@@ -34,6 +34,18 @@ namespace VM
         {
             Destroy();
         }
+
+        public void Minimize(object sender, RoutedEventArgs e)
+        {
+            Visibility = Visibility.Collapsed;
+            owner.Visibility = Visibility;
+        }
+
+        public void ToggleMaximize(object sender, RoutedEventArgs e)
+        {
+            Visibility ^= Visibility.Collapsed;
+            owner.Visibility = Visibility;
+        }
     }
 
    

@@ -42,12 +42,6 @@ namespace VM
             var window = new T();
             window.Title = title;
 
-            if (Windows.TryGetValue(title, out var value))
-            {
-                Windows.Remove(title);
-                Desktop.Children.Remove(value);
-            }
-
             var frame = new ResizableWindow
             {
                 Content = window,
@@ -59,11 +53,11 @@ namespace VM
 
             window.Init(frame);
 
-            Windows.Add(title, frame);
+            Windows[title] = frame;
 
             Desktop.Children.Add(frame);
 
-            Button btn = GetTaskbarButton(title);
+            Button btn = GetTaskbarButton(title, window.ToggleMaximize);
 
             TaskbarStackPanel.Children.Add(btn);
 
@@ -85,17 +79,18 @@ namespace VM
             }
         }
 
-        private static Button GetTaskbarButton(string title)
+        private static Button GetTaskbarButton(string title, RoutedEventHandler Toggle)
         {
-            return new Button()
+            var btn = new Button()
             {
                 Background = Brushes.LightGray,
                 Width = 35,
                 FontFamily = new("Consolas"),
                 FontSize = 10,
                 Content = title,
-
             };
+            btn.Click += Toggle;
+            return btn;
         }
 
         private void Taskbar_Click(object sender, RoutedEventArgs e)
