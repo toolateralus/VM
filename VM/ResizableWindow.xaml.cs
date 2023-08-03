@@ -12,17 +12,18 @@ namespace VM
         private Point dragOffset;
         private double originalWidth;
         private double originalHeight;
-        private const double MinWidth = 100; // Set your desired minimum width here
-        private const double MinHeight = 100; // Set your desired minimum height here
-        private const double MaxWidth = 500; // Set your desired maximum width here
-        private const double MaxHeight = 500; // Set your desired maximum height here
 
         public ResizableWindow()
         {
-            // Register event handlers
+           
             MouseDown += OnMouseDown;
             MouseMove += OnMouseMove;
             MouseUp += OnMouseUp;
+
+            MinWidth = 100;
+            MinHeight = 100;
+            MaxWidth = 500;
+            MaxHeight = 500;
         }
 
         protected void OnMouseDown(object sender, MouseButtonEventArgs e)

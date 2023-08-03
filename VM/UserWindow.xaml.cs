@@ -10,6 +10,7 @@ namespace VM
     public partial class UserWindow : Page
     {
         private ResizableWindow owner;
+        internal Action OnClosed;
 
         public UserWindow()
         {
@@ -26,6 +27,7 @@ namespace VM
                 throw new InvalidOperationException("Window was destroyed but it had no parent");
 
             grid.Children.Remove(owner);
+            OnClosed.Invoke();
         }
 
         private void CloseWindow(object sender, RoutedEventArgs e)

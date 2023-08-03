@@ -2,6 +2,7 @@
 using System;
 using System.Collections.Generic;
 using System.Windows;
+using System.Windows.Controls;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using VM;
@@ -14,6 +15,9 @@ namespace VM
         {
             InitializeComponent();
             SetBackground(@"Background.png");
+
+
+            // chat gpt, find "Consolas font here and place it in a field."
         }
 
         // singleton
@@ -37,7 +41,6 @@ namespace VM
 
             var window = new T();
             window.Title = title;
-            
 
             if (Windows.TryGetValue(title, out var value))
             {
@@ -53,13 +56,47 @@ namespace VM
                 Background = background,
                 Foreground = foreground,
             };
+
             window.Init(frame);
 
             Windows.Add(title, frame);
 
             Desktop.Children.Add(frame);
+
+            Button btn = GetTaskbarButton(title);
+
+            TaskbarStackPanel.Children.Add(btn);
+
+            window.OnClosed += () => RemoveTaskbarButton(title);
+
         }
 
+        private void RemoveTaskbarButton(string title)
+        {
+            System.Collections.IList list = TaskbarStackPanel.Children;
+            for (int i = 0; i < list.Count; i++)
+            {
+                object? item = list[i];
+                if (item is Button button && button.Content == title)
+                {
+                    TaskbarStackPanel.Children.Remove(button);
+                    break;
+                }
+            }
+        }
+
+        private static Button GetTaskbarButton(string title)
+        {
+            return new Button()
+            {
+                Background = Brushes.LightGray,
+                Width = 35,
+                FontFamily = new("Consolas"),
+                FontSize = 10,
+                Content = title,
+
+            };
+        }
 
         private void Taskbar_Click(object sender, RoutedEventArgs e)
         {
