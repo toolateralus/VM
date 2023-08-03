@@ -15,15 +15,14 @@ namespace VM
 
         public ResizableWindow()
         {
-           
             MouseDown += OnMouseDown;
             MouseMove += OnMouseMove;
             MouseUp += OnMouseUp;
 
-            MinWidth = 100;
-            MinHeight = 100;
-            MaxWidth = 500;
-            MaxHeight = 500;
+            MinWidth = 50;
+            MinHeight = 50;
+            MaxWidth = 1920;
+            MaxHeight = 1080;
         }
 
         protected void OnMouseDown(object sender, MouseButtonEventArgs e)

@@ -17,9 +17,6 @@ namespace VM
         public static string ROOT => root;
         static string root = $"{System.IO.Directory.GetCurrentDirectory()}\\root";
         
-        public static string CurrentDirectory => currentDirectory;
-        static string currentDirectory = root;
-
         private static OS current = null!;
         public static OS Current => current;
         public OS()
@@ -30,12 +27,35 @@ namespace VM
             }
             else current = this;
         }
+
        
     }
+    public static class Command
+    {
+        public static Dictionary<string, Action<object[]?>> Commands = new(){
+            { "-root", RootCmd },
+        };
+        static internal void RootCmd(object[]? args)
+        {
+            OS.Current.FileSystem.ChangeDirectory(OS.ROOT);
+        }
+
+        internal static bool TryCommand(string path, params object[]? args)
+        {
+            if (Commands.TryGetValue(path, out var cmd))
+            {
+                cmd.Invoke(args);
+                return true;
+            }
+
+            return false;
+
+        }
+    }
+
     public class FileSystem
     {
         private string currentDirectory;
-
         public FileSystem(string root)
         {
             if (string.IsNullOrEmpty(root))
@@ -48,7 +68,6 @@ namespace VM
 
             currentDirectory = root;
         }
-
         public string CurrentDirectory
         {
             get { return currentDirectory; }
@@ -64,9 +83,25 @@ namespace VM
                 }
             }
         }
-
         public void ChangeDirectory(string path)
         {
+            if (path == "..")
+            {
+                string currentDirectory = OS.Current.FileSystem.CurrentDirectory;
+
+                string[] components = currentDirectory.Split('\\');
+
+                if (components.Length > 1)
+                {
+                    string[] parentComponents = components.Take(components.Length - 1).ToArray();
+
+                    string parentDirectory = string.Join("\\", parentComponents);
+
+                    OS.Current.FileSystem.ChangeDirectory(parentDirectory);
+                }
+                return;
+            }
+
             string newPath = Path.Combine(currentDirectory, path);
             if (Directory.Exists(newPath))
             {
@@ -74,10 +109,9 @@ namespace VM
             }
             else
             {
-                throw new DirectoryNotFoundException($"Directory '{path}' not found in current path.");
+                Notifications.Now($"Directory '{path}' not found in current path.");
             }
         }
-
         public void NewFile(string fileName, bool isDirectory = false)
         {
             string newPath = Path.Combine(currentDirectory, fileName);
@@ -93,11 +127,10 @@ namespace VM
                 }
                 else
                 {
-                    throw new IOException($"File '{fileName}' already exists.");
+                    Notifications.Now($"File '{fileName}' already exists.");
                 }
             }
         }
-
         public void DeleteFile(string fileName, bool isDirectory = false)
         {
             string targetPath = Path.Combine(currentDirectory, fileName);
@@ -109,7 +142,7 @@ namespace VM
                 }
                 else
                 {
-                    throw new DirectoryNotFoundException($"Directory '{fileName}' not found in current path.");
+                    Notifications.Now($"Directory '{fileName}' not found in current path.");
                 }
             }
             else
@@ -120,17 +153,15 @@ namespace VM
                 }
                 else
                 {
-                    throw new FileNotFoundException($"File '{fileName}' not found in current path.");
+                    Notifications.Now($"File '{fileName}' not found in current path.");
                 }
             }
         }
-
         public void Write(string fileName, string content)
         {
             string filePath = Path.Combine(currentDirectory, fileName);
             File.WriteAllText(filePath, content);
         }
-
         public string Read(string fileName)
         {
             string filePath = Path.Combine(currentDirectory, fileName);
@@ -140,27 +171,24 @@ namespace VM
             }
             else
             {
-                throw new FileNotFoundException($"File '{fileName}' not found in current path.");
+                Notifications.Now($"File '{fileName}' not found in current path.");
+                return "";
             }
         }
-
         public bool FileExists(string fileName)
         {
             string filePath = Path.Combine(currentDirectory, fileName);
             return File.Exists(filePath);
         }
-
         public bool DirectoryExists(string directoryName)
         {
             string directoryPath = Path.Combine(currentDirectory, directoryName);
             return Directory.Exists(directoryPath);
         }
-
         public string GetFullPath(string path)
         {
             return Path.GetFullPath(path);
         }
-
         public string[] SerializeCurrentDirectory()
         {
             string[] content = Directory.GetFileSystemEntries(currentDirectory);

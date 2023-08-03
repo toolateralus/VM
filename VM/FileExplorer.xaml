@@ -18,15 +18,15 @@
     </UserControl.Resources>
 
     <Grid>
-        <StackPanel Orientation="Horizontal" VerticalAlignment="Top" Background="LightGray">
-            <Button Height="20" Content="Back" />
-            <Button Height="20" Content="Forward" />
-            <Button Height="20" Content="Up" />
-            <Button Height="20" Content="Go" />
-            <TextBox x:Name="SearchBar" Text="Search" Margin="5" />
-        </StackPanel>
-
-        <ListBox x:Name="FileBox" Margin="10,30,10,10" ContextMenu="{StaticResource ItemContextMenu}">
+        <ListBox x:Name="FileBox" Margin="10,50,10,10" ContextMenu="{StaticResource ItemContextMenu}">
         </ListBox>
+
+        <StackPanel Orientation="Horizontal" VerticalAlignment="Top" Background="LightGray">
+            <Button Click="BackPressed" Height="20" Content="Back" />
+            <Button Click="ForwardPressed" Height="20" Content="Forward" />
+            <Button Click="UpPressed" Height="20" Content="Up" />
+            <Button Click="SearchPressed"  Height="20" Content="Go" />
+            <TextBox Width="450" x:Name="SearchBar" Text="Search" Margin="5" />
+        </StackPanel>
     </Grid>
 </UserControl>
