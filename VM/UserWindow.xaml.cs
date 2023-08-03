@@ -7,19 +7,20 @@ namespace VM
     /// <summary>
     /// Interaction logic for UserWindow.xaml
     /// </summary>
-    public partial class UserWindow : Page
+    public partial class UserWindow : UserControl
     {
-        private ResizableWindow owner;
-        internal Action OnClosed;
+        private ResizableWindow? owner;
+        internal Action? OnClosed;
 
         public UserWindow()
         {
             InitializeComponent();
         }
 
-        internal void Init(ResizableWindow frame)
+        internal void Init(ResizableWindow frame, UserControl contents)
         {
             owner = frame;
+            ContentsFrame.Content = contents;
         }
         internal void Destroy()
         {
@@ -27,7 +28,7 @@ namespace VM
                 throw new InvalidOperationException("Window was destroyed but it had no parent");
 
             grid.Children.Remove(owner);
-            OnClosed.Invoke();
+            OnClosed?.Invoke();
         }
 
         private void CloseWindow(object sender, RoutedEventArgs e)
@@ -38,13 +39,17 @@ namespace VM
         public void Minimize(object sender, RoutedEventArgs e)
         {
             Visibility = Visibility.Collapsed;
-            owner.Visibility = Visibility;
+
+            if (owner != null)
+                owner.Visibility = Visibility;
         }
 
         public void ToggleMaximize(object sender, RoutedEventArgs e)
         {
             Visibility ^= Visibility.Collapsed;
-            owner.Visibility = Visibility;
+
+            if (owner != null)
+                owner.Visibility = Visibility;
         }
     }
 

@@ -34,13 +34,12 @@ namespace VM
 
         public Dictionary<string, ResizableWindow> Windows = new();
        
-        private void Open<T>(string title = "window", int width = 200, int height = 100, Brush? background = null, Brush? foreground = null) where T : UserWindow, new()
+        private void Open<T>(string title = "window", int width = 200, int height = 100, Brush? background = null, Brush? foreground = null) where T : UserControl, new()
         {
             background ??= Brushes.LightGray;
             foreground ??= Brushes.Black;
 
-            var window = new T();
-            window.Title = title;
+            var window = new UserWindow();
 
             var frame = new ResizableWindow
             {
@@ -51,7 +50,7 @@ namespace VM
                 Foreground = foreground,
             };
 
-            window.Init(frame);
+            window.Init(frame, new T());
 
             Windows[title] = frame;
 
@@ -95,7 +94,7 @@ namespace VM
 
         private void Taskbar_Click(object sender, RoutedEventArgs e)
         {
-            Open<UserWindow>("MyWindow");
+            Open<FileExplorer>("New File Explorer");
         }
     }
 }
