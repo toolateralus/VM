@@ -1,0 +1,28 @@
+﻿<Window x:Class="VM.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:VM"
+        mc:Ignorable="d"
+        Title="" Height="450" Width="800"
+        Background="#f08556">
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="15"/>
+        </Grid.RowDefinitions>
+
+        <Grid x:Name="Desktop" Grid.Row="0" Grid.Column="0">
+            <Image x:Name="desktopBackground" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Width="Auto" Height="Auto"/>
+        </Grid>
+
+        <Grid x:Name="Taskbar" Grid.Row="1" Grid.Column="0">
+            <StackPanel Orientation="Horizontal" Width="Auto" Height="15" Background="Gray">
+                <Button Click="Taskbar_Click" Background="LightGray" Width="35" FontFamily="Consolas" FontSize="10" Content="Main"/>
+                <Button Background="LightGray" Width="35" FontFamily="Consolas" FontSize="10" Content="A"/>
+                <Button Background="LightGray"  Width="35" FontFamily="Consolas" FontSize="10" Content="B"/>
+            </StackPanel>
+        </Grid>
+    </Grid>
+</Window>
