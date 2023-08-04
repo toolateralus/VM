@@ -10,28 +10,30 @@ namespace VM.OPSYS.JS
 {
     public class JSHelpers
     {
-        public void Print(string message)
+        public void print(string message)
         {
             Debug.WriteLine(message);
         }
     }
 
-    public class JSInterop
+    public class JavaScriptEngine
     {
         IJsEngine engine;
         IJsEngineSwitcher engineSwitcher;
 
-        public JSInterop()
+        public JavaScriptEngine()
         {
             engineSwitcher = JsEngineSwitcher.Current;
 
             engineSwitcher.EngineFactories.AddV8();
             
             engineSwitcher.DefaultEngineName = V8JsEngine.EngineName;
-            engine = engineSwitcher.CreateDefaultEngine();
-            
-            engine.EmbedHostObject("interop" ,new JSHelpers());
 
+            engine = engineSwitcher.CreateDefaultEngine();
+
+            var interop = new JSHelpers();
+
+            engine.EmbedHostObject("interop" , interop);
         }
 
         public object Execute(string jsCode, bool compile = false)

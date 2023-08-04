@@ -5,12 +5,13 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:VM"
         mc:Ignorable="d"
-        Title="" Height="450" Width="800"
-        Background="#f08556">
+        Title="" Height="1080" Width="1920"
+        Background="#f08556"
+        WindowStartupLocation="CenterScreen">
     <Grid>
         <Grid.RowDefinitions>
             <RowDefinition Height="*"/>
-            <RowDefinition Height="15"/>
+            <RowDefinition Height="25"/>
         </Grid.RowDefinitions>
 
         <Grid x:Name="Desktop" Grid.Row="0" Grid.Column="0">

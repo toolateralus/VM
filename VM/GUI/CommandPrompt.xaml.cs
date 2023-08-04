@@ -4,18 +4,20 @@ using VM.OPSYS.JS;
 using JavaScriptEngineSwitcher;
 using JavaScriptEngineSwitcher.Core.Extensions;
 using System.Linq;
+using VM.OPSYS;
 
 namespace VM.GUI
 {
     public partial class CommandPrompt : UserControl
     {
-        private JSInterop interop;
+        private JavaScriptEngine Engine;
 
         public CommandPrompt()
         {
             InitializeComponent();
-            interop = new JSInterop();
+            Engine = OS.Current.JavaScriptEngine;
             KeyDown += Input_KeyDown;
+            Unloaded += (o, e) => Engine?.Dispose();
         }
 
         private void ExecuteJavaScript()
@@ -23,7 +25,7 @@ namespace VM.GUI
             string code = input.Text.SplitToLines().LastOrDefault("");
             try
             {
-                object result = interop.Execute(code);
+                object result = Engine.Execute(code);
                 string? output = result?.ToString();
 
                 if (!string.IsNullOrEmpty(output))
