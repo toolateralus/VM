@@ -8,15 +8,16 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Media;
 using System.Xml.Linq;
+using VM.OPSYS.JS;
 
-namespace VM
+namespace VM.OPSYS
 {
     public class OS
     {
         public FileSystem FileSystem = new(ROOT);
-
+        public JSInterop JavaScript = new();
         public static string ROOT => root;
-        static string root = $"{System.IO.Directory.GetCurrentDirectory()}\\root";
+        static string root = $"{Directory.GetCurrentDirectory()}\\root";
         
         private static OS current = null!;
         public static OS Current => current;

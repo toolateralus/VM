@@ -9,7 +9,8 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <Folder Include="GUI\" />
+    <PackageReference Include="AvalonEdit" Version="6.3.0.90" />
+    <PackageReference Include="VroomJs" Version="1.2.3" />
   </ItemGroup>
 
   <ItemGroup>
