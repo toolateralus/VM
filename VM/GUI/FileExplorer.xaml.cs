@@ -27,7 +27,8 @@ namespace VM.GUI
     {
         ObservableCollection<string> FileViewerData = new();
         Dictionary<string, string> OriginalPaths = new();
-        public FileExplorer()
+        public Computer computer;
+        public FileExplorer(Computer computer)
         {
             InitializeComponent();
             FileBox.ItemsSource = FileViewerData;
@@ -40,6 +41,7 @@ namespace VM.GUI
             }; 
             KeyDown += FileExplorer_KeyDown;
             UpdateView();
+            this.computer = computer;
         }
 
         private void PreviewPath(object sender, SelectionChangedEventArgs e)
@@ -54,7 +56,7 @@ namespace VM.GUI
             if (e.Key == Key.Escape)
             {
                 Keyboard.ClearFocus();
-                SearchBar.Text = OS.Current.FileSystem.CurrentDirectory;
+                SearchBar.Text = computer.OS.FS.CurrentDirectory;
                 UpdateView();
             }
             if (e.Key == Key.Enter)
@@ -69,9 +71,11 @@ namespace VM.GUI
 
         private void UpdateView()
         {
+            if (computer is null)
+                return;
+            
             FileViewerData.Clear();
-
-            var fileNames = OS.Current.FileSystem.DirectoryListing();
+            var fileNames = computer.OS.FS.DirectoryListing();
             const string FolderIcon = "📁 ";
             const string FileIcon = "📄 ";
 
@@ -92,39 +96,39 @@ namespace VM.GUI
         
         private void AddFile_Click(object sender, RoutedEventArgs e)
         {
-            OS.Current.FileSystem.NewFile(SearchBar.Text);
+            computer.OS.FS.NewFile(SearchBar.Text);
             UpdateView();
 
         }
 
         private void AddDirectory_Click(object sender, RoutedEventArgs e)
         {
-            OS.Current.FileSystem.NewFile(SearchBar.Text, true);
+            computer.OS.FS.NewFile(SearchBar.Text, true);
             UpdateView();
 
         }
 
         private void Delete_Click(object sender, RoutedEventArgs e)
         {
-            OS.Current.FileSystem.DeleteFile(SearchBar.Text);
+            computer.OS.FS.DeleteFile(SearchBar.Text);
             UpdateView();
 
         }
 
         private void Properties_Click(object sender, RoutedEventArgs e)
         {
-            Notifications.Now(OS.Current.FileSystem.CurrentDirectory);
+            Notifications.Now(computer.OS.FS.CurrentDirectory);
         }
 
         private void BackPressed(object sender, RoutedEventArgs e)
         {
 
-            if (OS.Current.FileSystem.History.Count == 0)
+            if (computer.OS.FS.History.Count == 0)
             {
                 Notifications.Now("No file or directory to go back to.");
             }
 
-            OS.Current.FileSystem.ChangeDirectory(OS.Current.FileSystem.History.Pop());
+            computer.OS.FS.ChangeDirectory(computer.OS.FS.History.Pop());
             UpdateView();
         }
 
@@ -138,17 +142,19 @@ namespace VM.GUI
         {
             var path = SearchBar.Text;
 
-            if (Command.TryCommand(path))
+            // this is a very hacky solution to the way they were originally designed as static, todo fix the entire command system, 
+            // and make a common fs
+            if (new Command(computer).TryCommand(path))
             {
                 return;
             }
 
-            var exists = OS.Current.FileSystem.FileExists(path) || OS.Current.FileSystem.DirectoryExists(path);
+            var exists = computer.OS.FS.FileExists(path) || computer.OS.FS.DirectoryExists(path);
 
             if (exists)
             {
                 string dir = "";
-                if (OS.Current.FileSystem.FileExists(path))
+                if (computer.OS.FS.FileExists(path))
                 {
                     if (System.IO.Path.GetDirectoryName(path) is string _dir)
                     {
@@ -160,13 +166,13 @@ namespace VM.GUI
                     dir = path;
                 }
 
-                OS.Current.FileSystem.ChangeDirectory(dir);
+                computer.OS.FS.ChangeDirectory(dir);
             }
         }
 
         private void UpPressed(object sender, RoutedEventArgs e)
         {
-            OS.Current.FileSystem.ChangeDirectory("..");
+            computer.OS.FS.ChangeDirectory("..");
             UpdateView();
         }
 

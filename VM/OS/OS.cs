@@ -10,29 +10,37 @@ using VM.OPSYS.JS;
 
 namespace VM.OPSYS
 {
+
+    public class Computer
+    {
+        public Computer(uint id)
+        {
+            OS = new(id, this);
+        }
+        public uint ID() => OS.ID;
+
+        public OS OS;
+    }
+
     public class OS
     {
-        public FileSystem FileSystem = new(FS_ROOT);
-        public JavaScriptEngine JavaScriptEngine = new();
+        public FileSystem FS;
+        public JavaScriptEngine JavaScriptEngine;
 
-        private static string EXE_DIR = Directory.GetCurrentDirectory();
-        public static string PROJECT_ROOT = Path.GetFullPath(Path.Combine(EXE_DIR, @"..\..\.."));
-        public static string FS_ROOT => root;
-
-        static string root = $"{PROJECT_ROOT}\\root";
-        private static OS current = null!;
-        public static OS Current => current;
+        public readonly uint ID;
+        
+        public readonly string FS_ROOT;
+        public readonly string PROJECT_ROOT;
 
         public FontFamily SystemFont { get; internal set; } = new FontFamily("Consolas");
 
-        public OS()
+        public OS(uint id, Computer pc)
         {
-
-            if (current != null)
-            {
-                throw new InvalidOperationException("Cannot instantiate several instances of the operating system");
-            }
-            else current = this;
+            var EXE_DIR = Directory.GetCurrentDirectory();
+            PROJECT_ROOT = Path.GetFullPath(Path.Combine(EXE_DIR, @"..\..\.."));
+            FS_ROOT = $"{PROJECT_ROOT}\\computer{id}";
+            FS = new(FS_ROOT, pc);
+            JavaScriptEngine = new(PROJECT_ROOT);
         }
     }
 }

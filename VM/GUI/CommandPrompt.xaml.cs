@@ -12,10 +12,10 @@ namespace VM.GUI
     {
         private JavaScriptEngine Engine;
 
-        public CommandPrompt()
+        public CommandPrompt(Computer computer)
         {
             InitializeComponent();
-            Engine = OS.Current.JavaScriptEngine;
+            Engine = computer.OS.JavaScriptEngine;
             KeyDown += Input_KeyDown;
             Unloaded += (o, e) => Engine?.Dispose();
         }

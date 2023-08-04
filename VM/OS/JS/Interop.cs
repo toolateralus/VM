@@ -4,6 +4,7 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Reflection;
+using System.Security.Cryptography.X509Certificates;
 using System.Text;
 using System.Windows.Forms;
 using JavaScriptEngineSwitcher.Core;
@@ -25,7 +26,7 @@ namespace VM.OPSYS.JS
         IJsEngineSwitcher engineSwitcher;
 
 
-        public JavaScriptEngine()
+        public JavaScriptEngine(string ProjectRoot)
         {
             engineSwitcher = JsEngineSwitcher.Current;
 
@@ -38,7 +39,7 @@ namespace VM.OPSYS.JS
             var interop = new JSHelpers();
 
 
-            foreach (var file in Directory.EnumerateFiles(OS.PROJECT_ROOT + "\\OS-JS").Where(f => f.EndsWith(".js")))
+            foreach (var file in Directory.EnumerateFiles(ProjectRoot + "\\OS-JS").Where(f => f.EndsWith(".js")))
             {
                 engine.ExecuteFile(file);
             }

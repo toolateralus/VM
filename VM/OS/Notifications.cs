@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Linq;
 using System.Windows;
 using VM.GUI;
 
@@ -10,7 +11,7 @@ namespace VM
         {
             var wnd = Application.Current.MainWindow as MainWindow;
             var notificationControl = new NotificationControl { Message = message };
-            wnd?.Desktop.Children.Add(notificationControl);
+            (wnd?.Computers.First().Value as ComputerWindow).Desktop.Children.Add(notificationControl);
         }
     }
 }

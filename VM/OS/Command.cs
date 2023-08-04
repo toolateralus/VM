@@ -4,26 +4,31 @@ using System.Collections.Generic;
 namespace VM.OPSYS
 {
     // the "command line" for the file explorer, very basic operations with completely unique syntax.
-    public static class Command
+    public class Command
     {
-        public static Dictionary<string, Action<object[]?>> Commands = new(){
-            { "-root", RootCmd },
-        };
-        static internal void RootCmd(object[]? args)
+        public Computer Computer;
+        public Dictionary<string, Action<object[]?>> Commands = new();
+                
+        public Command(Computer computer)
         {
-            OS.Current.FileSystem.ChangeDirectory(OS.FS_ROOT);
+            Computer = computer;
+            Commands = new()
+            {
+                { "-root", RootCmd },
+            };
         }
-
-        internal static bool TryCommand(string path, params object[]? args)
+        internal bool TryCommand(string path, params object[]? args)
         {
             if (Commands.TryGetValue(path, out var cmd))
             {
                 cmd.Invoke(args);
                 return true;
             }
-
             return false;
-
+        }
+        internal void RootCmd(object[]? args)
+        {
+            Computer.OS.FS.ChangeDirectory(Computer.OS.FS_ROOT);
         }
     }
 }

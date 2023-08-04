@@ -7,8 +7,10 @@ namespace VM.OPSYS
     public class FileSystem
     {
         private string currentDirectory;
-        public FileSystem(string root)
+        public Computer Computer;
+        public FileSystem(string root, Computer computer)
         {
+            Computer = computer;
             if (string.IsNullOrEmpty(root))
             {
                 throw new ArgumentException("Invalid root directory path.");
@@ -40,7 +42,7 @@ namespace VM.OPSYS
         {
             if (path == "..")
             {
-                string currentDirectory = OS.Current.FileSystem.CurrentDirectory;
+                string currentDirectory = Computer.OS.FS.CurrentDirectory;
 
                 string[] components = currentDirectory.Split('\\');
 
@@ -50,7 +52,7 @@ namespace VM.OPSYS
 
                     string parentDirectory = string.Join("\\", parentComponents);
 
-                    OS.Current.FileSystem.ChangeDirectory(parentDirectory);
+                    Computer.OS.FS.ChangeDirectory(parentDirectory);
                 }
                 return;
             }
