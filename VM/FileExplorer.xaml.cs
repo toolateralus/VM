@@ -25,13 +25,28 @@ namespace VM
     public partial class FileExplorer : UserControl
     {
         ObservableCollection<string> FileViewerData = new();
+        Dictionary<string, string> OriginalPaths = new();
         public FileExplorer()
         {
             InitializeComponent();
             FileBox.ItemsSource = FileViewerData;
-            FileBox.MouseDoubleClick += (sender, @event) => Navigate();
+            FileBox.SelectionChanged += PreviewPath;
+            FileBox.MouseDoubleClick += (sender, @event) =>
+            {
+                Navigate();
+                UpdateView();
+
+            }; 
             KeyDown += FileExplorer_KeyDown;
+            UpdateView();
         }
+
+        private void PreviewPath(object sender, SelectionChangedEventArgs e)
+        {
+            if (FileBox.SelectedItem is string Path && OriginalPaths.TryGetValue(Path, out var AbsolutePath))
+                SearchBar.Text = AbsolutePath;
+        }
+
 
         private void FileExplorer_KeyDown(object sender, KeyEventArgs e)
         {
@@ -44,6 +59,8 @@ namespace VM
             if (e.Key == Key.Enter)
             {
                 Navigate();
+                UpdateView();
+
             }
         }
 
@@ -54,33 +71,43 @@ namespace VM
             FileViewerData.Clear();
 
             var fileNames = OS.Current.FileSystem.DirectoryListing();
+            const string FolderIcon = "📁 ";
+            const string FileIcon = "📄 ";
 
             foreach (var file in fileNames)
             {
-                if (Directory.Exists(file) && !File.Exists(file))
-                {
-                    FileViewerData.Add("📁 " + file.Split('\\').LastOrDefault("???"));
-                } 
-                else
-                {
-                    FileViewerData.Add("📄 " + file.Split('\\').LastOrDefault("???"));
-                }
+                StringBuilder visualPath = new(file.Split('\\').LastOrDefault("???"));
+                var isDir = Directory.Exists(file) && !File.Exists(file);
+
+                visualPath.Insert(0, isDir ? FolderIcon : FileIcon);
+
+                var finalVisualPath = visualPath.ToString();
+
+                FileViewerData.Add(finalVisualPath);
+
+                OriginalPaths[finalVisualPath] = file;
             }
         }
         
         private void AddFile_Click(object sender, RoutedEventArgs e)
         {
             OS.Current.FileSystem.NewFile(SearchBar.Text);
+            UpdateView();
+
         }
 
         private void AddDirectory_Click(object sender, RoutedEventArgs e)
         {
             OS.Current.FileSystem.NewFile(SearchBar.Text, true);
+            UpdateView();
+
         }
 
         private void Delete_Click(object sender, RoutedEventArgs e)
         {
             OS.Current.FileSystem.DeleteFile(SearchBar.Text);
+            UpdateView();
+
         }
 
         private void Properties_Click(object sender, RoutedEventArgs e)
@@ -90,13 +117,20 @@ namespace VM
 
         private void BackPressed(object sender, RoutedEventArgs e)
         {
-            OS.Current.FileSystem.ChangeDirectory("..");
+
+            if (OS.Current.FileSystem.History.Count == 0)
+            {
+                Notifications.Now("No file or directory to go back to.");
+            }
+
+            OS.Current.FileSystem.ChangeDirectory(OS.Current.FileSystem.History.Pop());
+            UpdateView();
         }
 
         private void SearchPressed(object sender, RoutedEventArgs e)
         {
             Navigate();
-
+            UpdateView();
         }
 
         private void Navigate()
@@ -132,11 +166,12 @@ namespace VM
         private void UpPressed(object sender, RoutedEventArgs e)
         {
             OS.Current.FileSystem.ChangeDirectory("..");
+            UpdateView();
         }
 
         private void ForwardPressed(object sender, RoutedEventArgs e)
         {
-
+            UpdateView();
         }
     }
 }

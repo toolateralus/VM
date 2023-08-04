@@ -81,7 +81,7 @@ namespace VM
             {
                 Background = Brushes.LightGray,
                 Width = 35,
-                FontFamily = new("Consolas"),
+                FontFamily = OS.Current.SystemFont,
                 FontSize = 10,
                 Content = title,
             };

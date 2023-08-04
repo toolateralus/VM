@@ -6,6 +6,7 @@ using System.Linq;
 using System.Reflection.Metadata;
 using System.Text;
 using System.Threading.Tasks;
+using System.Windows.Media;
 using System.Xml.Linq;
 
 namespace VM
@@ -19,6 +20,9 @@ namespace VM
         
         private static OS current = null!;
         public static OS Current => current;
+
+        public FontFamily SystemFont { get; internal set; } = new FontFamily("Consolas");
+
         public OS()
         {
             if (current != null)
@@ -83,6 +87,8 @@ namespace VM
                 }
             }
         }
+
+        public Deque<string> History = new();
         public void ChangeDirectory(string path)
         {
             if (path == "..")
@@ -103,8 +109,10 @@ namespace VM
             }
 
             string newPath = Path.Combine(currentDirectory, path);
+
             if (Directory.Exists(newPath))
             {
+                History.Push(currentDirectory);
                 currentDirectory = newPath;
             }
             else
