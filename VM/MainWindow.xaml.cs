@@ -14,10 +14,7 @@ namespace VM
         public MainWindow()
         {
             InitializeComponent();
-            SetBackground(@"Background.png");
-
-
-            // chat gpt, find "Consolas font here and place it in a field."
+            SetBackground("C:\\Users\\Josh\\source\\repos\\VM\\Background.png");
         }
 
         // singleton

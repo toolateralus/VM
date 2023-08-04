@@ -8,6 +8,9 @@ namespace VM
 {
     public partial class NotificationControl : UserControl
     {
+
+        const int NOTIFICATION_SIZE_X = 200, NOTIFICATION_SIZE_Y = 100;
+
         private DispatcherTimer fadeOutTimer;
 
         public static readonly DependencyProperty MessageProperty =
@@ -21,7 +24,12 @@ namespace VM
 
         public NotificationControl()
         {
+            MaxHeight = NOTIFICATION_SIZE_Y;
+            MaxWidth = NOTIFICATION_SIZE_X;
+
             InitializeComponent();
+            DataContext = this;
+
             fadeOutTimer = new DispatcherTimer();
             fadeOutTimer.Interval = TimeSpan.FromSeconds(2); 
             fadeOutTimer.Tick += OnFadeOutTimerTick;
@@ -30,12 +38,14 @@ namespace VM
             MouseEnter += OnMouseEnter;
             MouseLeave += OnMouseLeave;
         }
-
         private void OnLoaded(object? sender, RoutedEventArgs e)
         {
-            var fadeInAnimation = new DoubleAnimation(0, 1, TimeSpan.FromSeconds(0.5));
+            var fadeInAnimation = new DoubleAnimation(0, 1, TimeSpan.FromSeconds(1));
             BeginAnimation(OpacityProperty, fadeInAnimation);
 
+            var margin = new Thickness(Margin.Left, Margin.Top, Margin.Right, Margin.Bottom + 15);
+            var popUpAnim = new ThicknessAnimation(margin, TimeSpan.FromSeconds(1));
+            BeginAnimation(MarginProperty, popUpAnim);
             fadeOutTimer.Start();
         }
 
@@ -51,7 +61,7 @@ namespace VM
 
         private void OnFadeOutTimerTick(object? sender, EventArgs e)
         {
-            var fadeOutAnimation = new DoubleAnimation(1, 0, TimeSpan.FromSeconds(0.5));
+            var fadeOutAnimation = new DoubleAnimation(1, 0, TimeSpan.FromSeconds(2));
             fadeOutAnimation.Completed += (s, _) =>
             {
                 var parent = Parent as Panel;

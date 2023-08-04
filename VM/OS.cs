@@ -189,7 +189,7 @@ namespace VM
         {
             return Path.GetFullPath(path);
         }
-        public string[] SerializeCurrentDirectory()
+        public string[] DirectoryListing()
         {
             string[] content = Directory.GetFileSystemEntries(currentDirectory);
             return content;
