@@ -11,7 +11,7 @@ namespace VM.OPSYS
         };
         static internal void RootCmd(object[]? args)
         {
-            OS.Current.FileSystem.ChangeDirectory(OS.ROOT);
+            OS.Current.FileSystem.ChangeDirectory(OS.FS_ROOT);
         }
 
         internal static bool TryCommand(string path, params object[]? args)

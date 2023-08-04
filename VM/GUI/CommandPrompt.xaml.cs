@@ -30,7 +30,7 @@ namespace VM.GUI
 
                 if (!string.IsNullOrEmpty(output))
                 {
-                    input.AppendText(Environment.NewLine + output);
+                    input.Text = input.Text.Insert(0, output + Environment.NewLine);
                 }
             }
             catch (Exception ex)

@@ -12,11 +12,14 @@ namespace VM.OPSYS
 {
     public class OS
     {
-        public FileSystem FileSystem = new(ROOT);
+        public FileSystem FileSystem = new(FS_ROOT);
         public JavaScriptEngine JavaScriptEngine = new();
-        public static string ROOT => root;
-        static string root = $"{Directory.GetCurrentDirectory()}\\root";
-        
+
+        private static string EXE_DIR = Directory.GetCurrentDirectory();
+        public static string PROJECT_ROOT = Path.GetFullPath(Path.Combine(EXE_DIR, @"..\..\.."));
+        public static string FS_ROOT => root;
+
+        static string root = $"{PROJECT_ROOT}\\root";
         private static OS current = null!;
         public static OS Current => current;
 
@@ -24,13 +27,12 @@ namespace VM.OPSYS
 
         public OS()
         {
+
             if (current != null)
             {
                 throw new InvalidOperationException("Cannot instantiate several instances of the operating system");
             }
             else current = this;
         }
-
-       
     }
 }
