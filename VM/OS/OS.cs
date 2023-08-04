@@ -41,6 +41,7 @@ namespace VM.OPSYS
             FS_ROOT = $"{PROJECT_ROOT}\\computer{id}";
             FS = new(FS_ROOT, pc);
             JavaScriptEngine = new(PROJECT_ROOT);
+            JavaScriptEngine.Execute($"OS.id = {id}");
         }
     }
 }

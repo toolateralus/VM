@@ -1,5 +1,26 @@
+
 function print(obj){
-    interop.print(obj)
+    interop.print(obj);
 }
-// we can implement things like inter computer communication and any
-// libraries that computer craft has, we can just kinda clone.
+
+function _export(obj){
+    interop.export(obj);
+}
+
+class os {
+    id = 0;
+    exit() {
+        interop.exit(computer);
+    }
+
+    computerID() {
+        return this.id;
+    }
+
+}
+
+let OS = new os();
+
+print(OS.computerID);
+
+_export(os);

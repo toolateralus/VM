@@ -46,6 +46,9 @@ namespace VM.GUI
             ComputerWindow wnd = new(pc);
 
             Computers[pc] = wnd;
+
+
+
             wnd.Show();
             wnd.Closed += (o, e) => Computers.Remove(pc);
         }

@@ -13,7 +13,6 @@ namespace VM.GUI
         Computer computer;
         public string LoadedFile;
         public string Contents;
-        public bool open;
         public TextEditor(Computer pc, string path)
         {
             InitializeComponent();

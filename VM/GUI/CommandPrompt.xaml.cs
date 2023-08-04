@@ -17,7 +17,7 @@ namespace VM.GUI
             InitializeComponent();
             Engine = computer.OS.JavaScriptEngine;
             KeyDown += Input_KeyDown;
-            Unloaded += (o, e) => Engine?.Dispose();
+           
         }
 
         private void ExecuteJavaScript()
