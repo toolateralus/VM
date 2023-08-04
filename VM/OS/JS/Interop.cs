@@ -15,6 +15,7 @@ namespace VM.OPSYS.JS
     public class JSHelpers
     {
         public Action<object?>? OnModuleExported;
+        public Action<int>? OnComputerExit;
         public void print(object message)
         {
             Debug.WriteLine(message);
@@ -23,6 +24,10 @@ namespace VM.OPSYS.JS
         {
             OnModuleExported?.Invoke(obj);
         }
+        public void exit(int code)
+        {
+            OnComputerExit?.Invoke(code);
+        }
     }
 
     public class JavaScriptEngine
@@ -30,6 +35,8 @@ namespace VM.OPSYS.JS
         IJsEngine engine;
         IJsEngineSwitcher engineSwitcher;
         public Dictionary<string, object?> modules = new();
+
+        public JSHelpers InteropModule { get; internal set; }
 
         public JavaScriptEngine(string ProjectRoot)
         {
@@ -41,11 +48,11 @@ namespace VM.OPSYS.JS
 
             engine = engineSwitcher.CreateDefaultEngine();
 
-            var interop = new JSHelpers();
+            InteropModule = new JSHelpers();
 
             var subscribed = false;
 
-            engine.EmbedHostObject("interop" , interop);
+            engine.EmbedHostObject("interop" , InteropModule);
 
             foreach (var file in Directory.EnumerateFiles(ProjectRoot + "\\OS-JS").Where(f => f.EndsWith(".js")))
             {
@@ -56,7 +63,7 @@ namespace VM.OPSYS.JS
 
                 if (!subscribed)
                 {
-                    interop.OnModuleExported += (o) => AddModule(o, file);
+                    InteropModule.OnModuleExported += (o) => AddModule(o, file);
                     subscribed = true;
                 }
 

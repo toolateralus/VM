@@ -6,6 +6,7 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Media;
 using System.Xml.Linq;
+using VM.GUI;
 using VM.OPSYS.JS;
 
 namespace VM.OPSYS
@@ -20,6 +21,15 @@ namespace VM.OPSYS
         public uint ID() => OS.ID;
 
         public OS OS;
+
+        internal void Exit(int exitCode)
+        {
+            MainWindow.GetPCWindow(this).Close();
+            if (MainWindow.Computers.Count > 0 && exitCode != 0)
+            {
+                Notifications.Now($"Computer {ID()} has exited, most likely due to an error. code:{exitCode}");
+            }
+        }
     }
 
     public class OS
@@ -42,6 +52,7 @@ namespace VM.OPSYS
             FS = new(FS_ROOT, pc);
             JavaScriptEngine = new(PROJECT_ROOT);
             JavaScriptEngine.Execute($"OS.id = {id}");
+            JavaScriptEngine.InteropModule.OnComputerExit += pc.Exit;
         }
     }
 }

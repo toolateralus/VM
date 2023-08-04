@@ -5,10 +5,19 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:VM"
         mc:Ignorable="d"
-        Title="" Height="75" Width="125"
-        Background="#f08556"
+        Title="" Height="250" Width="300"
+        Background="MediumSlateBlue"
         WindowStartupLocation="CenterScreen">
     <Grid>
-        <Button Height="45" Width="100" Content="New Computer" Click="NewComputerButton"/>
+
+        <Grid.RowDefinitions>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="25"/>
+            <RowDefinition Height="*"/>
+        </Grid.RowDefinitions>
+        <Button Height="45" Width="100" Content="New Computer" Click="NewComputerButton"  FontFamily="Consolas" />
+        <Label Grid.Row="1" Background="SlateGray" Foreground="White" FontFamily="Consolas" >Enter a computer id below. </Label>
+        <TextBox x:Name="IDBox" Grid.Row="2" FontFamily="Consolas">
+        </TextBox>
     </Grid>
 </Window>

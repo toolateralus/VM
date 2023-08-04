@@ -9,8 +9,9 @@ function _export(obj){
 
 class os {
     id = 0;
-    exit() {
-        interop.exit(computer);
+
+    exit(code) {
+        interop.exit(code);
     }
 
     computerID() {
