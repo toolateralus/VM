@@ -2,9 +2,8 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
-using System.Text;
-using System.Threading.Tasks;
-using VroomJs;
+using JavaScriptEngineSwitcher.Core;
+using JavaScriptEngineSwitcher.V8;
 
 namespace VM.OPSYS.JS
 {
@@ -14,19 +13,25 @@ namespace VM.OPSYS.JS
         {
             Console.WriteLine(message);
         }
-
     }
 
     public class JSInterop
     {
-        JsEngine engine = new();
-        JsContext context = null!;
+        IJsEngine engine;
+        IJsEngineSwitcher engineSwitcher;
+
         public JSInterop()
         {
-            context = engine.CreateContext();
-            RegisterAllJSHelpersFunctions();
+            engineSwitcher = JsEngineSwitcher.Current;
 
+            engineSwitcher.EngineFactories.AddV8();
+
+            engineSwitcher.DefaultEngineName = V8JsEngine.EngineName;
+            engine = engineSwitcher.CreateDefaultEngine();
+
+            RegisterAllJSHelpersFunctions();
         }
+
         private void RegisterAllJSHelpersFunctions()
         {
             Type jshelpersType = typeof(JSHelpers);
@@ -35,30 +40,41 @@ namespace VM.OPSYS.JS
             foreach (MethodInfo method in methods)
             {
                 string methodName = method.Name;
-                Delegate function = method.CreateDelegate(typeof(Func<,>).MakeGenericType(method.GetParameters().Select(p => p.ParameterType).Concat(new[] { method.ReturnType }).ToArray()), null);
-                context.SetFunction(methodName, function);
+                Type returnType = method.ReturnType;
+
+                if (returnType == typeof(void))
+                {
+                    Action<object[]> action = args => method.Invoke(null, args);
+                    engine.Execute($"function {methodName}() {{ dotNetInterop.{methodName}.apply(dotNetInterop, arguments); }}");
+                }
+                else
+                {
+                    Delegate function = method.CreateDelegate(typeof(Func<,>).MakeGenericType(method.GetParameters().Select(p => p.ParameterType).Concat(new[] { returnType }).ToArray()), null);
+                    engine.Execute($"function {methodName}() {{ return dotNetInterop.{methodName}.apply(dotNetInterop, arguments); }}");
+                }
             }
         }
 
-        public object Execute(string jsCode, string name = "<UnnamedScript>", bool compile = false)
+
+        public object Execute(string jsCode, bool compile = false)
         {
             if (compile)
             {
-                return context.Execute(engine.CompileScript(jsCode, name));
+                return engine.Evaluate(jsCode);
             }
-            return context.Execute(jsCode, name);
+            return engine.Evaluate(jsCode);
         }
+
 
         public void RegisterFunction(string functionName, Delegate function)
         {
-            context.SetFunction(functionName, function);
+            // Optionally, you can implement this method to register .NET functions as JavaScript functions
+            engine.Execute($"dotNetInterop.{functionName} = dotNetInterop.createDelegate({functionName});"); // Again, change "dotNetInterop" to the name you want to use in JavaScript
         }
 
-        
         public void Dispose()
         {
             engine.Dispose();
         }
-
     }
 }

@@ -7,6 +7,6 @@
              mc:Ignorable="d" 
              d:DesignHeight="450" d:DesignWidth="800" Background="Black" BorderBrush="White" BorderThickness="2">
     <Grid>
-        <avalonEdit:TextEditor ShowLineNumbers="True" FontSize="16" x:Name="input" IsReadOnly="false"  FontFamily="MS Gothic" Background="Black" Foreground="White" Height="Auto" Width="Auto" HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Auto"/>
+        <avalonEdit:TextEditor SyntaxHighlighting="JavaScriptCustom" ShowLineNumbers="True" FontSize="16" x:Name="input" IsReadOnly="false"  FontFamily="Consolas" Height="Auto" Width="Auto" HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Auto"/>
     </Grid>
 </UserControl>

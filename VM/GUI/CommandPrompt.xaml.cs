@@ -1,7 +1,9 @@
 ﻿using System;
 using System.Windows.Controls;
 using VM.OPSYS.JS;
-using VroomJs;
+using JavaScriptEngineSwitcher;
+using JavaScriptEngineSwitcher.Core.Extensions;
+using System.Linq;
 
 namespace VM.GUI
 {
@@ -13,12 +15,12 @@ namespace VM.GUI
         {
             InitializeComponent();
             interop = new JSInterop();
-            input.KeyDown += Input_KeyDown;
+            KeyDown += Input_KeyDown;
         }
 
         private void ExecuteJavaScript()
         {
-            string code = input.Text;
+            string code = input.Text.SplitToLines().LastOrDefault("");
             try
             {
                 object result = interop.Execute(code);
@@ -39,8 +41,18 @@ namespace VM.GUI
         {
             if (e.Key == System.Windows.Input.Key.Enter)
             {
+                if (System.Windows.Input.Keyboard.Modifiers == System.Windows.Input.ModifierKeys.Shift)
+                {
+                    ExecuteJavaScript();
+                    return;
+                }
+               
+            }
+            if (e.Key == System.Windows.Input.Key.F5)
+            {
                 ExecuteJavaScript();
             }
         }
+
     }
 }
