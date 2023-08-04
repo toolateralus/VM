@@ -54,13 +54,7 @@ namespace VM.GUI
         private async Task AnimateBackgroundColor(Color fromColor, Color toColor, TimeSpan duration)
         {
             const int steps = 100;
-            ColorAnimation colorAnimation = new ColorAnimation
-            {
-                From = fromColor,
-                To = toColor,
-                Duration = new Duration(duration),
-            };
-
+           
             for (int step = 0; step <= steps; step++)
             {
                 Color currentColor = InterpolateColor(fromColor, toColor, step / (double)steps);
