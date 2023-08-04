@@ -17,7 +17,7 @@ using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
 using System.Windows.Shapes;
 
-namespace VM
+namespace VM.GUI
 {
     /// <summary>
     /// Interaction logic for FileExplorer.xaml

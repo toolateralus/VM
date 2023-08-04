@@ -7,7 +7,7 @@ using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using VM;
 
-namespace VM
+namespace VM.GUI
 {
     public partial class MainWindow : Window
     {

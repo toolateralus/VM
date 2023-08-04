@@ -4,7 +4,7 @@ using System.Windows.Controls;
 using System.Windows.Media.Animation;
 using System.Windows.Threading;
 
-namespace VM
+namespace VM.GUI
 {
     public partial class NotificationControl : UserControl
     {

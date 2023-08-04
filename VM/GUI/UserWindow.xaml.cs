@@ -2,7 +2,7 @@
 using System.Windows;
 using System.Windows.Controls;
 
-namespace VM
+namespace VM.GUI
 {
     /// <summary>
     /// Interaction logic for UserWindow.xaml
