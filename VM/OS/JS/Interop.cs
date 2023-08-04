@@ -25,7 +25,6 @@ namespace VM.OPSYS.JS
         IJsEngine engine;
         IJsEngineSwitcher engineSwitcher;
 
-
         public JavaScriptEngine(string ProjectRoot)
         {
             engineSwitcher = JsEngineSwitcher.Current;
@@ -38,10 +37,13 @@ namespace VM.OPSYS.JS
 
             var interop = new JSHelpers();
 
-
             foreach (var file in Directory.EnumerateFiles(ProjectRoot + "\\OS-JS").Where(f => f.EndsWith(".js")))
             {
-                engine.ExecuteFile(file);
+                try { engine.ExecuteFile(file); }
+                catch(Exception e)
+                {
+                    Notifications.Now($"{file} failed to execute javascript.. {e.Message}");
+                }
             }
 
             engine.EmbedHostObject("interop" , interop);

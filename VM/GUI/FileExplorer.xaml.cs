@@ -42,6 +42,7 @@ namespace VM.GUI
             KeyDown += FileExplorer_KeyDown;
             UpdateView();
             this.computer = computer;
+
         }
 
         private void PreviewPath(object sender, SelectionChangedEventArgs e)
@@ -156,10 +157,7 @@ namespace VM.GUI
                 string dir = "";
                 if (computer.OS.FS.FileExists(path))
                 {
-                    if (System.IO.Path.GetDirectoryName(path) is string _dir)
-                    {
-                        dir = _dir;
-                    }
+                    MainWindow.GetPCWindow(computer).Open(new TextEditor(computer, path));
                 }
                 else
                 {

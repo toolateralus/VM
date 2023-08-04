@@ -9,9 +9,13 @@ namespace VM
     {
         internal static void Now(string message)
         {
-            var wnd = Application.Current.MainWindow as MainWindow;
             var notificationControl = new NotificationControl { Message = message };
-            (wnd?.Computers.First().Value as ComputerWindow).Desktop.Children.Add(notificationControl);
+
+            if (MainWindow.Computers.Count > 0 && MainWindow.Computers.First().Value is ComputerWindow cw)
+            {
+                cw.Desktop.Children.Add(notificationControl);
+            }
+
         }
     }
 }

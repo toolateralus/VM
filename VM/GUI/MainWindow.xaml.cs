@@ -32,16 +32,22 @@ namespace VM.GUI
             }
         }
 
-        public Dictionary<Computer, ComputerWindow> Computers = new();
+        public static Dictionary<Computer, ComputerWindow> Computers = new();
         private uint lastID;
+
+        public static ComputerWindow GetPCWindow(Computer pc)
+        {
+            return Computers[pc];
+        }
 
         private void NewComputerButton(object sender, RoutedEventArgs e)
         {
-            VM.OPSYS.Computer pc = new(lastID++);
-            VM.GUI.ComputerWindow wnd = new(pc);
+            Computer pc = new(lastID++);
+            ComputerWindow wnd = new(pc);
 
             Computers[pc] = wnd;
             wnd.Show();
+            wnd.Closed += (o, e) => Computers.Remove(pc);
         }
     }
 }

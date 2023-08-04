@@ -171,6 +171,7 @@ namespace VM.GUI
                 case Key.OemTilde:
                     Open(new CommandPrompt(computer), "Cmd", 350, 275);
                     break;
+                
             }
         }
 
@@ -185,7 +186,7 @@ namespace VM.GUI
 
         public Dictionary<string, ResizableWindow> Windows = new();
 
-        private void Open(UserControl control, string title = "window", int width = 200, int height = 100, Brush? background = null, Brush? foreground = null) 
+        public void Open(UserControl control, string title = "window", int width = 200, int height = 100, Brush? background = null, Brush? foreground = null) 
         {
             background ??= Brushes.LightGray;
             foreground ??= Brushes.Black;
