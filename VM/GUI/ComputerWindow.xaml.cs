@@ -26,15 +26,15 @@ namespace VM.GUI
             <!-- forked by me in 2023, not for commercial use -->
 
             <SyntaxDefinition name=""JavaScriptCustom"" extensions="".js"" xmlns=""http://icsharpcode.net/sharpdevelop/syntaxdefinition/2008"">
-                <Color name=""Digits"" foreground=""#C3E88D"" exampleText=""3.14"" />
-                <Color name=""Comment"" foreground=""#546E7A"" exampleText=""// comment"" />
-                <Color name=""String"" foreground=""#CE9178"" exampleText=""var text = &quot;Hello, World!&quot;;"" />
-                <Color name=""Character"" foreground=""#CE9178"" exampleText=""var char = 'a';"" />
-                <Color name=""Regex"" foreground=""#CE9178"" exampleText=""/abc/m"" />
-                <Color name=""JavaScriptKeyWords"" foreground=""#82AAFF"" exampleText=""return myVariable;"" />
-                <Color name=""JavaScriptIntrinsics"" foreground=""#89DDFF"" exampleText=""Math.random()"" />
-                <Color name=""JavaScriptLiterals"" foreground=""#82AAFF"" exampleText=""return false;"" />
-                <Color name=""JavaScriptGlobalFunctions"" foreground=""#82AAFF"" exampleText=""escape(myString);"" />
+                <Color name=""Digits"" foreground=""#6D9C66"" exampleText=""3.14"" />
+                <Color name=""Comment"" foreground=""#607D8B"" exampleText=""// comment"" />
+                <Color name=""String"" foreground=""#D28258"" exampleText=""var text = &quot;Hello, World!&quot;;"" />
+                <Color name=""Character"" foreground=""#D28258"" exampleText=""var char = 'a';"" />
+                <Color name=""Regex"" foreground=""#D28258"" exampleText=""/abc/m"" />
+                <Color name=""JavaScriptKeyWords"" foreground=""#82B1FF"" exampleText=""return myVariable;"" />
+                <Color name=""JavaScriptIntrinsics"" foreground=""#8CDAFF"" exampleText=""Math.random()"" />
+                <Color name=""JavaScriptLiterals"" foreground=""#82B1FF"" exampleText=""return false;"" />
+                <Color name=""JavaScriptGlobalFunctions"" foreground=""#82B1FF"" exampleText=""escape(myString);"" />
                 <RuleSet ignoreCase=""false"">
                     <Keywords color=""JavaScriptKeyWords"">
                         <Word>break</Word>

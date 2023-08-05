@@ -9,13 +9,15 @@ namespace VM
     {
         internal static void Now(string message)
         {
-            var notificationControl = new NotificationControl { Message = message };
-
-            if (Runtime.Computers.Count > 0 && Runtime.Computers.First().Value is ComputerWindow cw)
+            App.Current.Dispatcher.Invoke(() =>
             {
-                cw.Desktop.Children.Add(notificationControl);
-            }
+                var notificationControl = new NotificationControl { Message = message };
 
+                if (Runtime.Computers.Count > 0 && Runtime.Computers.First().Value is ComputerWindow cw)
+                {
+                    cw.Desktop.Children.Add(notificationControl);
+                }
+            });
         }
     }
 }

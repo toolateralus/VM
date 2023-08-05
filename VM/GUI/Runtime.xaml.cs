@@ -83,11 +83,11 @@ namespace VM.GUI
         }
         #endregion
 
+        Regex regex = new Regex("[^0-9]+");
         private void IDBox_KeyDown(object sender, KeyEventArgs e)
-         {
-            var regex = new Regex("[^0-9]+");
+        {
             e.Handled = regex.IsMatch(IDBox.Text);
-         }
+        }
         public static ComputerWindow GetWindow(Computer pc)
         {
             return Computers[pc];

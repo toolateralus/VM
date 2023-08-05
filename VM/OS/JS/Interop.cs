@@ -14,6 +14,7 @@ using System.Threading.Tasks;
 using System.Windows.Forms;
 using JavaScriptEngineSwitcher.Core;
 using JavaScriptEngineSwitcher.V8;
+using Microsoft.VisualBasic.Devices;
 using VM.GUI;
 
 namespace VM.OPSYS.JS
@@ -91,6 +92,9 @@ namespace VM.OPSYS.JS
 
         public JSNetworkHelpers NetworkModule { get; }
         public JSHelpers InteropModule { get; }
+        private readonly ConcurrentDictionary<int, (string code, Action<object?> output)> CodeDictionary = new();
+
+        private readonly Thread executionThread;
 
         public JavaScriptEngine(string ProjectRoot, Computer computer)
         {
@@ -102,24 +106,22 @@ namespace VM.OPSYS.JS
 
             engine = engineSwitcher.CreateDefaultEngine();
 
-
-
             NetworkModule = new JSNetworkHelpers(computer.Network.OutputChannel, computer.Network.InputChannel);
             engine.EmbedHostObject("network", NetworkModule);
 
             InteropModule = new JSHelpers();
             engine.EmbedHostObject("interop", InteropModule);
 
-            var subscribed = false;
-            subscribed = LoadModules(ProjectRoot, subscribed);
-
+            LoadModules(ProjectRoot);
 
             executionThread = new Thread(Execute);
             executionThread.Start();
         }
 
-        private bool LoadModules(string ProjectRoot, bool subscribed)
+        private void LoadModules(string ProjectRoot)
         {
+            bool subscribed = false; 
+
             foreach (var file in Directory.EnumerateFiles(ProjectRoot + "\\OS-JS").Where(f => f.EndsWith(".js")))
             {
                 void AddModule(object? obj, string path)
@@ -133,20 +135,16 @@ namespace VM.OPSYS.JS
                     subscribed = true;
                 }
 
-
-                try { engine.Execute(File.ReadAllText(file)); }
+                try
+                { 
+                    engine.Execute(File.ReadAllText(file)); 
+                }
                 catch (Exception e)
                 {
                     Notifications.Now(e.Message);
                 }
             }
-
-            return subscribed;
         }
-
-        readonly ConcurrentDictionary<int, (string code, Action<object?> output)> CodeDictionary = new();
-
-        private Thread executionThread;
 
         public void Execute()
         {
@@ -176,7 +174,7 @@ namespace VM.OPSYS.JS
 
             void callback(object? e) { result = e; };
 
-            int handle = GetRandomHandle();
+            int handle = GetUniqueHandle();
 
             CodeDictionary.TryAdd(handle, (jsCode, callback));
 
@@ -186,7 +184,7 @@ namespace VM.OPSYS.JS
             return result;
         }
 
-        private int GetRandomHandle()
+        private int GetUniqueHandle()
         {
             int handle = Random.Shared.Next();
 

@@ -6,6 +6,7 @@ using JavaScriptEngineSwitcher.Core.Extensions;
 using System.Linq;
 using VM.OPSYS;
 using System.Threading.Tasks;
+using System.Security.Cryptography.X509Certificates;
 
 namespace VM.GUI
 {
@@ -39,10 +40,10 @@ namespace VM.GUI
             }
             catch (Exception ex)
             {
-                input.AppendText(Environment.NewLine + "Error: " + ex.Message);
+                input.Text = input.Text.Insert(0, ex.Message + Environment.NewLine);
             }
         }
-
+      
         private async void Input_KeyDown(object sender, System.Windows.Input.KeyEventArgs e)
         {
             if (e.Key == System.Windows.Input.Key.Enter)
@@ -54,10 +55,14 @@ namespace VM.GUI
                 }
                
             }
+
             if (e.Key == System.Windows.Input.Key.F5)
             {
                 await ExecuteJavaScript();
             }
+
+
+
         }
 
     }
