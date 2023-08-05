@@ -8,11 +8,11 @@
              d:DesignHeight="450" d:DesignWidth="800" Background="Black" BorderBrush="White" BorderThickness="5">
     <Grid>
         <Grid.RowDefinitions>
-            <RowDefinition Height="auto"/>
             <RowDefinition Height="*"/>
+            <RowDefinition Height="auto"/>
         </Grid.RowDefinitions>
             
-        <avalonEdit:TextEditor BorderBrush="White" BorderThickness="1" Grid.Row="0" Background="Black" Foreground="White" SyntaxHighlighting="JavaScriptCustom" FontSize="16" x:Name="input" IsReadOnly="false"  FontFamily="Consolas" Height="Auto" Width="Auto" HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Auto"/>
-        <avalonEdit:TextEditor BorderBrush="White" BorderThickness="1" Grid.Row="1" Background="Black" Foreground="White" SyntaxHighlighting="JavaScriptCustom" FontSize="16" x:Name="output" IsReadOnly="false"  FontFamily="Consolas" Height="Auto" Width="Auto" HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Auto"/>
+        <avalonEdit:TextEditor IsEnabled="False" IsReadOnly="true" BorderBrush="White" BorderThickness="1" Grid.Row="0" Background="Black" Foreground="White" SyntaxHighlighting="JavaScriptCustom" FontSize="16" x:Name="output"  FontFamily="Consolas" Height="Auto" Width="Auto" HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Auto"/>
+        <avalonEdit:TextEditor BorderBrush="White" BorderThickness="1" Grid.Row="1" Background="Black" Foreground="White" SyntaxHighlighting="JavaScriptCustom" FontSize="16" x:Name="input" IsReadOnly="false"  FontFamily="Consolas" Height="Auto" Width="Auto" HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Auto"/>
     </Grid>
 </UserControl>

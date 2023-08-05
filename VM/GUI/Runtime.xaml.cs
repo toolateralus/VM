@@ -116,7 +116,7 @@ namespace VM.GUI
         }
 
         public static Dictionary<int, (object? val, int replyCh)> NetworkEvents = new();
-        public static object? PullEvent(int channel)
+        public static (object? value, int reply) PullEvent(int channel)
         {
             while (!NetworkEvents.TryGetValue(channel, out _))
             {

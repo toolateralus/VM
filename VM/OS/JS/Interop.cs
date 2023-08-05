@@ -78,8 +78,9 @@ namespace VM.OPSYS.JS
             if (parameters != null && parameters.Length > 0 && parameters[0] is int ch &&
                 parameters != null && parameters.Length > 0 && parameters[0] is int replyCh)
             {
-                Runtime.PullEvent(ch);
+                return Runtime.PullEvent(ch).value;
             }
+            Notifications.Now("Insufficient arguments for a network connection");
             return null;
         }
     }
