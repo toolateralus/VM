@@ -61,7 +61,9 @@ namespace VM.OPSYS
 
             if (Directory.Exists(newPath))
             {
+                
                 History.Push(currentDirectory);
+
                 currentDirectory = newPath;
             }
             else

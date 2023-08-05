@@ -28,7 +28,7 @@ namespace VM.GUI
 
         private void LoadButton_Click(object sender, RoutedEventArgs e)
         {
-            MainWindow.GetPCWindow(computer).Open(new FileExplorer(computer));
+            Runtime.GetWindow(computer).Open(new FileExplorer(computer));
         }
 
         private void SaveButton_Click(object sender, RoutedEventArgs e)

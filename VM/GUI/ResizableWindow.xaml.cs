@@ -36,17 +36,17 @@ namespace VM.GUI
                 else
                 {
                     isDragging = true;
-                    dragOffset = e.GetPosition(this.Parent as UIElement);
                     this.CaptureMouse();
                 }
             }
             else if (e.RightButton == MouseButtonState.Pressed)
             {
                 isResizing = true;
-                dragOffset = e.GetPosition(this);
                 originalWidth = this.ActualWidth;
                 originalHeight = this.ActualHeight;
             }
+
+            dragOffset = e.GetPosition(this);
         }
 
         protected void OnMouseMove(object sender, MouseEventArgs e)
@@ -66,9 +66,6 @@ namespace VM.GUI
 
                 double newWidth = originalWidth + newPosition.X - dragOffset.X;
                 double newHeight = originalHeight + newPosition.Y - dragOffset.Y;
-
-                newWidth = Math.Max(MinWidth, Math.Min(MaxWidth, newWidth));
-                newHeight = Math.Max(MinHeight, Math.Min(MaxHeight, newHeight));
 
                 this.Width = newWidth;
                 this.Height = newHeight;

@@ -12,7 +12,7 @@ server = new TcpListener(IPAddress.Any, port);
 server.Start();
 
 
-for (int i = 0; i < maxClients; i++)
+while (true)
 {
     await HandleClientAsync();
 }
@@ -30,6 +30,8 @@ async Task HandleClientAsync()
     {
         string message = Encoding.ASCII.GetString(buffer, 0, bytesRead);
         Console.WriteLine("Received: " + message);
+
+        // todo: implement the appropriate methods and functionality once the fake network is established.
 
         // Broadcast the message to all connected clients
         byte[] broadcastBuffer = Encoding.ASCII.GetBytes(message);

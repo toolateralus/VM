@@ -11,7 +11,7 @@ namespace VM
         {
             var notificationControl = new NotificationControl { Message = message };
 
-            if (MainWindow.Computers.Count > 0 && MainWindow.Computers.First().Value is ComputerWindow cw)
+            if (Runtime.Computers.Count > 0 && Runtime.Computers.First().Value is ComputerWindow cw)
             {
                 cw.Desktop.Children.Add(notificationControl);
             }

@@ -39,9 +39,11 @@ namespace VM.GUI
                 UpdateView();
 
             }; 
+
             KeyDown += FileExplorer_KeyDown;
-            UpdateView();
             this.computer = computer;
+
+            UpdateView();
 
         }
 
@@ -130,6 +132,7 @@ namespace VM.GUI
             }
 
             computer.OS.FS.ChangeDirectory(computer.OS.FS.History.Pop());
+
             UpdateView();
         }
 
@@ -157,7 +160,7 @@ namespace VM.GUI
                 string dir = "";
                 if (computer.OS.FS.FileExists(path))
                 {
-                    MainWindow.GetPCWindow(computer).Open(new TextEditor(computer, path));
+                    Runtime.GetWindow(computer).Open(new TextEditor(computer, path));
                 }
                 else
                 {

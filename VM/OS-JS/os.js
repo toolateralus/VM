@@ -1,4 +1,3 @@
-
 function print(obj){
     interop.print(obj);
 }
@@ -20,8 +19,4 @@ class os {
 
 }
 
-let OS = new os();
-
-print(OS.computerID);
-
-_export(os);
+let OS = new os()

@@ -5,6 +5,7 @@ using JavaScriptEngineSwitcher;
 using JavaScriptEngineSwitcher.Core.Extensions;
 using System.Linq;
 using VM.OPSYS;
+using System.Threading.Tasks;
 
 namespace VM.GUI
 {
@@ -20,12 +21,15 @@ namespace VM.GUI
            
         }
 
-        private void ExecuteJavaScript()
+        private async Task ExecuteJavaScript()
         {
             string code = input.Text.SplitToLines().LastOrDefault("");
             try
             {
-                object result = Engine.Execute(code);
+                var task = Engine.Execute(code);
+                await task;
+                var result = task.Result;
+
                 string? output = result?.ToString();
 
                 if (!string.IsNullOrEmpty(output))
@@ -39,20 +43,20 @@ namespace VM.GUI
             }
         }
 
-        private void Input_KeyDown(object sender, System.Windows.Input.KeyEventArgs e)
+        private async void Input_KeyDown(object sender, System.Windows.Input.KeyEventArgs e)
         {
             if (e.Key == System.Windows.Input.Key.Enter)
             {
                 if (System.Windows.Input.Keyboard.Modifiers == System.Windows.Input.ModifierKeys.Shift)
                 {
-                    ExecuteJavaScript();
+                    await ExecuteJavaScript();
                     return;
                 }
                
             }
             if (e.Key == System.Windows.Input.Key.F5)
             {
-                ExecuteJavaScript();
+                await ExecuteJavaScript();
             }
         }
 
