@@ -5,12 +5,14 @@
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
              xmlns:avalonEdit="http://icsharpcode.net/sharpdevelop/avalonedit"
              mc:Ignorable="d" 
-             d:DesignHeight="450" d:DesignWidth="800" Background="Black" BorderBrush="White" BorderThickness="2">
+             d:DesignHeight="450" d:DesignWidth="800" Background="Black" BorderBrush="White" BorderThickness="5">
     <Grid>
         <Grid.RowDefinitions>
-
+            <RowDefinition Height="auto"/>
+            <RowDefinition Height="*"/>
         </Grid.RowDefinitions>
             
-        <avalonEdit:TextEditor Background="Black" Foreground="White" SyntaxHighlighting="JavaScriptCustom" ShowLineNumbers="True" FontSize="16" x:Name="input" IsReadOnly="false"  FontFamily="Consolas" Height="Auto" Width="Auto" HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Auto"/>
+        <avalonEdit:TextEditor BorderBrush="White" BorderThickness="1" Grid.Row="0" Background="Black" Foreground="White" SyntaxHighlighting="JavaScriptCustom" FontSize="16" x:Name="input" IsReadOnly="false"  FontFamily="Consolas" Height="Auto" Width="Auto" HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Auto"/>
+        <avalonEdit:TextEditor BorderBrush="White" BorderThickness="1" Grid.Row="1" Background="Black" Foreground="White" SyntaxHighlighting="JavaScriptCustom" FontSize="16" x:Name="output" IsReadOnly="false"  FontFamily="Consolas" Height="Auto" Width="Auto" HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Auto"/>
     </Grid>
 </UserControl>

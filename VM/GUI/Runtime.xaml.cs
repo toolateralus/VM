@@ -108,7 +108,11 @@ namespace VM.GUI
             Computers[pc] = wnd;
 
             wnd.Show();
-            wnd.Closed += (o, e) => Computers.Remove(pc);
+            wnd.Closed += (o, e) =>
+            {
+                Computers.Remove(pc);
+                pc.Shutdown();
+            };
         }
 
         public static Dictionary<int, (object? val, int replyCh)> NetworkEvents = new();

@@ -92,6 +92,8 @@ namespace VM.OPSYS.JS
 
         public JSNetworkHelpers NetworkModule { get; }
         public JSHelpers InteropModule { get; }
+        public bool Disposing { get; private set; }
+
         private readonly ConcurrentDictionary<int, (string code, Action<object?> output)> CodeDictionary = new();
 
         private readonly Thread executionThread;
@@ -116,6 +118,7 @@ namespace VM.OPSYS.JS
 
             executionThread = new Thread(Execute);
             executionThread.Start();
+            
         }
 
         private void LoadModules(string ProjectRoot)
@@ -148,7 +151,7 @@ namespace VM.OPSYS.JS
 
         public void Execute()
         {
-            while (true)
+            while (true && !Disposing)
             {
                 if (!CodeDictionary.IsEmpty)
                 {
@@ -196,7 +199,9 @@ namespace VM.OPSYS.JS
 
         public void Dispose()
         {
+            Disposing = true;
             engine.Dispose();
+            Task.Run(() => executionThread.Join());
         }
     }
 }

@@ -1,11 +1,5 @@
-﻿using ICSharpCode.AvalonEdit.Highlighting.Xshd;
-using ICSharpCode.AvalonEdit.Highlighting;
-using ICSharpCode.AvalonEdit;
-using Microsoft.VisualBasic;
-using System;
+﻿using System;
 using System.Collections.Generic;
-using System.IO;
-using System.Reflection;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
@@ -13,8 +7,6 @@ using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using VM;
 using VM.OPSYS;
-using static System.Windows.Forms.VisualStyles.VisualStyleElement.TextBox;
-using System.Xml;
 
 namespace VM.GUI
 {
@@ -171,7 +163,6 @@ namespace VM.GUI
                 case Key.OemTilde:
                     Open(new CommandPrompt(computer), "Cmd", 350, 275);
                     break;
-                
             }
         }
 

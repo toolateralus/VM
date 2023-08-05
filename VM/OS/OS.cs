@@ -1,4 +1,5 @@
-﻿using System.Collections.ObjectModel;
+﻿using System;
+using System.Collections.ObjectModel;
 using System.IO;
 using System.Reflection.Metadata;
 using System.Threading.Tasks;
@@ -31,8 +32,11 @@ namespace VM.OPSYS
                 Notifications.Now($"Computer {ID()} has exited, most likely due to an error. code:{exitCode}");
             }
         }
-        
 
+        internal void Shutdown()
+        {
+            OS.JavaScriptEngine.Dispose();
+        }
     }
 
     public class OS
