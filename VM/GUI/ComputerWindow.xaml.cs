@@ -2,13 +2,16 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
+using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
+using System.Xml.Linq;
 using VM;
 using VM.OS;
+using VM.OS.UserInterface;
 
 namespace VM.GUI
 {
@@ -381,11 +384,53 @@ namespace VM.GUI
             }
             return false;
         }
+        public List<string> CustomApps =new();
 
-        internal void RegisterCustomApp(string id, UserControl type)
+        public async Task OpenCustom(string type)
         {
+            var data = Runtime.GetAppDefinition(computer, type);
+
+            var control = XamlJsInterop.ParseUserControl(data.XAML);
+
+            // we need to compile the js, somehow reflect for the class, get the methods,
+            // bind methods to c# actions(maybe optional) and setup events.
+            // bind ui events to js methods here.
+            // XamlJsInterop.InitializeControl(computer, control, new() { XamlJsInterop.EventInitializer }, new() { });
+
+            var js_obj = await computer.OS.JavaScriptEngine.Execute(data.JS);
+
+            if (js_obj == null)
+            {
+                Notifications.Now($"Javascript for a {type} backend did not compile or return any valid data");
+            }
+
             var wnd = Runtime.GetWindow(pc: computer);
-            wnd.Open(type);
+
+            wnd.Open(control);
         }
+
+        public void RegisterCustomApp(string type)
+        {
+
+            Dispatcher.Invoke(delegate
+            {
+                CustomApps.Add(type);
+
+                var btn = GetDesktopIconButton(type);
+
+                btn.MouseDoubleClick += OnDesktopIconPressed;
+
+                async void OnDesktopIconPressed(object? sender, RoutedEventArgs e)
+                {
+                    await OpenCustom(type);
+                }
+
+                DesktopIconPanel.Children.Add(btn);
+                DesktopIconPanel.UpdateLayout();
+            });
+
+            
+        }
+
     }
 }
