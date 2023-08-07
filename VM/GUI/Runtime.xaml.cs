@@ -11,20 +11,23 @@ using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using System.Threading;
 using VM.OS;
+using static System.Net.Mime.MediaTypeNames;
+using System.Xml.Linq;
+using System.Linq;
 
 namespace VM.GUI
 {
 
     public partial class Runtime : Window
     {
-        
+
         public static Dictionary<Computer, ComputerWindow> Computers = new();
 
         public Runtime()
         {
             InitializeComponent();
             IDBox.KeyDown += IDBox_KeyDown;
-            
+
             using (XmlReader reader = XmlReader.Create(new StringReader(JAVASCRIPT_SYNTAX_HIGHLIGHTING.HIGHLIGHTING)))
             {
                 IHighlightingDefinition jsHighlighting = HighlightingLoader.Load(reader, HighlightingManager.Instance);
@@ -54,7 +57,7 @@ namespace VM.GUI
         private async Task AnimateBackgroundColor(Color fromColor, Color toColor, TimeSpan duration)
         {
             const int steps = 1000;
-           
+
             for (int step = 0; step <= steps; step++)
             {
                 Color currentColor = Lerp(fromColor, toColor, step / (double)steps);
@@ -122,7 +125,7 @@ namespace VM.GUI
 
         internal static void Broadcast(int outCh, int inCh, object? msg)
         {
-            NetworkEvents[outCh] = (msg , inCh);
+            NetworkEvents[outCh] = (msg, inCh);
         }
 
         internal static string? GetResource(string name, string ext)
@@ -147,6 +150,35 @@ namespace VM.GUI
             {
                 Directory.CreateDirectory(path);
             }
+        }
+
+        internal static (string XAML, string JS) GetAppDefinition(string dir, string fileName)
+        {
+            const string xamlExt = ".xaml";
+            const string xamlJsExt = ".xaml.js";
+
+            var path = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "VM");
+
+            VerifyOrCreateAppdataDir(path);
+
+            var absDir = Path.Combine(path, dir);
+
+            if (Directory.Exists(absDir))
+            {
+                string xamlFile = Path.Combine(absDir, fileName + xamlExt);
+                string jsFile = Path.Combine(absDir, fileName + xamlJsExt);
+
+                if (File.Exists(xamlFile) && File.Exists(jsFile))
+                {
+                    return (File.ReadAllText(xamlFile), File.ReadAllText(jsFile));
+                }
+                else
+                {
+                    Notifications.Now("Matching XAML and XAML.js files not found.");
+                }
+            }
+
+            return ("Not found!", "Not Found!");
         }
     }
 }

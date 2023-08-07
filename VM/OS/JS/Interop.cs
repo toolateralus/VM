@@ -44,7 +44,7 @@ namespace VM.OS.JS
             NetworkModule = new JSNetworkHelpers(computer.Network.OutputChannel, computer.Network.InputChannel);
             engine.EmbedHostObject("network", NetworkModule);
 
-            InteropModule = new JSInterop();
+            InteropModule = new JSInterop(computer);
             InteropModule.OnModuleImported += ImportModule;
             engine.EmbedHostObject("interop", InteropModule);
 
@@ -144,6 +144,16 @@ namespace VM.OS.JS
             Disposing = true;
             engine.Dispose();
             Task.Run(() => executionThread.Join());
+        }
+
+        public Dictionary<string, Action> MethodBindings = new();
+        internal Action? FetchMethodBinding(string name)
+        {
+            if (MethodBindings.TryGetValue(name, out var val))
+            {
+                return val;
+            }
+            return null;
         }
     }
 }
