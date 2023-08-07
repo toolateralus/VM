@@ -6,8 +6,11 @@
         xmlns:local="clr-namespace:VM"
         mc:Ignorable="d"
         Title="" Height="1080" Width="1920"
-        Background="#f08556"
-        WindowStartupLocation="CenterScreen">
+        Background="Black"
+        WindowStartupLocation="CenterScreen"
+        WindowStyle="None"
+        WindowState="Maximized">
+    
     <Grid>
         <Grid.RowDefinitions>
             <RowDefinition Height="*"/>
@@ -21,8 +24,18 @@
         </Grid>
 
         <Grid x:Name="Taskbar" Grid.Row="1" Grid.Column="0">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition  Width="*"/>
+                <ColumnDefinition  Width="auto"/>
+            </Grid.ColumnDefinitions>
+            
             <StackPanel x:Name="TaskbarStackPanel" Orientation="Horizontal" Width="Auto" Height="25" Background="Gray">
-                <Button Click="Taskbar_Click" Background="LightGray" Width="66" FontFamily="Consolas" FontSize="10" Content="Explorer"/>
+                <Button x:Name="HomeButton" Click="Taskbar_Click" Background="LightGray" Width="66" FontFamily="Consolas" FontSize="10" Content="Explorer"/>
+            </StackPanel>
+            
+            <StackPanel FlowDirection="RightToLeft" Grid.Row="1" Grid.Column="2" x:Name="RightSideTaskbarPanel" Orientation="Horizontal" HorizontalAlignment="Right"  Width="400" Height="25" Background="Gray">
+                <Label Height="35" FontSize="15" Foreground="White" x:Name="IDLabel" Width="100" Content="computer 0"/>
+                <Label Height="35" FlowDirection="LeftToRight" FontSize="15" Foreground="White" x:Name="TimeLabel" Width="200" Content="08/07/23 || 12:00"/>
             </StackPanel>
         </Grid>
     </Grid>

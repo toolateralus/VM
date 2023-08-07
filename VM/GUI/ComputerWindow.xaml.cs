@@ -164,7 +164,7 @@ namespace VM.GUI
             {
                 case Key.OemTilde:
                     var cmd = new CommandPrompt();
-                    Open(cmd, "Cmd", 350, 275);
+                    Open(cmd, "Cmd");
                     cmd.LateInit(computer);
                     break;
             }
@@ -181,7 +181,7 @@ namespace VM.GUI
 
         public Dictionary<string, ResizableWindow> Windows = new();
 
-        public void Open(UserControl control, string title = "window", int width = 200, int height = 100, Brush? background = null, Brush? foreground = null) 
+        public void Open(UserControl control, string title = "window", Brush? background = null, Brush? foreground = null)
         {
             background ??= Brushes.LightGray;
             foreground ??= Brushes.Black;
@@ -191,8 +191,9 @@ namespace VM.GUI
             var frame = new ResizableWindow
             {
                 Content = window,
-                Width = width,
-                Height = height,
+                Width = 800,
+                Height = 600,
+                Margin = new(),
                 Background = background,
                 Foreground = foreground,
             };
@@ -203,13 +204,24 @@ namespace VM.GUI
 
             Desktop.Children.Add(frame);
 
-            Button btn = GetTaskbarButton(title, window.ToggleMaximize);
+            Button btn = GetTaskbarButton(title, window.ToggleVisibility);
 
             TaskbarStackPanel.Children.Add(btn);
 
             window.OnClosed += () => RemoveTaskbarButton(title);
+            IDLabel.Content = $"computer {computer.ID()}";
+            
+            CompositionTarget.Rendering += (e, o) => UpdateComputerTime();
 
         }
+
+        private void UpdateComputerTime()
+        {
+            DateTime now = DateTime.Now;
+            string formattedDateTime = now.ToString("MM/dd/yy || HH:mm");
+            TimeLabel.Content = formattedDateTime;
+        }
+
 
         private void RemoveTaskbarButton(string title)
         {

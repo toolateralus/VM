@@ -1,4 +1,5 @@
-﻿using System.IO;
+﻿using Microsoft.Win32;
+using System.IO;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Shapes;
@@ -45,9 +46,24 @@ namespace VM.GUI
 
         private void SaveButton_Click(object sender, RoutedEventArgs e)
         {
-            File.WriteAllText(LoadedFile, input.Text);
-        }
+            if (!File.Exists(LoadedFile))
+            {
+                var dialog = new SaveFileDialog();
+                dialog.InitialDirectory = computer.OS.FS_ROOT;
+                dialog.FileName = "New";
+                dialog.DefaultExt = ".js";
 
+                bool? dlg = dialog.ShowDialog();
+
+                if (dlg.HasValue && dlg.Value)
+                {
+                    LoadedFile = dialog.FileName;
+
+                    File.WriteAllText(LoadedFile, input.Text);
+                }
+            }
+             File.WriteAllText(LoadedFile, input.Text);
+        }
         private async void RunButton_Click(object sender, RoutedEventArgs e)
         {
             await computer.OS.JavaScriptEngine.Execute(input.Text);

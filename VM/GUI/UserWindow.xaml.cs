@@ -9,12 +9,13 @@ namespace VM.GUI
     /// </summary>
     public partial class UserWindow : UserControl
     {
-        private ResizableWindow? owner;
+        private ResizableWindow owner;
         internal Action? OnClosed;
 
         public UserWindow()
         {
             InitializeComponent();
+            
         }
 
         internal void Init(ResizableWindow frame, UserControl contents)
@@ -36,20 +37,42 @@ namespace VM.GUI
             Destroy();
         }
 
-        public void Minimize(object sender, RoutedEventArgs e)
-        {
-            Visibility = Visibility.Collapsed;
-
-            if (owner != null)
-                owner.Visibility = Visibility;
-        }
-
-        public void ToggleMaximize(object sender, RoutedEventArgs e)
+        public void ToggleVisibility(object sender, RoutedEventArgs e)
         {
             Visibility ^= Visibility.Collapsed;
+            owner.Visibility = Visibility;
+           
+            if (Visibility == Visibility.Visible)
+                owner.BringToTopOfDesktop();
 
-            if (owner != null)
-                owner.Visibility = Visibility;
+        }
+
+        public double lastW = 0, lastH = 0;
+        public Thickness lastMargin = new();
+        public bool Maximized = false;
+        public void ToggleMaximize(object sender, RoutedEventArgs e)
+        {
+            Visibility = Visibility.Visible;
+            if (!Maximized)
+            {
+                Maximized = true;
+                lastW = owner.Width;
+                lastH = owner.Height;
+                lastMargin = owner.Margin;
+
+                owner.Height = 1080;
+                owner.Width = 1980;
+                owner.Margin = new(0, 0, 0, 0);
+
+                return;
+            }
+
+            Maximized = false;
+
+            owner.Height = lastH;
+            owner.Width = lastW;
+            owner.Margin = lastMargin;
+            owner.BringToTopOfDesktop();
         }
     }
 

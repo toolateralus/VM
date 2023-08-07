@@ -108,7 +108,7 @@ namespace VM.OS
             
             FS = new(FS_ROOT, computer);
 
-            // prepare the javascript engine, and assign the computer ID to the var in the OS instance (in the js)
+            // prepare the javascript engine, and assign the computer ID to the var in the OS instance (in the js), and get the on exit event from the js env.
             JavaScriptEngine = new(this.WORKING_DIR, computer);
             
             _ = JavaScriptEngine.Execute($"OS.id = {id}");

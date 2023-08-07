@@ -2,7 +2,6 @@
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.ComponentModel.Design;
-using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Reflection;
@@ -15,78 +14,9 @@ using System.Windows.Forms;
 using JavaScriptEngineSwitcher.Core;
 using JavaScriptEngineSwitcher.V8;
 using Microsoft.VisualBasic.Devices;
-using VM.GUI;
 
 namespace VM.OS.JS
 {
-    public class JSHelpers
-    {
-        public Action<object?>? OnModuleExported;
-        public Action<int>? OnComputerExit;
-        public void print(object message)
-        {
-            Debug.WriteLine(message);
-        }
-        public void _export(object? obj)
-        {
-            OnModuleExported?.Invoke(obj);
-        }
-        public void exit(int code)
-        {
-            OnComputerExit?.Invoke(code);
-        }
-    }
-    public class JSNetworkHelpers
-    {
-        // record level nullability
-        public event Action<object?[]?>? OnSent;
-        public Action<object?[]?>? OnRecieved;
-
-        public JSNetworkHelpers(Action<object?[]?>? Output, Action<object?[]?>? Input)
-        {
-            OnSent += Output;
-            OnRecieved += Input;
-        }
-        public void print(object message)
-        {
-            Debug.WriteLine(message);
-        }
-        public void send(params object?[]? parameters)
-        {
-            OnSent?.Invoke(parameters);
-
-            int outCh, inCh;
-            object msg;
-
-            if (parameters is not null && parameters.Length > 2)
-            {
-                msg = parameters[2];
-                if (parameters[0] is int _out && parameters[1] is int _in)
-                {
-                    outCh = _out;
-                    inCh = _in;
-                    Runtime.Broadcast(outCh, inCh, msg);
-                    return;
-                }
-            }
-            Notifications.Now("Insufficient arguments for a network connection");
-
-
-        }
-        public object? recieve(params object?[]? parameters)
-        {
-            if (parameters != null && parameters.Length > 0 && parameters[0] is int ch &&
-                parameters != null && parameters.Length > 0 && parameters[0] is int replyCh)
-            {
-                var val = Runtime.PullEvent(ch).value;
-                OnRecieved?.Invoke(new[] { val });
-                return val;
-            }
-            Notifications.Now("Insufficient arguments for a network connection");
-            return null;
-        }
-    }
-
     public class JavaScriptEngine
     {
         IJsEngine engine;
@@ -94,7 +24,7 @@ namespace VM.OS.JS
         public Dictionary<string, object?> modules = new();
 
         public JSNetworkHelpers NetworkModule { get; }
-        public JSHelpers InteropModule { get; }
+        public JSInterop InteropModule { get; }
         public bool Disposing { get; private set; }
 
         private readonly ConcurrentDictionary<int, (string code, Action<object?> output)> CodeDictionary = new();
@@ -114,13 +44,22 @@ namespace VM.OS.JS
             NetworkModule = new JSNetworkHelpers(computer.Network.OutputChannel, computer.Network.InputChannel);
             engine.EmbedHostObject("network", NetworkModule);
 
-            InteropModule = new JSHelpers();
+            InteropModule = new JSInterop();
+            InteropModule.OnModuleImported += ImportModule;
             engine.EmbedHostObject("interop", InteropModule);
 
             LoadModules(ProjectRoot);
 
             executionThread = new Thread(Execute);
             executionThread.Start();
+
+        }
+
+        private object? ImportModule(string arg)
+        {
+            if (modules.TryGetValue(arg, out var val))
+                return val;
+            return null;
 
         }
 
@@ -137,7 +76,7 @@ namespace VM.OS.JS
 
                 if (!subscribed)
                 {
-                    InteropModule.OnModuleExported += (o) => AddModule(o, file);
+                    InteropModule.OnModuleExported += (path, o) => AddModule(o, path);
                     subscribed = true;
                 }
 
