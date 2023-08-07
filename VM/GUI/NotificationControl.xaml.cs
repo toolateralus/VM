@@ -1,4 +1,6 @@
 ﻿using System;
+using System.Threading;
+using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Media.Animation;
@@ -21,23 +23,32 @@ namespace VM.GUI
             get { return (string)GetValue(MessageProperty); }
             set { SetValue(MessageProperty, value); }
         }
-
-        public NotificationControl()
+        Action onComplete = new(delegate {});
+        public void Start()
         {
-            MaxHeight = NOTIFICATION_SIZE_Y;
-            MaxWidth = NOTIFICATION_SIZE_X;
-
+            fadeOutTimer.Start();
+        }
+        public NotificationControl(Action complete)
+        {
             InitializeComponent();
-            DataContext = this;
 
-            fadeOutTimer = new DispatcherTimer();
-            fadeOutTimer.Interval = TimeSpan.FromSeconds(2); 
-            fadeOutTimer.Tick += OnFadeOutTimerTick;
-
+            onComplete += complete;
             Loaded += OnLoaded;
             MouseEnter += OnMouseEnter;
             MouseLeave += OnMouseLeave;
+
+            MaxHeight = NOTIFICATION_SIZE_Y;
+            MaxWidth = NOTIFICATION_SIZE_X;
+
+            DataContext = this;
+
+            fadeOutTimer = new DispatcherTimer();
+            fadeOutTimer.Interval = TimeSpan.FromSeconds(2);
+            fadeOutTimer.Tick += OnFadeOutTimerTick;
+
+
         }
+
         private void OnLoaded(object? sender, RoutedEventArgs e)
         {
             var fadeInAnimation = new DoubleAnimation(0, 1, TimeSpan.FromSeconds(1));
@@ -46,7 +57,6 @@ namespace VM.GUI
             var margin = new Thickness(Margin.Left, Margin.Top, Margin.Right, Margin.Bottom + 15);
             var popUpAnim = new ThicknessAnimation(margin, TimeSpan.FromSeconds(1));
             BeginAnimation(MarginProperty, popUpAnim);
-            fadeOutTimer.Start();
         }
 
         private void OnMouseEnter(object? sender, System.Windows.Input.MouseEventArgs e)
@@ -66,6 +76,7 @@ namespace VM.GUI
             {
                 var parent = Parent as Panel;
                 parent?.Children.Remove(this);
+                onComplete?.Invoke();
             };
             BeginAnimation(OpacityProperty, fadeOutAnimation);
             fadeOutTimer.Stop();

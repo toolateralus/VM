@@ -61,7 +61,7 @@ namespace VM.GUI
                 lastMargin = owner.Margin;
 
                 owner.Height = 1080;
-                owner.Width = 1980;
+                owner.Width = 1920;
                 owner.Margin = new(0, 0, 0, 0);
 
                 return;
