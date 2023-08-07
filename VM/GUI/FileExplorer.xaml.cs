@@ -16,7 +16,7 @@ using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
 using System.Windows.Shapes;
-using VM.OPSYS;
+using VM.OS;
 
 namespace VM.GUI
 {
@@ -28,7 +28,7 @@ namespace VM.GUI
         ObservableCollection<string> FileViewerData = new();
         Dictionary<string, string> OriginalPaths = new();
         public Computer computer;
-        public FileExplorer(Computer computer)
+        public FileExplorer()
         {
             InitializeComponent();
             FileBox.ItemsSource = FileViewerData;
@@ -39,12 +39,13 @@ namespace VM.GUI
                 UpdateView();
 
             }; 
-
             KeyDown += FileExplorer_KeyDown;
-            this.computer = computer;
-
             UpdateView();
 
+        }
+        public void LateInit(Computer computer)
+        {
+            this.computer = computer;
         }
 
         private void PreviewPath(object sender, SelectionChangedEventArgs e)
@@ -148,7 +149,7 @@ namespace VM.GUI
 
             // this is a very hacky solution to the way they were originally designed as static, todo fix the entire command system, 
             // and make a common fs
-            if (new Command(computer).TryCommand(path))
+            if (computer.OS.CommandLine.TryCommand(path))
             {
                 return;
             }

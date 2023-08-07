@@ -12,7 +12,7 @@
             <RowDefinition Height="auto"/>
         </Grid.RowDefinitions>
             
-        <avalonEdit:TextEditor IsEnabled="False" IsReadOnly="true" BorderBrush="White" BorderThickness="1" Grid.Row="0" Background="Black" Foreground="White" SyntaxHighlighting="JavaScriptCustom" FontSize="16" x:Name="output"  FontFamily="Consolas" Height="Auto" Width="Auto" HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Auto"/>
+        <avalonEdit:TextEditor IsReadOnly="true" BorderBrush="White" BorderThickness="1" Grid.Row="0" Background="Black" Foreground="White" SyntaxHighlighting="JavaScriptCustom" FontSize="16" x:Name="output"  FontFamily="Consolas" Height="Auto" Width="Auto" HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Auto"/>
         <avalonEdit:TextEditor BorderBrush="White" BorderThickness="1" Grid.Row="1" Background="Black" Foreground="White" SyntaxHighlighting="JavaScriptCustom" FontSize="16" x:Name="input" IsReadOnly="false"  FontFamily="Consolas" Height="Auto" Width="Auto" HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Auto"/>
     </Grid>
 </UserControl>

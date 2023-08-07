@@ -1,7 +1,8 @@
 ﻿using System.IO;
 using System.Windows;
 using System.Windows.Controls;
-using VM.OPSYS;
+using System.Windows.Shapes;
+using VM.OS;
 
 namespace VM.GUI
 {
@@ -25,15 +26,31 @@ namespace VM.GUI
                 input.Text = Contents;
             }
         }
+        public void LateInit(Computer pc)
+        {
+            computer = pc;
+        }
+
+        public TextEditor()
+        {
+            InitializeComponent();
+        }
 
         private void LoadButton_Click(object sender, RoutedEventArgs e)
         {
-            Runtime.GetWindow(computer).Open(new FileExplorer(computer));
+            FileExplorer fileExplorer = new FileExplorer();
+            fileExplorer.LateInit(computer);
+            Runtime.GetWindow(computer).Open(fileExplorer);
         }
 
         private void SaveButton_Click(object sender, RoutedEventArgs e)
         {
             File.WriteAllText(LoadedFile, input.Text);
+        }
+
+        private async void RunButton_Click(object sender, RoutedEventArgs e)
+        {
+            await computer.OS.JavaScriptEngine.Execute(input.Text);
         }
     }
 }

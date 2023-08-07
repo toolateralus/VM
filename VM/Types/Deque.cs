@@ -1,7 +1,7 @@
 ﻿using System.Collections.Generic;
 using System;
 
-namespace VM
+namespace VM.Types
 {
     public class Deque<T>
     {

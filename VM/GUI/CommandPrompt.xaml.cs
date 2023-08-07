@@ -1,9 +1,9 @@
 ﻿using System;
 using System.Windows.Controls;
-using VM.OPSYS.JS;
-using VM.OPSYS;
 using System.Threading.Tasks;
 using System.Collections.Generic;
+using VM.OS.JS;
+using VM.OS;
 
 namespace VM.GUI
 {
@@ -13,15 +13,18 @@ namespace VM.GUI
         private List<string> commandHistory = new List<string>();
         private int historyIndex = -1; // To keep track of the current position in history
         private string tempInput = ""; // To store the temporary input when navigating history
-
-        public CommandPrompt(Computer computer)
+        public Computer computer;
+        public CommandPrompt()
         {
             InitializeComponent();
-            Engine = computer.OS.JavaScriptEngine;
             KeyDown += Input_KeyDown;
             PreviewKeyDown += CommandPrompt_PreviewKeyDown;
         }
-
+        public void LateInit(Computer computer)
+        {
+            this.computer = computer;
+            Engine = computer.OS.JavaScriptEngine;
+        }
         private void CommandPrompt_PreviewKeyDown(object sender, System.Windows.Input.KeyEventArgs e)
         {
             if (e.Key == System.Windows.Input.Key.Up)
@@ -65,6 +68,7 @@ namespace VM.GUI
             }
 
             commandHistory.Add(code);
+
 
             input.Clear();
             try

@@ -1,23 +1,28 @@
 ﻿using System;
-using System.Collections.ObjectModel;
+using System.Collections.Generic;
 using System.IO;
-using System.Reflection.Metadata;
-using System.Threading.Tasks;
 using System.Windows;
+using System.Windows.Controls;
 using System.Windows.Media;
-using System.Xml.Linq;
 using VM.GUI;
-using VM.OPSYS.JS;
+using VM.OS.FS;
+using VM.OS.JS;
+using VM.OS.Network;
 
-namespace VM.OPSYS
+namespace VM.OS
 {
     public class Computer
     {
         // This connects every computer to the lan server
         public NetworkConfiguration Network = new();
+
         public Computer(uint id)
         {
             OS = new(id, this);
+
+            
+            
+            
         }
         public uint ID() => OS.ID;
 
@@ -39,27 +44,68 @@ namespace VM.OPSYS
         }
     }
 
+    /// <summary>
+    /// The default initialization for a parameterless construction of this object represents a fully implemented default theme, and
+    /// it's meant to be customized.
+    /// </summary>
+    public class Theme
+    {
+        public Brush Background = Brushes.LightGray;
+        public Brush Foreground = Brushes.White;
+        public Brush Border = Brushes.Transparent;
+        public FontFamily Font = new("Consolas");
+        public Thickness BorderThickness = new(0, 0, 0, 0);
+        public double FontSize = 12;
+    }
     public class OS
     {
+        // we should re-think the references we have to the computer everywhere, maybe just combine the OS and pc or fix the strange references.
         public FileSystem FS;
         public JavaScriptEngine JavaScriptEngine;
+        public CommandLine CommandLine;
+        public Theme Theme = new();
 
         public readonly uint ID;
-        
+
         public readonly string FS_ROOT;
         public readonly string PROJECT_ROOT;
 
-        public FontFamily SystemFont { get; internal set; } = new FontFamily("Consolas");
+        
+        public Dictionary<string, Type> Applets = new();
+        public void InstallApplication<T>(string exePath) where T : UserControl
+        {
+            // do we need this collection? it helps us identify already existing apps but it's almost unneccesary,
+            // we may be relying on our UI scripts to do too much behavior.
+            if (Applets.TryGetValue(exePath, out _))
+            {
+                Notifications.Now("Tried to install an app that already exists on the computer, try renaming it if this was intended");
+                return;
+            }
+
+            Applets[exePath] = typeof(T);
+            Notifications.Now($"{exePath} installed!");
+
+            ComputerWindow window = Runtime.GetWindow(FS.Computer);
+            window.RegisterApp<T>(exePath);
+        }
+
+        internal void StartApplication(string exePath)
+        {
+            throw new NotImplementedException();
+        }
 
         public OS(uint id, Computer computer)
         {
+            CommandLine = new(computer);
             var EXE_DIR = Directory.GetCurrentDirectory();
             PROJECT_ROOT = Path.GetFullPath(Path.Combine(EXE_DIR, @"..\..\.."));
             FS_ROOT = $"{PROJECT_ROOT}\\computer{id}";
             FS = new(FS_ROOT, computer);
             JavaScriptEngine = new(PROJECT_ROOT, computer);
-            JavaScriptEngine.Execute($"OS.id = {id}");
+            _ = JavaScriptEngine.Execute($"OS.id = {id}");
             JavaScriptEngine.InteropModule.OnComputerExit += computer.Exit;
+
+           
         }
     }
 }

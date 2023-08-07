@@ -1,8 +1,10 @@
 ﻿using System;
 using System.IO;
 using System.Linq;
+using VM.OS;
+using VM.Types;
 
-namespace VM.OPSYS
+namespace VM.OS.FS
 {
     public class FileSystem
     {
@@ -61,7 +63,7 @@ namespace VM.OPSYS
 
             if (Directory.Exists(newPath))
             {
-                
+
                 History.Push(currentDirectory);
 
                 currentDirectory = newPath;

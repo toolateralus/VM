@@ -1,12 +1,14 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
+using System.Reflection;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using VM;
-using VM.OPSYS;
+using VM.OS;
 
 namespace VM.GUI
 {
@@ -161,7 +163,9 @@ namespace VM.GUI
             switch (e.Key)
             {
                 case Key.OemTilde:
-                    Open(new CommandPrompt(computer), "Cmd", 350, 275);
+                    var cmd = new CommandPrompt();
+                    Open(cmd, "Cmd", 350, 275);
+                    cmd.LateInit(computer);
                     break;
             }
         }
@@ -221,23 +225,98 @@ namespace VM.GUI
             }
         }
 
-        private Button GetTaskbarButton(string title, RoutedEventHandler Toggle)
+        private Button GetOSThemeButton(double width = double.NaN, double height = double.NaN)
         {
             var btn = new Button()
             {
-                Background = Brushes.LightGray,
-                Width = 35,
-                FontFamily = computer.OS.SystemFont,
-                FontSize = 10,
-                Content = title,
+                Background = computer.OS.Theme.Background,
+                BorderBrush = computer.OS.Theme.Border,
+                BorderThickness = computer.OS.Theme.BorderThickness,
+                FontFamily = computer.OS.Theme.Font,
+                Width = width,
+                Height = height,
+                FontSize = computer.OS.Theme.FontSize,
             };
+            return btn;
+        }
+
+        private Button GetTaskbarButton(string title, RoutedEventHandler Toggle)
+        {
+            var btn = GetOSThemeButton(width: 65);
+
+            btn.Content = title;
             btn.Click += Toggle;
             return btn;
         }
 
         private void Taskbar_Click(object sender, RoutedEventArgs e)
         {
-            Open(new FileExplorer(computer), "New File Explorer");
+            FileExplorer control = new FileExplorer();
+            control.LateInit(computer);
+            Open(control, "New File Explorer");
+        }
+
+        private Button GetDesktopIconButton(string appName, RoutedEventHandler @event)
+        {
+            var btn = GetOSThemeButton(width: 100, height : 100);
+            btn.Margin = new Thickness(15, 15, 15, 15);
+            btn.Content = appName;
+            btn.Click += @event;
+            return btn;
+        }
+
+        /// <summary>
+        /// the instantiation of applications is handled in the button event
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <param name="exePath"></param>
+        internal void RegisterApp<T>(string exePath) where T : UserControl
+        {
+            var name = exePath.Split('.')[0];
+
+            var btn = GetDesktopIconButton(name, 
+            (sender, args) =>
+            {
+                var type = typeof(T);
+                var members = typeof(T).GetMethods();
+               
+                if (IsValidType(members) && Activator.CreateInstance(typeof(T)) is T instance)
+                {
+                    AssignComputer(instance, computer);
+                    Open(instance, name);
+                }
+            });
+
+            DesktopIconPanel.Children.Add(btn);
+            DesktopIconPanel.UpdateLayout();
+        }
+
+        private static void AssignComputer<T>(T instance, Computer computer) where T : UserControl
+        {
+            var methods = instance.GetType().GetMethods();
+
+            foreach (var method in methods)
+            {
+                if (method.Name.Contains("LateInit")
+                    && method.GetParameters().Length == 1
+                    && method.GetParameters()[0].ParameterType == typeof(Computer))
+                {
+                    method.Invoke(instance, new[] { computer });
+                }
+            }
+        }
+
+
+        private static bool IsValidType(MemberInfo[] members)
+        {
+            foreach (var member in members)
+            {
+                if (member.Name.Contains("LateInit"))
+                {
+                    return true;
+                }
+            }
+            return false;
         }
     }
 }

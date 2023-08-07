@@ -17,7 +17,7 @@ using JavaScriptEngineSwitcher.V8;
 using Microsoft.VisualBasic.Devices;
 using VM.GUI;
 
-namespace VM.OPSYS.JS
+namespace VM.OS.JS
 {
     public class JSHelpers
     {
@@ -78,7 +78,9 @@ namespace VM.OPSYS.JS
             if (parameters != null && parameters.Length > 0 && parameters[0] is int ch &&
                 parameters != null && parameters.Length > 0 && parameters[0] is int replyCh)
             {
-                return Runtime.PullEvent(ch).value;
+                var val = Runtime.PullEvent(ch).value;
+                OnRecieved?.Invoke(new[] { val });
+                return val;
             }
             Notifications.Now("Insufficient arguments for a network connection");
             return null;
@@ -119,12 +121,12 @@ namespace VM.OPSYS.JS
 
             executionThread = new Thread(Execute);
             executionThread.Start();
-            
+
         }
 
         private void LoadModules(string ProjectRoot)
         {
-            bool subscribed = false; 
+            bool subscribed = false;
 
             foreach (var file in Directory.EnumerateFiles(ProjectRoot + "\\OS-JS").Where(f => f.EndsWith(".js")))
             {
@@ -140,8 +142,8 @@ namespace VM.OPSYS.JS
                 }
 
                 try
-                { 
-                    engine.Execute(File.ReadAllText(file)); 
+                {
+                    engine.Execute(File.ReadAllText(file));
                 }
                 catch (Exception e)
                 {

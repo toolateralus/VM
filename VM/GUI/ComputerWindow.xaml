@@ -15,14 +15,15 @@
         </Grid.RowDefinitions>
 
         <Grid x:Name="Desktop" Grid.Row="0" Grid.Column="0">
-            <Image x:Name="desktopBackground" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Width="Auto" Height="Auto"/>
+            <Image Stretch="Fill" x:Name="desktopBackground" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Width="Auto" Height="Auto"/>
+            <WrapPanel x:Name="DesktopIconPanel" Orientation="Horizontal" HorizontalAlignment="Left" VerticalAlignment="Top">
+                <Button/>
+            </WrapPanel>
         </Grid>
 
         <Grid x:Name="Taskbar" Grid.Row="1" Grid.Column="0">
-            <StackPanel x:Name="TaskbarStackPanel" Orientation="Horizontal" Width="Auto" Height="15" Background="Gray">
-                <Button Click="Taskbar_Click" Background="LightGray" Width="35" FontFamily="Consolas" FontSize="10" Content="Main"/>
-                <Button Background="LightGray" Width="35" FontFamily="Consolas" FontSize="10" Content="A"/>
-                <Button Background="LightGray"  Width="35" FontFamily="Consolas" FontSize="10" Content="B"/>
+            <StackPanel x:Name="TaskbarStackPanel" Orientation="Horizontal" Width="Auto" Height="25" Background="Gray">
+                <Button Click="Taskbar_Click" Background="LightGray" Width="66" FontFamily="Consolas" FontSize="10" Content="Explorer"/>
             </StackPanel>
         </Grid>
     </Grid>

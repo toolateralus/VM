@@ -23,8 +23,9 @@
         </Grid.ColumnDefinitions>
 
         <StackPanel Orientation="Horizontal" Grid.ColumnSpan="4">
-            <Button Click="LoadButton_Click" Name="LoadButton" TextBlock.TextAlignment="Center" Height="20" Width="45" Content="Load" />
-            <Button Click="SaveButton_Click"  Name="SaveButton" TextBlock.TextAlignment="Center" Height="20" Width="45" Content="Save" />
+            <Button FontFamily="Consolas" Click="LoadButton_Click" Name="LoadButton" TextBlock.TextAlignment="Center" Height="20" Width="45" Content="load" />
+            <Button FontFamily="Consolas" Click="SaveButton_Click"  Name="SaveButton" TextBlock.TextAlignment="Center" Height="20" Width="45" Content="save" />
+            <Button FontFamily="Consolas" Click="RunButton_Click"  Name="RunButton" TextBlock.TextAlignment="Center" Height="20" Width="60" Content="run .js" />
         </StackPanel>
         <avalonEdit:TextEditor Grid.Row="1" Grid.RowSpan="4" Grid.ColumnSpan="4" SyntaxHighlighting="JavaScriptCustom" ShowLineNumbers="True" FontSize="16" x:Name="input" IsReadOnly="false"  FontFamily="Consolas" Height="Auto" Width="Auto" HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Auto"/>
     </Grid>

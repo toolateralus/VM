@@ -2,7 +2,7 @@
 using System.Text;
 using System.Threading;
 
-namespace VM.OPSYS
+namespace VM.OS.Network
 {
     using System;
     using System.Windows;

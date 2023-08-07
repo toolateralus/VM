@@ -6,6 +6,7 @@ using System.Text;
 TcpListener server;
 const int port = 8080;
 const int maxClients = 100;
+List<TcpClient> connectedClients = new();
 
 Console.WriteLine("Server started. Waiting for connections...");
 server = new TcpListener(IPAddress.Any, port);
@@ -20,31 +21,48 @@ while (true)
 async Task HandleClientAsync()
 {
     TcpClient client = await server.AcceptTcpClientAsync();
-    Console.WriteLine("Client connected");
+    connectedClients.Add(client);
+    Console.WriteLine($"Client {client.GetHashCode()} connected ");
 
-    NetworkStream stream = client.GetStream();
-    byte[] buffer = new byte[1024];
-    int bytesRead;
-
-    while ((bytesRead = await stream.ReadAsync(buffer, 0, buffer.Length)) > 0)
+    _ = Task.Run(async () =>
     {
-        string message = Encoding.ASCII.GetString(buffer, 0, bytesRead);
-        Console.WriteLine("Received: " + message);
+        NetworkStream stream = client.GetStream();
+        byte[] buffer = new byte[1024];
+        int bytesRead;
 
-        // todo: implement the appropriate methods and functionality once the fake network is established.
-
-        // Broadcast the message to all connected clients
-        byte[] broadcastBuffer = Encoding.ASCII.GetBytes(message);
-        foreach (TcpClient connectedClient in server.Pending() ? new TcpClient[] { server.AcceptTcpClient() } : new TcpClient[] { })
+        try
         {
-            if (connectedClient != client)
+            while ((bytesRead = await stream.ReadAsync(buffer)) > 0)
             {
-                NetworkStream connectedStream = connectedClient.GetStream();
-                await connectedStream.WriteAsync(broadcastBuffer, 0, broadcastBuffer.Length);
+                string message = Encoding.ASCII.GetString(buffer, 0, bytesRead);
+                Console.WriteLine($"Received from client {client.GetHashCode()}: {message}");
+
+                byte[] broadcastBuffer = Encoding.ASCII.GetBytes(message);
+                await BroadcastMessage(connectedClients, client, broadcastBuffer);
             }
         }
-    }
+        catch (Exception ex)
+        {
+            // Handle the exception, log the error, etc.
+        }
+        finally
+        {
+            client.Close();
+            connectedClients.Remove(client);
+            Console.WriteLine($"Client {client.GetHashCode()} disconnected");
+        }
+    });
+}
 
-    client.Close();
-    Console.WriteLine("Client disconnected");
+
+static async Task BroadcastMessage(List<TcpClient> connectedClients, TcpClient client, byte[] broadcastBuffer)
+{
+    foreach (TcpClient connectedClient in connectedClients)
+    {
+        if (connectedClient != client)
+        {
+            NetworkStream connectedStream = connectedClient.GetStream();
+            await connectedStream.WriteAsync(broadcastBuffer, 0, broadcastBuffer.Length);
+        }
+    }
 }

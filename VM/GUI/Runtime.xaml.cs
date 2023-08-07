@@ -1,28 +1,16 @@
 ﻿using ICSharpCode.AvalonEdit.Highlighting.Xshd;
 using ICSharpCode.AvalonEdit.Highlighting;
-using ICSharpCode.AvalonEdit;
-using Microsoft.VisualBasic;
 using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Reflection;
 using System.Windows;
-using System.Windows.Controls;
-using System.Windows.Input;
 using System.Windows.Media;
-using System.Windows.Media.Imaging;
-using VM;
-using VM.OPSYS;
-using static System.Windows.Forms.VisualStyles.VisualStyleElement.TextBox;
 using System.Xml;
-using System.Windows.Forms;
 using KeyEventArgs = System.Windows.Input.KeyEventArgs;
 using System.Text.RegularExpressions;
-using System.Windows.Media.Animation;
 using System.Threading.Tasks;
 using System.Threading;
-using System.Net.NetworkInformation;
-using System.Threading.Channels;
+using VM.OS;
 
 namespace VM.GUI
 {
@@ -44,6 +32,7 @@ namespace VM.GUI
             }
 
             IDBox.Focus();
+            IDBox.Text = "0";
 
             StartPerpetualColorAnimation();
 
@@ -102,10 +91,13 @@ namespace VM.GUI
                 return;
             }
 
-            Computer pc = new(cpu_id);
+            OS.Computer pc = new(cpu_id);
             ComputerWindow wnd = new(pc);
-
             Computers[pc] = wnd;
+
+            pc.OS.InstallApplication<CommandPrompt>("CommandPrompt.app");
+            pc.OS.InstallApplication<FileExplorer>("FileExplorer.app");
+            pc.OS.InstallApplication<TextEditor>("TextEditor.app");
 
             wnd.Show();
             wnd.Closed += (o, e) =>
