@@ -68,7 +68,7 @@ namespace VM.OS
         public readonly uint ID;
 
         public readonly string FS_ROOT;
-        public readonly string PROJECT_ROOT;
+        public readonly string WORKING_DIR;
 
         
         public Dictionary<string, Type> Applets = new();
@@ -97,15 +97,23 @@ namespace VM.OS
         public OS(uint id, Computer computer)
         {
             CommandLine = new(computer);
-            var EXE_DIR = Directory.GetCurrentDirectory();
-            PROJECT_ROOT = Path.GetFullPath(Path.Combine(EXE_DIR, @"..\..\.."));
-            FS_ROOT = $"{PROJECT_ROOT}\\computer{id}";
-            FS = new(FS_ROOT, computer);
-            JavaScriptEngine = new(PROJECT_ROOT, computer);
-            _ = JavaScriptEngine.Execute($"OS.id = {id}");
-            JavaScriptEngine.InteropModule.OnComputerExit += computer.Exit;
+            
+            // we get our working root
+            var WORKING_DIR = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData) + "\\VM";
+            
+            this.WORKING_DIR = Path.GetFullPath(WORKING_DIR);
 
-           
+            // prepare the root dir for the FileSystem, since we add a dir to contain that itself.
+            FS_ROOT = $"{this.WORKING_DIR}\\computer{id}";
+            
+            FS = new(FS_ROOT, computer);
+
+            // prepare the javascript engine, and assign the computer ID to the var in the OS instance (in the js)
+            JavaScriptEngine = new(this.WORKING_DIR, computer);
+            
+            _ = JavaScriptEngine.Execute($"OS.id = {id}");
+
+            JavaScriptEngine.InteropModule.OnComputerExit += computer.Exit;
         }
     }
 }

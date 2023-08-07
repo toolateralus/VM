@@ -17,7 +17,6 @@
         <Grid x:Name="Desktop" Grid.Row="0" Grid.Column="0">
             <Image Stretch="Fill" x:Name="desktopBackground" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Width="Auto" Height="Auto"/>
             <WrapPanel x:Name="DesktopIconPanel" Orientation="Horizontal" HorizontalAlignment="Left" VerticalAlignment="Top">
-                <Button/>
             </WrapPanel>
         </Grid>
 

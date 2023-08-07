@@ -153,7 +153,7 @@ namespace VM.GUI
         public ComputerWindow(Computer pc)
         {
             InitializeComponent();
-            SetBackground("C:\\Users\\Josh\\source\\repos\\VM\\Background.png");
+            desktopBackground.Source = LoadImage("C:\\Users\\Josh\\source\\repos\\VM\\Background.png");
             KeyDown += Computer_KeyDown;
             computer = pc;
         }
@@ -170,13 +170,13 @@ namespace VM.GUI
             }
         }
 
-        private void SetBackground(string path)
+        public static BitmapImage LoadImage(string path)
         {
             BitmapImage bitmapImage = new BitmapImage();
             bitmapImage.BeginInit();
             bitmapImage.UriSource = new Uri(path, UriKind.RelativeOrAbsolute);
             bitmapImage.EndInit();
-            desktopBackground.Source = bitmapImage;
+            return bitmapImage;
         }
 
         public Dictionary<string, ResizableWindow> Windows = new();
@@ -233,10 +233,19 @@ namespace VM.GUI
                 BorderBrush = computer.OS.Theme.Border,
                 BorderThickness = computer.OS.Theme.BorderThickness,
                 FontFamily = computer.OS.Theme.Font,
+                FontSize = computer.OS.Theme.FontSize,
                 Width = width,
                 Height = height,
-                FontSize = computer.OS.Theme.FontSize,
             };
+            return btn;
+        }
+
+        private Button GetDesktopIconButton(string appName)
+        {
+            var btn = GetOSThemeButton(width: 60, height: 60);
+
+            btn.Margin = new Thickness(15, 15, 15, 15);
+            btn.Content = appName;
             return btn;
         }
 
@@ -253,16 +262,7 @@ namespace VM.GUI
         {
             FileExplorer control = new FileExplorer();
             control.LateInit(computer);
-            Open(control, "New File Explorer");
-        }
-
-        private Button GetDesktopIconButton(string appName, RoutedEventHandler @event)
-        {
-            var btn = GetOSThemeButton(width: 100, height : 100);
-            btn.Margin = new Thickness(15, 15, 15, 15);
-            btn.Content = appName;
-            btn.Click += @event;
-            return btn;
+            Open(control, "File Explorer");
         }
 
         /// <summary>
@@ -274,39 +274,91 @@ namespace VM.GUI
         {
             var name = exePath.Split('.')[0];
 
-            var btn = GetDesktopIconButton(name, 
-            (sender, args) =>
+            var btn = GetDesktopIconButton(name);
+
+            btn.MouseDoubleClick += OnDesktopIconPressed;
+
+            void OnDesktopIconPressed(object? sender, RoutedEventArgs e)
             {
                 var type = typeof(T);
                 var members = typeof(T).GetMethods();
-               
+
                 if (IsValidType(members) && Activator.CreateInstance(typeof(T)) is T instance)
                 {
                     AssignComputer(instance, computer);
                     Open(instance, name);
                 }
-            });
+            }
+
+            SetupIcon<T>(name, btn);
 
             DesktopIconPanel.Children.Add(btn);
             DesktopIconPanel.UpdateLayout();
         }
 
+        private static void SetupIcon<T>(string name, Button btn) where T : UserControl
+        {
+            if (GetIcon<T>() is BitmapImage img)
+            {
+                btn.Background = new ImageBrush(img);
+            }
+
+            btn.Margin = new Thickness(15, 15, 15, 15);
+
+            var contentBorder = new Border
+            {
+                Background = new ImageBrush(GetIcon<T>()),
+                CornerRadius = new CornerRadius(10),
+                ToolTip = name,
+            };
+
+            btn.Content = contentBorder;
+        }
+
+        private static BitmapImage? GetIcon<T>() where T : UserControl
+        {
+            var properties = typeof(T).GetProperties();
+
+            foreach (var property in properties)
+            {
+                if (property.Name.Contains("DesktopIcon") &&
+                    property.PropertyType == typeof(string) &&
+                    property.GetValue(null) is string path &&
+                    !string.IsNullOrEmpty(path))
+                {
+                    return LoadImage(path);
+                }
+            }
+
+            return null;
+        }
+
+        /// <summary>
+        /// performs init on LateInit method, explaied in tooltipf or IsValidType (a static method in this class)
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <param name="instance"></param>
+        /// <param name="computer"></param>
         private static void AssignComputer<T>(T instance, Computer computer) where T : UserControl
         {
             var methods = instance.GetType().GetMethods();
 
             foreach (var method in methods)
             {
-                if (method.Name.Contains("LateInit")
-                    && method.GetParameters().Length == 1
-                    && method.GetParameters()[0].ParameterType == typeof(Computer))
+                if (method.Name.Contains("LateInit") &&
+                    method.GetParameters().Length == 1 &&
+                    method.GetParameters()[0].ParameterType == typeof(Computer))
                 {
                     method.Invoke(instance, new[] { computer });
                 }
             }
         }
 
-
+        /// <summary>
+        /// we rely on this <code>('public void LateInit(Computer pc){..}') </code>method being declared in the UserControl to attach the OS to the app
+        /// </summary>
+        /// <param name="members"></param>
+        /// <returns></returns>
         private static bool IsValidType(MemberInfo[] members)
         {
             foreach (var member in members)

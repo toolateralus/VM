@@ -11,9 +11,10 @@ namespace VM.GUI
     {
         private JavaScriptEngine Engine;
         private List<string> commandHistory = new List<string>();
-        private int historyIndex = -1; // To keep track of the current position in history
-        private string tempInput = ""; // To store the temporary input when navigating history
+        private int historyIndex = -1; 
+        private string tempInput = ""; 
         public Computer computer;
+        public static string? DesktopIcon => Runtime.GetResource("commandprompt", ".png");
         public CommandPrompt()
         {
             InitializeComponent();

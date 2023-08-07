@@ -124,5 +124,29 @@ namespace VM.GUI
         {
             NetworkEvents[outCh] = (msg , inCh);
         }
+
+        internal static string? GetResource(string name, string ext)
+        {
+            var path = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData) + "\\VM";
+
+            VerifyOrCreateAppdataDir(path);
+
+            string[] files = Directory.GetFiles(path, name + ext, SearchOption.AllDirectories);
+
+            if (files.Length > 0)
+            {
+                return files[0];
+            }
+
+            return null;
+        }
+
+        internal static void VerifyOrCreateAppdataDir(string path)
+        {
+            if (!Directory.Exists(path))
+            {
+                Directory.CreateDirectory(path);
+            }
+        }
     }
 }
