@@ -15,12 +15,10 @@ namespace VM
         private static bool Preoccupied = false;
         private static object queueLock = new object();
 
-        // Define an event to signal processing the next message
         public static event Action<string> MessageProcessed;
 
         static Notifications()
         {
-            // Subscribe to the MessageProcessed event
             MessageProcessed += ProcessNextMessage;
         }
 
@@ -32,7 +30,6 @@ namespace VM
                 if (!Preoccupied)
                 {
                     Preoccupied = true;
-                    // Trigger the MessageProcessed event to process the message
                     MessageProcessed?.Invoke(message);
                 }
             }
@@ -40,7 +37,6 @@ namespace VM
 
         private static async void ProcessNextMessage(string message)
         {
-            // Show the notification
             await Application.Current.Dispatcher.InvokeAsync(() =>
             {
                 void onTimerComplete()
@@ -48,7 +44,6 @@ namespace VM
                     lock (queueLock)
                     {
                         Preoccupied = false;
-                        // If there are more messages in the queue, process the next one
                         if (MessageQueue.Any())
                         {
                             string nextMessage = MessageQueue.Dequeue();
@@ -61,6 +56,10 @@ namespace VM
 
                 foreach (var cw in Runtime.Computers)
                 {
+                    if (cw.Value.Desktop.Children.Contains(notif))
+                    {
+                        continue;
+                    }
                     cw.Value.Desktop.Children.Add(notif);
                 }
 

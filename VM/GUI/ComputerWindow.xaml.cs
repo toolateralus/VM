@@ -282,7 +282,7 @@ namespace VM.GUI
         /// </summary>
         /// <typeparam name="T"></typeparam>
         /// <param name="exePath"></param>
-        internal void RegisterApp<T>(string exePath) where T : UserControl
+        internal void RegisterApp(string exePath, Type type)
         {
             var name = exePath.Split('.')[0];
 
@@ -292,25 +292,24 @@ namespace VM.GUI
 
             void OnDesktopIconPressed(object? sender, RoutedEventArgs e)
             {
-                var type = typeof(T);
-                var members = typeof(T).GetMethods();
+                var members = type.GetMethods();
 
-                if (IsValidType(members) && Activator.CreateInstance(typeof(T)) is T instance)
+                if (IsValidType(members) && Activator.CreateInstance(type) is object instance && instance is UserControl userControl)
                 {
                     AssignComputer(instance, computer);
-                    Open(instance, name);
+                    Open(userControl, name);
                 }
             }
 
-            SetupIcon<T>(name, btn);
+            SetupIcon(name, btn, type);
 
             DesktopIconPanel.Children.Add(btn);
             DesktopIconPanel.UpdateLayout();
         }
 
-        private static void SetupIcon<T>(string name, Button btn) where T : UserControl
+        private static void SetupIcon(string name, Button btn, Type type) 
         {
-            if (GetIcon<T>() is BitmapImage img)
+            if (GetIcon(type) is BitmapImage img)
             {
                 btn.Background = new ImageBrush(img);
             }
@@ -319,7 +318,7 @@ namespace VM.GUI
 
             var contentBorder = new Border
             {
-                Background = new ImageBrush(GetIcon<T>()),
+                Background = new ImageBrush(GetIcon(type)),
                 CornerRadius = new CornerRadius(10),
                 ToolTip = name,
             };
@@ -327,9 +326,9 @@ namespace VM.GUI
             btn.Content = contentBorder;
         }
 
-        private static BitmapImage? GetIcon<T>() where T : UserControl
+        private static BitmapImage? GetIcon(Type type) 
         {
-            var properties = typeof(T).GetProperties();
+            var properties = type.GetProperties();
 
             foreach (var property in properties)
             {
@@ -351,7 +350,7 @@ namespace VM.GUI
         /// <typeparam name="T"></typeparam>
         /// <param name="instance"></param>
         /// <param name="computer"></param>
-        private static void AssignComputer<T>(T instance, Computer computer) where T : UserControl
+        private static void AssignComputer(object instance, Computer computer)
         {
             var methods = instance.GetType().GetMethods();
 
@@ -381,6 +380,12 @@ namespace VM.GUI
                 }
             }
             return false;
+        }
+
+        internal void RegisterCustomApp(string id, UserControl type)
+        {
+            var wnd = Runtime.GetWindow(pc: computer);
+            wnd.Open(type);
         }
     }
 }

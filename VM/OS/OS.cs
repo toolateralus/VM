@@ -72,7 +72,7 @@ namespace VM.OS
 
         
         public Dictionary<string, Type> Applets = new();
-        public void InstallApplication<T>(string exePath) where T : UserControl
+        public void InstallApplication(string exePath, Type type) 
         {
             // do we need this collection? it helps us identify already existing apps but it's almost unneccesary,
             // we may be relying on our UI scripts to do too much behavior.
@@ -82,16 +82,16 @@ namespace VM.OS
                 return;
             }
 
-            Applets[exePath] = typeof(T);
+            Applets[exePath] = type;
             Notifications.Now($"{exePath} installed!");
 
             ComputerWindow window = Runtime.GetWindow(FS.Computer);
-            window.RegisterApp<T>(exePath);
+            window.RegisterApp(exePath, type);
         }
 
-        internal void StartApplication(string exePath)
+        internal void InstallCustomApplication(string id, UserControl type)
         {
-            throw new NotImplementedException();
+            
         }
 
         public OS(uint id, Computer computer)

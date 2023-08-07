@@ -98,9 +98,9 @@ namespace VM.GUI
             ComputerWindow wnd = new(pc);
             Computers[pc] = wnd;
 
-            pc.OS.InstallApplication<CommandPrompt>("CommandPrompt.app");
-            pc.OS.InstallApplication<FileExplorer>("FileExplorer.app");
-            pc.OS.InstallApplication<TextEditor>("TextEditor.app");
+            pc.OS.InstallApplication("CommandPrompt.app", typeof(CommandPrompt));
+            pc.OS.InstallApplication("FileExplorer.app", typeof(FileExplorer));
+            pc.OS.InstallApplication("TextEditor.app", typeof(TextEditor));
 
             wnd.Show();
             wnd.Closed += (o, e) =>
@@ -152,21 +152,20 @@ namespace VM.GUI
             }
         }
 
-        internal static (string XAML, string JS) GetAppDefinition(string dir, string fileName)
+        internal static (string XAML, string JS) GetAppDefinition(Computer pc, string dir)
         {
             const string xamlExt = ".xaml";
             const string xamlJsExt = ".xaml.js";
 
-            var path = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "VM");
-
-            VerifyOrCreateAppdataDir(path);
+            var path = pc.OS.FS_ROOT;
 
             var absDir = Path.Combine(path, dir);
 
             if (Directory.Exists(absDir))
             {
-                string xamlFile = Path.Combine(absDir, fileName + xamlExt);
-                string jsFile = Path.Combine(absDir, fileName + xamlJsExt);
+                string name = dir.Split('.')[0];
+                string xamlFile = Path.Combine(absDir, name + xamlExt);
+                string jsFile = Path.Combine(absDir, dir.Split('.')[0]  + xamlJsExt);
 
                 if (File.Exists(xamlFile) && File.Exists(jsFile))
                 {

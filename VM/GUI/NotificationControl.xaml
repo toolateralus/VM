@@ -5,6 +5,6 @@
              VerticalAlignment="Bottom"
              >
     <Grid>
-        <TextBlock FontFamily="Consolas" FontSize="15" Text="{Binding Message}" VerticalAlignment="Stretch" TextWrapping="Wrap" Padding="10"/>
+        <TextBox FontFamily="Consolas" FontSize="15" Text="{Binding Message}" VerticalAlignment="Stretch" TextWrapping="Wrap" Padding="10"/>
     </Grid>
 </UserControl>

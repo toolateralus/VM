@@ -1,4 +1,5 @@
 ﻿
+using Microsoft.Windows.Themes;
 using System;
 using System.Collections.Generic;
 using System.Reflection;
@@ -47,8 +48,10 @@ namespace VM.OS.UserInterface
                 }
             }
         });
+        public static void TranspileJS(string jS)
+        {
 
-
+        }
         public static void InitializeControl(Computer computer, UserControl control, List<Action<UserControl, Computer, object[]?>> initializations, List<object[]?> args)
         {
             for (int i = 0; i < initializations.Count; i++)
@@ -68,32 +71,38 @@ namespace VM.OS.UserInterface
             }
             else
             {
-                throw new InvalidOperationException("The UserControl does not have an InitializeComponent method.");
+                return;
             }
         }
 
         public static UserControl ParseUserControl(string xaml)
         {
-            try
-            {
-                object parsedObject = XamlReader.Parse(xaml);
+            UserControl product = null;
+            Action<UserControl> output = (e) => { product = e; };
 
-                if (parsedObject is UserControl userControl)
+            App.Current.Dispatcher.Invoke(delegate { 
+                try
                 {
-                    return userControl;
+                    object parsedObject = XamlReader.Parse(xaml);
+
+                    if (parsedObject is UserControl userControl)
+                    {
+                        output.Invoke(userControl);
+                    }
+                    else
+                    {
+                        Notifications.Now("The provided XAML does not represent a UserControl.");
+                    }
                 }
-                else
+                catch (XamlParseException ex)
                 {
-                    Notifications.Now("The provided XAML does not represent a UserControl.");
-                    return null;
+                    Notifications.Now($"XAML parsing error: {ex.Message}");
                 }
-            }
-            catch (XamlParseException ex)
-            {
-                Notifications.Now($"XAML parsing error: {ex.Message}");
-                return null;
-            }
+            });
+
+            return product;
         }
 
+       
     }
 }

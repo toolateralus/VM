@@ -2,6 +2,8 @@
 using System.CodeDom;
 using System.Diagnostics;
 using System.IO;
+using System.Threading.Tasks;
+using System.Windows.Controls;
 using VM.GUI;
 using VM.OS.UserInterface;
 
@@ -35,20 +37,26 @@ namespace VM.OS.JS
         }
         #endregion
         #region XAML/JS interop
-        public void register_app(string dir, string fileName)
+        public async void register_app(string dir)
         {
-            var data = Runtime.GetAppDefinition(dir, fileName);
-            var control = XamlJsInterop.ParseUserControl(data.XAML);
-            
-            XamlJsInterop.CallInitializeComponent(control);
+            var data = Runtime.GetAppDefinition(computer, dir);
 
-            computer.OS.InstallApplication < typeof(control) > (dir);
+            var control = XamlJsInterop.ParseUserControl(data.XAML);
+
+            var js_obj = await computer.OS.JavaScriptEngine.Execute(data.JS);
+
+            if (js_obj == null)
+            {
+                Notifications.Now($"Javascript for a {dir} backend did not compile or return any valid data");
+            }
+
+            App.Current.Dispatcher.Invoke(delegate {
+                ComputerWindow window = Runtime.GetWindow(computer);
+                window.RegisterCustomApp(dir, control);
+            });
 
             // bind ui events to js methods here.
             // XamlJsInterop.InitializeControl(computer, control, new() { XamlJsInterop.EventInitializer }, new() { });
-
-
-          
         }
 
 
