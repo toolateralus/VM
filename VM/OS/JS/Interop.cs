@@ -22,15 +22,11 @@ namespace VM.OS.JS
         IJsEngine engine;
         IJsEngineSwitcher engineSwitcher;
         public Dictionary<string, object?> modules = new();
-
         public JSNetworkHelpers NetworkModule { get; }
         public JSInterop InteropModule { get; }
         public bool Disposing { get; private set; }
-
         private readonly ConcurrentDictionary<int, (string code, Action<object?> output)> CodeDictionary = new();
-
         private readonly Thread executionThread;
-
         public JavaScriptEngine(string ProjectRoot, Computer computer)
         {
             engineSwitcher = JsEngineSwitcher.Current;
@@ -48,13 +44,15 @@ namespace VM.OS.JS
             InteropModule.OnModuleImported += ImportModule;
             engine.EmbedHostObject("interop", InteropModule);
 
-            LoadModules(ProjectRoot);
 
             executionThread = new Thread(Execute);
             executionThread.Start();
 
         }
-
+        public object? GetVariable(string name)
+        {
+            return engine.GetVariableValue(name);
+        }
         private object? ImportModule(string arg)
         {
             if (modules.TryGetValue(arg, out var val))
@@ -62,12 +60,11 @@ namespace VM.OS.JS
             return null;
 
         }
-
-        private void LoadModules(string ProjectRoot)
+        public void LoadModules(string sourceDir)
         {
             bool subscribed = false;
 
-            foreach (var file in Directory.EnumerateFiles(ProjectRoot + "\\OS-JS").Where(f => f.EndsWith(".js")))
+            foreach (var file in Directory.EnumerateFiles(sourceDir).Where(f => f.EndsWith(".js")))
             {
                 void AddModule(object? obj, string path)
                 {
@@ -90,7 +87,6 @@ namespace VM.OS.JS
                 }
             }
         }
-
         public void Execute()
         {
             while (true && !Disposing)
@@ -128,7 +124,6 @@ namespace VM.OS.JS
 
             return result;
         }
-
         private int GetUniqueHandle()
         {
             int handle = Random.Shared.Next();
@@ -138,22 +133,16 @@ namespace VM.OS.JS
 
             return handle;
         }
-
         public void Dispose()
         {
             Disposing = true;
             engine.Dispose();
             Task.Run(() => executionThread.Join());
         }
-
-        public Dictionary<string, Action> MethodBindings = new();
-        internal Action? FetchMethodBinding(string name)
+        internal void ExecuteScript(string absPath)
         {
-            if (MethodBindings.TryGetValue(name, out var val))
-            {
-                return val;
-            }
-            return null;
+            if (File.Exists(absPath))
+                Task.Run(async () => await Execute(File.ReadAllText(absPath)));
         }
     }
 }

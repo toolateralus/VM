@@ -15,6 +15,17 @@ using VM.OS.UserInterface;
 
 namespace VM.GUI
 {
+    public enum XAML_EVENTS
+    {
+        MOUSE_DOWN = 0,
+        MOUSE_UP = 1,
+        MOUSE_MOVE = 2,
+        KEY_DOWN = 3,
+        KEY_UP = 4,
+        LOADED = 5,
+        WINDOW_CLOSE = 6,
+        RENDER = 7,
+    }
     public static class JAVASCRIPT_SYNTAX_HIGHLIGHTING
     {
         public const string HIGHLIGHTING = @"<?xml version=""1.0""?>
@@ -156,7 +167,7 @@ namespace VM.GUI
         public ComputerWindow(Computer pc)
         {
             InitializeComponent();
-            desktopBackground.Source = LoadImage("C:\\Users\\Josh\\source\\repos\\VM\\Background.png");
+            desktopBackground.Source = LoadImage(Runtime.GetResourcePath("Background", ".png"));
             KeyDown += Computer_KeyDown;
             computer = pc;
         }
@@ -212,6 +223,7 @@ namespace VM.GUI
             TaskbarStackPanel.Children.Add(btn);
 
             window.OnClosed += () => RemoveTaskbarButton(title);
+
             IDLabel.Content = $"computer {computer.ID()}";
             
             CompositionTarget.Rendering += (e, o) => UpdateComputerTime();
@@ -221,7 +233,7 @@ namespace VM.GUI
         private void UpdateComputerTime()
         {
             DateTime now = DateTime.Now;
-            string formattedDateTime = now.ToString("MM/dd/yy || HH:mm");
+            string formattedDateTime = now.ToString("MM/dd/yy || h:mm");
             TimeLabel.Content = formattedDateTime;
         }
 
@@ -397,16 +409,32 @@ namespace VM.GUI
             // bind ui events to js methods here.
             // XamlJsInterop.InitializeControl(computer, control, new() { XamlJsInterop.EventInitializer }, new() { });
 
-            var js_obj = await computer.OS.JavaScriptEngine.Execute(data.JS);
-
-            if (js_obj == null)
-            {
-                Notifications.Now($"Javascript for a {type} backend did not compile or return any valid data");
-            }
+            var instance_identifier = await HandleJS(type, data);
 
             var wnd = Runtime.GetWindow(pc: computer);
 
             wnd.Open(control);
+        }
+      
+        private async Task<string> HandleJS(string type, (string XAML, string JS) data)
+        {
+            var js_obj = await computer.OS.JavaScriptEngine.Execute(data.JS);
+
+            if (js_obj != null)
+            {
+                Notifications.Now(js_obj?.ToString() ?? "");
+            }
+
+            var typeName = type.Split('.')[0];
+
+            var name = typeName.ToUpper();
+
+
+            // inject helper methods/ generate code for the UI backend class
+
+            await computer.OS.JavaScriptEngine.Execute($"let {name} = new {typeName}()");
+
+            return name;
         }
 
         public void RegisterCustomApp(string type)
@@ -432,5 +460,29 @@ namespace VM.GUI
             
         }
 
+        internal void RegisterCustomWebApp(string type)
+        {
+            Dispatcher.Invoke(delegate
+            {
+                CustomApps.Add(type);
+
+                var btn = GetDesktopIconButton(type);
+
+                btn.MouseDoubleClick += OnDesktopIconPressed;
+
+                void OnDesktopIconPressed(object? sender, RoutedEventArgs e)
+                {
+                    var app = new UserWebApplet();
+
+                    // we add the appropriate extension within navigate.
+                    app.Navigate(type.Replace(".web", ""));
+                    Open(app);
+                }
+
+                DesktopIconPanel.Children.Add(btn);
+                DesktopIconPanel.UpdateLayout();
+            });
+
+        }
     }
 }

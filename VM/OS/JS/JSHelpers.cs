@@ -1,11 +1,14 @@
-﻿using System;
+﻿using Microsoft.ClearScript;
+using System;
 using System.CodeDom;
 using System.Diagnostics;
 using System.IO;
 using System.Threading.Tasks;
 using System.Windows.Controls;
+using System.Windows.Media;
 using VM.GUI;
 using VM.OS.UserInterface;
+
 
 namespace VM.OS.JS
 {
@@ -37,15 +40,64 @@ namespace VM.OS.JS
         }
         #endregion
         #region XAML/JS interop
-        public async void register_app(string dir)
+        public async void install(string dir)
         {
             ComputerWindow window = Runtime.GetWindow(computer);
-            window.RegisterCustomApp(dir);
-            
-            
+
+            // js/html app
+            if (dir.Contains(".web"))
+            {
+                window.RegisterCustomWebApp(dir);
+                return;
+            }
+
+            // wpf app
+            if (dir.Contains(".app"))
+            {
+                window.RegisterCustomApp(dir);
+            }
         }
+        public void alias(string alias, string path)
+        {
+            computer.OS.CommandLine.Aliases.Add(alias, Runtime.GetResourcePath(path, ".js") ?? "not found");
+        }
+        public void addEventHandler(object? method, int type)
+        {
+            var wnd = Runtime.GetWindow(computer);
+
+            if (method is IScriptObject v8Function)
+            {
+                void execute(params object[]? parameters)
+                {
+                    v8Function.Invoke(false, parameters ?? new object[] { });
+                }
+
+                switch ((XAML_EVENTS)type)
+                {
+                    case XAML_EVENTS.MOUSE_DOWN:
+                        break;
+                    case XAML_EVENTS.MOUSE_UP:
+                        break;
+                    case XAML_EVENTS.MOUSE_MOVE:
+                        break;
+                    case XAML_EVENTS.KEY_DOWN:
+                        break;
+                    case XAML_EVENTS.KEY_UP:
+                        break;
+                    case XAML_EVENTS.LOADED:
+                        break;
+                    case XAML_EVENTS.WINDOW_CLOSE:
+                        break;
+                    case XAML_EVENTS.RENDER:
+                        CompositionTarget.Rendering += (sender, e) => execute(null);
+                        break;
+                }
+            }
+
+          
 
 
+        }
         #endregion
         #region IO
         public object? require(string path)

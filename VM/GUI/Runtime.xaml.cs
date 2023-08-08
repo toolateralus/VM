@@ -90,7 +90,8 @@ namespace VM.GUI
 
             if (!uint.TryParse(id, out var cpu_id))
             {
-                System.Windows.MessageBox.Show("The inputted computer id was invalid. It must be a non-negative integer.");
+                System.Windows.MessageBox.Show($"The computer id \"{id}\" was invalid. It must be a non-negative integer.");
+                IDBox.Text = "0";
                 return;
             }
 
@@ -101,6 +102,7 @@ namespace VM.GUI
             pc.OS.InstallApplication("CommandPrompt.app", typeof(CommandPrompt));
             pc.OS.InstallApplication("FileExplorer.app", typeof(FileExplorer));
             pc.OS.InstallApplication("TextEditor.app", typeof(TextEditor));
+            pc.OS.InstallApplication("Browser.app", typeof(UserWebApplet));
 
             wnd.Show();
             wnd.Closed += (o, e) =>
@@ -128,7 +130,7 @@ namespace VM.GUI
             NetworkEvents[outCh] = (msg, inCh);
         }
 
-        internal static string? GetResource(string name, string ext)
+        internal static string? GetResourcePath(string name, string ext)
         {
             var path = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData) + "\\VM";
 

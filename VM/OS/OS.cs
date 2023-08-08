@@ -20,9 +20,13 @@ namespace VM.OS
         {
             OS = new(id, this);
 
-            
-            
-            
+            OS.JavaScriptEngine.LoadModules(Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "VM\\OS-JS"));
+            _ = OS.JavaScriptEngine.Execute($"OS.id = {id}");
+
+            if (Runtime.GetResourcePath("startup", ".js") is string AbsPath)
+            {
+                OS.JavaScriptEngine.ExecuteScript(AbsPath);
+            }
         }
         public uint ID() => OS.ID;
 
@@ -89,11 +93,6 @@ namespace VM.OS
             window.RegisterApp(exePath, type);
         }
 
-        internal void InstallCustomApplication(string id, UserControl type)
-        {
-            
-        }
-
         public OS(uint id, Computer computer)
         {
             CommandLine = new(computer);
@@ -111,7 +110,7 @@ namespace VM.OS
             // prepare the javascript engine, and assign the computer ID to the var in the OS instance (in the js), and get the on exit event from the js env.
             JavaScriptEngine = new(this.WORKING_DIR, computer);
             
-            _ = JavaScriptEngine.Execute($"OS.id = {id}");
+           
 
             JavaScriptEngine.InteropModule.OnComputerExit += computer.Exit;
         }

@@ -14,7 +14,7 @@ namespace VM.GUI
         private int historyIndex = -1; 
         private string tempInput = ""; 
         public Computer computer;
-        public static string? DesktopIcon => Runtime.GetResource("commandprompt", ".png");
+        public static string? DesktopIcon => Runtime.GetResourcePath("commandprompt", ".png");
         public CommandPrompt()
         {
             InitializeComponent();

@@ -2,6 +2,10 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Runtime.CompilerServices;
+using System.Runtime.InteropServices;
+using System.Text.RegularExpressions;
+using System.Threading.Tasks;
 using VM.OS;
 
 namespace VM.OS.FS
@@ -11,7 +15,7 @@ namespace VM.OS.FS
     {
         public Computer Computer;
         public Dictionary<string, Action<object[]?>> Commands = new();
-
+        public Dictionary<string, string> Aliases = new();
         public CommandLine(Computer computer)
         {
             Computer = computer;
@@ -46,6 +50,25 @@ namespace VM.OS.FS
             string cmdName = split.First();
             var str_args = split[1..];
 
+            if (Aliases.TryGetValue(cmdName, out var alias) && File.Exists(alias))
+            {
+                var jsCode = File.ReadAllText(alias);
+
+                const string ArgsArrayReplacement = " = [..];";
+                var index = jsCode.IndexOf(ArgsArrayReplacement);
+
+                if (index != -1)
+                {
+                    var args = jsCode.Substring(index, ArgsArrayReplacement.Length);
+
+                    var newArgs = $" = [{string.Join(",", str_args)}]";
+
+                    jsCode = jsCode.Replace(args, newArgs);
+                }
+
+                Task.Run(async delegate { await Computer.OS.JavaScriptEngine.Execute(jsCode); });
+                return true;
+            }
             if (Commands.TryGetValue(cmdName, out var cmd))
             {
                 cmd.Invoke(str_args);
