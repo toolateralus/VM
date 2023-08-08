@@ -63,6 +63,11 @@ namespace VM.GUI
         {
             string code = input.Text;
 
+            if (computer.OS.CommandLine.TryCommand(code))
+            {
+                return;
+            }
+
             if (commandHistory.Count > 50)
             {
                 commandHistory.RemoveAt(0);

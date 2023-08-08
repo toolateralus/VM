@@ -1,32 +1,37 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
+using System.IO;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
-using System.Windows.Data;
-using System.Windows.Documents;
-using System.Windows.Input;
-using System.Windows.Media;
-using System.Windows.Media.Imaging;
-using System.Windows.Navigation;
-using System.Windows.Shapes;
+using Microsoft.Web.WebView2.Core;
 using VM.OS;
 
 namespace VM.GUI
 {
-    /// <summary>
-    /// Interaction logic for UserWebApplet.xaml
-    /// </summary>
     public partial class UserWebApplet : UserControl
     {
+        private bool webViewInitialized = false;
+
         public UserWebApplet()
         {
             InitializeComponent();
-            
+            chromiumBrowser.Loaded += ChromiumBrowser_Loaded;
         }
+
+        private async void ChromiumBrowser_Loaded(object sender, RoutedEventArgs e)
+        {
+            await InitializeWebViewAsync();
+            Navigate(Path);
+        }
+
+        private async Task InitializeWebViewAsync()
+        {
+            await chromiumBrowser.EnsureCoreWebView2Async();
+            webViewInitialized = true;
+        }
+
         Computer computer;
+        public string Path;
         public void LateInit(Computer computer)
         {
             this.computer = computer;
@@ -34,9 +39,14 @@ namespace VM.GUI
 
         public void Navigate(string appName)
         {
-            Uri uri = new Uri(Runtime.GetResourcePath(appName , ".index.html"), UriKind.RelativeOrAbsolute);
-            webBrowser.Navigate(uri);
-        }
+            if (webViewInitialized)
+            {
+                var html = Runtime.GetResourcePath(appName, ".index.html");
+                
+                if (File.Exists(html)) 
+                    chromiumBrowser.NavigateToString(File.ReadAllText(html));
 
+            }
+        }
     }
 }

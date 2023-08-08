@@ -14,6 +14,7 @@ using VM.OS;
 using static System.Net.Mime.MediaTypeNames;
 using System.Xml.Linq;
 using System.Linq;
+using System.Windows.Controls;
 
 namespace VM.GUI
 {
@@ -38,6 +39,32 @@ namespace VM.GUI
             IDBox.Text = "0";
 
             StartPerpetualColorAnimation();
+
+            const string pc_id = "computer";
+            const string name = "this";
+            const string ext = ".ins";
+
+            if (GetResourcePath(name, ext) is string path && path.Contains(pc_id))
+            {
+                int startIndex = path.IndexOf(pc_id) + pc_id.Length;
+
+                if (startIndex < path.Length)
+                {
+                    string computerNumber = path.Substring(startIndex);
+                    int endIndex = computerNumber.IndexOfAny(new char[] { '/', '\\' });
+
+                    if (endIndex != -1)
+                    {
+                        computerNumber = computerNumber.Substring(0, endIndex);
+                    }
+
+                    if (uint.TryParse(computerNumber, out uint number))
+                    {
+                        InstantiateComputer(number);
+                        Close();
+                    }
+                }
+            }
 
         }
 
@@ -95,6 +122,12 @@ namespace VM.GUI
                 return;
             }
 
+            InstantiateComputer(cpu_id);
+            
+        }
+
+        private void InstantiateComputer(uint cpu_id)
+        {
             OS.Computer pc = new(cpu_id);
             ComputerWindow wnd = new(pc);
             Computers[pc] = wnd;
@@ -102,7 +135,6 @@ namespace VM.GUI
             pc.OS.InstallApplication("CommandPrompt.app", typeof(CommandPrompt));
             pc.OS.InstallApplication("FileExplorer.app", typeof(FileExplorer));
             pc.OS.InstallApplication("TextEditor.app", typeof(TextEditor));
-            pc.OS.InstallApplication("Browser.app", typeof(UserWebApplet));
 
             wnd.Show();
             wnd.Closed += (o, e) =>
@@ -110,6 +142,7 @@ namespace VM.GUI
                 Computers.Remove(pc);
                 pc.Shutdown();
             };
+            WindowState = WindowState.Minimized;
         }
 
         public static Dictionary<int, (object? val, int replyCh)> NetworkEvents = new();
@@ -180,6 +213,30 @@ namespace VM.GUI
             }
 
             return ("Not found!", "Not Found!");
+        }
+
+        public static T SearchForOpenWindowType<T>(Computer Computer)
+        {
+            var wnd = Runtime.GetWindow(Computer);
+
+            foreach (var window in wnd.Windows)
+                if (window.Value.Content is UserWindow userWindow && userWindow.Content is Grid g)
+                {
+
+                    foreach (var item in g.Children)
+                    {
+                        if (item is Frame frame)
+                        {
+                            if (frame.Content is T ActualApplication)
+                            {
+                                return ActualApplication;
+                            }
+                        }
+                    }
+
+                }
+            return default;
+
         }
     }
 }

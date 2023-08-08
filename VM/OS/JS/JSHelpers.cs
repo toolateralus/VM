@@ -40,6 +40,29 @@ namespace VM.OS.JS
         }
         #endregion
         #region XAML/JS interop
+
+        public void uninstall(string dir)
+        {
+            ComputerWindow window = Runtime.GetWindow(computer);
+
+            // js/html app
+            if (dir.Contains(".web"))
+            {
+                window.Uninstall(dir); 
+                return;
+            }
+
+            // wpf app
+            if (dir.Contains(".app"))
+            {
+                window.Uninstall(dir);
+                return;
+            }
+
+            Notifications.Now("Incorrect path for uninstall");
+
+        }
+
         public async void install(string dir)
         {
             ComputerWindow window = Runtime.GetWindow(computer);
@@ -47,14 +70,14 @@ namespace VM.OS.JS
             // js/html app
             if (dir.Contains(".web"))
             {
-                window.RegisterCustomWebApp(dir);
+                window.InstallJSHTML(dir);
                 return;
             }
 
             // wpf app
             if (dir.Contains(".app"))
             {
-                window.RegisterCustomApp(dir);
+                window.InstallWPF(dir);
             }
         }
         public void alias(string alias, string path)

@@ -273,6 +273,7 @@ namespace VM.GUI
 
             btn.Margin = new Thickness(15, 15, 15, 15);
             btn.Content = appName;
+            btn.Name = appName.Split(".")[0];
             return btn;
         }
 
@@ -437,7 +438,7 @@ namespace VM.GUI
             return name;
         }
 
-        public void RegisterCustomApp(string type)
+        public void InstallWPF(string type)
         {
 
             Dispatcher.Invoke(delegate
@@ -445,7 +446,7 @@ namespace VM.GUI
                 CustomApps.Add(type);
 
                 var btn = GetDesktopIconButton(type);
-
+              
                 btn.MouseDoubleClick += OnDesktopIconPressed;
 
                 async void OnDesktopIconPressed(object? sender, RoutedEventArgs e)
@@ -460,7 +461,7 @@ namespace VM.GUI
             
         }
 
-        internal void RegisterCustomWebApp(string type)
+        internal void InstallJSHTML(string type)
         {
             Dispatcher.Invoke(delegate
             {
@@ -475,7 +476,7 @@ namespace VM.GUI
                     var app = new UserWebApplet();
 
                     // we add the appropriate extension within navigate.
-                    app.Navigate(type.Replace(".web", ""));
+                    app.Path = (type.Replace(".web", ""));
                     Open(app);
                 }
 
@@ -484,5 +485,25 @@ namespace VM.GUI
             });
 
         }
+
+        internal void Uninstall(string name)
+        {
+            CustomApps.Remove(name);
+
+            Dispatcher.Invoke(() => { 
+                System.Collections.IList list = DesktopIconPanel.Children;
+
+                for (int i = 0; i < list.Count; i++)
+                {
+                    object? item = list[i];
+                    if (item is Button btn && btn.Name == name)
+                    {
+                        DesktopIconPanel.Children.Remove(btn);
+                    }
+                }
+            });
+        }
+
+     
     }
 }

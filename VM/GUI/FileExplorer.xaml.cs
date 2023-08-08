@@ -25,6 +25,7 @@ namespace VM.GUI
     /// </summary>
     public partial class FileExplorer : UserControl
     {
+        public static string? DesktopIcon => Runtime.GetResourcePath("fileexplorer", ".png");
         ObservableCollection<string> FileViewerData = new();
         Dictionary<string, string> OriginalPaths = new();
         public Computer computer;

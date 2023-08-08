@@ -1,4 +1,6 @@
-﻿using Microsoft.Win32;
+﻿using ICSharpCode.AvalonEdit.Highlighting;
+using ICSharpCode.AvalonEdit;
+using Microsoft.Win32;
 using System.IO;
 using System.Windows;
 using System.Windows.Controls;
@@ -15,6 +17,7 @@ namespace VM.GUI
         Computer computer;
         public string LoadedFile;
         public string Contents;
+        public static string? DesktopIcon => Runtime.GetResourcePath("texteditor", ".png");
         public TextEditor(Computer pc, string path)
         {
             InitializeComponent();
@@ -23,9 +26,26 @@ namespace VM.GUI
             
             if (File.Exists(path))
             {
+                if (path.Contains(".html") && !path.Contains(".js"))
+                {
+                    input.SyntaxHighlighting =  HighlightingManager.Instance.GetDefinition("HTML");
+                }
+               
+                else if (path.Contains(".xaml") && (!path.Contains(".cs") && !path.Contains(".js")))
+                {
+                    input.SyntaxHighlighting = HighlightingManager.Instance.GetDefinition("XAML");
+                }
+
+                else if (path.Contains(".cs") && !path.Contains(".js"))
+                {
+                    input.SyntaxHighlighting = HighlightingManager.Instance.GetDefinition("C#");
+                }
+
+
                 Contents = File.ReadAllText(path);
                 input.Text = Contents;
             }
+            // change the highlighting based on file extension that's opened
         }
         public void LateInit(Computer pc)
         {
