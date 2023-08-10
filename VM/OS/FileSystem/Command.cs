@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Newtonsoft.Json.Linq;
+using System;
 using System.Collections.Generic;
 using System.Data;
 using System.Drawing;
@@ -97,6 +98,32 @@ namespace VM.OS.FS
                         foreach (var item in obj[2..])
                         {
                             arg += $" {item}";
+                        }
+
+                        arg = arg.Trim();
+
+                        if (arg.First() == '[' && arg.Last() == ']')
+                        {
+                            var clean = arg.Replace('[', ' ');
+                            clean = clean.Replace(']', ' ');
+
+                            var contents = clean.Split(',');
+
+                            List<object> objectArgs = new();
+
+                            foreach (var item in contents)
+                            {
+                                if (float.TryParse(item, out var floatingpt))
+                                    objectArgs.Add(floatingpt);
+                                else if (int.TryParse(item, out var integer))
+                                    objectArgs.Add(integer);
+                                else if (bool.TryParse(item, out var boolean))
+                                    objectArgs.Add(boolean);
+                            }
+
+                            var jObject =JObject.FromObject(objectArgs);
+
+                            Computer.OS.Config[propname] = jObject;
                         }
 
                         Computer.OS.Config[propname] = arg;

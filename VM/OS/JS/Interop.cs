@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.ComponentModel.Design;
@@ -11,9 +12,12 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Forms;
+using System.Windows.Media;
 using JavaScriptEngineSwitcher.Core;
 using JavaScriptEngineSwitcher.V8;
 using Microsoft.VisualBasic.Devices;
+using VM.GUI;
+using static VM.OS.JS.JSInterop;
 
 namespace VM.OS.JS
 {
@@ -27,8 +31,12 @@ namespace VM.OS.JS
         public bool Disposing { get; private set; }
         private readonly ConcurrentDictionary<int, (string code, Action<object?> output)> CodeDictionary = new();
         private readonly Thread executionThread;
+
+        Computer computer;
         public JavaScriptEngine(string ProjectRoot, Computer computer)
         {
+            this.computer = computer;
+
             engineSwitcher = JsEngineSwitcher.Current;
 
             engineSwitcher.EngineFactories.AddV8();
@@ -44,11 +52,20 @@ namespace VM.OS.JS
             InteropModule.OnModuleImported += ImportModule;
             engine.EmbedHostObject("interop", InteropModule);
 
-
             executionThread = new Thread(Execute);
             executionThread.Start();
+            CompositionTarget.Rendering += Render;
 
         }
+
+        private void Render(object? sender, EventArgs e)
+        {
+            foreach (var item in EventHandlers.Where(e => e.Event == XAML_EVENTS.RENDER))
+            {
+                item.Invoke(null,null);
+            }
+        }
+
         public object? GetVariable(string name)
         {
             return engine.GetVariableValue(name);
@@ -142,7 +159,54 @@ namespace VM.OS.JS
         internal void ExecuteScript(string absPath)
         {
             if (File.Exists(absPath))
-                Task.Run(async () => await Execute(File.ReadAllText(absPath)));
+                Task.Run(()=>engine.Execute(File.ReadAllText(absPath)));
+        }
+        internal void DIRECT_EXECUTE(string code)
+        {
+            Task.Run(() => engine.Execute(code));
+        }
+        public List<JSEventHandler> EventHandlers = new();
+
+        // async void for specific use
+        internal async Task CreateEventHandler(string identifier, string methodName, int type)
+        {
+            var wnd = Runtime.GetWindow(computer);
+
+            var result = await Execute($"{identifier} != null");
+
+            if (result is not bool ID_EXISTS || !ID_EXISTS)
+            {
+                return;
+            }
+
+            result = await Execute($"{identifier}.{methodName} != null");
+
+            if (result is not bool METHOD_EXISTS || !METHOD_EXISTS)
+            {
+                return;
+            }
+
+            switch ((XAML_EVENTS)type)
+            {
+                case XAML_EVENTS.MOUSE_DOWN:
+                    break;
+                case XAML_EVENTS.MOUSE_UP:
+                    break;
+                case XAML_EVENTS.MOUSE_MOVE:
+                    break;
+                case XAML_EVENTS.KEY_DOWN:
+                    break;
+                case XAML_EVENTS.KEY_UP:
+                    break;
+                case XAML_EVENTS.LOADED:
+                    break;
+                case XAML_EVENTS.WINDOW_CLOSE:
+                    break;
+                case XAML_EVENTS.RENDER:
+                    var eh = new JSEventHandler((XAML_EVENTS)type, computer.OS.JavaScriptEngine, identifier, methodName, "OS", "null");
+                    EventHandlers.Add(eh);
+                    break;
+            }
         }
     }
 }

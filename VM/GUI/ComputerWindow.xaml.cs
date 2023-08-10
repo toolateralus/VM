@@ -2,6 +2,8 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
+using System.Runtime.InteropServices;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
@@ -405,7 +407,7 @@ namespace VM.GUI
             return false;
         }
         public List<string> CustomApps =new();
-
+        public Dictionary<string, int> JSClassInstances = new();
         public async Task OpenCustom(string type)
         {
             var data = Runtime.GetAppDefinition(computer, type);
@@ -427,24 +429,44 @@ namespace VM.GUI
 
             var wnd = Runtime.GetWindow(pc: computer);
 
-            wnd.Open(control);
+            wnd.Open(control, instance_identifier);
         }
-      
+
         private async Task<string> HandleJS(string type, (string XAML, string JS) data)
         {
-            var js_obj = await computer.OS.JavaScriptEngine.Execute(data.JS);
+            var name = type.Split('.')[0];
+            int id = 0;
+            JSClassInstances.TryGetValue(type, out id);
 
-            // probably an error.
-            if (js_obj != null)
-                Notifications.Now(js_obj?.ToString() ?? "");
+            string generatedClassName = name + id.ToString();
+            data.JS = Regex.Replace(data.JS, @"\b" + name + @"\b", generatedClassName);
 
-            var typeName = type.Split('.')[0];
+            var variablePattern = new Regex(@"\b(\w+)\{..\}");
+            Match variableMatch = variablePattern.Match(data.JS);
 
-            var name = typeName.ToUpper();
+            if (variableMatch.Success)
+            {
+                string variableName = variableMatch.Groups[1].Value;
+                
+                string replacedVariable = id.ToString();
 
-            // inject helper methods/ generate code for the UI backend class
+                data.JS = data.JS.Replace(variableMatch.Value, variableName+replacedVariable);
 
-            await computer.OS.JavaScriptEngine.Execute($"let {name} = new {typeName}()");
+                await computer.OS.JavaScriptEngine.Execute(data.JS);
+
+                // overwrite o declaration
+                string kw = "let ";
+                var VarExists = await computer.OS.JavaScriptEngine.Execute($"{variableName}{id} == null");
+                if (VarExists is bool boolean && boolean)
+                {
+                    kw = "";
+                }
+
+                name = $"{variableName}{id}";
+                string classInstantiationCode = $"{kw}{name} = new {generatedClassName}()";
+                await computer.OS.JavaScriptEngine.Execute(classInstantiationCode);
+            }
+
 
             return name;
         }

@@ -101,6 +101,31 @@ namespace VM.OS
         public Thickness BorderThickness = new(0, 0, 0, 0);
         public double FontSize = 12;
     }
+    public class JSEventHandler
+    {
+        string _code = "";
+        JavaScriptEngine js;
+        public XAML_EVENTS Event = XAML_EVENTS.RENDER;
+        public JSEventHandler(XAML_EVENTS @event, JavaScriptEngine js, string id, string method, string sender, string args)
+        {
+            this.Event = @event;
+            this.js = js;
+            SetCode(id, method, sender, args);
+        }
+        public string GetCode()
+        {
+            return _code;
+        }
+        public void SetCode(string identifier, string methodName, string sender, string args)
+        {
+            _code = $"{identifier}.{methodName}({sender}, {args})";
+        }
+        public void Invoke(object? e, object? o)
+        {
+            // no output
+            js.DIRECT_EXECUTE(_code);
+        }
+    }
     public class OS
     {
         // we should re-think the references we have to the computer everywhere, maybe just combine the OS and pc or fix the strange references.

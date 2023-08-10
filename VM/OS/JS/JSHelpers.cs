@@ -1,8 +1,14 @@
 ﻿using Microsoft.ClearScript;
+using Microsoft.ClearScript.JavaScript;
 using System;
 using System.CodeDom;
+using System.Collections.Generic;
 using System.Diagnostics;
+using System.Drawing.Drawing2D;
 using System.IO;
+using System.IO.Packaging;
+using System.Linq;
+using System.Reflection;
 using System.Threading.Tasks;
 using System.Windows.Controls;
 using System.Windows.Media;
@@ -23,6 +29,23 @@ namespace VM.OS.JS
         public JSInterop(Computer computer)
         {
             this.computer = computer;
+            RegisteredEventHandlers.Add("draw_pixels", DrawPixelsEvent);
+        }
+
+        public object? DrawPixelsEvent(string id, object? data)
+        {
+            var window = Runtime.GetWindow(computer);
+            var resizableWins = window.Windows.Where(W => W.Key == id);
+            if (resizableWins.Any())
+            {
+                window.Dispatcher.Invoke(() =>
+                {
+                    // win == (user window), hierarchy == win->grid->frame->ACTUALUSERCONTENT
+                    var win = resizableWins.First().Value.Content;
+
+                });
+            }
+            return null;
         }
 
         #region System
@@ -98,42 +121,25 @@ namespace VM.OS.JS
         {
             computer.OS.CommandLine.Aliases.Add(alias, Runtime.GetResourcePath(path, ".js") ?? "not found");
         }
-        public void addEventHandler(object? method, int type)
+        public static Dictionary<string, Func<string, object?, object?>> RegisteredEventHandlers = new();
+        /// <summary>
+        /// this returns the callback, no need for extra listening
+        /// </summary>
+        /// <param name="id"></param>
+        /// <param name="eventType"></param>
+        /// <param name="data"></param>
+        /// <returns></returns>
+        public object? pushEvent(string id, string eventType, object? data)
         {
-            var wnd = Runtime.GetWindow(computer);
-
-            if (method is IScriptObject v8Function)
+            if (RegisteredEventHandlers.TryGetValue(eventType, out var handler))
             {
-                void execute(params object[]? parameters)
-                {
-                    v8Function.Invoke(false, parameters ?? new object[] { });
-                }
-
-                switch ((XAML_EVENTS)type)
-                {
-                    case XAML_EVENTS.MOUSE_DOWN:
-                        break;
-                    case XAML_EVENTS.MOUSE_UP:
-                        break;
-                    case XAML_EVENTS.MOUSE_MOVE:
-                        break;
-                    case XAML_EVENTS.KEY_DOWN:
-                        break;
-                    case XAML_EVENTS.KEY_UP:
-                        break;
-                    case XAML_EVENTS.LOADED:
-                        break;
-                    case XAML_EVENTS.WINDOW_CLOSE:
-                        break;
-                    case XAML_EVENTS.RENDER:
-                        CompositionTarget.Rendering += (sender, e) => execute(null);
-                        break;
-                }
+                return handler.Invoke(id, data);
             }
-
-          
-
-
+            return null;
+        }
+        public void addEventHandler(string identifier, string methodName, int type)
+        {
+            _ = computer.OS.JavaScriptEngine.CreateEventHandler(identifier, methodName, type);
         }
         #endregion
         #region IO
