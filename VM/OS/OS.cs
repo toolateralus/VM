@@ -143,7 +143,7 @@ namespace VM.OS
 
             JavaScriptEngine.InteropModule.OnComputerExit += computer.Exit;
 
-            Config = OSConfigLoader.Load(this);
+            Config = OSConfigLoader.Load();
 
         }
 
@@ -167,7 +167,7 @@ namespace VM.OS
 
     internal class OSConfigLoader
     {
-        internal static JObject Load(OS os)
+        internal static JObject Load()
         {
             if (Runtime.GetResourcePath("config", ".json") is string AbsPath)
             {
