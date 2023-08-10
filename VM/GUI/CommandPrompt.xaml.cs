@@ -18,16 +18,24 @@ namespace VM.GUI
         public CommandPrompt()
         {
             InitializeComponent();
-            KeyDown += Input_KeyDown;
             PreviewKeyDown += CommandPrompt_PreviewKeyDown;
         }
         public void LateInit(Computer computer)
         {
             this.computer = computer;
             Engine = computer.OS.JavaScriptEngine;
+            output.FontFamily = new(computer.OS.Config.Value<string>("font") ?? "Consolas");
         }
-        private void CommandPrompt_PreviewKeyDown(object sender, System.Windows.Input.KeyEventArgs e)
+        private async void CommandPrompt_PreviewKeyDown(object sender, System.Windows.Input.KeyEventArgs e)
         {
+            if (e.Key == System.Windows.Input.Key.Enter || e.Key == System.Windows.Input.Key.F5)
+            {
+                await ExecuteJavaScript();
+                e.Handled = true;
+                input.Clear();
+                return;
+            }
+
             if (e.Key == System.Windows.Input.Key.Up)
             {
                 if (historyIndex == -1)
@@ -40,6 +48,7 @@ namespace VM.GUI
                     historyIndex++;
                     input.Text = commandHistory[commandHistory.Count - 1 - historyIndex];
                 }
+                e.Handled = true;
             }
 
             if (e.Key == System.Windows.Input.Key.Down)
@@ -56,6 +65,7 @@ namespace VM.GUI
                         input.Text = commandHistory[commandHistory.Count - 1 - historyIndex];
                     }
                 }
+                e.Handled = true;
             }
         }
 
@@ -74,7 +84,6 @@ namespace VM.GUI
             }
 
             commandHistory.Add(code);
-
 
             input.Clear();
             try
@@ -96,12 +105,6 @@ namespace VM.GUI
             }
         }
 
-        private async void Input_KeyDown(object sender, System.Windows.Input.KeyEventArgs e)
-        {
-            if ((e.Key == System.Windows.Input.Key.Enter && System.Windows.Input.Keyboard.Modifiers == System.Windows.Input.ModifierKeys.Shift) || e.Key == System.Windows.Input.Key.F5)
-            {
-                await ExecuteJavaScript();
-            }
-        }
+       
     }
 }

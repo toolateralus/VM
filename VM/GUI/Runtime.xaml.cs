@@ -131,17 +131,7 @@ namespace VM.GUI
             OS.Computer pc = new(cpu_id);
             ComputerWindow wnd = new(pc);
             Computers[pc] = wnd;
-
-            pc.OS.InstallApplication("CommandPrompt.app", typeof(CommandPrompt));
-            pc.OS.InstallApplication("FileExplorer.app", typeof(FileExplorer));
-            pc.OS.InstallApplication("TextEditor.app", typeof(TextEditor));
-
-            wnd.Show();
-            wnd.Closed += (o, e) =>
-            {
-                Computers.Remove(pc);
-                pc.Shutdown();
-            };
+            pc.FinishInit(pc, wnd);
             WindowState = WindowState.Minimized;
         }
 

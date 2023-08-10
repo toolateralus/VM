@@ -155,5 +155,10 @@ namespace VM.OS.FS
             string[] content = Directory.GetFileSystemEntries(currentDirectory);
             return content;
         }
+
+        internal void Copy(string path, string destination)
+        {
+            File.Copy(path, destination);
+        }
     }
 }

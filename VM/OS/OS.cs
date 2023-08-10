@@ -1,6 +1,9 @@
-﻿using System;
+﻿using Newtonsoft.Json;
+using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Text.Json.Nodes;
+using System.Text.Json;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Media;
@@ -8,6 +11,14 @@ using VM.GUI;
 using VM.OS.FS;
 using VM.OS.JS;
 using VM.OS.Network;
+using Newtonsoft.Json.Linq;
+using System.Net;
+using System.Xml.Linq;
+using static System.Windows.Forms.VisualStyles.VisualStyleElement.TrayNotify;
+using System.Windows.Media.Imaging;
+using static System.Windows.Forms.VisualStyles.VisualStyleElement;
+using Microsoft.VisualBasic.Devices;
+using System.Threading.Tasks;
 
 namespace VM.OS
 {
@@ -27,6 +38,7 @@ namespace VM.OS
             {
                 OS.JavaScriptEngine.ExecuteScript(AbsPath);
             }
+
         }
         public uint ID() => OS.ID;
 
@@ -45,6 +57,26 @@ namespace VM.OS
         internal void Shutdown()
         {
             OS.JavaScriptEngine.Dispose();
+        }
+
+        internal void FinishInit(Computer pc, ComputerWindow wnd)
+        {
+            string[] backgroundpath = pc.OS.Config.Value<string>("BACKGROUND").Split('.') ?? new[] { "background", ".png" };
+
+            wnd.desktopBackground.Source = ComputerWindow.LoadImage(Runtime.GetResourcePath(backgroundpath[0], "." + backgroundpath[1]));
+
+            pc.OS.InstallApplication("CommandPrompt.app", typeof(CommandPrompt));
+            pc.OS.InstallApplication("FileExplorer.app", typeof(FileExplorer));
+            pc.OS.InstallApplication("TextEditor.app", typeof(TextEditor));
+
+            wnd.Show();
+
+            wnd.Closed += (o, e) =>
+            {
+                Runtime.Computers.Remove(pc);
+                pc.Shutdown();
+                Task.Run(() => pc.OS.SaveConfig());
+            };
         }
     }
 
@@ -70,11 +102,10 @@ namespace VM.OS
         public Theme Theme = new();
 
         public readonly uint ID;
-
         public readonly string FS_ROOT;
         public readonly string WORKING_DIR;
 
-        
+        public JObject Config;
         public Dictionary<string, Type> Applets = new();
         public void InstallApplication(string exePath, Type type) 
         {
@@ -109,10 +140,57 @@ namespace VM.OS
 
             // prepare the javascript engine, and assign the computer ID to the var in the OS instance (in the js), and get the on exit event from the js env.
             JavaScriptEngine = new(this.WORKING_DIR, computer);
-            
-           
 
             JavaScriptEngine.InteropModule.OnComputerExit += computer.Exit;
+
+            Config = OSConfigLoader.Load(this);
+
+        }
+
+        public void SaveConfig()
+        {
+            string configFilePath = Runtime.GetResourcePath("config", ".json");
+
+            if (!string.IsNullOrEmpty(configFilePath))
+            {
+                try
+                {
+                    File.WriteAllText(configFilePath, Config.ToString());
+                }
+                catch (Exception ex)
+                {
+                    Notifications.Now($"Error saving JSON config: {ex.Message}");
+                }
+            }
+        }
+    }
+
+    internal class OSConfigLoader
+    {
+        internal static JObject Load(OS os)
+        {
+            if (Runtime.GetResourcePath("config", ".json") is string AbsPath)
+            {
+                if (File.Exists(AbsPath))
+                {
+                    string json = File.ReadAllText(AbsPath);
+
+                    try
+                    {
+                        return JObject.Parse(json);
+                    }
+                    catch (Exception ex)
+                    {
+                        Notifications.Now($"Error loading JSON: {ex.Message}");
+                    }
+                }
+                else
+                {
+                    Notifications.Now("JSON file not found.");
+                }
+            }
+
+            return null;
         }
     }
 }
