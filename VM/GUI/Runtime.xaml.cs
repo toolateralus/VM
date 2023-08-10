@@ -28,6 +28,8 @@ namespace VM.GUI
         {
             InitializeComponent();
             IDBox.KeyDown += IDBox_KeyDown;
+            
+            onWindowStateChanged += (ws) => WindowState = ws;
 
             using (XmlReader reader = XmlReader.Create(new StringReader(JAVASCRIPT_SYNTAX_HIGHLIGHTING.HIGHLIGHTING)))
             {
@@ -65,6 +67,11 @@ namespace VM.GUI
                     }
                 }
             }
+
+        }
+        public static Action<WindowState>? onWindowStateChanged;
+        public static void Restart(uint id)
+        {
 
         }
 
@@ -121,18 +128,17 @@ namespace VM.GUI
                 IDBox.Text = "0";
                 return;
             }
-
-            InstantiateComputer(cpu_id);
+           
             
         }
-
-        private void InstantiateComputer(uint cpu_id)
+        
+        private static void InstantiateComputer(uint cpu_id)
         {
             OS.Computer pc = new(cpu_id);
             ComputerWindow wnd = new(pc);
             Computers[pc] = wnd;
             pc.FinishInit(pc, wnd);
-            WindowState = WindowState.Minimized;
+            onWindowStateChanged?.Invoke(WindowState.Minimized);
         }
 
         public static Dictionary<int, (object? val, int replyCh)> NetworkEvents = new();

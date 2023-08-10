@@ -39,10 +39,13 @@ namespace VM.OS.UserInterface
             }
         }
 
-        public static UserControl ParseUserControl(string xaml)
+        public static UserControl? ParseUserControl(string xaml)
         {
             UserControl product = null;
             Action<UserControl> output = (e) => { product = e; };
+
+            if (xaml == "Not found!")
+                return null;
 
             App.Current.Dispatcher.Invoke(delegate { 
                 try

@@ -405,6 +405,12 @@ namespace VM.GUI
 
             var control = XamlJsInterop.ParseUserControl(data.XAML);
 
+            if (control == null)
+            {
+                Notifications.Now($"Error parsing xaml for {type}.");
+                return;
+            }
+
             // we need to compile the js, somehow reflect for the class, get the methods,
             // bind methods to c# actions(maybe optional) and setup events.
             // bind ui events to js methods here.
@@ -421,15 +427,13 @@ namespace VM.GUI
         {
             var js_obj = await computer.OS.JavaScriptEngine.Execute(data.JS);
 
+            // probably an error.
             if (js_obj != null)
-            {
                 Notifications.Now(js_obj?.ToString() ?? "");
-            }
 
             var typeName = type.Split('.')[0];
 
             var name = typeName.ToUpper();
-
 
             // inject helper methods/ generate code for the UI backend class
 
@@ -440,7 +444,6 @@ namespace VM.GUI
 
         public void InstallWPF(string type)
         {
-
             Dispatcher.Invoke(delegate
             {
                 CustomApps.Add(type);
@@ -456,8 +459,8 @@ namespace VM.GUI
 
                 DesktopIconPanel.Children.Add(btn);
                 DesktopIconPanel.UpdateLayout();
-            });
 
+            });
             
         }
 

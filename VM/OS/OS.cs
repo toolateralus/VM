@@ -19,6 +19,8 @@ using System.Windows.Media.Imaging;
 using static System.Windows.Forms.VisualStyles.VisualStyleElement;
 using Microsoft.VisualBasic.Devices;
 using System.Threading.Tasks;
+using System.Threading;
+using System.Windows.Threading;
 
 namespace VM.OS
 {
@@ -44,16 +46,22 @@ namespace VM.OS
 
         public OS OS;
 
+        /// <summary>
+        /// this closes the window associated with the pc, if you do so manually before or after this call, it will error.
+        /// </summary>
+        /// <param name="exitCode"></param>
         internal void Exit(int exitCode)
         {
-            Runtime.GetWindow(this).Close();
+            ComputerWindow computerWindow = Runtime.GetWindow(this);
+            
+            computerWindow.Close();
 
             if (Runtime.Computers.Count > 0 && exitCode != 0)
             {
                 Notifications.Now($"Computer {ID()} has exited, most likely due to an error. code:{exitCode}");
             }
         }
-
+       
         internal void Shutdown()
         {
             OS.JavaScriptEngine.Dispose();
@@ -61,7 +69,7 @@ namespace VM.OS
 
         internal void FinishInit(Computer pc, ComputerWindow wnd)
         {
-            string[] backgroundpath = pc.OS.Config.Value<string>("BACKGROUND").Split('.') ?? new[] { "background", ".png" };
+            string[] backgroundpath = pc.OS.Config.Value<string>("BACKGROUND")?.Split('.') ?? new[] { "background", ".png" };
 
             wnd.desktopBackground.Source = ComputerWindow.LoadImage(Runtime.GetResourcePath(backgroundpath[0], "." + backgroundpath[1]));
 

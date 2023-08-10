@@ -45,8 +45,13 @@ namespace VM.GUI
             fadeOutTimer = new DispatcherTimer();
             fadeOutTimer.Interval = TimeSpan.FromSeconds(2);
             fadeOutTimer.Tick += OnFadeOutTimerTick;
+            MouseDoubleClick += NotificationControl_MouseDoubleClick;
 
+        }
 
+        private void NotificationControl_MouseDoubleClick(object sender, System.Windows.Input.MouseButtonEventArgs e)
+        {
+            OnFadeOutCompleted();
         }
 
         private void OnLoaded(object? sender, RoutedEventArgs e)
@@ -71,15 +76,20 @@ namespace VM.GUI
 
         private void OnFadeOutTimerTick(object? sender, EventArgs e)
         {
-            var fadeOutAnimation = new DoubleAnimation(1, 0, TimeSpan.FromSeconds(2));
+            var fadeOutAnimation = new DoubleAnimation(1, 0, TimeSpan.FromSeconds(1.5));
             fadeOutAnimation.Completed += (s, _) =>
             {
-                var parent = Parent as Panel;
-                parent?.Children.Remove(this);
-                onComplete?.Invoke();
+                OnFadeOutCompleted();
             };
             BeginAnimation(OpacityProperty, fadeOutAnimation);
             fadeOutTimer.Stop();
+        }
+
+        private void OnFadeOutCompleted()
+        {
+            var parent = Parent as Panel;
+            parent?.Children.Remove(this);
+            onComplete?.Invoke();
         }
     }
 }

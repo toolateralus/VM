@@ -58,7 +58,8 @@ namespace VM.OS.FS
                 new("copy", Copy, "copy arg1 to any number of provided paths,\'\n\t\' example: { copy source destination1 destination2 destination3... }"),
                 new("clear", Clear, "makes directory at provided path if permitted"),
                 new("font", SetFont, "set\'s the command prompt\'s font for this session. call this from a startup to set as default"),
-                new("config" ,Config, "config <set or get> <property name> (set only) <new value>")
+                new("config" ,Config, "config <set or get> <property name> (set only) <new value>"),
+                new("restart", (_) => Runtime.Restart(computer.ID()), "restarts this computer"),
             };
         }
         private void Config(object[]? obj)
@@ -87,7 +88,7 @@ namespace VM.OS.FS
                             return;
                         }
 
-                        commandPrompt.output.AppendText($"\n {{{propname} : {propValue}}}");
+                        commandPrompt.DrawTextBox($"\n {{{propname} : {propValue}}}");
                     }
                     else if (toLower == "set" && obj.Length > 2)
                     {
@@ -111,11 +112,12 @@ namespace VM.OS.FS
                         Notifications.Now("You must have a cmd prompt open to display 'help' command results.");
                         return;
                     }
-
+                    StringBuilder sb = new();
                     foreach (var kvp in Computer.OS.Config)
                     {
-                        commandPrompt.output.AppendText($"\n {{{kvp.Key} : {kvp.Value}}}");
+                        sb.Append($"\n {{{kvp.Key} : {kvp.Value}}}");
                     }
+                    commandPrompt.DrawTextBox(sb.ToString());
                 }
                 else
                 {
@@ -127,7 +129,6 @@ namespace VM.OS.FS
                 Notifications.Now("Invalid input parameters.");
             }
         }
-
         private void SetFont(object[]? obj)
         {
             var commandPrompt = Runtime.SearchForOpenWindowType<CommandPrompt>(Computer);
@@ -168,8 +169,6 @@ namespace VM.OS.FS
                 Notifications.Now("Font name not provided.");
             }
         }
-
-
         private void ListDir(object[]? obj)
         {
             var commandPrompt = Runtime.SearchForOpenWindowType<CommandPrompt>(Computer);
@@ -181,29 +180,11 @@ namespace VM.OS.FS
             }
 
             var list = Computer.OS.FS.DirectoryListing();
+            var txt = string.Join('\n', list);
+            var text = $"-Current Directory: {Computer.OS.FS.CurrentDirectory} --";
 
-
-            var text = listitemformat($"-Current Directory: {Computer.OS.FS.CurrentDirectory} --", list, commandPrompt);
-            commandPrompt.output.AppendText(text);
-            
-        }
-
-        private string listitemformat(string header, string[] data, CommandPrompt commandPrompt)
-        {
-            StringBuilder product = new();
-            product.AppendLine(headerformat(header));
-            product.AppendLine(@$"{Environment.NewLine}/*");
-            foreach (var file in data)
-            {
-                product.AppendLine(file);
-            }
-            product.AppendLine(@$"*/{Environment.NewLine}");
-            return product.ToString();
-        }
-        
-        string headerformat(string input)
-        {
-            return $"\n// // // // //\n{input}\n\t// // // // //";
+            commandPrompt.DrawTextBox(text);
+            commandPrompt.DrawTextBox(txt);
         }
         private void ChangeDir(object[]? obj)
         {
@@ -241,13 +222,18 @@ namespace VM.OS.FS
                 return;
             }
 
+            StringBuilder cmdbuilder = new();
+            StringBuilder aliasbuilder = new();
+
             foreach (var item in Commands)
-                commandPrompt.output.AppendText($"\n {{{item.id}}} \n\t\'{string.Join(",", item.infos)}\'");
+                cmdbuilder.Append($"{{{item.id}}} \t\'{string.Join(",", item.infos)}\'");
 
             foreach (var item in Aliases)
-            {
-                commandPrompt.output.AppendText($"\n{item.Key} -> {item.Value}");
-            }
+                aliasbuilder.Append($"{item.Key} -> {item.Value}");
+
+            commandPrompt.DrawTextBox(cmdbuilder.ToString());
+            commandPrompt.DrawTextBox(aliasbuilder.ToString());
+
         }
         private async void RunJs(object[]? obj)
         {

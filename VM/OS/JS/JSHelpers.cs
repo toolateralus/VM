@@ -40,7 +40,7 @@ namespace VM.OS.JS
                     return;
                 }
 
-                commandPrompt.output.AppendText($"\n {message}");
+                commandPrompt.DrawTextBox($"\n {message}");
             });
 
         }
