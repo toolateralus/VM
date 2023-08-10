@@ -43,7 +43,6 @@ namespace VM.OS.FS
         public List<Command> Commands = new();
         public Dictionary<string, string> Aliases = new();
 
-
         public CommandLine(Computer computer)
         {
             Computer = computer;
@@ -218,18 +217,17 @@ namespace VM.OS.FS
 
             if (commandPrompt == default)
             {
-                Notifications.Now("You must have a cmd prompt open to display 'help' command results.");
-                return;
+                //Runtime.GetWindow(Computer).Open();
             }
 
             StringBuilder cmdbuilder = new();
             StringBuilder aliasbuilder = new();
 
             foreach (var item in Commands)
-                cmdbuilder.Append($"{{{item.id}}} \t\'{string.Join(",", item.infos)}\'");
+                cmdbuilder.Append($"\n{{{item.id}}} \t\n\'{string.Join(",", item.infos)}\'");
 
             foreach (var item in Aliases)
-                aliasbuilder.Append($"{item.Key} -> {item.Value}");
+                aliasbuilder.Append($"\n{item.Key} -> {item.Value.Split('\\').Last()}");
 
             commandPrompt.DrawTextBox(cmdbuilder.ToString());
             commandPrompt.DrawTextBox(aliasbuilder.ToString());

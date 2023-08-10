@@ -47,7 +47,7 @@ namespace VM.GUI
                 {
                     output.AppendText("═");
                 }
-                output.AppendText("╝\n");
+                output.AppendText("╝");
             }
 
             DrawBoxTop();

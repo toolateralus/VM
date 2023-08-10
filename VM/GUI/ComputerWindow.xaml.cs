@@ -36,6 +36,7 @@ namespace VM.GUI
             <SyntaxDefinition name=""JavaScriptCustom"" extensions="".js"" xmlns=""http://icsharpcode.net/sharpdevelop/syntaxdefinition/2008"">
                 <Color name=""Digits"" foreground=""#6D9C66"" exampleText=""3.14"" />
                 <Color name=""Comment"" foreground=""#607D8B"" exampleText=""// comment"" />
+                <Color name=""Method"" foreground=""#FAC05E"" exampleText=""functionName()"" />
                 <Color name=""String"" foreground=""#D28258"" exampleText=""var text = &quot;Hello, World!&quot;;"" />
                 <Color name=""Character"" foreground=""#D28258"" exampleText=""var char = 'a';"" />
                 <Color name=""Regex"" foreground=""#D28258"" exampleText=""/abc/m"" />
@@ -134,6 +135,10 @@ namespace VM.GUI
                     <Span color=""Comment"">
                         <Begin>//</Begin>
                     </Span>
+                   <Span color=""Method"">
+                          <Begin>\b\w+\b(?=\s*\()</Begin>
+                         <End>\b</End>
+                    </Span>
                     <Span color=""Comment"" multiline=""true"">
                         <Begin>/\*</Begin>
                         <End>\*/</End>
@@ -200,8 +205,10 @@ namespace VM.GUI
             background ??= Brushes.LightGray;
             foreground ??= Brushes.Black;
 
+            // this has the actual 'window' behavior
             var window = new UserWindow();
 
+            // this is just an extended frame, so we do need the UserWindow to host it. (frames may only have one 'Content').
             var frame = new ResizableWindow
             {
                 Content = window,

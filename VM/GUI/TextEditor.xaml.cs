@@ -23,24 +23,97 @@ namespace VM.GUI
             InitializeComponent();
             computer = pc;
             LoadedFile = path;
-            
+
             if (File.Exists(path))
             {
-                if (path.Contains(".html") && !path.Contains(".js"))
-                {
-                    input.SyntaxHighlighting =  HighlightingManager.Instance.GetDefinition("HTML");
-                }
-               
-                else if (path.Contains(".xaml") && (!path.Contains(".cs") && !path.Contains(".js")))
-                {
-                    input.SyntaxHighlighting = HighlightingManager.Instance.GetDefinition("XAML");
-                }
+                string extension = System.IO.Path.GetExtension(path)?.ToLower();
 
-                else if (path.Contains(".cs") && !path.Contains(".js"))
+                switch (extension)
                 {
-                    input.SyntaxHighlighting = HighlightingManager.Instance.GetDefinition("C#");
+                    case ".cs":
+                        input.SyntaxHighlighting = HighlightingManager.Instance.GetDefinition("C#");
+                        break;
+                    case ".js":
+                        input.SyntaxHighlighting = HighlightingManager.Instance.GetDefinition("JavaScriptCustom");
+                        break;
+                    case ".htm":
+                    case ".html":
+                        input.SyntaxHighlighting = HighlightingManager.Instance.GetDefinition("HTML");
+                        break;
+                    case ".asp":
+                    case ".aspx":
+                    case ".asax":
+                    case ".asmx":
+                    case ".ascx":
+                    case ".master":
+                        input.SyntaxHighlighting = HighlightingManager.Instance.GetDefinition("ASP/XHTML");
+                        break;
+                    case ".boo":
+                        input.SyntaxHighlighting = HighlightingManager.Instance.GetDefinition("Boo");
+                        break;
+                    case ".atg":
+                        input.SyntaxHighlighting = HighlightingManager.Instance.GetDefinition("Coco");
+                        break;
+                    case ".css":
+                        input.SyntaxHighlighting = HighlightingManager.Instance.GetDefinition("CSS");
+                        break;
+                    case ".c":
+                    case ".h":
+                    case ".cc":
+                    case ".cpp":
+                    case ".hpp":
+                        input.SyntaxHighlighting = HighlightingManager.Instance.GetDefinition("C++");
+                        break;
+                    case ".java":
+                        input.SyntaxHighlighting = HighlightingManager.Instance.GetDefinition("Java");
+                        break;
+                    case ".patch":
+                    case ".diff":
+                        input.SyntaxHighlighting = HighlightingManager.Instance.GetDefinition("Patch");
+                        break;
+                    case ".ps1":
+                    case ".psm1":
+                    case ".psd1":
+                        input.SyntaxHighlighting = HighlightingManager.Instance.GetDefinition("PowerShell");
+                        break;
+                    case ".php":
+                        input.SyntaxHighlighting = HighlightingManager.Instance.GetDefinition("PHP");
+                        break;
+                    case ".py":
+                    case ".pyw":
+                        input.SyntaxHighlighting = HighlightingManager.Instance.GetDefinition("Python");
+                        break;
+                    case ".tex":
+                        input.SyntaxHighlighting = HighlightingManager.Instance.GetDefinition("TeX");
+                        break;
+                    case ".sql":
+                        input.SyntaxHighlighting = HighlightingManager.Instance.GetDefinition("TSQL");
+                        break;
+                    case ".vb":
+                        input.SyntaxHighlighting = HighlightingManager.Instance.GetDefinition("VB");
+                        break;
+                    case ".xml":
+                    case ".xsl":
+                    case ".xslt":
+                    case ".xsd":
+                    case ".manifest":
+                    case ".config":
+                    case ".addin":
+                        // ... add more XML-related extensions ...
+                        input.SyntaxHighlighting = HighlightingManager.Instance.GetDefinition("XML");
+                        break;
+                    case ".md":
+                        input.SyntaxHighlighting = HighlightingManager.Instance.GetDefinition("MarkDown");
+                        break;
+                    case ".json":
+                        input.SyntaxHighlighting = HighlightingManager.Instance.GetDefinition("Json");
+                        break;
+                    // Add more cases for other supported file types
+                    default:
+                        // If none of the above extensions match, use a default syntax highlighting (if applicable)
+                        // For example: input.SyntaxHighlighting = HighlightingManager.Instance.GetDefinition("Text");
+                        break;
                 }
-
 
                 Contents = File.ReadAllText(path);
                 input.Text = Contents;

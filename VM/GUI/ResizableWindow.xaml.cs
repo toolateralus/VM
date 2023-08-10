@@ -19,11 +19,18 @@ namespace VM.GUI
             MouseDown += OnMouseDown;
             MouseMove += OnMouseMove;
             MouseUp += OnMouseUp;
-
+            MouseLeave += onMouseLeave;
             MinWidth = 50;
             MinHeight = 50;
             MaxWidth = 1920;
             MaxHeight = 1080;
+        }
+
+        private void onMouseLeave(object sender, MouseEventArgs e)
+        {
+            isDragging = false;
+            isResizing = false;
+            this.ReleaseMouseCapture();
         }
 
         protected void OnMouseDown(object sender, MouseButtonEventArgs e)
@@ -67,7 +74,8 @@ namespace VM.GUI
                 double left = newPosition.X - dragOffset.X;
                 double top = newPosition.Y - dragOffset.Y;
 
-                Margin = new Thickness(left, top, 0, 0);
+                Canvas.SetLeft(this, left);
+                Canvas.SetTop(this, top);
             }
             else if (isResizing)
             {
