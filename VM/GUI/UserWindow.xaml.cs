@@ -25,10 +25,10 @@ namespace VM.GUI
         }
         internal void Destroy()
         {
-            if (owner is null || owner.Parent is not Grid grid)
+            if (owner is null || owner.Parent is not Canvas canvas)
                 throw new InvalidOperationException("Window was destroyed but it had no parent");
 
-            grid.Children.Remove(owner);
+            canvas.Children.Remove(owner);
             OnClosed?.Invoke();
         }
 
