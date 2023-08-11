@@ -18,6 +18,9 @@ namespace VM.GUI
         public string LoadedFile;
         public string Contents;
         public static string? DesktopIcon => Runtime.GetResourcePath("texteditor.png");
+
+        public MarkdownViewer? mdViewer;
+
         public TextEditor(Computer pc, string path)
         {
             InitializeComponent();
@@ -104,6 +107,7 @@ namespace VM.GUI
                         break;
                     case ".md":
                         input.SyntaxHighlighting = HighlightingManager.Instance.GetDefinition("MarkDown");
+                        RunMarkdownViewer(path);
                         break;
                     case ".json":
                         input.SyntaxHighlighting = HighlightingManager.Instance.GetDefinition("Json");
@@ -120,6 +124,16 @@ namespace VM.GUI
             }
             // change the highlighting based on file extension that's opened
         }
+
+        private void RunMarkdownViewer(string path)
+        {
+            var wnd = Runtime.GetWindow(computer);
+            mdViewer = new MarkdownViewer();
+            Contents = File.ReadAllText(path);
+            mdViewer.RenderMarkdown(Contents);
+            wnd.Open(mdViewer, "Markdown Renderer");
+        }
+
         public void LateInit(Computer pc)
         {
             computer = pc;
@@ -136,7 +150,10 @@ namespace VM.GUI
             fileExplorer.LateInit(computer);
             Runtime.GetWindow(computer).Open(fileExplorer);
         }
-
+        private void RenderMD_Click(object sender, RoutedEventArgs e)
+        {
+            mdViewer?.RenderMarkdown(Contents ?? "## no markdown found");
+        }
         private void SaveButton_Click(object sender, RoutedEventArgs e)
         {
             if (!File.Exists(LoadedFile))
