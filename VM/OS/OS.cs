@@ -23,6 +23,7 @@ using System.Threading;
 using System.Windows.Threading;
 using System.Reflection.Metadata;
 using System.Text;
+using Button = System.Windows.Controls.Button;
 
 namespace VM.OS
 {
@@ -36,7 +37,7 @@ namespace VM.OS
             OS = new(id, this);
 
             OS.JavaScriptEngine.LoadModules(Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "VM\\OS-JS"));
-            _ = OS.JavaScriptEngine.Execute($"OS.id = {id}");
+            _ = OS.JavaScriptEngine.Execute($"os.id = {id}");
 
             if (Runtime.GetResourcePath("startup.js") is string AbsPath)
             {
@@ -93,7 +94,7 @@ namespace VM.OS
 
         private static void LoadBackground(Computer pc, ComputerWindow wnd)
         {
-            string backgroundPath = pc.OS.Config.Value<string>("BACKGROUND") ?? "background.png";
+            string backgroundPath = pc?.OS?.Config?.Value<string>("BACKGROUND") ?? "background.png";
             wnd.desktopBackground.Source = ComputerWindow.LoadImage(Runtime.GetResourcePath(backgroundPath) ?? "background.png");
         }
     }
@@ -117,7 +118,9 @@ namespace VM.OS
         readonly string TemplateCode;
         JavaScriptEngine js;
         public XAML_EVENTS Event = XAML_EVENTS.RENDER;
-        public JSEventHandler(Control control, XAML_EVENTS @event, JavaScriptEngine js, string id, string method)
+        public Action OnUnhook;
+       
+        public JSEventHandler(FrameworkElement control, XAML_EVENTS @event, JavaScriptEngine js, string id, string method)
         {
             this.Event = @event;
             this.js = js;
@@ -128,34 +131,48 @@ namespace VM.OS
             switch (@event)
             {
                 case XAML_EVENTS.MOUSE_DOWN:
-                    control.MouseDown += Invoke;
+                    if (control is Button button)
+                    {
+                        button.Click += InvokeGeneric;
+                        OnUnhook = () => button.Click -= InvokeGeneric;
+                        break;
+                    }
+                    control.MouseDown += InvokeMouse;
+                    OnUnhook = () => control.MouseDown -= InvokeMouse;
                     break;
                 case XAML_EVENTS.MOUSE_UP:
-                    control.MouseUp += Invoke;
+                    control.MouseUp += InvokeMouse;
+                    OnUnhook = () => control.MouseUp -= InvokeMouse;
                     break;
                 case XAML_EVENTS.MOUSE_MOVE:
-                    control.MouseMove += Invoke;
+                    control.MouseMove += InvokeMouse;
+                    OnUnhook = () => control.MouseMove -= InvokeMouse;
                     break;
                 case XAML_EVENTS.KEY_DOWN:
-                    control.KeyDown += Invoke;
+                    control.KeyDown += InvokeKeyboard;
+                    OnUnhook = () => control.KeyDown -= InvokeKeyboard;
                     break;
                 case XAML_EVENTS.KEY_UP:
-                    control.KeyUp += Invoke;
+                    control.KeyUp += InvokeKeyboard;
+                    OnUnhook = () => control.KeyUp -= InvokeKeyboard;
                     break;
                 case XAML_EVENTS.LOADED:
-                    control.Loaded += Invoke;
+                    control.Loaded += InvokeGeneric;
+                    OnUnhook = () => control.Loaded -= InvokeGeneric;
                     break;
                 case XAML_EVENTS.WINDOW_CLOSE:
-                    control.Unloaded += Invoke;
+                    control.Unloaded += InvokeGeneric;
+                    OnUnhook = () => control.Unloaded -= InvokeGeneric;
                     break;
 
-                // this is a special case and is handled elsewhere, since rendering in WPF is static.
                 case XAML_EVENTS.RENDER:
                 default:
                     break;
             }
 
         }
+
+
         public string GetCode()
         {
             return LastCode.ToString();
@@ -174,19 +191,43 @@ namespace VM.OS
             var arg0 = sender?.ToString();
 
             if (!string.IsNullOrEmpty(arg0))
-                argsBldr.Append(arg0 + ", ");
+                argsBldr.Append(arg0);
 
             var arg1 = args?.ToString();
 
             if (!string.IsNullOrEmpty(arg1))
-                argsBldr.Append(arg1);
+                argsBldr.Append(" ," + arg1);
 
             LastCode.Append(TemplateCode.Replace(arguments_placeholder, $"{argsBldr.ToString()}"));
         }
-        public void Invoke(object? sender, object? arguments)
+
+        public void InvokeMouse(object? sender, System.Windows.Input.MouseEventArgs e)
         {
-            InstantiateCode(sender, arguments);
-            js.DIRECT_EXECUTE(LastCode.ToString());
+            InstantiateCode(sender, $"[{e.LeftButton},{e.RightButton},{e.MiddleButton}]");
+            InvokeEvent();
+        }
+
+        private void InvokeEvent()
+        {
+            Task.Run(() =>
+            {
+                if (LastCode.ToString() is string Code)
+                {
+                    js.DIRECT_EXECUTE(Code);
+                    LastCode.Clear();
+                }
+            });
+        }
+
+        public void InvokeKeyboard(object? sender, System.Windows.Input.KeyEventArgs e)
+        {
+            InstantiateCode(sender, $"[{e.Key},{e.IsDown},{e.SystemKey}]");
+            InvokeEvent();
+        }
+        public void InvokeGeneric(object? sender, object? arguments)
+        {
+            InstantiateCode(null, null);
+            InvokeEvent();
         }
     }
     public class OS

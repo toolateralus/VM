@@ -110,6 +110,30 @@ namespace VM.OS.JS
 
             return null;
         }
+        public T FindElementInUserControl<T>(UserControl userControl, string elementName) where T : FrameworkElement
+        {
+            var elementType = typeof(T);
+            var contentProperty = userControl.GetType().GetProperty("Content");
+
+            if (contentProperty != null)
+            {
+                var content = contentProperty.GetValue(userControl);
+
+                if (content != null)
+                {
+                    foreach (var property in content.GetType().GetProperties())
+                    {
+                        if (elementType.IsAssignableFrom(property.PropertyType) && property.Name == elementName && property.GetValue(content) is T Instance)
+                        {
+                            return Instance;
+                        }
+                    }
+                }
+            }
+
+            return default;
+        }
+
         public static void Draw(List<byte> colorData, Image image)
         {
             var bytesPerPixel = 4;
@@ -319,7 +343,6 @@ namespace VM.OS.JS
 
             return null;
         }
-
         private FrameworkElement? SearchVisualTree(object element, string controlName)
         {
             if (element is FrameworkElement frameworkElement && frameworkElement.Name == controlName)
@@ -343,30 +366,7 @@ namespace VM.OS.JS
 
             return null;
         }
-        public T FindElementInUserControl<T>(UserControl userControl, string elementName) where T : FrameworkElement
-        {
-            var elementType = typeof(T);
-            var contentProperty = userControl.GetType().GetProperty("Content");
-
-            if (contentProperty != null)
-            {
-                var content = contentProperty.GetValue(userControl);
-
-                if (content != null)
-                {
-                    foreach (var property in content.GetType().GetProperties())
-                    {
-                        if (elementType.IsAssignableFrom(property.PropertyType) && property.Name == elementName && property.GetValue(content) is T Instance)
-                        {
-                            return Instance;
-                        }
-                    }
-                }
-            }
-
-            return default;
-        }
-
+       
         public void uninstall(string dir)
         {
             ComputerWindow window = Runtime.GetWindow(computer);

@@ -62,7 +62,8 @@ namespace VM.OS.JS
         {
             foreach (var item in EventHandlers.Where(e => e.Event == XAML_EVENTS.RENDER))
             {
-                item.Invoke(null,null);
+                // Yup Lol
+                item.InvokeGeneric(null, (object?) null);
             }
         }
         public object? GetVariable(string name)
@@ -207,32 +208,49 @@ namespace VM.OS.JS
             {
                 return;
             }
-
-            var content = InteropModule.GetUserContent(identifier);
-
-            Control control = null;
-            if (targetControl.ToLower().Trim() == "this")
+            wnd.Dispatcher.Invoke(() =>
             {
-                control = content;
-            }
-            else
-            {
-                control = InteropModule.FindElementInUserControl<Control>(content, targetControl);
-            }
+                var content = InteropModule.GetUserContent(identifier);
 
-            var eh = new JSEventHandler(control, (XAML_EVENTS)type, computer.OS.JavaScriptEngine, identifier, methodName);
-                    
-            if (wnd.Windows.TryGetValue(identifier, out var app))
-            {
-                app.OnClosed += () =>
+                if (content == null)
                 {
-                    if (EventHandlers.Contains(eh))
-                        EventHandlers.Remove(eh);
-                           
-                };
-            }
+                    Notifications.Now($"control {identifier} not found!");
+                    return;
+                }
 
-            EventHandlers.Add(eh);
+
+                FrameworkElement element = null;
+                if (targetControl.ToLower().Trim() == "this")
+                {
+                    element = content;
+                }
+                else
+                {
+                    element = InteropModule.FindControl(content, targetControl);
+                }
+
+
+                if (element == null)
+                {
+                    Notifications.Now($"control {targetControl} of {content.Name} not found.");
+                    return;
+                }
+
+                var eh = new JSEventHandler(element, (XAML_EVENTS)type, computer.OS.JavaScriptEngine, identifier, methodName);
+                    
+                if (wnd.Windows.TryGetValue(identifier, out var app))
+                {
+                    app.OnClosed += () =>
+                    {
+                        if (EventHandlers.Contains(eh))
+                            EventHandlers.Remove(eh);
+
+                        eh.OnUnhook?.Invoke();
+                    };
+                }
+
+                EventHandlers.Add(eh);
+            });
         }
     }
 }
