@@ -168,21 +168,17 @@ namespace VM.GUI
         {
             NetworkEvents[outCh] = (msg, inCh);
         }
-        internal static string? GetResourcePath(string name)
+        internal static string GetResourcePath(string name)
         {
             var path = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData) + "\\VM";
 
             VerifyOrCreateAppdataDir(path);
 
-            string[] files = Directory.GetFiles(path, name, SearchOption.AllDirectories);
+            string[] entries = Directory.GetFileSystemEntries(path, name, SearchOption.AllDirectories);
 
-            if (files.Length > 0)
-            {
-                return files[0];
-            }
-
-            return null;
+            return entries.FirstOrDefault(" ");
         }
+
         internal static void VerifyOrCreateAppdataDir(string path)
         {
             if (!Directory.Exists(path))
@@ -195,15 +191,13 @@ namespace VM.GUI
             const string xamlExt = ".xaml";
             const string xamlJsExt = ".xaml.js";
 
-            var path = pc.OS.FS_ROOT;
+            var absPath = GetResourcePath(dir);
 
-            var absDir = Path.Combine(path, dir);
-
-            if (Directory.Exists(absDir))
+            if (Directory.Exists(absPath))
             {
                 string name = dir.Split('.')[0];
-                string xamlFile = Path.Combine(absDir, name + xamlExt);
-                string jsFile = Path.Combine(absDir, dir.Split('.')[0]  + xamlJsExt);
+                string xamlFile = Path.Combine(absPath, name + xamlExt);
+                string jsFile = Path.Combine(absPath, dir.Split('.')[0]  + xamlJsExt);
 
                 if (File.Exists(xamlFile) && File.Exists(jsFile))
                 {

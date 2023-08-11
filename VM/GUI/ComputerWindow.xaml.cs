@@ -184,7 +184,7 @@ namespace VM.GUI
             {
                 case Key.OemTilde:
                     var cmd = new CommandPrompt();
-                    Open(cmd, "Cmd");
+                    OpenApp(cmd, "Cmd");
                     cmd.LateInit(computer);
                     break;
             }
@@ -198,7 +198,7 @@ namespace VM.GUI
             return bitmapImage;
         }
         public Dictionary<string, ResizableWindow> Windows = new();
-        public void Open(UserControl control, string title = "window", Brush? background = null, Brush? foreground = null)
+        public void OpenApp(UserControl control, string title = "window", Brush? background = null, Brush? foreground = null)
         {
             background ??= Brushes.LightGray;
             foreground ??= Brushes.Black;
@@ -288,7 +288,7 @@ namespace VM.GUI
         {
             FileExplorer control = new FileExplorer();
             control.LateInit(computer);
-            Open(control, "File Explorer");
+            OpenApp(control, "File Explorer");
         }
         /// <summary>
         /// the instantiation of applications is handled in the button event
@@ -310,7 +310,7 @@ namespace VM.GUI
                 if (IsValidType(members) && Activator.CreateInstance(type) is object instance && instance is UserControl userControl)
                 {
                     AssignComputer(instance, computer);
-                    Open(userControl, name);
+                    OpenApp(userControl, name);
                 }
             }
 
@@ -413,7 +413,7 @@ namespace VM.GUI
 
             var wnd = Runtime.GetWindow(pc: computer);
 
-            wnd.Open(control, instance_identifier);
+            wnd.OpenApp(control, instance_identifier);
         }
         private async Task<string> HandleJS(string type, (string XAML, string JS) data)
         {
@@ -498,7 +498,7 @@ namespace VM.GUI
 
                     // we add the appropriate extension within navigate.
                     app.Path = (type.Replace(".web", ""));
-                    Open(app);
+                    OpenApp(app);
                 }
 
                 DesktopIconPanel.Children.Add(btn);

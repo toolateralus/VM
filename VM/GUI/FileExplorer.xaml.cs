@@ -115,7 +115,7 @@ namespace VM.GUI
 
         private void Delete_Click(object sender, RoutedEventArgs e)
         {
-            computer.OS.FS.DeleteFile(SearchBar.Text);
+            computer.OS.FS.Delete(SearchBar.Text);
             UpdateView();
 
         }
@@ -162,7 +162,7 @@ namespace VM.GUI
                 string dir = "";
                 if (computer.OS.FS.FileExists(path))
                 {
-                    Runtime.GetWindow(computer).Open(new TextEditor(computer, path));
+                    Runtime.GetWindow(computer).OpenApp(new TextEditor(computer, path));
                 }
                 else
                 {

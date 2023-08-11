@@ -133,7 +133,7 @@ namespace VM.OS.FS
                 }
             }
         }
-        public void DeleteFile(string fileName, bool isDirectory = false)
+        public void Delete(string fileName, bool isDirectory = false)
         {
             string targetPath = Path.Combine(currentDirectory, fileName);
             if (isDirectory)

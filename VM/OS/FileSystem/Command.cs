@@ -49,7 +49,10 @@ namespace VM.OS.FS
             Computer = computer;
             Commands = new()
             {
+                // we need Delete, Edit (open text editor/create new file)
                 new("root", RootCmd, "navigates the open file explorer to the root directory of the computer."),
+                new("edit", Edit, "opens the editor for file, or creates a new one if not found."),
+                new("delete", Delete, "deletes a file or directory"),
                 new("js", RunJs, "runs a js file of name provided, such as myCodeFile to run myCodeFile.js in any directory under ../Appdata/VM"),
                 new("help", Help, "shows a list of all available commands and aliases to the currently open command prompt."),
                 new("ls", ListDir, "lists all dirs in current directory"),
@@ -62,6 +65,43 @@ namespace VM.OS.FS
                 new("restart", (_) => Runtime.Restart(computer.ID()), "restarts this computer"),
             };
         }
+
+        private void Delete(object[]? obj)
+        {
+            if (obj != null && obj.Length > 0 && obj[0] is string target)
+            {
+                Computer.OS.FS.Delete(target);
+            }
+            else
+            {
+                Notifications.Now("Invalid input parameters.");
+            }
+        }
+
+        private void Edit(object[]? obj)
+        {
+            if (obj != null && obj.Length > 0 && obj[0] is string fileName)
+            {
+
+                if (Runtime.GetResourcePath(fileName) is string AbsPath)
+                {
+                    if (!File.Exists(AbsPath))
+                    {
+                        var str = File.Create(AbsPath);
+                        str.Close();
+                    }
+                    var wnd = Runtime.GetWindow(Computer);
+                    var tEdit = new TextEditor(Computer, AbsPath);
+                    wnd.OpenApp(tEdit);
+                } 
+            }
+            else
+            {
+                Notifications.Now("Invalid input parameters.");
+            }
+        }
+
+
         private void Config(object[]? obj)
         {
             if (obj != null && obj.Length > 0 && obj[0] is string getset)
