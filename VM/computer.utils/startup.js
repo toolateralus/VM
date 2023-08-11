@@ -1,0 +1,6 @@
+alias("-install", "install")
+alias("-uninstall", "uninstall")
+alias("exit", "exitcmd")
+app.install("webapp.web")
+app.install("test.web")
+app.install("window.app")

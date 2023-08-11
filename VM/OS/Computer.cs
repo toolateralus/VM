@@ -11,7 +11,7 @@ namespace VM.OS
     {
         // This connects every computer to the lan server
         public NetworkConfiguration Network = new();
-        private string GetParentDir(string targetDirectory)
+        public static string GetParentDir(string targetDirectory)
         {
             string assemblyLocation = Assembly.GetExecutingAssembly().Location;
             string currentDirectory = Path.GetDirectoryName(assemblyLocation);

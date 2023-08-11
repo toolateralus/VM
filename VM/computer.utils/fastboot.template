@@ -1,0 +1,14 @@
+╔════════════════════════════════════════════════╗
+║            Computer Initialization             ║
+║                                                ║
+║   This computer will start as default and      ║
+║   wont display the menu to create more         ║
+║   computers. Delete or rename this file to     ║
+║   enable the computer creation menu. Move into ║
+║   another 'computer' root directory to  		 ║
+║   set a different default 'computer' location. ║
+║   Do not move it outside of a 'computer' root  ║
+║   without proper adjustments, as errors will   ║
+║   occur.                                       ║
+║                                                ║
+╚════════════════════════════════════════════════╝

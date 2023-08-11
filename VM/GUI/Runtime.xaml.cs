@@ -125,7 +125,8 @@ namespace VM.GUI
                 IDBox.Text = "0";
                 return;
             }
-           
+
+            InstantiateComputer(cpu_id);
             
         }
         private static void InstantiateComputer(uint cpu_id)

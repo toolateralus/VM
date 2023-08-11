@@ -1,6 +1,7 @@
 ﻿using System;
 using System.IO;
 using System.Linq;
+using System.Security.Cryptography.X509Certificates;
 using VM.OS;
 using VM.Types;
 
@@ -10,6 +11,25 @@ namespace VM.OS.FS
     {
         private string currentDirectory;
         public Computer Computer;
+
+        class Installer
+        {
+            const string PATH = "\\computer.utils";
+            public Installer(string root)
+            {
+                var dir = Computer.GetParentDir("VM");
+
+                if (Directory.Exists(dir + PATH))
+                {
+                    foreach (var item in Directory.EnumerateFiles(dir + PATH))
+                    {
+                        string newFileName = item.Split('\\').Last();
+                        File.Copy(item, root + "\\" + newFileName);
+                    }
+                }
+            }
+        }
+
         public FileSystem(string root, Computer computer)
         {
             Computer = computer;
@@ -19,9 +39,13 @@ namespace VM.OS.FS
             }
 
             if (!Directory.Exists(root))
+            {
                 Directory.CreateDirectory(root);
+                Installer installer = new(root);
+            }
 
             currentDirectory = root;
+
         }
         public string CurrentDirectory
         {
