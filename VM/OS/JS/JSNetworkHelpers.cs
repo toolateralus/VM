@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Diagnostics;
+using System.Net;
 using VM.GUI;
 
 namespace VM.OS.JS
@@ -9,15 +10,24 @@ namespace VM.OS.JS
         // record level nullability
         public event Action<object?[]?>? OnSent;
         public Action<object?[]?>? OnRecieved;
-
-        public JSNetworkHelpers(Action<object?[]?>? Output, Action<object?[]?>? Input)
+        Computer computer;
+        public JSNetworkHelpers(Computer computer, Action<object?[]?>? Output, Action<object?[]?>? Input)
         {
+            this.computer = computer;
             OnSent += Output;
             OnRecieved += Input;
         }
         public void print(object message)
         {
             Debug.WriteLine(message);
+        }
+        public void connect(object? ip)
+        {
+            if (ip is string IPString && IPAddress.Parse(IPString) is IPAddress IP)
+            {
+                computer.Network.TryHaltCurrentConnection();
+                computer.Network.StartClient(IP);
+            }
         }
         public void send(params object?[]? parameters)
         {

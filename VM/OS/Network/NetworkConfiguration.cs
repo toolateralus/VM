@@ -6,6 +6,7 @@ namespace VM.OS.Network
 {
     using System;
     using System.Net;
+    using System.Threading.Tasks;
     using System.Windows;
 
     public class NetworkConfiguration
@@ -17,12 +18,15 @@ namespace VM.OS.Network
         public event Action<string>? OnNetworkException;
         public event Action<string>? OnNetworkDisconneted;
         public event Action<string>? OnNetworkConneted;
+
+        public Thread receiveThread;
+
         public NetworkConfiguration()
         {
-            IPAddress localIP = LANIPFetcher.GetLocalIPAddress();
-            StartClient(localIP);
+            StartClient(SERVER_IP);
 
         }
+        static IPAddress SERVER_IP = IPAddress.Parse("192.168.0.138");
         public void StartClient(IPAddress ip)
         {
             try
@@ -31,7 +35,7 @@ namespace VM.OS.Network
                 client = new TcpClient(ip_str, DEFAULT_PORT);
                 stream = client.GetStream();
                 OnNetworkConneted?.Invoke($"Connected to {client.Client.AddressFamily}");
-                Thread receiveThread = new Thread(ReceiveMessages);
+                receiveThread = new Thread(ReceiveMessages);
                 receiveThread.Start();
             }
             catch (Exception e)
@@ -78,6 +82,13 @@ namespace VM.OS.Network
             // "send", args order
             // outCh, replyCh, message (any)
             MessageBox.Show($"Sent message on channel {obj[0]}");
+        }
+
+        internal void TryHaltCurrentConnection()
+        {
+            client.Dispose();
+            stream.Dispose();
+            Task.Run(()=>receiveThread.Join());
         }
     }
 }
