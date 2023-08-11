@@ -14,21 +14,38 @@ namespace VM.OS.FS
 
         class Installer
         {
-            const string PATH = "\\computer.utils";
+            const string PATH = "computer.utils";
+
             public Installer(string root)
             {
                 var dir = Computer.GetParentDir("VM");
+                string fullPath = Path.Combine(dir, PATH);
 
-                if (Directory.Exists(dir + PATH))
+                if (Directory.Exists(fullPath))
                 {
-                    foreach (var item in Directory.EnumerateFiles(dir + PATH))
-                    {
-                        string newFileName = item.Split('\\').Last();
-                        File.Copy(item, root + "\\" + newFileName);
-                    }
+                    CopyDirectory(fullPath, root);
+                }
+            }
+
+            private void CopyDirectory(string sourceDir, string destDir)
+            {
+                if (!Directory.Exists(destDir))
+                    Directory.CreateDirectory(destDir);
+
+                foreach (string file in Directory.GetFiles(sourceDir))
+                {
+                    string destFile = Path.Combine(destDir, Path.GetFileName(file));
+                    File.Copy(file, destFile, true);
+                }
+
+                foreach (string subDir in Directory.GetDirectories(sourceDir))
+                {
+                    string destSubDir = Path.Combine(destDir, Path.GetFileName(subDir));
+                    CopyDirectory(subDir, destSubDir);
                 }
             }
         }
+
 
         public FileSystem(string root, Computer computer)
         {
