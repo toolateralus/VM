@@ -5,6 +5,7 @@ using System.Threading;
 namespace VM.OS.Network
 {
     using System;
+    using System.Net;
     using System.Windows;
 
     public class NetworkConfiguration
@@ -18,15 +19,16 @@ namespace VM.OS.Network
         public event Action<string>? OnNetworkConneted;
         public NetworkConfiguration()
         {
-            string localIP = LANIPFetcher.GetLocalIPAddress();
+            IPAddress localIP = LANIPFetcher.GetLocalIPAddress();
             StartClient(localIP);
 
         }
-        public void StartClient(string ip)
+        public void StartClient(IPAddress ip)
         {
             try
             {
-                client = new TcpClient(ip, DEFAULT_PORT);
+                var ip_str = ip.ToString();
+                client = new TcpClient(ip_str, DEFAULT_PORT);
                 stream = client.GetStream();
                 OnNetworkConneted?.Invoke($"Connected to {client.Client.AddressFamily}");
                 Thread receiveThread = new Thread(ReceiveMessages);

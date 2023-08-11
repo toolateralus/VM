@@ -5,9 +5,9 @@
 
     public static class LANIPFetcher
     {
-        public static string GetLocalIPAddress()
+        public static IPAddress GetLocalIPAddress()
         {
-            string localIP = "";
+            IPAddress localIP = null;
 
             NetworkInterface[] networkInterfaces = NetworkInterface.GetAllNetworkInterfaces();
 
@@ -23,12 +23,12 @@
                         if (ipInformation.Address.AddressFamily == System.Net.Sockets.AddressFamily.InterNetwork &&
                             !IPAddress.IsLoopback(ipInformation.Address))
                         {
-                            localIP = ipInformation.Address.ToString();
+                            localIP = ipInformation.Address;
                             break;
                         }
                     }
 
-                    if (!string.IsNullOrEmpty(localIP))
+                    if (localIP == null)
                     {
                         break;
                     }

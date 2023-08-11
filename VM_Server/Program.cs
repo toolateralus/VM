@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Net;
+using System.Net.NetworkInformation;
 using System.Net.Sockets;
 using System.Text;
 
@@ -9,7 +10,7 @@ const int maxClients = 100;
 List<TcpClient> connectedClients = new();
 
 Console.WriteLine("Server started. Waiting for connections...");
-server = new TcpListener(IPAddress.Any, port);
+server = new TcpListener(IPAddress.Parse(GetLocalIPAddress()), port);
 server.Start();
 
 
@@ -17,7 +18,38 @@ while (true)
 {
     await HandleClientAsync();
 }
+static string GetLocalIPAddress()
+{
+    string localIP = "";
 
+    NetworkInterface[] networkInterfaces = NetworkInterface.GetAllNetworkInterfaces();
+
+    foreach (NetworkInterface networkInterface in networkInterfaces)
+    {
+        if (networkInterface.OperationalStatus == OperationalStatus.Up &&
+            networkInterface.NetworkInterfaceType != NetworkInterfaceType.Loopback)
+        {
+            IPInterfaceProperties ipProperties = networkInterface.GetIPProperties();
+
+            foreach (UnicastIPAddressInformation ipInformation in ipProperties.UnicastAddresses)
+            {
+                if (ipInformation.Address.AddressFamily == System.Net.Sockets.AddressFamily.InterNetwork &&
+                    !IPAddress.IsLoopback(ipInformation.Address))
+                {
+                    localIP = ipInformation.Address.ToString();
+                    break;
+                }
+            }
+
+            if (!string.IsNullOrEmpty(localIP))
+            {
+                break;
+            }
+        }
+    }
+
+    return localIP;
+}
 async Task HandleClientAsync()
 {
     TcpClient client = await server.AcceptTcpClientAsync();
