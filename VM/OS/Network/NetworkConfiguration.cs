@@ -15,7 +15,8 @@ namespace VM.OS.Network
         private NetworkStream stream;
 
         const int DEFAULT_PORT = 8080;
-        public static IPAddress SERVER_IP = IPAddress.Parse("192.168.0.138");
+        static string LAST_KNOWN_SERVER_IP = "192.168.0.138";
+        public static IPAddress SERVER_IP = IPAddress.Parse(LAST_KNOWN_SERVER_IP);
 
         public event Action<string>? OnMessageRecieved;
         public event Action<string>? OnNetworkException;
@@ -28,7 +29,14 @@ namespace VM.OS.Network
         {
             if (computer?.OS?.Config?.Value<bool>("ALWAYS_CONNECT") is bool connect && connect)
             {
-                StartClient(SERVER_IP);
+                if (computer?.OS?.Config?.Value<string>("DEFAULT_SERVER_IP") is string _IP && IPAddress.Parse(_IP) is IPAddress ip)
+                {
+                    StartClient(ip);
+                }
+                else
+                {
+                    StartClient(SERVER_IP);
+                }
             }
         }
         public void StartClient(IPAddress ip)

@@ -1,2 +1,4 @@
-args = [/***/];
-interop.install(args[0]);
+{
+    args = [/***/];
+    interop.install(args[0]);
+}

@@ -161,7 +161,7 @@ namespace VM.OS.FS
 
             if (!Path.IsPathFullyQualified(targetPath))
             {
-                targetPath = Path.Combine(currentDirectory, fileName);
+                targetPath = Path.Combine(Computer.OS.FS_ROOT, fileName);
             }
 
             return targetPath;
@@ -205,11 +205,41 @@ namespace VM.OS.FS
             return content;
         }
 
-        internal void Copy(string path, string destination)
+        internal void Copy(string sourcePath, string destinationPath)
         {
-            path = GetRelativeOrAbsolute(path);
-            destination = GetRelativeOrAbsolute(destination);
-            File.Copy(path, destination);
+            sourcePath = GetRelativeOrAbsolute(sourcePath);
+            destinationPath = GetRelativeOrAbsolute(destinationPath);
+
+            if (Directory.Exists(sourcePath))
+            {
+                Directory.CreateDirectory(destinationPath);
+
+                string[] files = Directory.GetFiles(sourcePath);
+                string[] directories = Directory.GetDirectories(sourcePath);
+
+                foreach (string filePath in files)
+                {
+                    string fileName = Path.GetFileName(filePath);
+                    string destinationFilePath = Path.Combine(destinationPath, fileName);
+                    File.Copy(filePath, destinationFilePath, true); // 'true' overwrites if the file already exists
+                }
+
+                foreach (string directoryPath in directories)
+                {
+                    string directoryName = Path.GetFileName(directoryPath);
+                    string destinationSubdirectoryPath = Path.Combine(destinationPath, directoryName);
+                    Copy(directoryPath, destinationSubdirectoryPath); 
+                }
+            }
+            else if (File.Exists(sourcePath))
+            {
+                File.Copy(sourcePath, destinationPath, true); // 'true' overwrites if the file already exists
+            }
+            else
+            {
+                throw new FileNotFoundException("Source file or directory not found.", sourcePath);
+            }
         }
+
     }
 }

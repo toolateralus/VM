@@ -25,8 +25,39 @@ namespace VM.OS.JS
         {
             if (ip is string IPString && IPAddress.Parse(IPString) is IPAddress IP)
             {
+                Computer.OS.JavaScriptEngine.InteropModule.print($"Trying to connect to : {IPString}");
+
                 Computer.Network.TryHaltCurrentConnection();
-                Computer.Network.StartClient(IP);
+                try
+                {
+                    Computer.Network.StartClient(IP);
+                }
+                catch (Exception e)
+                {
+                    Computer.OS.JavaScriptEngine.InteropModule.print($"Failed to connect to : {IPString} :: {e.Message}");
+                }
+                finally
+                {
+                    Computer.OS.JavaScriptEngine.InteropModule.print($"Successfully connected to {IPString}.");
+                }
+            }
+            else if (Computer.OS.Config?.Value<string>("DEFAULT_SERVER_IP") is string _IP && IPAddress.Parse(_IP) is var __IP)
+            {
+                Computer.OS.JavaScriptEngine.InteropModule.print($"Trying to connect to : {__IP}");
+
+                Computer.Network.TryHaltCurrentConnection();
+                try
+                {
+                    Computer.Network.StartClient(__IP);
+                }
+                catch (Exception e)
+                {
+                    Computer.OS.JavaScriptEngine.InteropModule.print($"Failed to connect to : {__IP} :: {e.Message}");
+                }
+                finally
+                {
+                    Computer.OS.JavaScriptEngine.InteropModule.print($"Successfully connected to {__IP}.");
+                }
             }
         }
         public void send(params object?[]? parameters)

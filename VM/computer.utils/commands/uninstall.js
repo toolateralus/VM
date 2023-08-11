@@ -1,2 +1,4 @@
-args = [/***/];
-interop.uninstall(args[0]);
+{
+    args = [/***/];
+    interop.uninstall(args[0]);
+}

@@ -3,5 +3,6 @@
   "NAME": "Your Computer",
   "FONT": "Consolas",
   "IP_ADDRESS": "0.01",
-  "OPEN_PORTS": ["0000","0000"]
+  "DEFAULT_SERVER_IP": "192.168.0.138",
+  "OPEN_PORTS": [ "0000", "8080" ]
 }
