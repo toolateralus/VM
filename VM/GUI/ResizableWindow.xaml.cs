@@ -68,6 +68,8 @@ namespace VM.GUI
         private ResizeDirection resizeDirection;
         private const int ResizeMargin = 10;
 
+        public Action OnClosed { get; internal set; }
+
         private enum ResizeDirection
         {
             None,

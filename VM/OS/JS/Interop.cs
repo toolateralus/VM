@@ -57,7 +57,6 @@ namespace VM.OS.JS
             CompositionTarget.Rendering += Render;
 
         }
-
         private void Render(object? sender, EventArgs e)
         {
             foreach (var item in EventHandlers.Where(e => e.Event == XAML_EVENTS.RENDER))
@@ -65,7 +64,6 @@ namespace VM.OS.JS
                 item.Invoke(null,null);
             }
         }
-
         public object? GetVariable(string name)
         {
             return engine.GetVariableValue(name);
@@ -125,6 +123,10 @@ namespace VM.OS.JS
                 }
                 Thread.SpinWait(1);
             }
+            if (!Disposing)
+            {
+                throw new JsEngineException("Something happened");
+            }
         }
         public async Task<object?> Execute(string jsCode)
         {
@@ -154,6 +156,7 @@ namespace VM.OS.JS
         {
             Disposing = true;
             engine.Dispose();
+            engine = null;
             Task.Run(() => executionThread.Join());
         }
         internal void ExecuteScript(string absPath)
@@ -161,9 +164,27 @@ namespace VM.OS.JS
             if (File.Exists(absPath))
                 Task.Run(()=>engine.Execute(File.ReadAllText(absPath)));
         }
+        /// <summary>
+        /// this method is used for executing js events
+        /// </summary>
+        /// <param name="code"></param>
         internal void DIRECT_EXECUTE(string code)
         {
-            Task.Run(() => engine.Execute(code));
+            if (Disposing)
+                return;
+
+            Task.Run(() =>
+            {
+
+                try
+                {
+                    engine.Execute(code);
+                }
+                catch(Exception e)
+                {
+                    Notifications.Now(e.Message);
+                }
+            });
         }
         public List<JSEventHandler> EventHandlers = new();
 
@@ -173,6 +194,7 @@ namespace VM.OS.JS
             var wnd = Runtime.GetWindow(computer);
 
             var result = await Execute($"{identifier} != null");
+
 
             if (result is not bool ID_EXISTS || !ID_EXISTS)
             {
@@ -204,6 +226,17 @@ namespace VM.OS.JS
                     break;
                 case XAML_EVENTS.RENDER:
                     var eh = new JSEventHandler((XAML_EVENTS)type, computer.OS.JavaScriptEngine, identifier, methodName, "OS", "null");
+                    
+                    if (wnd.Windows.TryGetValue(identifier, out var app))
+                    {
+                        app.OnClosed += () =>
+                        {
+                            if (EventHandlers.Contains(eh))
+                                EventHandlers.Remove(eh);
+                           
+                        };
+                    }
+
                     EventHandlers.Add(eh);
                     break;
             }
