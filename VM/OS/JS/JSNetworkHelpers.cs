@@ -1,20 +1,21 @@
 ﻿using System;
+using System.Collections;
 using System.Diagnostics;
 using System.Net;
+using System.Text;
 using VM.GUI;
 
 namespace VM.OS.JS
 {
     public class JSNetworkHelpers
     {
-        // record level nullability
-        public event Action<object?[]?>? OnSent;
-        public Action<object?[]?>? OnRecieved;
+        public event Action<byte[]> OnSent;
+        public Action<byte[]> OnRecieved;
         Computer Computer;
-        public JSNetworkHelpers(Computer computer, Action<object?[]?>? Output, Action<object?[]?>? Input)
+        public JSNetworkHelpers(Computer computer, Action<byte[]> Output, Action<byte[]> Input)
         {
-            OnSent += Output;
-            OnRecieved += Input;
+            OnSent = Output;
+            OnRecieved = Input;
             Computer = computer;
         }
         public void print(object message)
@@ -62,14 +63,31 @@ namespace VM.OS.JS
         }
         public void send(params object?[]? parameters)
         {
-            OnSent?.Invoke(parameters);
-
             int outCh, inCh;
             object msg;
 
             if (parameters is not null && parameters.Length > 2)
             {
                 msg = parameters[2];
+
+                if (msg is string inputString)
+                {
+                    byte[] byteArray = Encoding.UTF8.GetBytes(inputString);
+
+                    if (parameters.Length >= 3 && parameters[0] is int __out && parameters[1] is int __in)
+                    {
+                        byte[] outBytes = BitConverter.GetBytes(__out);
+                        byte[] inBytes = BitConverter.GetBytes(__in);
+
+                        byte[] combinedBytes = new byte[byteArray.Length + sizeof(int) + sizeof(int)];
+                        Array.Copy(byteArray, 0, combinedBytes, 0, byteArray.Length);
+                        Array.Copy(outBytes, 0, combinedBytes, byteArray.Length, sizeof(int));
+                        Array.Copy(inBytes, 0, combinedBytes, byteArray.Length + sizeof(int), sizeof(int));
+
+                        OnSent?.Invoke(combinedBytes);
+                    }
+                    
+                }
                 if (parameters[0] is int _out && parameters[1] is int _in)
                 {
                     outCh = _out;
@@ -87,8 +105,24 @@ namespace VM.OS.JS
             if (parameters != null && parameters.Length > 0 && parameters[0] is int ch &&
                 parameters != null && parameters.Length > 0 && parameters[0] is int replyCh)
             {
-                var val = Runtime.PullEvent(ch).value;
-                OnRecieved?.Invoke(new[] { val });
+                var result = Runtime.PullEvent(ch);
+                var val = result.value;
+
+                if (val is string inputString)
+                {
+                    byte[] byteArray = Encoding.UTF8.GetBytes(inputString);
+
+                    byte[] outBytes = BitConverter.GetBytes(ch);
+                    byte[] inBytes = BitConverter.GetBytes(result.reply);
+
+                    byte[] combinedBytes = new byte[byteArray.Length + sizeof(int) + sizeof(int)];
+                    Array.Copy(byteArray, 0, combinedBytes, 0, byteArray.Length);
+                    Array.Copy(outBytes, 0, combinedBytes, byteArray.Length, sizeof(int));
+                    Array.Copy(inBytes, 0, combinedBytes, byteArray.Length + sizeof(int), sizeof(int));
+
+                    OnRecieved?.Invoke(combinedBytes);
+
+                }
                 return val;
             }
             Notifications.Now("Insufficient arguments for a network connection");

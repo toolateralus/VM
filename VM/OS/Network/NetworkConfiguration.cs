@@ -5,6 +5,7 @@ using System.Threading;
 namespace VM.OS.Network
 {
     using System;
+    using System.Buffers.Text;
     using System.Net;
     using System.Threading.Tasks;
     using System.Windows;
@@ -82,17 +83,15 @@ namespace VM.OS.Network
             }
         }
 
-        internal void InputChannel(object?[]? obj)
+        internal void InputChannel(byte[] obj)
         {
             MessageBox.Show($"Begin listening on channel {obj[0]}");
 
 
         }
 
-        internal void OutputChannel(object?[]? obj)
+        internal void OutputChannel(byte[] obj)
         {
-            // "send", args order
-            // outCh, replyCh, message (any)
             MessageBox.Show($"Sent message on channel {obj[0]}");
         }
 
