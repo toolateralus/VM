@@ -41,7 +41,7 @@ namespace VM.GUI
         {
             if (webViewInitialized)
             {
-                var html = Runtime.GetResourcePath(appName, ".index.html");
+                var html = Runtime.GetResourcePath(appName + ".index.html");
                 
                 if (File.Exists(html)) 
                     chromiumBrowser.NavigateToString(File.ReadAllText(html));

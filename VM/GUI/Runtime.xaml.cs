@@ -42,13 +42,12 @@ namespace VM.GUI
 
             StartPerpetualColorAnimation();
 
-            const string pc_id = "computer";
-            const string name = "this";
-            const string ext = ".ins";
+            const string COMPUTER = "computer";
+            const string FAST_BOOT_FILENAME = "this.ins";
 
-            if (GetResourcePath(name, ext) is string path && path.Contains(pc_id))
+            if (GetResourcePath(FAST_BOOT_FILENAME) is string path && path.Contains(COMPUTER))
             {
-                int startIndex = path.IndexOf(pc_id) + pc_id.Length;
+                int startIndex = path.IndexOf(COMPUTER) + COMPUTER.Length;
 
                 if (startIndex < path.Length)
                 {
@@ -87,7 +86,6 @@ namespace VM.GUI
                 await AnimateBackgroundColor(EndColor, StartColor, AnimationDuration);
             }
         }
-
         private async Task AnimateBackgroundColor(Color fromColor, Color toColor, TimeSpan duration)
         {
             const int steps = 1000;
@@ -99,7 +97,6 @@ namespace VM.GUI
                 await Task.Delay((int)duration.TotalMilliseconds / steps);
             }
         }
-
         private Color Lerp(Color from, Color to, double progress)
         {
             byte r = (byte)(from.R + (to.R - from.R) * progress);
@@ -131,7 +128,6 @@ namespace VM.GUI
            
             
         }
-        
         private static void InstantiateComputer(uint cpu_id)
         {
             OS.Computer pc = new(cpu_id);
@@ -153,19 +149,17 @@ namespace VM.GUI
             return value;
 
         }
-
         internal static void Broadcast(int outCh, int inCh, object? msg)
         {
             NetworkEvents[outCh] = (msg, inCh);
         }
-
-        internal static string? GetResourcePath(string name, string ext)
+        internal static string? GetResourcePath(string name)
         {
             var path = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData) + "\\VM";
 
             VerifyOrCreateAppdataDir(path);
 
-            string[] files = Directory.GetFiles(path, name + ext, SearchOption.AllDirectories);
+            string[] files = Directory.GetFiles(path, name, SearchOption.AllDirectories);
 
             if (files.Length > 0)
             {
@@ -174,7 +168,6 @@ namespace VM.GUI
 
             return null;
         }
-
         internal static void VerifyOrCreateAppdataDir(string path)
         {
             if (!Directory.Exists(path))
@@ -182,7 +175,6 @@ namespace VM.GUI
                 Directory.CreateDirectory(path);
             }
         }
-
         internal static (string XAML, string JS) GetAppDefinition(Computer pc, string dir)
         {
             const string xamlExt = ".xaml";
@@ -210,7 +202,6 @@ namespace VM.GUI
 
             return ("Not found!", "Not Found!");
         }
-
         public static T SearchForOpenWindowType<T>(Computer Computer)
         {
             var wnd = Runtime.GetWindow(Computer);

@@ -17,7 +17,7 @@ namespace VM.GUI
         Computer computer;
         public string LoadedFile;
         public string Contents;
-        public static string? DesktopIcon => Runtime.GetResourcePath("texteditor", ".png");
+        public static string? DesktopIcon => Runtime.GetResourcePath("texteditor.png");
         public TextEditor(Computer pc, string path)
         {
             InitializeComponent();

@@ -174,7 +174,7 @@ namespace VM.GUI
         public ComputerWindow(Computer pc)
         {
             InitializeComponent();
-            desktopBackground.Source = LoadImage(Runtime.GetResourcePath("Background", ".png"));
+            desktopBackground.Source = LoadImage(Runtime.GetResourcePath("Background.png"));
             KeyDown += Computer_KeyDown;
             computer = pc;
         }
@@ -431,13 +431,20 @@ namespace VM.GUI
 
             wnd.Open(control, instance_identifier);
         }
-
         private async Task<string> HandleJS(string type, (string XAML, string JS) data)
         {
             var name = type.Split('.')[0];
             int id = 0;
-            JSClassInstances.TryGetValue(type, out id);
 
+            if (JSClassInstances.TryGetValue(type, out id))
+            {
+                JSClassInstances[type]++;
+            } 
+            else
+            {
+                JSClassInstances.Add(type, 1);
+            }
+            
             string generatedClassName = name + id.ToString();
             data.JS = Regex.Replace(data.JS, @"\b" + name + @"\b", generatedClassName);
 
@@ -470,7 +477,6 @@ namespace VM.GUI
 
             return name;
         }
-
         public void InstallWPF(string type)
         {
             Dispatcher.Invoke(delegate
@@ -492,7 +498,6 @@ namespace VM.GUI
             });
             
         }
-
         internal void InstallJSHTML(string type)
         {
             Dispatcher.Invoke(delegate
@@ -517,7 +522,6 @@ namespace VM.GUI
             });
 
         }
-
         internal void Uninstall(string name)
         {
             CustomApps.Remove(name);
@@ -535,7 +539,6 @@ namespace VM.GUI
                 }
             });
         }
-
      
     }
 }

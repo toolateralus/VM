@@ -262,7 +262,7 @@ namespace VM.OS.FS
         }
         private async void RunJs(object[]? obj)
         {
-            if (obj.Length > 0 && obj[0] is string path && Runtime.GetResourcePath(path, ".js") is string AbsPath &&  File.Exists(AbsPath))
+            if (obj.Length > 0 && obj[0] is string path && Runtime.GetResourcePath(path + ".js") is string AbsPath &&  File.Exists(AbsPath))
             {
                 await Computer.OS.JavaScriptEngine.Execute(File.ReadAllText(AbsPath));
             }

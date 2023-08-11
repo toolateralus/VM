@@ -36,7 +36,7 @@ namespace VM.OS
             OS.JavaScriptEngine.LoadModules(Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "VM\\OS-JS"));
             _ = OS.JavaScriptEngine.Execute($"OS.id = {id}");
 
-            if (Runtime.GetResourcePath("startup", ".js") is string AbsPath)
+            if (Runtime.GetResourcePath("startup.js") is string AbsPath)
             {
                 OS.JavaScriptEngine.ExecuteScript(AbsPath);
             }
@@ -69,13 +69,8 @@ namespace VM.OS
 
         internal void FinishInit(Computer pc, ComputerWindow wnd)
         {
-            string[] backgroundpath = pc.OS.Config.Value<string>("BACKGROUND")?.Split('.') ?? new[] { "background", ".png" };
-
-            wnd.desktopBackground.Source = ComputerWindow.LoadImage(Runtime.GetResourcePath(backgroundpath[0], "." + backgroundpath[1]));
-
-            pc.OS.InstallApplication("CommandPrompt.app", typeof(CommandPrompt));
-            pc.OS.InstallApplication("FileExplorer.app", typeof(FileExplorer));
-            pc.OS.InstallApplication("TextEditor.app", typeof(TextEditor));
+            LoadBackground(pc, wnd);
+            InstallCoreApps(pc);
 
             wnd.Show();
 
@@ -85,6 +80,19 @@ namespace VM.OS
                 Task.Run(() => pc.OS.SaveConfig());
                 pc.Shutdown();
             };
+        }
+
+        private static void InstallCoreApps(Computer pc)
+        {
+            pc.OS.InstallApplication("CommandPrompt.app", typeof(CommandPrompt));
+            pc.OS.InstallApplication("FileExplorer.app", typeof(FileExplorer));
+            pc.OS.InstallApplication("TextEditor.app", typeof(TextEditor));
+        }
+
+        private static void LoadBackground(Computer pc, ComputerWindow wnd)
+        {
+            string backgroundPath = pc.OS.Config.Value<string>("BACKGROUND") ?? "background.png";
+            wnd.desktopBackground.Source = ComputerWindow.LoadImage(Runtime.GetResourcePath(backgroundPath) ?? "background.png");
         }
     }
 
@@ -182,7 +190,7 @@ namespace VM.OS
 
         public void SaveConfig()
         {
-            string configFilePath = Runtime.GetResourcePath("config", ".json");
+            string configFilePath = Runtime.GetResourcePath("config.json");
 
             if (!string.IsNullOrEmpty(configFilePath))
             {
@@ -202,7 +210,7 @@ namespace VM.OS
     {
         internal static JObject Load()
         {
-            if (Runtime.GetResourcePath("config", ".json") is string AbsPath)
+            if (Runtime.GetResourcePath("config.json") is string AbsPath)
             {
                 if (File.Exists(AbsPath))
                 {

@@ -30,10 +30,66 @@ namespace VM.OS.JS
         {
             this.computer = computer;
             EventActions.Add("draw_pixels", DrawPixelsEvent);
+            EventActions.Add("draw_image", DrawImageEvent);
+        }
+        public BitmapImage BitmapImageFromBase64(string base64String)
+        {
+            try
+            {
+                byte[] imageBytes = Convert.FromBase64String(base64String);
+
+                using (MemoryStream memoryStream = new MemoryStream(imageBytes))
+                {
+                    BitmapImage bitmapImage = new BitmapImage();
+                    bitmapImage.BeginInit();
+                    bitmapImage.CacheOption = BitmapCacheOption.OnLoad;
+                    bitmapImage.StreamSource = memoryStream;
+                    bitmapImage.EndInit();
+                    return bitmapImage;
+                }
+            }
+            catch (Exception ex)
+            {
+                // Handle any exceptions that may occur during conversion
+                Console.WriteLine("Exception during base64 to BitmapImage conversion: " + ex.Message);
+                return null;
+            }
         }
 
+        public object? DrawImageEvent(string id, object? value)
+        {
+            if (value is null)
+                return null;
+
+            var control = GetUserContent(id);
+
+            control?.Dispatcher.Invoke(() =>
+            {
+                if (control?.Content is Grid grid)
+                {
+                    if (grid != null)
+                    {
+                        var image = FindImageInGrid(grid);
+
+                        if (image != null)
+                        {
+                            if (value is string Base64Image && BitmapImageFromBase64(Base64Image) is BitmapImage bitmap)
+                            {
+                                image.Source = bitmap;
+                            }
+                        }
+                    }
+                }
+            });
+
+
+            return null;
+        }
         public object? DrawPixelsEvent(string id, object? value)
         {
+            if (value is null)
+                return null;
+
             var control = GetUserContent(id);
 
             List<byte> colorData = new();
@@ -140,16 +196,7 @@ namespace VM.OS.JS
 
             return result;
         }
-        private void LoadPixelDataToImage(Image image, byte[] pixelData, int width, int height)
-        {
-            int bytesPerPixel = 4;
 
-            int stride = width * bytesPerPixel;
-
-            var bitmapSource = BitmapSource.Create(width, height, 96, 96, PixelFormats.Pbgra32, null, pixelData, stride);
-
-            image.Source = bitmapSource;
-        }
         #region REFLECTION
 
         public static void SetProperty(object target, string propertyName, object value)
@@ -318,7 +365,7 @@ namespace VM.OS.JS
         }
         public void alias(string alias, string path)
         {
-            computer.OS.CommandLine.Aliases.Add(alias, Runtime.GetResourcePath(path, ".js") ?? "not found");
+            computer.OS.CommandLine.Aliases.Add(alias, Runtime.GetResourcePath(path + ".js") ?? "not found");
         }
         public static Dictionary<string, Func<string, object?, object?>> EventActions = new();
         /// <summary>
@@ -350,13 +397,48 @@ namespace VM.OS.JS
         {
             if (!File.Exists(path))
             {
+                if (Runtime.GetResourcePath(path) is string AbsPath && !string.IsNullOrEmpty(AbsPath))
+                {
+                    return File.ReadAllText(AbsPath);
+                }
+
                 return null;
             }
             return File.ReadAllText(path);
         }
+        public string imageFromFile(string path)
+        {
+            byte[] imageData = null;
+
+            if (!File.Exists(path))
+            {
+                if (Runtime.GetResourcePath(path) is string absPath && !string.IsNullOrEmpty(absPath))
+                {
+                    imageData = File.ReadAllBytes(absPath);
+                }
+            }
+            else
+            {
+                imageData = File.ReadAllBytes(path);
+            }
+
+            if (imageData != null)
+            {
+                return Convert.ToBase64String(imageData);
+            }
+
+            return null;
+        }
         public void write_file(string path, string data)
         {
-           File.WriteAllText(path, data);
+
+            if (Runtime.GetResourcePath(path) is string AbsPath && !string.IsNullOrEmpty(AbsPath))
+            {
+                File.WriteAllText(AbsPath, data);
+                return;
+            }
+
+            File.WriteAllText(path, data);
         }
         public bool file_exists(string path)
         {

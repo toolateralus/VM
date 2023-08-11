@@ -195,7 +195,6 @@ namespace VM.OS.JS
 
             var result = await Execute($"{identifier} != null");
 
-
             if (result is not bool ID_EXISTS || !ID_EXISTS)
             {
                 return;

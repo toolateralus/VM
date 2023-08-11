@@ -37,7 +37,7 @@ namespace VM
 
         private static async void ProcessNextMessage(string message)
         {
-            await Application.Current.Dispatcher.InvokeAsync(() =>
+            await Application.Current?.Dispatcher?.InvokeAsync(() =>
             {
                 void onTimerComplete()
                 {
