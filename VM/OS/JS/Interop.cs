@@ -79,31 +79,38 @@ namespace VM.OS.JS
         }
         public void LoadModules(string sourceDir)
         {
-            bool subscribed = false;
-
-            foreach (var file in Directory.EnumerateFiles(sourceDir).Where(f => f.EndsWith(".js")))
+            void RecursiveLoad(string directory)
             {
-                void AddModule(object? obj, string path)
+                foreach (var file in Directory.GetFiles(directory, "*.js"))
                 {
-                    modules[path] = obj;
-                }
+                    void AddModule(object? obj, string path)
+                    {
+                        modules[path] = obj;
+                    }
 
-                if (!subscribed)
-                {
                     InteropModule.OnModuleExported += (path, o) => AddModule(o, path);
-                    subscribed = true;
+
+                    try
+                    {
+                        engine.Execute(File.ReadAllText(file));
+                    }
+                    catch (Exception e)
+                    {
+                        Notifications.Now(e.Message);
+                    }
                 }
 
-                try
+                foreach (var subDir in Directory.GetDirectories(directory))
                 {
-                    engine.Execute(File.ReadAllText(file));
-                }
-                catch (Exception e)
-                {
-                    Notifications.Now(e.Message);
+                    RecursiveLoad(subDir);
                 }
             }
+
+            RecursiveLoad(sourceDir);
         }
+
+
+
         public void Execute()
         {
             while (true && !Disposing)

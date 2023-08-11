@@ -3,6 +3,7 @@ using System.IO;
 using VM.GUI;
 using VM.OS.Network;
 using System.Threading.Tasks;
+using System.Reflection;
 
 namespace VM.OS
 {
@@ -10,12 +11,30 @@ namespace VM.OS
     {
         // This connects every computer to the lan server
         public NetworkConfiguration Network = new();
+        private string GetParentDir(string targetDirectory)
+        {
+            string assemblyLocation = Assembly.GetExecutingAssembly().Location;
+            string currentDirectory = Path.GetDirectoryName(assemblyLocation);
 
+            while (!Directory.Exists(Path.Combine(currentDirectory, targetDirectory)))
+            {
+                currentDirectory = Directory.GetParent(currentDirectory)?.FullName;
+                if (currentDirectory == null)
+                {
+                    // Reached the root directory without finding the target
+                    return null;
+                }
+            }
+
+            return Path.Combine(currentDirectory, targetDirectory);
+        }
         public Computer(uint id)
         {
             OS = new(id, this);
 
-            OS.JavaScriptEngine.LoadModules(Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "VM\\OS-JS"));
+            string jsDirectory = GetParentDir("VM");
+
+            OS.JavaScriptEngine.LoadModules(jsDirectory + "\\OS-JS");
             _ = OS.JavaScriptEngine.Execute($"os.id = {id}");
 
             if (Runtime.GetResourcePath("startup.js") is string AbsPath)
