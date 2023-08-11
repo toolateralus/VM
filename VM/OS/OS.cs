@@ -119,11 +119,12 @@ namespace VM.OS
         JavaScriptEngine js;
         public XAML_EVENTS Event = XAML_EVENTS.RENDER;
         public Action OnUnhook;
-       
+        FrameworkElement element;
         public JSEventHandler(FrameworkElement control, XAML_EVENTS @event, JavaScriptEngine js, string id, string method)
         {
             this.Event = @event;
             this.js = js;
+            this.element = control;
             SetCode(id, method);
 
             TemplateCode ??= LastCode.ToString();
@@ -187,8 +188,8 @@ namespace VM.OS
         {
             LastCode.Clear();
 
-            StringBuilder argsBldr = new("");
-            var arg0 = sender?.ToString();
+            StringBuilder argsBldr = new("\"");
+            var arg0 = sender?.ToString() + '\"';
 
             if (!string.IsNullOrEmpty(arg0))
                 argsBldr.Append(arg0);
@@ -203,7 +204,13 @@ namespace VM.OS
 
         public void InvokeMouse(object? sender, System.Windows.Input.MouseEventArgs e)
         {
-            InstantiateCode(sender, $"[{e.LeftButton},{e.RightButton},{e.MiddleButton}]");
+            if (element != null && e.GetPosition(element) is Point pos)
+            {
+                InstantiateCode(null, $"[{(e.LeftButton == System.Windows.Input.MouseButtonState.Pressed ? 1 : 0)},{(e.RightButton == System.Windows.Input.MouseButtonState.Pressed ? 1 : 0)}, [{pos.X},{pos.Y}] ,{(e.MiddleButton == System.Windows.Input.MouseButtonState.Pressed ? 1 : 0)}]");
+                InvokeEvent();
+                return;
+            }
+            InstantiateCode(null, $"[{(e.LeftButton == System.Windows.Input.MouseButtonState.Pressed ? 1 : 0)},{(e.RightButton == System.Windows.Input.MouseButtonState.Pressed ? 1 : 0)},{(e.MiddleButton == System.Windows.Input.MouseButtonState.Pressed ? 1 : 0)}]");
             InvokeEvent();
         }
 
@@ -221,7 +228,7 @@ namespace VM.OS
 
         public void InvokeKeyboard(object? sender, System.Windows.Input.KeyEventArgs e)
         {
-            InstantiateCode(sender, $"[{e.Key},{e.IsDown},{e.SystemKey}]");
+            InstantiateCode(null, $"[{e.Key},{e.IsDown},{e.SystemKey}]");
             InvokeEvent();
         }
         public void InvokeGeneric(object? sender, object? arguments)
