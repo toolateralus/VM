@@ -25,6 +25,7 @@ namespace VM.OS.JS
         public Action<string, object?>? OnModuleExported;
         public Func<string, object?>? OnModuleImported;
         public Action<int>? OnComputerExit;
+        public static Dictionary<string, Func<string, string, object?, object?>> EventActions = new();
 
         public JSInterop(Computer computer)
         {
@@ -56,7 +57,8 @@ namespace VM.OS.JS
             }
         }
 
-        public object? DrawImageEvent(string id, object? value)
+        #region DRAWING
+        public object? DrawImageEvent(string id, string target_control, object? value)
         {
             if (value is null)
                 return null;
@@ -65,19 +67,13 @@ namespace VM.OS.JS
 
             control?.Dispatcher.Invoke(() =>
             {
-                if (control?.Content is Grid grid)
-                {
-                    if (grid != null)
-                    {
-                        var image = FindImageInGrid(grid);
+                var image = FindControl(control, target_control);
 
-                        if (image != null)
-                        {
-                            if (value is string Base64Image && BitmapImageFromBase64(Base64Image) is BitmapImage bitmap)
-                            {
-                                image.Source = bitmap;
-                            }
-                        }
+                if (image is Image img)
+                {
+                    if (value is string Base64Image && BitmapImageFromBase64(Base64Image) is BitmapImage bitmap)
+                    {
+                        img.Source = bitmap;
                     }
                 }
             });
@@ -85,7 +81,7 @@ namespace VM.OS.JS
 
             return null;
         }
-        public object? DrawPixelsEvent(string id, object? value)
+        public object? DrawPixelsEvent(string id, string target_control, object? value)
         {
             if (value is null)
                 return null;
@@ -102,7 +98,7 @@ namespace VM.OS.JS
                 {
                     if (grid != null)
                     {
-                        var image = FindImageInGrid(grid);
+                        var image = FindElementInUserControl<Image>(control, target_control);
 
                         if (image != null)
                         {
@@ -114,8 +110,7 @@ namespace VM.OS.JS
 
             return null;
         }
-
-        private static void Draw(List<byte> colorData, Image image)
+        public static void Draw(List<byte> colorData, Image image)
         {
             var bytesPerPixel = 4;
             var pixelCount = colorData.Count / bytesPerPixel;
@@ -147,8 +142,8 @@ namespace VM.OS.JS
 
             image.Source = bitmap;
         }
-
-        private void forEach<T>(IEnumerable<object> source, Action<T> action)
+        #endregion
+        public void forEach<T>(IEnumerable<object> source, Action<T> action)
         {
             try
             {
@@ -168,8 +163,7 @@ namespace VM.OS.JS
                 }
             }
         }
-
-        private static T Get<T>(object item, out bool success)
+        public static T Get<T>(object item, out bool success)
         {
             success = false;
             if (item is T instance)
@@ -180,25 +174,8 @@ namespace VM.OS.JS
             return default;
         }
 
-        private Image FindImageInGrid(Grid grid)
-        {
-            Image result = null;
-            grid.Dispatcher.Invoke(() =>
-            {
-                foreach (var element in grid.Children)
-                {
-                    if (element is Image image)
-                    {
-                        result = image;
-                    }
-                }
-            });
-
-            return result;
-        }
-
         #region REFLECTION
-
+       
         public static void SetProperty(object target, string propertyName, object value)
         {
             var targetType = target.GetType();
@@ -209,7 +186,6 @@ namespace VM.OS.JS
                 propertyInfo.SetValue(target, value);
             }
         }
-
         public static object GetProperty(object target, string propertyName)
         {
             var targetType = target.GetType();
@@ -222,7 +198,6 @@ namespace VM.OS.JS
 
             return null;
         }
-
         public static object CallMethod(object target, string methodName, params object[] parameters)
         {
             var targetType = target.GetType();
@@ -235,7 +210,6 @@ namespace VM.OS.JS
 
             return null;
         }
-
         public static object GetField(object target, string fieldName)
         {
             var targetType = target.GetType();
@@ -248,7 +222,6 @@ namespace VM.OS.JS
 
             return null;
         }
-
         public static void SetField(object target, string fieldName, object value)
         {
             var targetType = target.GetType();
@@ -260,7 +233,36 @@ namespace VM.OS.JS
             }
         }
         #endregion
-        private UserControl? GetUserContent(string javascript_controL_class_instance_id)
+        #region System
+        public void print(object message)
+        {
+            Runtime.GetWindow(computer).Dispatcher.Invoke(() =>
+            {
+                Debug.WriteLine(message);
+
+                var commandPrompt = Runtime.SearchForOpenWindowType<CommandPrompt>(computer);
+
+                if (commandPrompt == default)
+                {
+                    Notifications.Now(message?.ToString() ?? "Invalid Print.");
+                    return;
+                }
+
+                commandPrompt.DrawTextBox($"\n {message}");
+            });
+
+        }
+        public void export(string id, object? obj)
+        {
+            OnModuleExported?.Invoke(id, obj);
+        }
+        public void exit(int code)
+        {
+            OnComputerExit?.Invoke(code);
+        }
+        #endregion
+        #region XAML/JS interop
+        public UserControl? GetUserContent(string javascript_controL_class_instance_id)
         {
             var window = Runtime.GetWindow(computer);
             var resizableWins = window.Windows.Where(W => W.Key == javascript_controL_class_instance_id);
@@ -294,35 +296,76 @@ namespace VM.OS.JS
 
             return userContent;
         }
-        #region System
-        public void print(object message)
+        public FrameworkElement? FindControl(UserControl userControl, string controlName)
         {
-            Runtime.GetWindow(computer).Dispatcher.Invoke(() =>
+            var contentProperty = userControl.GetType().GetProperty("Content");
+
+            if (contentProperty != null)
             {
-                Debug.WriteLine(message);
+                var content = contentProperty.GetValue(userControl);
 
-                var commandPrompt = Runtime.SearchForOpenWindowType<CommandPrompt>(computer);
-
-                if (commandPrompt == default)
+                if (content != null)
                 {
-                    Notifications.Now(message?.ToString() ?? "Invalid Print.");
-                    return;
+                    // Check if the content itself is the target control
+                    if (content is FrameworkElement contentElement && contentElement.Name == controlName)
+                    {
+                        return contentElement;
+                    }
+
+                    // Recursively search through the visual tree
+                    return SearchVisualTree(content, controlName);
                 }
+            }
 
-                commandPrompt.DrawTextBox($"\n {message}");
-            });
+            return null;
+        }
 
-        }
-        public void export(string id, object? obj)
+        private FrameworkElement? SearchVisualTree(object element, string controlName)
         {
-            OnModuleExported?.Invoke(id, obj);
+            if (element is FrameworkElement frameworkElement && frameworkElement.Name == controlName)
+            {
+                return frameworkElement;
+            }
+
+            if (element is DependencyObject dependencyObject)
+            {
+                int childCount = VisualTreeHelper.GetChildrenCount(dependencyObject);
+                for (int i = 0; i < childCount; i++)
+                {
+                    var childElement = VisualTreeHelper.GetChild(dependencyObject, i);
+                    var result = SearchVisualTree(childElement, controlName);
+                    if (result != null)
+                    {
+                        return result;
+                    }
+                }
+            }
+
+            return null;
         }
-        public void exit(int code)
+        public T FindElementInUserControl<T>(UserControl userControl, string elementName) where T : FrameworkElement
         {
-            OnComputerExit?.Invoke(code);
+            var elementType = typeof(T);
+            var contentProperty = userControl.GetType().GetProperty("Content");
+
+            if (contentProperty != null)
+            {
+                var content = contentProperty.GetValue(userControl);
+
+                if (content != null)
+                {
+                    foreach (var property in content.GetType().GetProperties())
+                    {
+                        if (elementType.IsAssignableFrom(property.PropertyType) && property.Name == elementName && property.GetValue(content) is T Instance)
+                        {
+                            return Instance;
+                        }
+                    }
+                }
+            }
+
+            return default;
         }
-        #endregion
-        #region XAML/JS interop
 
         public void uninstall(string dir)
         {
@@ -367,7 +410,6 @@ namespace VM.OS.JS
         {
             computer.OS.CommandLine.Aliases.Add(alias, Runtime.GetResourcePath(path + ".js") ?? "not found");
         }
-        public static Dictionary<string, Func<string, object?, object?>> EventActions = new();
         /// <summary>
         /// this returns the callback, no need for extra listening
         /// </summary>
@@ -375,17 +417,17 @@ namespace VM.OS.JS
         /// <param name="eventType"></param>
         /// <param name="data"></param>
         /// <returns></returns>
-        public object? pushEvent(string id, string eventType, object? data)
+        public object? pushEvent(string id, string targetControl, string eventType, object? data)
         {
             if (EventActions.TryGetValue(eventType, out var handler))
             {
-                return handler.Invoke(id, data);
+                return handler.Invoke(id, targetControl,  data);
             }
             return null;
         }
-        public void addEventHandler(string identifier, string methodName, int type)
+        public void addEventHandler(string identifier, string targetControl, string methodName, int type)
         {
-            _ = computer.OS.JavaScriptEngine.CreateEventHandler(identifier, methodName, type);
+            _ = computer.OS.JavaScriptEngine.CreateEventHandler(identifier, targetControl, methodName, type);
         }
         #endregion
         #region IO

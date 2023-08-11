@@ -21,6 +21,8 @@ using Microsoft.VisualBasic.Devices;
 using System.Threading.Tasks;
 using System.Threading;
 using System.Windows.Threading;
+using System.Reflection.Metadata;
+using System.Text;
 
 namespace VM.OS
 {
@@ -111,27 +113,80 @@ namespace VM.OS
     }
     public class JSEventHandler
     {
-        string _code = "";
+        StringBuilder LastCode = new("");
+        readonly string TemplateCode;
         JavaScriptEngine js;
         public XAML_EVENTS Event = XAML_EVENTS.RENDER;
-        public JSEventHandler(XAML_EVENTS @event, JavaScriptEngine js, string id, string method, string sender, string args)
+        public JSEventHandler(Control control, XAML_EVENTS @event, JavaScriptEngine js, string id, string method)
         {
             this.Event = @event;
             this.js = js;
-            SetCode(id, method, sender, args);
+            SetCode(id, method);
+
+            TemplateCode ??= LastCode.ToString();
+
+            switch (@event)
+            {
+                case XAML_EVENTS.MOUSE_DOWN:
+                    control.MouseDown += Invoke;
+                    break;
+                case XAML_EVENTS.MOUSE_UP:
+                    control.MouseUp += Invoke;
+                    break;
+                case XAML_EVENTS.MOUSE_MOVE:
+                    control.MouseMove += Invoke;
+                    break;
+                case XAML_EVENTS.KEY_DOWN:
+                    control.KeyDown += Invoke;
+                    break;
+                case XAML_EVENTS.KEY_UP:
+                    control.KeyUp += Invoke;
+                    break;
+                case XAML_EVENTS.LOADED:
+                    control.Loaded += Invoke;
+                    break;
+                case XAML_EVENTS.WINDOW_CLOSE:
+                    control.Unloaded += Invoke;
+                    break;
+
+                // this is a special case and is handled elsewhere, since rendering in WPF is static.
+                case XAML_EVENTS.RENDER:
+                default:
+                    break;
+            }
+
         }
         public string GetCode()
         {
-            return _code;
+            return LastCode.ToString();
         }
-        public void SetCode(string identifier, string methodName, string sender, string args)
+        public void SetCode(string identifier, string methodName)
         {
-            _code = $"{identifier}.{methodName}({sender}, {args})";
+            LastCode.Clear();
+            LastCode.Append($"{identifier}.{methodName}({arguments_placeholder})");
         }
-        public void Invoke(object? e, object? o)
+        const string arguments_placeholder = $"{{!arguments}}";
+        public void InstantiateCode(object? sender, object? args)
         {
-            // no output
-            js.DIRECT_EXECUTE(_code);
+            LastCode.Clear();
+
+            StringBuilder argsBldr = new("");
+            var arg0 = sender?.ToString();
+
+            if (!string.IsNullOrEmpty(arg0))
+                argsBldr.Append(arg0 + ", ");
+
+            var arg1 = args?.ToString();
+
+            if (!string.IsNullOrEmpty(arg1))
+                argsBldr.Append(arg1);
+
+            LastCode.Append(TemplateCode.Replace(arguments_placeholder, $"{argsBldr.ToString()}"));
+        }
+        public void Invoke(object? sender, object? arguments)
+        {
+            InstantiateCode(sender, arguments);
+            js.DIRECT_EXECUTE(LastCode.ToString());
         }
     }
     public class OS

@@ -11,7 +11,8 @@ using System.Security.Cryptography.X509Certificates;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
-using System.Windows.Forms;
+using System.Windows;
+using System.Windows.Controls;
 using System.Windows.Media;
 using JavaScriptEngineSwitcher.Core;
 using JavaScriptEngineSwitcher.V8;
@@ -189,7 +190,7 @@ namespace VM.OS.JS
         public List<JSEventHandler> EventHandlers = new();
 
         // async void for specific use
-        internal async Task CreateEventHandler(string identifier, string methodName, int type)
+        internal async Task CreateEventHandler(string identifier, string targetControl, string methodName, int type)
         {
             var wnd = Runtime.GetWindow(computer);
 
@@ -207,38 +208,31 @@ namespace VM.OS.JS
                 return;
             }
 
-            switch ((XAML_EVENTS)type)
-            {
-                case XAML_EVENTS.MOUSE_DOWN:
-                    break;
-                case XAML_EVENTS.MOUSE_UP:
-                    break;
-                case XAML_EVENTS.MOUSE_MOVE:
-                    break;
-                case XAML_EVENTS.KEY_DOWN:
-                    break;
-                case XAML_EVENTS.KEY_UP:
-                    break;
-                case XAML_EVENTS.LOADED:
-                    break;
-                case XAML_EVENTS.WINDOW_CLOSE:
-                    break;
-                case XAML_EVENTS.RENDER:
-                    var eh = new JSEventHandler((XAML_EVENTS)type, computer.OS.JavaScriptEngine, identifier, methodName, "OS", "null");
-                    
-                    if (wnd.Windows.TryGetValue(identifier, out var app))
-                    {
-                        app.OnClosed += () =>
-                        {
-                            if (EventHandlers.Contains(eh))
-                                EventHandlers.Remove(eh);
-                           
-                        };
-                    }
+            var content = InteropModule.GetUserContent(identifier);
 
-                    EventHandlers.Add(eh);
-                    break;
+            Control control = null;
+            if (targetControl.ToLower().Trim() == "this")
+            {
+                control = content;
             }
+            else
+            {
+                control = InteropModule.FindElementInUserControl<Control>(content, targetControl);
+            }
+
+            var eh = new JSEventHandler(control, (XAML_EVENTS)type, computer.OS.JavaScriptEngine, identifier, methodName);
+                    
+            if (wnd.Windows.TryGetValue(identifier, out var app))
+            {
+                app.OnClosed += () =>
+                {
+                    if (EventHandlers.Contains(eh))
+                        EventHandlers.Remove(eh);
+                           
+                };
+            }
+
+            EventHandlers.Add(eh);
         }
     }
 }
