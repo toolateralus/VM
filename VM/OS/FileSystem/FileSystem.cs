@@ -18,7 +18,7 @@ namespace VM.OS.FS
 
             public Installer(string root)
             {
-                var dir = Computer.GetParentDir("VM");
+                var dir = Computer.SearchForParentRecursive("VM");
                 string fullPath = Path.Combine(dir, PATH);
 
                 if (Directory.Exists(fullPath))
@@ -100,14 +100,14 @@ namespace VM.OS.FS
                 return;
             }
 
-            string newPath = Path.Combine(currentDirectory, path);
+            path = GetRelativeOrAbsolute(path);
 
-            if (Directory.Exists(newPath))
+            if (Directory.Exists(path))
             {
 
                 History.Push(currentDirectory);
 
-                currentDirectory = newPath;
+                currentDirectory = path;
             }
             else
             {
@@ -116,16 +116,17 @@ namespace VM.OS.FS
         }
         public void NewFile(string fileName, bool isDirectory = false)
         {
-            string newPath = Path.Combine(currentDirectory, fileName);
-            if (isDirectory && !File.Exists(newPath) && !Directory.Exists(newPath))
+            string path = GetRelativeOrAbsolute(fileName);
+
+            if (isDirectory && !File.Exists(path) && !Directory.Exists(path))
             {
-                Directory.CreateDirectory(newPath);
+                Directory.CreateDirectory(path);
             }
             else
             {
-                if (!File.Exists(newPath) && !Directory.Exists(newPath))
+                if (!File.Exists(path) && !Directory.Exists(path))
                 {
-                    File.Create(newPath).Close();
+                    File.Create(path).Close();
                 }
                 else
                 {
@@ -135,17 +136,11 @@ namespace VM.OS.FS
         }
         public void Delete(string fileName, bool isDirectory = false)
         {
-            string targetPath = Path.Combine(currentDirectory, fileName);
-            if (isDirectory)
+            string targetPath = GetRelativeOrAbsolute(fileName);
+
+            if (Directory.Exists(targetPath) && !File.Exists(targetPath))
             {
-                if (Directory.Exists(targetPath))
-                {
-                    Directory.Delete(targetPath, true);
-                }
-                else
-                {
-                    Notifications.Now($"Directory '{fileName}' not found in current path.");
-                }
+                Directory.Delete(targetPath, true);
             }
             else
             {
@@ -159,17 +154,30 @@ namespace VM.OS.FS
                 }
             }
         }
+
+        private string GetRelativeOrAbsolute(string fileName)
+        {
+            var targetPath = fileName;
+
+            if (!Path.IsPathFullyQualified(targetPath))
+            {
+                targetPath = Path.Combine(currentDirectory, fileName);
+            }
+
+            return targetPath;
+        }
+
         public void Write(string fileName, string content)
         {
-            string filePath = Path.Combine(currentDirectory, fileName);
-            File.WriteAllText(filePath, content);
+            fileName = GetRelativeOrAbsolute(fileName);
+            File.WriteAllText(fileName, content);
         }
         public string Read(string fileName)
         {
-            string filePath = Path.Combine(currentDirectory, fileName);
-            if (File.Exists(filePath))
+            fileName = GetRelativeOrAbsolute(fileName);
+            if (File.Exists(fileName))
             {
-                return File.ReadAllText(filePath);
+                return File.ReadAllText(fileName);
             }
             else
             {
@@ -179,13 +187,13 @@ namespace VM.OS.FS
         }
         public bool FileExists(string fileName)
         {
-            string filePath = Path.Combine(currentDirectory, fileName);
-            return File.Exists(filePath);
+            fileName = GetRelativeOrAbsolute(fileName);
+            return File.Exists(fileName);
         }
         public bool DirectoryExists(string directoryName)
         {
-            string directoryPath = Path.Combine(currentDirectory, directoryName);
-            return Directory.Exists(directoryPath);
+            directoryName = GetRelativeOrAbsolute(directoryName);
+            return Directory.Exists(directoryName);
         }
         public string GetFullPath(string path)
         {
@@ -199,6 +207,8 @@ namespace VM.OS.FS
 
         internal void Copy(string path, string destination)
         {
+            path = GetRelativeOrAbsolute(path);
+            destination = GetRelativeOrAbsolute(destination);
             File.Copy(path, destination);
         }
     }

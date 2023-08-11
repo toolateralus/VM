@@ -55,24 +55,35 @@ namespace VM.OS
         public OS(uint id, Computer computer)
         {
             CommandLine = new(computer);
-            
-            // we get our working root
-            var WORKING_DIR = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData) + "\\VM";
-            
-            this.WORKING_DIR = Path.GetFullPath(WORKING_DIR);
 
+            var WORKING_DIR = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData) + "\\VM";
+
+            this.WORKING_DIR = Path.GetFullPath(WORKING_DIR);
             // prepare the root dir for the FileSystem, since we add a dir to contain that itself.
             FS_ROOT = $"{this.WORKING_DIR}\\computer{id}";
-            
+
             FS = new(FS_ROOT, computer);
-
-            // prepare the javascript engine, and assign the computer ID to the var in the OS instance (in the js), and get the on exit event from the js env.
-            JavaScriptEngine = new(this.WORKING_DIR, computer);
-
-            JavaScriptEngine.InteropModule.OnComputerExit += computer.Exit;
 
             Config = OSConfigLoader.Load();
 
+        }
+
+        public void InitializeEngine(uint id, Computer computer)
+        {
+            JavaScriptEngine = new(this.WORKING_DIR, computer);
+
+            if (Runtime.GetResourcePath("startup.js") is string AbsPath)
+            {
+                JavaScriptEngine.ExecuteScript(AbsPath);
+            }
+
+            string jsDirectory = Computer.SearchForParentRecursive("VM");
+
+            JavaScriptEngine.LoadModules(jsDirectory + "\\OS-JS");
+
+            _ = JavaScriptEngine.Execute($"os.id = {id}");
+
+            JavaScriptEngine.InteropModule.OnComputerExit += computer.Exit;
         }
 
         public void SaveConfig()

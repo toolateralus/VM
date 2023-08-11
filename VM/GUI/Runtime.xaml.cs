@@ -148,7 +148,7 @@ namespace VM.GUI
             OS.Computer pc = new(cpu_id);
             ComputerWindow wnd = new(pc);
             Computers[pc] = wnd;
-            pc.FinishInit(pc, wnd);
+            pc.FinishInit(wnd);
             onWindowStateChanged?.Invoke(WindowState.Minimized);
         }
 

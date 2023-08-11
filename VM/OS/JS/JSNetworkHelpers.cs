@@ -10,12 +10,12 @@ namespace VM.OS.JS
         // record level nullability
         public event Action<object?[]?>? OnSent;
         public Action<object?[]?>? OnRecieved;
-        Computer computer;
+        Computer Computer;
         public JSNetworkHelpers(Computer computer, Action<object?[]?>? Output, Action<object?[]?>? Input)
         {
-            this.computer = computer;
             OnSent += Output;
             OnRecieved += Input;
+            Computer = computer;
         }
         public void print(object message)
         {
@@ -25,8 +25,8 @@ namespace VM.OS.JS
         {
             if (ip is string IPString && IPAddress.Parse(IPString) is IPAddress IP)
             {
-                computer.Network.TryHaltCurrentConnection();
-                computer.Network.StartClient(IP);
+                Computer.Network.TryHaltCurrentConnection();
+                Computer.Network.StartClient(IP);
             }
         }
         public void send(params object?[]? parameters)

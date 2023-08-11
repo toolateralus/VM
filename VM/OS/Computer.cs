@@ -9,9 +9,8 @@ namespace VM.OS
 {
     public class Computer
     {
-        // This connects every computer to the lan server
-        public NetworkConfiguration Network = new();
-        public static string GetParentDir(string targetDirectory)
+        public NetworkConfiguration Network = null;
+        public static string SearchForParentRecursive(string targetDirectory)
         {
             string assemblyLocation = Assembly.GetExecutingAssembly().Location;
             string currentDirectory = Path.GetDirectoryName(assemblyLocation);
@@ -31,17 +30,7 @@ namespace VM.OS
         public Computer(uint id)
         {
             OS = new(id, this);
-
-            string jsDirectory = GetParentDir("VM");
-
-            OS.JavaScriptEngine.LoadModules(jsDirectory + "\\OS-JS");
-            _ = OS.JavaScriptEngine.Execute($"os.id = {id}");
-
-            if (Runtime.GetResourcePath("startup.js") is string AbsPath)
-            {
-                OS.JavaScriptEngine.ExecuteScript(AbsPath);
-            }
-
+            Network = new(this);
         }
         public uint ID() => OS.ID;
 
@@ -68,18 +57,20 @@ namespace VM.OS
             OS.JavaScriptEngine.Dispose();
         }
 
-        internal void FinishInit(Computer pc, ComputerWindow wnd)
+        internal void FinishInit(ComputerWindow wnd)
         {
-            LoadBackground(pc, wnd);
-            InstallCoreApps(pc);
+            OS.InitializeEngine(ID(), this);
+
+            LoadBackground(this, wnd);
+            InstallCoreApps(this);
 
             wnd.Show();
 
             wnd.Closed += (o, e) =>
             {
-                Runtime.Computers.Remove(pc);
-                Task.Run(() => pc.OS.SaveConfig());
-                pc.Shutdown();
+                Runtime.Computers.Remove(this);
+                Task.Run(() => this.OS.SaveConfig());
+                this.Shutdown();
             };
         }
 

@@ -13,7 +13,10 @@ namespace VM.OS.Network
     {
         private TcpClient client;
         private NetworkStream stream;
+
         const int DEFAULT_PORT = 8080;
+        public static IPAddress SERVER_IP = IPAddress.Parse("192.168.0.138");
+
         public event Action<string>? OnMessageRecieved;
         public event Action<string>? OnNetworkException;
         public event Action<string>? OnNetworkDisconneted;
@@ -21,12 +24,13 @@ namespace VM.OS.Network
 
         public Thread receiveThread;
 
-        public NetworkConfiguration()
+        public NetworkConfiguration(Computer computer)
         {
-            StartClient(SERVER_IP);
-
+            if (computer?.OS?.Config?.Value<bool>("ALWAYS_CONNECT") is bool connect && connect)
+            {
+                StartClient(SERVER_IP);
+            }
         }
-        static IPAddress SERVER_IP = IPAddress.Parse("192.168.0.138");
         public void StartClient(IPAddress ip)
         {
             try
@@ -86,9 +90,9 @@ namespace VM.OS.Network
 
         internal void TryHaltCurrentConnection()
         {
-            client.Dispose();
-            stream.Dispose();
-            Task.Run(()=>receiveThread.Join());
+            client?.Dispose();
+            stream?.Dispose();
+            Task.Run(()=>receiveThread?.Join());
         }
     }
 }

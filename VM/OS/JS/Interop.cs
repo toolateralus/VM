@@ -171,7 +171,7 @@ namespace VM.OS.JS
         internal void ExecuteScript(string absPath)
         {
             if (File.Exists(absPath))
-                Task.Run(()=>engine.Execute(File.ReadAllText(absPath)));
+                Task.Run(()=> { try { engine.Execute(File.ReadAllText(absPath)); } catch { } });
         }
         /// <summary>
         /// this method is used for executing js events
