@@ -106,10 +106,9 @@ namespace VM.GUI
         }
         #endregion
 
-        Regex regex = new Regex("[^0-9]+");
         private void IDBox_KeyDown(object sender, KeyEventArgs e)
         {
-            e.Handled = regex.IsMatch(IDBox.Text);
+            
         }
         public static ComputerWindow GetWindow(Computer pc)
         {
@@ -119,15 +118,30 @@ namespace VM.GUI
         {
             var id = IDBox.Text;
 
-            if (!uint.TryParse(id, out var cpu_id))
-            {
-                System.Windows.MessageBox.Show($"The computer id \"{id}\" was invalid. It must be a non-negative integer.");
-                IDBox.Text = "0";
-                return;
-            }
+            TryOpenComputerAtIDRecursive(id);
+            Close();
 
-            InstantiateComputer(cpu_id);
-            
+            void TryOpenComputerAtIDRecursive(string id)
+            {
+                if (id.Contains(','))
+                {
+                    var split = id.Split(',');
+
+                    foreach (var item in split)
+                    {
+                        TryOpenComputerAtIDRecursive(item);
+                    }
+                    return;
+                }
+                if (!uint.TryParse(id, out var cpu_id))
+                {
+                    System.Windows.MessageBox.Show($"The computer id \"{id}\" was invalid. It must be a non-negative integer.");
+                    IDBox.Text = "0";
+                    return;
+                }
+
+                InstantiateComputer(cpu_id);
+            }
         }
         private static void InstantiateComputer(uint cpu_id)
         {

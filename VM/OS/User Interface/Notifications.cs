@@ -52,18 +52,16 @@ namespace VM
                     }
                 }
 
-                var notif = new NotificationControl(onTimerComplete) { Message = message };
 
                 foreach (var cw in Runtime.Computers)
                 {
-                    if (cw.Value.Desktop.Children.Contains(notif))
-                    {
-                        continue;
-                    }
+                    var notif = new NotificationControl(onTimerComplete) { Message = message };
+
                     cw.Value.Desktop.Children.Add(notif);
+                   
+                    notif.Start();
                 }
 
-                notif.Start();
             });
         }
     }

@@ -1,6 +1,7 @@
 {
-  "BACKGROUND": "images\\Background.png",
+  "BACKGROUND": "Background.png",
   "NAME": "Your Computer",
   "FONT": "Consolas",
-  "IP_ADDRESS": "0.01"
+  "IP_ADDRESS": "0.01",
+  "OPEN_PORTS": ["0000","0000"]
 }

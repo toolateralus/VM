@@ -27,11 +27,13 @@ namespace VM.OS.JS
         public Action<int>? OnComputerExit;
         public static Dictionary<string, Func<string, string, object?, object?>> EventActions = new();
 
+
+
         public JSInterop(Computer computer)
         {
             this.computer = computer;
-            EventActions.Add("draw_pixels", DrawPixelsEvent);
-            EventActions.Add("draw_image", DrawImageEvent);
+            EventActions.TryAdd("draw_pixels", DrawPixelsEvent);
+            EventActions.TryAdd("draw_image", DrawImageEvent);
         }
         public BitmapImage BitmapImageFromBase64(string base64String)
         {

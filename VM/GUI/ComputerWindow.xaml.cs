@@ -174,11 +174,10 @@ namespace VM.GUI
         public ComputerWindow(Computer pc)
         {
             InitializeComponent();
-            desktopBackground.Source = LoadImage(Runtime.GetResourcePath("Background.png"));
+            desktopBackground.Source = LoadImage(Runtime.GetResourcePath("Background.png") ?? "background.png");
             KeyDown += Computer_KeyDown;
             computer = pc;
         }
-
         private void Computer_KeyDown(object sender, System.Windows.Input.KeyEventArgs e)
         {
             switch (e.Key)
@@ -190,7 +189,6 @@ namespace VM.GUI
                     break;
             }
         }
-
         public static BitmapImage LoadImage(string path)
         {
             BitmapImage bitmapImage = new BitmapImage();
@@ -199,9 +197,7 @@ namespace VM.GUI
             bitmapImage.EndInit();
             return bitmapImage;
         }
-
         public Dictionary<string, ResizableWindow> Windows = new();
-
         public void Open(UserControl control, string title = "window", Brush? background = null, Brush? foreground = null)
         {
             background ??= Brushes.LightGray;
@@ -238,15 +234,12 @@ namespace VM.GUI
             CompositionTarget.Rendering += (e, o) => UpdateComputerTime();
 
         }
-
         private void UpdateComputerTime()
         {
             DateTime now = DateTime.Now;
             string formattedDateTime = now.ToString("MM/dd/yy || h:mm");
             TimeLabel.Content = formattedDateTime;
         }
-
-
         private void RemoveTaskbarButton(string title)
         {
             System.Collections.IList list = TaskbarStackPanel.Children;
@@ -260,7 +253,6 @@ namespace VM.GUI
                 }
             }
         }
-
         private Button GetOSThemeButton(double width = double.NaN, double height = double.NaN)
         {
             var btn = new Button()
@@ -275,7 +267,6 @@ namespace VM.GUI
             };
             return btn;
         }
-
         private Button GetDesktopIconButton(string appName)
         {
             var btn = GetOSThemeButton(width: 60, height: 60);
@@ -285,7 +276,6 @@ namespace VM.GUI
             btn.Name = appName.Split(".")[0];
             return btn;
         }
-
         private Button GetTaskbarButton(string title, RoutedEventHandler Toggle)
         {
             var btn = GetOSThemeButton(width: 65);
@@ -294,14 +284,12 @@ namespace VM.GUI
             btn.Click += Toggle;
             return btn;
         }
-
         private void Taskbar_Click(object sender, RoutedEventArgs e)
         {
             FileExplorer control = new FileExplorer();
             control.LateInit(computer);
             Open(control, "File Explorer");
         }
-
         /// <summary>
         /// the instantiation of applications is handled in the button event
         /// </summary>
@@ -331,7 +319,6 @@ namespace VM.GUI
             DesktopIconPanel.Children.Add(btn);
             DesktopIconPanel.UpdateLayout();
         }
-
         private static void SetupIcon(string name, Button btn, Type type) 
         {
             if (GetIcon(type) is BitmapImage img)
@@ -350,7 +337,6 @@ namespace VM.GUI
 
             btn.Content = contentBorder;
         }
-
         private static BitmapImage? GetIcon(Type type) 
         {
             var properties = type.GetProperties();
@@ -368,7 +354,6 @@ namespace VM.GUI
 
             return null;
         }
-
         /// <summary>
         /// performs init on LateInit method, explaied in tooltipf or IsValidType (a static method in this class)
         /// </summary>
@@ -389,7 +374,6 @@ namespace VM.GUI
                 }
             }
         }
-
         /// <summary>
         /// we rely on this <code>('public void LateInit(Computer pc){..}') </code>method being declared in the UserControl to attach the OS to the app
         /// </summary>
@@ -406,7 +390,7 @@ namespace VM.GUI
             }
             return false;
         }
-        public List<string> CustomApps =new();
+        public List<string> CustomApps = new();
         public Dictionary<string, int> JSClassInstances = new();
         public async Task OpenCustom(string type)
         {
