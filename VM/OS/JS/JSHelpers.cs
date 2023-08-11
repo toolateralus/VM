@@ -79,8 +79,6 @@ namespace VM.OS.JS
                     }
                 }
             });
-
-
             return null;
         }
         public object? DrawPixelsEvent(string id, string target_control, object? value)
