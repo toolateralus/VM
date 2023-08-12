@@ -64,7 +64,7 @@ namespace VM.OS.FS
                 new("mkdir", MkDir, "makes directory at provided path if permitted"),
                 new("copy", Copy, "copy arg1 to any number of provided paths,\'\n\t\' example: { copy source destination1 destination2 destination3... }"),
                 new("clear", Clear, "makes directory at provided path if permitted"),
-                new("font", SetFont, "set\'s the command prompt\'s font for this session. call this from a startup to set as default"),
+                new("font", SetFont, "sets the command prompts font for this session. call this from a startup to set as default"),
                 new("config" ,Config, "config <set or get> <property name> (set only) <new value>"),
                 new("ip", getIP, "fetches the local ip address of wifi/ethernet"),
                 new("restart", (_) => Runtime.Restart(computer.ID()), "restarts this computer"),

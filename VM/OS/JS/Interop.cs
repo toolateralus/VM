@@ -55,17 +55,32 @@ namespace VM.OS.JS
 
             executionThread = new Thread(Execute);
             executionThread.Start();
-            CompositionTarget.Rendering += Render;
+            Thread RenderThread = new Thread(Render);
+            RenderThread.Start();
 
         }
-        private void Render(object? sender, EventArgs e)
+
+        private void Render()
         {
-            foreach (var item in EventHandlers.Where(e => e.Event == XAML_EVENTS.RENDER))
+            while (true)
             {
-                // Yup Lol
-                item.InvokeGeneric(null, (object?) null);
+                var collection = EventHandlers.Where(e => e.Event == XAML_EVENTS.RENDER);
+                for (int i = 0; i < collection.Count(); ++i)
+                {
+                    var item = collection.ElementAt(i);
+                    if (!item.Disposed)
+                    {
+                        item?.InvokeGeneric(null, null);
+                    }
+                    else
+                    {
+                        EventHandlers.Remove(item);
+                    }
+                }
+                Thread.Sleep(16);
             }
         }
+
         public object? GetVariable(string name)
         {
             return engine.GetVariableValue(name);

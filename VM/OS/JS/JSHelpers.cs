@@ -32,8 +32,8 @@ namespace VM.OS.JS
             this.computer = computer;
             EventActions.TryAdd("draw_pixels", DrawPixelsEvent);
             EventActions.TryAdd("draw_image", DrawImageEvent);
-            EventActions.TryAdd("get_content", SetContent);
-            EventActions.TryAdd("set_content", GetContent);
+            EventActions.TryAdd("set_content", SetContent);
+            EventActions.TryAdd("get_content", GetContent);
         }
 
         private object? GetContent(string id, string controlName, object? value)
@@ -70,19 +70,28 @@ namespace VM.OS.JS
             wnd?.Dispatcher.Invoke(() =>
             {
                 var userControl = GetUserContent(id);
-                if (userControl.GetType() == typeof(TextBox) || userControl.GetType() == typeof(TextBlock))
+
+                if (userControl == null)
+                    return;
+
+                var _control = FindControl(userControl, control);
+
+                if (_control == null)
+                    return;
+
+                if (_control.GetType() == typeof(TextBox) || _control.GetType() == typeof(TextBlock))
                 {
-                    SetProperty(userControl, "Text", value);    
+                    SetProperty(_control, "Text", value);    
                 } 
                 else
                 {
-                    SetProperty(userControl, "Content", value);
+                    SetProperty(_control, "Content", value);
                 }
             });
             return output;
         }
 
-        public byte[] toBytes(string background)
+        public object toBytes(string background)
         {
             return Convert.FromBase64String(background);
         }

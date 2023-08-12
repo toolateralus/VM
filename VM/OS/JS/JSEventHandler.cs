@@ -79,6 +79,9 @@ namespace VM.OS.JS
             LastCode.Append($"{identifier}.{methodName}({arguments_placeholder})");
         }
         const string arguments_placeholder = $"{{!arguments}}";
+
+        public bool Disposed { get; internal set; }
+
         public void InstantiateCode(object? sender, object? args)
         {
             LastCode.Clear();
