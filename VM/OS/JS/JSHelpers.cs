@@ -87,14 +87,11 @@ namespace VM.OS.JS
             return Convert.FromBase64String(background);
         }
 
-        public string toBase64(int[] ints)
+        public string toBase64(object ints)
         {
             List<byte> bytes = new List<byte>();
 
-            foreach (var item in ints)
-            {
-                bytes.Add((byte)item);
-            }
+            forEach<int>(ints.ToEnumerable(), (i) => bytes.Add((byte)i));
 
             return Convert.ToBase64String(bytes.ToArray());
         }
