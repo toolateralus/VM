@@ -6,6 +6,7 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Reflection;
+using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using System.Windows;
 using System.Windows.Controls;
@@ -86,9 +87,16 @@ namespace VM.OS.JS
             return Convert.FromBase64String(background);
         }
 
-        public string toBase64(byte[] bytes)
+        public string toBase64(int[] ints)
         {
-            return Convert.ToBase64String(bytes);
+            List<byte> bytes = new List<byte>();
+
+            foreach (var item in ints)
+            {
+                bytes.Add((byte)item);
+            }
+
+            return Convert.ToBase64String(bytes.ToArray());
         }
 
         #region DRAWING
