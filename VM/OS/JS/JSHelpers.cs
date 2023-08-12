@@ -212,10 +212,10 @@ namespace VM.OS.JS
                 for (int x = 0; x < width; x++)
                 {
                     int pixelIndex = (y * width + x) * bytesPerPixel;
-                    byte b = colorData[pixelIndex];
-                    byte g = colorData[pixelIndex + 1];
-                    byte r = colorData[pixelIndex + 2];
-                    byte a = colorData[pixelIndex + 3];
+                    byte a = colorData[pixelIndex];
+                    byte r = colorData[pixelIndex + 1];
+                    byte g = colorData[pixelIndex + 2];
+                    byte b = colorData[pixelIndex + 3];
 
                     byte[] pixelData = new byte[] { b, g, r, a };
                     Marshal.Copy(pixelData, 0, bitmap.BackBuffer + pixelIndex, bytesPerPixel);
