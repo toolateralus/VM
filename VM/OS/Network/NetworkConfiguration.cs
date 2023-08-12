@@ -16,7 +16,7 @@ namespace VM.OS.Network
         private NetworkStream stream;
 
         const int DEFAULT_PORT = 8080;
-        static string LAST_KNOWN_SERVER_IP = "192.168.0.138";
+        public static string LAST_KNOWN_SERVER_IP => "192.168.0.138";
         public static IPAddress SERVER_IP = IPAddress.Parse(LAST_KNOWN_SERVER_IP);
 
         public event Action<string>? OnMessageRecieved;

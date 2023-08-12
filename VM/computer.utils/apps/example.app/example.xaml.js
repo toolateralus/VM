@@ -2,7 +2,8 @@
 class example 
 {
     btnPressed(sender, args){
-        network.send(0, 1, "event");
+        const text  = app.pushEvent(this.__ID, 'textBox', 'get_content', '')
+        network.send(0, 1, text);
     }
     constructor() {
  
@@ -14,6 +15,7 @@ class example
         
         app.pushEvent(this.__ID, 'renderTarget', 'draw_image', background);
         
+        app.pushEvent(this.__ID, 'textBlock', 'set_content', "0.0.000.0");
     }
 }
 

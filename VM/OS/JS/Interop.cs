@@ -108,9 +108,6 @@ namespace VM.OS.JS
 
             RecursiveLoad(sourceDir);
         }
-
-
-
         public void Execute()
         {
             while (true && !Disposing)

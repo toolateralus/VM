@@ -23,7 +23,6 @@ namespace VM.OS
 {
     public class OS
     {
-        // we should re-think the references we have to the computer everywhere, maybe just combine the OS and pc or fix the strange references.
         public FileSystem FS;
         public JavaScriptEngine JavaScriptEngine;
         public CommandLine CommandLine;

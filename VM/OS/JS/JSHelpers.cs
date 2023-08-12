@@ -16,8 +16,6 @@ using VM.GUI;
 
 namespace VM.OS.JS
 {
-
-
     public class JSInterop
     {
 
@@ -27,14 +25,63 @@ namespace VM.OS.JS
         public Action<int>? OnComputerExit;
         public static Dictionary<string, Func<string, string, object?, object?>> EventActions = new();
 
-
-
         public JSInterop(Computer computer)
         {
             this.computer = computer;
             EventActions.TryAdd("draw_pixels", DrawPixelsEvent);
             EventActions.TryAdd("draw_image", DrawImageEvent);
+            EventActions.TryAdd("get_content", SetContent);
+            EventActions.TryAdd("set_content", GetContent);
         }
+
+        private object? GetContent(string id, string controlName, object? value)
+        {
+            var userControl = GetUserContent(id);
+            object? output = null;
+
+            userControl?.Dispatcher.Invoke(() =>
+            {
+                var control = FindControl(userControl, controlName);
+
+                if (control is null)
+                    return;
+
+                if (control.GetType() == typeof(TextBox) || control.GetType() == typeof(TextBlock))
+                {
+                    output = GetProperty(control, "Text");
+                }
+                else
+                {
+                    output = GetProperty(control, "Content");
+                }
+            });
+
+            return output;
+        }
+
+        private object? SetContent(string id, string control, object? value)
+        {
+            var userControl = GetUserContent(id);
+            object? output = null;
+
+            userControl?.Dispatcher.Invoke(() =>
+            {
+                if (userControl.GetType() == typeof(TextBox) || userControl.GetType() == typeof(TextBlock))
+                {
+                    SetProperty(control, "Text", value);    
+                } 
+                else
+                {
+                    SetProperty(control, "Content", value);
+                }
+            });
+
+            return output;
+        }
+
+
+
+        #region DRAWING
         public BitmapImage BitmapImageFromBase64(string base64String)
         {
             try
@@ -58,8 +105,6 @@ namespace VM.OS.JS
                 return null;
             }
         }
-
-        #region DRAWING
         public object? DrawImageEvent(string id, string target_control, object? value)
         {
             if (value is null)
@@ -173,7 +218,7 @@ namespace VM.OS.JS
             {
                 foreach (var item in source)
                 {
-                    T instance = Get<T>(item, out var success);
+                    T instance = Cast<T>(item, out var success);
 
                     if (success)
                         action(instance);
@@ -187,7 +232,7 @@ namespace VM.OS.JS
                 }
             }
         }
-        public static T Get<T>(object item, out bool success)
+        public static T Cast<T>(object item, out bool success)
         {
             success = false;
             if (item is T instance)
@@ -200,27 +245,19 @@ namespace VM.OS.JS
 
         #region REFLECTION
        
-        public static void SetProperty(object target, string propertyName, object value)
+        public static void SetProperty(object target, string propertyName, object? value)
         {
             var targetType = target.GetType();
             var propertyInfo = targetType.GetProperty(propertyName);
 
-            if (propertyInfo != null)
-            {
-                propertyInfo.SetValue(target, value);
-            }
+            propertyInfo?.SetValue(target, value);
         }
         public static object GetProperty(object target, string propertyName)
         {
             var targetType = target.GetType();
             var propertyInfo = targetType.GetProperty(propertyName);
 
-            if (propertyInfo != null)
-            {
-                return propertyInfo.GetValue(target);
-            }
-
-            return null;
+            return propertyInfo != null ? propertyInfo.GetValue(target) : null;
         }
         public static object CallMethod(object target, string methodName, params object[] parameters)
         {
@@ -322,26 +359,30 @@ namespace VM.OS.JS
         }
         public FrameworkElement? FindControl(UserControl userControl, string controlName)
         {
+
+            FrameworkElement element = null;
+            userControl.Dispatcher.Invoke(() => { 
             var contentProperty = userControl.GetType().GetProperty("Content");
 
-            if (contentProperty != null)
-            {
-                var content = contentProperty.GetValue(userControl);
-
-                if (content != null)
+                if (contentProperty != null)
                 {
-                    // Check if the content itself is the target control
-                    if (content is FrameworkElement contentElement && contentElement.Name == controlName)
+                    var content = contentProperty.GetValue(userControl);
+
+                    if (content != null)
                     {
-                        return contentElement;
+                        if (content is FrameworkElement contentElement && contentElement.Name == controlName)
+                        {
+                            element =  contentElement;
+                            return;
+                        }
+
+                        element = SearchVisualTree(content, controlName);
+                        return;
                     }
-
-                    // Recursively search through the visual tree
-                    return SearchVisualTree(content, controlName);
                 }
-            }
+            });
 
-            return null;
+            return element;
         }
         private FrameworkElement? SearchVisualTree(object element, string controlName)
         {

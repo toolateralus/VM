@@ -4,6 +4,7 @@ using System.Diagnostics;
 using System.Net;
 using System.Text;
 using VM.GUI;
+using VM.OS.Network;
 
 namespace VM.OS.JS
 {
@@ -18,9 +19,9 @@ namespace VM.OS.JS
             OnRecieved = Input;
             Computer = computer;
         }
-        public void print(object message)
+        public string? ip()
         {
-            Debug.WriteLine(message);
+            return NetworkConfiguration.LAST_KNOWN_SERVER_IP;
         }
         public void connect(object? ip)
         {
@@ -86,7 +87,6 @@ namespace VM.OS.JS
 
                         OnSent?.Invoke(combinedBytes);
                     }
-                    
                 }
                 if (parameters[0] is int _out && parameters[1] is int _in)
                 {
