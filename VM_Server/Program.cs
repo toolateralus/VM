@@ -71,14 +71,23 @@ namespace ServerExample
             _ = Task.Run(async () =>
             {
                 NetworkStream stream = client.GetStream();
-                byte[] buffer = new byte[1024];
-                int bytesRead;
-
                 try
                 {
-                    while ((bytesRead = await stream.ReadAsync(buffer)) > 0)
+                    while (true)
                     {
-                        string message = Encoding.ASCII.GetString(buffer, 0, bytesRead);
+                        byte[] header = new byte[4]; // Assuming a 4-byte header size
+
+                        // Read the message length
+                        if (stream.Read(header, 0, 4) <= 0)
+                            break;
+                        int messageLength = BitConverter.ToInt32(header, 0);
+
+                        // Read the message content
+                        byte[] dataBytes = new byte[messageLength];
+                        if (stream.Read(dataBytes, 0, messageLength) <= 0)
+                            break;
+
+                        string message = Encoding.ASCII.GetString(dataBytes, 0, messageLength);
                         
                         Console.WriteLine($"Received from client {client.GetHashCode()}: {message}");
 
@@ -89,8 +98,7 @@ namespace ServerExample
 
                         // Handle other message types or logic here
 
-                        byte[] broadcastBuffer = Encoding.ASCII.GetBytes(message);
-                        await BroadcastMessage(connectedClients, client, broadcastBuffer);
+                        await BroadcastMessage(connectedClients, client, dataBytes, header);
                     }
                 }
                 catch (Exception ex)
@@ -106,13 +114,14 @@ namespace ServerExample
             });
         }
 
-        private async Task BroadcastMessage(List<TcpClient> connectedClients, TcpClient client, byte[] broadcastBuffer)
+        private async Task BroadcastMessage(List<TcpClient> connectedClients, TcpClient client, byte[] broadcastBuffer, byte[] header)
         {
             foreach (TcpClient connectedClient in connectedClients)
             {
                 if (connectedClient != client)
                 {
                     NetworkStream connectedStream = connectedClient.GetStream();
+                    await connectedStream.WriteAsync(header, 0, header.Length);
                     await connectedStream.WriteAsync(broadcastBuffer, 0, broadcastBuffer.Length);
                 }
             }

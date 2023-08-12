@@ -58,13 +58,20 @@ namespace VM.OS.Network
         {
             try
             {
-                // MUSTARD
-                byte[] buffer = new byte[1024];
-                int bytesRead;
-
-                while ((bytesRead = stream.Read(buffer, 0, buffer.Length)) > 0)
+                while (true)
                 {
-                    OnMessageRecieved?.Invoke(buffer);
+                    byte[] header = new byte[4]; // Assuming a 4-byte header size
+
+                    // Read the message length
+                    if (stream.Read(header, 0, 4) <= 0)
+                        break;
+                    int messageLength = BitConverter.ToInt32(header, 0);
+
+                    // Read the message content
+                    byte[] dataBytes = new byte[messageLength];
+                    if (stream.Read(dataBytes, 0, messageLength) <= 0)
+                        break;
+                    OnMessageRecieved?.Invoke(dataBytes);
                 }
             }
             catch (Exception e)
@@ -79,10 +86,13 @@ namespace VM.OS.Network
         }
 
 
-        internal void OnSendMessage(byte[] obj)
+        internal void OnSendMessage(byte[] dataBytes)
         {
-            MessageBox.Show($"Sent message on channel {obj[0]}");
-            stream.Write(obj);
+            MessageBox.Show($"Sent message on channel {dataBytes[0]}");
+            int messageLength = dataBytes.Length;
+            byte[] lengthBytes = BitConverter.GetBytes(messageLength);
+            stream.Write(lengthBytes, 0, 4); // Assuming a 4-byte header size
+            stream.Write(dataBytes, 0, dataBytes.Length);
         }
 
         internal void TryHaltCurrentConnection()
