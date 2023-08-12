@@ -111,14 +111,11 @@ namespace VM.OS.JS
 
         private void InvokeEvent()
         {
-            Task.Run(() =>
+            if (LastCode.ToString() is string Code)
             {
-                if (LastCode.ToString() is string Code)
-                {
-                    js.DIRECT_EXECUTE(Code);
-                    LastCode.Clear();
-                }
-            });
+                js.DIRECT_EXECUTE(Code);
+                LastCode.Clear();
+            }
         }
 
         public void InvokeKeyboard(object? sender, System.Windows.Input.KeyEventArgs e)

@@ -178,19 +178,14 @@ namespace VM.OS.JS
         {
             if (Disposing)
                 return;
-
-            Task.Run(() =>
+            try
             {
-
-                try
-                {
-                    engine.Execute(code);
-                }
-                catch(Exception e)
-                {
-                    Notifications.Now(e.Message);
-                }
-            });
+                engine.Execute(code);
+            }
+            catch(Exception e)
+            {
+                Notifications.Now(e.Message);
+            }
         }
         public List<JSEventHandler> EventHandlers = new();
 

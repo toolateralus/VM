@@ -11,7 +11,7 @@ namespace VM.GUI
     public partial class NotificationControl : UserControl
     {
 
-        const int NOTIFICATION_SIZE_X = 200, NOTIFICATION_SIZE_Y = 100;
+        const int NOTIFICATION_SIZE_X = 350, NOTIFICATION_SIZE_Y = 100;
 
         private DispatcherTimer fadeOutTimer;
 
@@ -40,7 +40,12 @@ namespace VM.GUI
             MaxHeight = NOTIFICATION_SIZE_Y;
             MaxWidth = NOTIFICATION_SIZE_X;
 
+            HorizontalAlignment = HorizontalAlignment.Right;
+            VerticalAlignment = VerticalAlignment.Bottom;
+
             DataContext = this;
+
+            TextBox.FontFamily = new("Consolas MS");
 
             fadeOutTimer = new DispatcherTimer();
             fadeOutTimer.Interval = TimeSpan.FromSeconds(2);
