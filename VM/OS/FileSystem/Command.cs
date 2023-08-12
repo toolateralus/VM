@@ -148,7 +148,7 @@ namespace VM.OS.FS
                             return;
                         }
 
-                        commandPrompt.DrawTextBox($"\n {{{propname} : {propValue}}}");
+                        commandPrompt.output.AppendText($"\n {{{propname} : {propValue}}}");
                     }
                     else if (toLower == "set" && obj.Length > 2)
                     {
@@ -203,7 +203,7 @@ namespace VM.OS.FS
                     {
                         sb.Append($"\n {{{kvp.Key} : {kvp.Value}}}");
                     }
-                    commandPrompt.DrawTextBox(sb.ToString());
+                    commandPrompt.output.AppendText(sb.ToString());
                 }
                 else
                 {
@@ -269,8 +269,8 @@ namespace VM.OS.FS
             var txt = string.Join('\n', list);
             var text = $"-Current Directory: {Computer.OS.FS.CurrentDirectory} --";
 
-            commandPrompt.DrawTextBox(text);
-            commandPrompt.DrawTextBox(txt);
+            commandPrompt.output.AppendText(text);
+            commandPrompt.output.AppendText(txt);
         }
         private void ChangeDir(object[]? obj)
         {
@@ -316,8 +316,8 @@ namespace VM.OS.FS
             foreach (var item in Aliases)
                 aliasbuilder.Append($"\n{item.Key} -> {item.Value.Split('\\').Last()}");
 
-            commandPrompt.DrawTextBox(cmdbuilder.ToString());
-            commandPrompt.DrawTextBox(aliasbuilder.ToString());
+            commandPrompt.output.AppendText(cmdbuilder.ToString());
+            commandPrompt.output.AppendText(aliasbuilder.ToString());
 
         }
         private async void RunJs(object[]? obj)

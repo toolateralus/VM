@@ -59,8 +59,6 @@ namespace VM.OS.JS
             renderThread = new Thread(Render);
             renderThread.Start();
 
-            
-
         }
         Thread renderThread;
         private void Render()

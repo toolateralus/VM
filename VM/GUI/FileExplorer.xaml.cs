@@ -164,10 +164,8 @@ namespace VM.GUI
                 {
                     Runtime.GetWindow(computer).OpenApp(new TextEditor(computer, path));
                 }
-                else
-                {
-                    dir = path;
-                }
+
+                dir = path;
 
                 computer.OS.FS.ChangeDirectory(dir);
             }

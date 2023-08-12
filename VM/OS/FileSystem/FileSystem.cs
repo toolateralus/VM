@@ -109,7 +109,7 @@ namespace VM.OS.FS
 
                 currentDirectory = path;
             }
-            else
+            else if (!File.Exists(path))
             {
                 Notifications.Now($"Directory '{path}' not found in current path.");
             }

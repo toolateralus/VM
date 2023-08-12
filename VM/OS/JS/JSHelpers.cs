@@ -334,7 +334,7 @@ namespace VM.OS.JS
                     return;
                 }
 
-                commandPrompt.DrawTextBox($"\n {message}");
+                commandPrompt.output.AppendText($"\n {message}");
             });
 
         }

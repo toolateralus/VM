@@ -151,7 +151,7 @@ namespace VM.GUI
 
                 if (!string.IsNullOrEmpty(output))
                 {
-                     DrawTextBox(output);
+                     this.output.AppendText("\n" + output);
                 }
             }
             catch (Exception ex)
