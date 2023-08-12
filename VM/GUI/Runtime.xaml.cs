@@ -112,7 +112,16 @@ namespace VM.GUI
         }
         public static ComputerWindow GetWindow(Computer pc)
         {
-            return Computers[pc];
+            // TODO : fix this;
+            try
+            {
+                return Computers[pc];
+            }
+            catch
+            {
+
+            }
+            return null;
         }
         private void NewComputerButton(object sender, RoutedEventArgs e)
         {

@@ -37,32 +37,41 @@ namespace VM
 
         private static async void ProcessNextMessage(string message)
         {
-            await Application.Current?.Dispatcher?.InvokeAsync(() =>
+
+            try
             {
-                void onTimerComplete()
+
+                await Application.Current?.Dispatcher?.InvokeAsync(() =>
                 {
-                    lock (queueLock)
+                    void onTimerComplete()
                     {
-                        Preoccupied = false;
-                        if (MessageQueue.Any())
+                        lock (queueLock)
                         {
-                            string nextMessage = MessageQueue.Dequeue();
-                            MessageProcessed?.Invoke(nextMessage);
+                            Preoccupied = false;
+                            if (MessageQueue.Any())
+                            {
+                                string nextMessage = MessageQueue.Dequeue();
+                                MessageProcessed?.Invoke(nextMessage);
+                            }
                         }
                     }
-                }
 
 
-                foreach (var cw in Runtime.Computers)
-                {
-                    var notif = new NotificationControl(onTimerComplete) { Message = message };
+                    foreach (var cw in Runtime.Computers)
+                    {
+                        var notif = new NotificationControl(onTimerComplete) { Message = message };
 
-                    cw.Value.Desktop.Children.Add(notif);
-                   
-                    notif.Start();
-                }
+                        cw.Value.Desktop.Children.Add(notif);
 
-            });
+                        notif.Start();
+                    }
+
+                });
+            }
+            catch
+            {
+
+            }
         }
     }
 }
