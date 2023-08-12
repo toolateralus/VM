@@ -15,7 +15,7 @@ class example
         
         app.pushEvent(this.__ID, 'renderTarget', 'draw_image', background);
         
-        app.pushEvent(this.__ID, 'textBlock', 'set_content', "0.0.000.0");
+        app.pushEvent(this.__ID, 'textBlock', 'set_content', "0.00.00.00");
     }
 }
 

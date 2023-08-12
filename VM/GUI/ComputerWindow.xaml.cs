@@ -380,6 +380,8 @@ namespace VM.GUI
         /// </summary>
         /// <param name="members"></param>
         /// <returns></returns>
+        /// 
+
         private static bool IsValidType(MemberInfo[] members)
         {
             foreach (var member in members)
@@ -431,47 +433,19 @@ namespace VM.GUI
                 JSClassInstances.Add(type, 1);
             }
 
-            string generatedClassName = name + id.ToString();
-
             var JS = new string(data.JS);
 
-            var classNamePattern = new Regex($@"\bclass\s+({name})\s*\b");
-            if (classNamePattern.IsMatch(JS))
-            {
-                JS = classNamePattern.Replace(JS, $"class {generatedClassName}");
-            }
+             _ = await computer.OS.JavaScriptEngine.Execute(JS);
 
-            var variablePattern = new Regex(@"this\.__ID\s*=\s*'(\w+)\{..\}'");
-            Match variableMatch = variablePattern.Match(JS);
+            var instance_name = "uid" + Guid.NewGuid().ToString().Split('-')[0];
 
-            if (variableMatch.Success)
-            {
-                string variableName = variableMatch.Groups[1].Value + id.ToString();
+            string instantiation_code = $"let {instance_name} = new {name}()";
 
-                if (variableName == generatedClassName)
-                {
-                    generatedClassName = char.ToUpper(generatedClassName[0]) + generatedClassName[1..];
-                }
-
-                JS = variablePattern.Replace(JS, $"this.__ID = '{variableName}'");
-
-                name = variableName;
-            }
-
-            _ = await computer.OS.JavaScriptEngine.Execute(JS);
-
-            var identifier = name;
-
-            var exists = await computer.OS.JavaScriptEngine.Execute($"({identifier} != undefined || {identifier} != null)");
-
-            string instantiation_code = $"let {identifier} = new {generatedClassName}()";
-
-            if (exists is bool Exists && Exists)
-            {
-                instantiation_code = instantiation_code.Replace("let ", "");
-            }
+            string id_setter_code = $"{instance_name}.__ID = \'{instance_name}\'";
 
             _ = await computer.OS.JavaScriptEngine.Execute(instantiation_code);
+
+            _ = await computer.OS.JavaScriptEngine.Execute(id_setter_code);
 
             return name;
         }

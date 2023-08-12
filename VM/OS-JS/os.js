@@ -6,9 +6,15 @@ function alias(cmd, path){
 }
 class OS {
     id = 0;
+
+    constructor() {
+        this.app_classes = [];
+    }
+
     exit(code) {
         interop.exit(code);
     }
+
     computerID() {
         return this.id;
     }
