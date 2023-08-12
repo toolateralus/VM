@@ -67,11 +67,16 @@ namespace VM.OS.FS
                 new("font", SetFont, "sets the command prompts font for this session. call this from a startup to set as default"),
                 new("config" ,Config, "config <set or get> <property name> (set only) <new value>"),
                 new("ip", getIP, "fetches the local ip address of wifi/ethernet"),
+                new("rename", Rename, "fetches the local ip address of wifi/ethernet"),
                 new("restart", (_) => Runtime.Restart(computer.ID()), "restarts this computer"),
                 new("lp", LP, "restarts this computer"),
             };
         }
+        private void Rename(object[]? obj)
+        {
+            Computer.OS.FS.Rename(obj[0] as string, obj[1] as string);
 
+        }
         private void LP(object[]? obj)
         {
             foreach (var item in Runtime.GetWindow(Computer).Windows)
@@ -103,7 +108,7 @@ namespace VM.OS.FS
             if (obj != null && obj.Length > 0 && obj[0] is string fileName)
             {
 
-                if (Runtime.GetResourcePath(fileName) is string AbsPath)
+                if (Runtime.GetResourcePath(fileName) is string AbsPath && AbsPath != null)
                 {
                     if (!File.Exists(AbsPath))
                     {
@@ -266,11 +271,12 @@ namespace VM.OS.FS
             }
 
             var list = Computer.OS.FS.DirectoryListing();
-            var txt = string.Join('\n', list);
-            var text = $"-Current Directory: {Computer.OS.FS.CurrentDirectory} --";
 
-            commandPrompt.output.AppendText(text);
-            commandPrompt.output.AppendText(txt);
+            var textList = string.Join("\n\t", list);
+
+            var text = $"\n##Current Directory: {Computer.OS.FS.CurrentDirectory}###\n";
+            commandPrompt.output.AppendText(text + "\t");
+            commandPrompt.output.AppendText(textList);
         }
         private void ChangeDir(object[]? obj)
         {

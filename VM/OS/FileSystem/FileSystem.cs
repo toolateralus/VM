@@ -241,5 +241,25 @@ namespace VM.OS.FS
             }
         }
 
+        internal void Rename(string? path, string? dest)
+        {
+           if (path != null && dest != null)
+           {
+              path = GetRelativeOrAbsolute(path);
+              dest = GetRelativeOrAbsolute(path);
+
+                if (File.Exists(path))
+                {
+                    File.Move(path, dest);
+                }
+                else if (Directory.Exists(path))
+                {
+                    Directory.Move(path, dest);
+                }
+
+
+
+           }
+        }
     }
 }
