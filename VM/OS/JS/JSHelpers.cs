@@ -159,7 +159,7 @@ namespace VM.OS.JS
                 {
                     if (grid != null)
                     {
-                        var image = FindElementInUserControl<Image>(control, target_control);
+                        var image = FindControl(control, target_control) as Image;
 
                         if (image != null)
                         {
