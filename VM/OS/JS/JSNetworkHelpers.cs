@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections;
 using System.Diagnostics;
+using System.Linq;
 using System.Net;
 using System.Text;
 using VM.GUI;
@@ -13,10 +14,19 @@ namespace VM.OS.JS
         public event Action<byte[]> OnSent;
         public Action<byte[]> OnRecieved;
         Computer Computer;
-        public JSNetworkHelpers(Computer computer, Action<byte[]> Output, Action<byte[]> Input)
+        public JSNetworkHelpers(Computer computer, Action<byte[]> OutStream, Action<byte[]> InStream)
         {
-            OnSent = Output;
-            OnRecieved = Input;
+            OnSent = OutStream;
+            OnRecieved += InStream;
+            OnRecieved += (e) =>
+            {
+                string msg = "";
+                foreach (var item in e)
+                {
+                    msg += item;
+                }
+                computer.OS.JavaScriptEngine.InteropModule.print(msg);
+            };
             Computer = computer;
         }
         public string? ip()

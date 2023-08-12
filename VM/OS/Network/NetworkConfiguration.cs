@@ -17,12 +17,10 @@ namespace VM.OS.Network
 
         const int DEFAULT_PORT = 8080;
         public static string LAST_KNOWN_SERVER_IP => "192.168.0.138";
+
         public static IPAddress SERVER_IP = IPAddress.Parse(LAST_KNOWN_SERVER_IP);
 
-        public event Action<string>? OnMessageRecieved;
-        public event Action<string>? OnNetworkException;
-        public event Action<string>? OnNetworkDisconneted;
-        public event Action<string>? OnNetworkConneted;
+        public Action<byte[]>? OnMessageRecieved;
 
         public Thread receiveThread;
 
@@ -47,7 +45,6 @@ namespace VM.OS.Network
                 var ip_str = ip.ToString();
                 client = new TcpClient(ip_str, DEFAULT_PORT);
                 stream = client.GetStream();
-                OnNetworkConneted?.Invoke($"Connected to {client.Client.AddressFamily}");
                 receiveThread = new Thread(ReceiveMessages);
                 receiveThread.Start();
             }
@@ -67,29 +64,22 @@ namespace VM.OS.Network
 
                 while ((bytesRead = stream.Read(buffer, 0, buffer.Length)) > 0)
                 {
-                    string message = Encoding.ASCII.GetString(buffer, 0, bytesRead);
-                    OnMessageRecieved?.Invoke(message);
+                    OnMessageRecieved?.Invoke(buffer);
                 }
             }
             catch (Exception e)
             {
-                OnNetworkException?.Invoke(e.Message);
             }
             finally
             {
                 // server disconnect
                 stream.Close();
                 client.Close();
-                OnNetworkDisconneted?.Invoke("Disconnected");
             }
         }
 
-        internal void InputChannel(byte[] obj)
-        {
-            MessageBox.Show($"Begin listening on channel {obj[0]}");
-        }
 
-        internal void OutputChannel(byte[] obj)
+        internal void OnSendMessage(byte[] obj)
         {
             MessageBox.Show($"Sent message on channel {obj[0]}");
             stream.Write(obj);

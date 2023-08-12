@@ -68,9 +68,18 @@ namespace VM.OS.FS
                 new("config" ,Config, "config <set or get> <property name> (set only) <new value>"),
                 new("ip", getIP, "fetches the local ip address of wifi/ethernet"),
                 new("restart", (_) => Runtime.Restart(computer.ID()), "restarts this computer"),
+                new("lp", LP, "restarts this computer"),
             };
         }
 
+        private void LP(object[]? obj)
+        {
+            foreach (var item in Runtime.GetWindow(Computer).Windows)
+            {
+                Computer.OS.JavaScriptEngine.InteropModule.print($"\n{item.Key}");
+            }
+
+        }
         private void getIP(object[]? obj)
         {
             var IP = LANIPFetcher.GetLocalIPAddress().MapToIPv4();
