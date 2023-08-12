@@ -55,15 +55,21 @@ namespace VM.OS.JS
 
             executionThread = new Thread(Execute);
             executionThread.Start();
-            Thread RenderThread = new Thread(Render);
-            RenderThread.Start();
+
+            renderThread = new Thread(Render);
+            renderThread.Start();
+
+            
 
         }
-
+        Thread renderThread;
         private void Render()
         {
             while (true)
             {
+                if (Disposing)
+                    return;
+
                 var collection = EventHandlers.Where(e => e.Event == XAML_EVENTS.RENDER);
                 for (int i = 0; i < collection.Count(); ++i)
                 {
@@ -178,7 +184,10 @@ namespace VM.OS.JS
             Disposing = true;
             engine.Dispose();
             engine = null;
+
+
             Task.Run(() => executionThread.Join());
+            Task.Run(() => renderThread.Join());
         }
         internal void ExecuteScript(string absPath)
         {
