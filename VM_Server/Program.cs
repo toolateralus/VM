@@ -1,100 +1,120 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Net;
 using System.Net.NetworkInformation;
 using System.Net.Sockets;
 using System.Text;
+using System.Threading.Tasks;
 
-TcpListener server;
-const int port = 8080;
-const int maxClients = 100;
-List<TcpClient> connectedClients = new();
-
-Console.WriteLine("Server started. Waiting for connections...");
-server = new TcpListener(IPAddress.Parse(GetLocalIPAddress()), port);
-server.Start();
-
-
-while (true)
+namespace ServerExample
 {
-    await HandleClientAsync();
-}
-static string GetLocalIPAddress()
-{
-    string localIP = "";
-
-    NetworkInterface[] networkInterfaces = NetworkInterface.GetAllNetworkInterfaces();
-
-    foreach (NetworkInterface networkInterface in networkInterfaces)
+    class Program
     {
-        if (networkInterface.OperationalStatus == OperationalStatus.Up &&
-            networkInterface.NetworkInterfaceType != NetworkInterfaceType.Loopback)
+        static async Task Main(string[] args)
         {
-            IPInterfaceProperties ipProperties = networkInterface.GetIPProperties();
+            const int port = 8080;
+            List<TcpClient> connectedClients = new();
 
-            foreach (UnicastIPAddressInformation ipInformation in ipProperties.UnicastAddresses)
-            {
-                if (ipInformation.Address.AddressFamily == System.Net.Sockets.AddressFamily.InterNetwork &&
-                    !IPAddress.IsLoopback(ipInformation.Address))
-                {
-                    localIP = ipInformation.Address.ToString();
-                    break;
-                }
-            }
+            Console.WriteLine("Server started. Waiting for connections...");
+            TcpListener server = new TcpListener(IPAddress.Any, port);
+            server.Start();
 
-            if (!string.IsNullOrEmpty(localIP))
+            NetworkConfiguration networkConfig = new NetworkConfiguration();
+
+            while (true)
             {
-                break;
+                await networkConfig.HandleClientAsync(server, connectedClients);
             }
         }
     }
 
-    return localIP;
-}
-async Task HandleClientAsync()
-{
-    TcpClient client = await server.AcceptTcpClientAsync();
-    connectedClients.Add(client);
-    Console.WriteLine($"Client {client.GetHashCode()} connected ");
-
-    _ = Task.Run(async () =>
+    public class NetworkConfiguration
     {
-        NetworkStream stream = client.GetStream();
-        byte[] buffer = new byte[1024];
-        int bytesRead;
+        const int DEFAULT_PORT = 8080;
+        Dictionary<string, Func<string, Task>> messageHandlers = new();
 
-        try
+        public NetworkConfiguration()
         {
-            while ((bytesRead = await stream.ReadAsync(buffer)) > 0)
-            {
-                string message = Encoding.ASCII.GetString(buffer, 0, bytesRead);
-                Console.WriteLine($"Received from client {client.GetHashCode()}: {message}");
+            messageHandlers["SERVER_DISCOVERY"] = HandleDiscoveryMessage;
+        }
 
-                byte[] broadcastBuffer = Encoding.ASCII.GetBytes(message);
-                await BroadcastMessage(connectedClients, client, broadcastBuffer);
+        private async Task HandleDiscoveryMessage(string ipAddress)
+        {
+            await SendResponse(ipAddress, "SERVER_DISCOVERY_RESPONSE");
+        }
+
+        private async Task SendResponse(string ipAddress, string responseMessage)
+        {
+            byte[] responseBuffer = Encoding.ASCII.GetBytes(responseMessage);
+
+            using (TcpClient tcpClient = new TcpClient())
+            {
+                try
+                {
+                    await tcpClient.ConnectAsync(ipAddress, DEFAULT_PORT);
+                    NetworkStream stream = tcpClient.GetStream();
+                    await stream.WriteAsync(responseBuffer, 0, responseBuffer.Length);
+                }
+                catch (Exception)
+                {
+                    // Handle connection errors if needed
+                }
             }
         }
-        catch (Exception ex)
-        {
-            // Handle the exception, log the error, etc.
-        }
-        finally
-        {
-            client.Close();
-            connectedClients.Remove(client);
-            Console.WriteLine($"Client {client.GetHashCode()} disconnected");
-        }
-    });
-}
 
-
-static async Task BroadcastMessage(List<TcpClient> connectedClients, TcpClient client, byte[] broadcastBuffer)
-{
-    foreach (TcpClient connectedClient in connectedClients)
-    {
-        if (connectedClient != client)
+        public async Task HandleClientAsync(TcpListener server, List<TcpClient> connectedClients)
         {
-            NetworkStream connectedStream = connectedClient.GetStream();
-            await connectedStream.WriteAsync(broadcastBuffer, 0, broadcastBuffer.Length);
+            TcpClient client = await server.AcceptTcpClientAsync();
+            connectedClients.Add(client);
+            Console.WriteLine($"Client {client.GetHashCode()} connected ");
+
+            _ = Task.Run(async () =>
+            {
+                NetworkStream stream = client.GetStream();
+                byte[] buffer = new byte[1024];
+                int bytesRead;
+
+                try
+                {
+                    while ((bytesRead = await stream.ReadAsync(buffer)) > 0)
+                    {
+                        string message = Encoding.ASCII.GetString(buffer, 0, bytesRead);
+                        Console.WriteLine($"Received from client {client.GetHashCode()}: {message}");
+
+                        if (messageHandlers.TryGetValue(message, out var handler))
+                        {
+                            await handler.Invoke(((IPEndPoint)client.Client.RemoteEndPoint).Address.ToString());
+                        }
+
+                        // Handle other message types or logic here
+
+                        byte[] broadcastBuffer = Encoding.ASCII.GetBytes(message);
+                        await BroadcastMessage(connectedClients, client, broadcastBuffer);
+                    }
+                }
+                catch (Exception ex)
+                {
+                    // Handle the exception, log the error, etc.
+                }
+                finally
+                {
+                    client.Close();
+                    connectedClients.Remove(client);
+                    Console.WriteLine($"Client {client.GetHashCode()} disconnected");
+                }
+            });
+        }
+
+        private async Task BroadcastMessage(List<TcpClient> connectedClients, TcpClient client, byte[] broadcastBuffer)
+        {
+            foreach (TcpClient connectedClient in connectedClients)
+            {
+                if (connectedClient != client)
+                {
+                    NetworkStream connectedStream = connectedClient.GetStream();
+                    await connectedStream.WriteAsync(broadcastBuffer, 0, broadcastBuffer.Length);
+                }
+            }
         }
     }
 }

@@ -28,6 +28,9 @@ namespace VM.OS.Network
 
         public NetworkConfiguration(Computer computer)
         {
+
+           
+
             if (computer?.OS?.Config?.Value<bool>("ALWAYS_CONNECT") is bool connect && connect)
             {
                 if (computer?.OS?.Config?.Value<string>("DEFAULT_SERVER_IP") is string _IP && IPAddress.Parse(_IP) is IPAddress ip)

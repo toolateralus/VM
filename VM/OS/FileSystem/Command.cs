@@ -15,6 +15,7 @@ using System.Windows.Documents;
 using System.Windows.Forms.VisualStyles;
 using VM.GUI;
 using VM.OS;
+using VM.OS.Network;
 
 namespace VM.OS.FS
 {
@@ -44,6 +45,9 @@ namespace VM.OS.FS
         public List<Command> Commands = new();
         public Dictionary<string, string> Aliases = new();
 
+        
+
+
         public CommandLine(Computer computer)
         {
             Computer = computer;
@@ -62,8 +66,15 @@ namespace VM.OS.FS
                 new("clear", Clear, "makes directory at provided path if permitted"),
                 new("font", SetFont, "set\'s the command prompt\'s font for this session. call this from a startup to set as default"),
                 new("config" ,Config, "config <set or get> <property name> (set only) <new value>"),
+                new("ip", getIP, "fetches the local ip address of wifi/ethernet"),
                 new("restart", (_) => Runtime.Restart(computer.ID()), "restarts this computer"),
             };
+        }
+
+        private void getIP(object[]? obj)
+        {
+            var IP = LANIPFetcher.GetLocalIPAddress().MapToIPv4();
+            Computer.OS.JavaScriptEngine.InteropModule.print(IP.ToString());
         }
 
         private void Delete(object[]? obj)
