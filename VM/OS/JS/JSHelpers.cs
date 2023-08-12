@@ -12,6 +12,7 @@ using System.Windows.Controls;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using VM.GUI;
+using static System.Windows.Forms.VisualStyles.VisualStyleElement.TrayNotify;
 
 
 namespace VM.OS.JS
@@ -77,11 +78,18 @@ namespace VM.OS.JS
                     SetProperty(userControl, "Content", value);
                 }
             });
-
             return output;
         }
 
+        public byte[] toBytes(string background)
+        {
+            return Convert.FromBase64String(background);
+        }
 
+        public string toBase64(byte[] bytes)
+        {
+            return Convert.ToBase64String(bytes);
+        }
 
         #region DRAWING
         public BitmapImage BitmapImageFromBase64(string base64String)

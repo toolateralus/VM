@@ -1,3 +1,5 @@
+const internal = require("stream");
+
 // exposes basic file system functionality to the js env
 class FS {
     read(path)
@@ -22,6 +24,15 @@ class Image {
     fromFile(path){
         return interop.imageFromFile(path);
     }
+
+    toBytes(background) {
+        return interop.toBytes(background);
+    }
+
+    toBase64(bytes) {
+        return interop.toBase64(bytes);
+    }
+
 }
 
 function _export(obj){
