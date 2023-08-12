@@ -28,9 +28,6 @@ namespace VM.OS.Network
 
         public NetworkConfiguration(Computer computer)
         {
-
-           
-
             if (computer?.OS?.Config?.Value<bool>("ALWAYS_CONNECT") is bool connect && connect)
             {
                 if (computer?.OS?.Config?.Value<string>("DEFAULT_SERVER_IP") is string _IP && IPAddress.Parse(_IP) is IPAddress ip)
@@ -90,13 +87,12 @@ namespace VM.OS.Network
         internal void InputChannel(byte[] obj)
         {
             MessageBox.Show($"Begin listening on channel {obj[0]}");
-
-
         }
 
         internal void OutputChannel(byte[] obj)
         {
             MessageBox.Show($"Sent message on channel {obj[0]}");
+            stream.Write(obj);
         }
 
         internal void TryHaltCurrentConnection()
