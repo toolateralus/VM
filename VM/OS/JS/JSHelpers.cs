@@ -36,11 +36,11 @@ namespace VM.OS.JS
 
         private object? GetContent(string id, string controlName, object? value)
         {
-            var userControl = GetUserContent(id);
             object? output = null;
 
-            userControl?.Dispatcher.Invoke(() =>
+            Runtime.GetWindow(computer)?.Dispatcher.Invoke(() =>
             {
+                var userControl = GetUserContent(id);
                 var control = FindControl(userControl, controlName);
 
                 if (control is null)
@@ -61,18 +61,20 @@ namespace VM.OS.JS
 
         private object? SetContent(string id, string control, object? value)
         {
-            var userControl = GetUserContent(id);
             object? output = null;
 
-            userControl?.Dispatcher.Invoke(() =>
+            var wnd = Runtime.GetWindow(computer);
+
+            wnd?.Dispatcher.Invoke(() =>
             {
+                var userControl = GetUserContent(id);
                 if (userControl.GetType() == typeof(TextBox) || userControl.GetType() == typeof(TextBlock))
                 {
-                    SetProperty(control, "Text", value);    
+                    SetProperty(userControl, "Text", value);    
                 } 
                 else
                 {
-                    SetProperty(control, "Content", value);
+                    SetProperty(userControl, "Content", value);
                 }
             });
 
@@ -110,10 +112,10 @@ namespace VM.OS.JS
             if (value is null)
                 return null;
 
-            var control = GetUserContent(id);
-
-            control?.Dispatcher.Invoke(() =>
+            Runtime.GetWindow(computer)?.Dispatcher.Invoke(() =>
             {
+                var control = GetUserContent(id);
+
                 var image = FindControl(control, target_control);
 
                 if (image is Image img)
@@ -131,14 +133,15 @@ namespace VM.OS.JS
             if (value is null)
                 return null;
 
-            var control = GetUserContent(id);
+          
 
             List<byte> colorData = new();
 
             forEach<int>(value.ToEnumerable(), (item) => colorData.Add((byte)item));
 
-            control?.Dispatcher.Invoke(() =>
+            Runtime.GetWindow(computer)?.Dispatcher.Invoke(() =>
             {
+                var control = GetUserContent(id);
                 if (control?.Content is Grid grid)
                 {
                     if (grid != null)
@@ -329,31 +332,25 @@ namespace VM.OS.JS
             var resizableWins = window.Windows.Where(W => W.Key == javascript_controL_class_instance_id);
             UserControl userContent = null;
 
-            window.Dispatcher.Invoke(() =>
+            if (resizableWins.Any())
             {
-                if (resizableWins.Any())
+                var win = resizableWins.First().Value.Content as UserWindow;
+
+                if (win != null)
                 {
-                    var win = resizableWins.First().Value.Content as UserWindow;
+                    var contentGrid = win.Content as Grid;
 
-                    if (win != null)
+                    if (contentGrid != null)
                     {
-                        window.Dispatcher.Invoke(() =>
+                        var frame = contentGrid.Children.OfType<Frame>().FirstOrDefault();
+
+                        if (frame != null)
                         {
-                            var contentGrid = win.Content as Grid;
-
-                            if (contentGrid != null)
-                            {
-                                var frame = contentGrid.Children.OfType<Frame>().FirstOrDefault();
-
-                                if (frame != null)
-                                {
-                                    userContent = frame.Content as UserControl;
-                                }
-                            }
-                        });
+                            userContent = frame.Content as UserControl;
+                        }
                     }
                 }
-            });
+            }
 
             return userContent;
         }
@@ -361,8 +358,7 @@ namespace VM.OS.JS
         {
 
             FrameworkElement element = null;
-            userControl.Dispatcher.Invoke(() => { 
-            var contentProperty = userControl.GetType().GetProperty("Content");
+            var contentProperty = userControl?.GetType()?.GetProperty("Content");
 
                 if (contentProperty != null)
                 {
@@ -372,16 +368,12 @@ namespace VM.OS.JS
                     {
                         if (content is FrameworkElement contentElement && contentElement.Name == controlName)
                         {
-                            element =  contentElement;
-                            return;
+                            return contentElement;
                         }
 
-                        element = SearchVisualTree(content, controlName);
-                        return;
+                        return SearchVisualTree(content, controlName);
                     }
                 }
-            });
-
             return element;
         }
         private FrameworkElement? SearchVisualTree(object element, string controlName)
@@ -429,7 +421,6 @@ namespace VM.OS.JS
             Notifications.Now("Incorrect path for uninstall");
 
         }
-
         public async void install(string dir)
         {
             ComputerWindow window = Runtime.GetWindow(computer);

@@ -412,14 +412,16 @@ namespace VM.GUI
             // bind ui events to js methods here.
             // XamlJsInterop.InitializeControl(computer, control, new() { XamlJsInterop.EventInitializer }, new() { });
 
-            var instance_identifier = await HandleJS(type, data);
+            var JSResult = await HandleJS(type, data);
 
             var wnd = Runtime.GetWindow(pc: computer);
 
-            wnd.OpenApp(control, instance_identifier);
+            wnd.OpenApp(control, JSResult.id);
+
+            computer.OS.JavaScriptEngine.Execute(JSResult.code);
         }
 
-        private async Task<string> HandleJS(string type, (string XAML, string JS) data)
+        private async Task<(string id, string code)> HandleJS(string type, (string XAML, string JS) data)
         {
             var name = type.Split('.')[0];
             int id = 0;
@@ -439,15 +441,9 @@ namespace VM.GUI
 
             var instance_name = "uid" + Guid.NewGuid().ToString().Split('-')[0];
 
-            string instantiation_code = $"let {instance_name} = new {name}()";
+            string instantiation_code = $"let {instance_name} = new {name}('{instance_name}')";
 
-            string id_setter_code = $"{instance_name}.__ID = \'{instance_name}\'";
-
-            _ = await computer.OS.JavaScriptEngine.Execute(instantiation_code);
-
-            _ = await computer.OS.JavaScriptEngine.Execute(id_setter_code);
-
-            return name;
+            return (instance_name, instantiation_code);
         }
         public void InstallWPF(string type)
         {
