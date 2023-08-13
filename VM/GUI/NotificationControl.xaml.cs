@@ -45,7 +45,7 @@ namespace VM.GUI
             TextBox.FontFamily = new("Consolas MS");
 
             fadeOutTimer = new DispatcherTimer();
-            fadeOutTimer.Interval = TimeSpan.FromSeconds(2);
+            fadeOutTimer.Interval = TimeSpan.FromSeconds(10);
             fadeOutTimer.Tick += OnFadeOutTimerTick;
             MouseDoubleClick += NotificationControl_MouseDoubleClick;
 
