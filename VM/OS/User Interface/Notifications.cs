@@ -17,10 +17,6 @@ namespace VM
 
         public static event Action<string> MessageProcessed;
 
-        static Notifications()
-        {
-        }
-
         public static void Now(string message)
         {
             foreach (var cw in Runtime.Computers)
