@@ -90,7 +90,6 @@ namespace VM.OS.Network
 
         internal void OnSendMessage(byte[] dataBytes)
         {
-            MessageBox.Show($"Sent message on channel {dataBytes[0]}");
             int messageLength = dataBytes.Length;
             byte[] lengthBytes = BitConverter.GetBytes(messageLength);
             stream?.Write(lengthBytes, 0, 4); // Assuming a 4-byte header size
