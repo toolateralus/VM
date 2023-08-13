@@ -87,9 +87,12 @@ namespace ServerExample
                         if (stream.Read(dataBytes, 0, messageLength) <= 0)
                             break;
 
-                        string message = Encoding.ASCII.GetString(dataBytes, 0, messageLength);
-                        
-                        Console.WriteLine($"Received from client {client.GetHashCode()}: {message}");
+                        var bytesLength = dataBytes.Length;
+                        int reciever = BitConverter.ToInt32(dataBytes, bytesLength - 8);
+                        int sender = BitConverter.ToInt32(dataBytes, bytesLength - 4);
+                        string message = Encoding.ASCII.GetString(dataBytes, 0, bytesLength - 8);
+
+                        Console.WriteLine($"Received from client {client.GetHashCode()}: {sender} to {reciever} \"{message}\"");
 
                         if (messageHandlers.TryGetValue(message, out var handler))
                         {
