@@ -503,6 +503,7 @@ namespace VM.OS.JS
         }
         #endregion
         public static Dictionary<string, Func<string, string, object?, object?>> EventActions = new();
+
         public object? pushEvent(string id, string targetControl, string eventType, object? data)
         {
             if (EventActions.TryGetValue(eventType, out var handler))
