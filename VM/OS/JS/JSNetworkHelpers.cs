@@ -28,7 +28,7 @@ namespace VM.OS.JS
                     Console.WriteLine($"Received from server: {sender} to {reciever} \"{message}\"");
                 else
                     Console.WriteLine($"Received from server: {sender} to {reciever}, {FormatBytes(bytesLength)}");
-                Runtime.NetworkEvents.Add(reciever, (message, sender));
+                Runtime.NetworkEvents[reciever] = (message, sender);
             };
             Computer = computer;
         }
