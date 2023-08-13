@@ -65,17 +65,9 @@ namespace VM.OS
             Config = OSConfigLoader.Load();
 
         }
-        public void InitializeEngine(uint id, Computer computer)
+        public void InitializeEngine(Computer computer)
         {
-            JavaScriptEngine = new(this.WORKING_DIR, computer);
-
-            string jsDirectory = Computer.SearchForParentRecursive("VM");
-
-            JavaScriptEngine.LoadModules(jsDirectory + "\\OS-JS");
-
-            _ = JavaScriptEngine.Execute($"os.id = {id}");
-
-            JavaScriptEngine.InteropModule.OnComputerExit += computer.Exit;
+            JavaScriptEngine = new(computer);
 
             if (Runtime.GetResourcePath("startup.js") is string AbsPath)
             {

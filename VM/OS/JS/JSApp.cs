@@ -1,62 +1,21 @@
-﻿using Microsoft.ClearScript;
-using Microsoft.ClearScript.JavaScript;
+﻿using System.Collections.Generic;
 using System;
-using System.Collections.Generic;
-using System.Diagnostics;
-using System.IO;
-using System.Linq;
-using System.Reflection;
-using System.Runtime.CompilerServices;
-using System.Runtime.InteropServices;
-using System.Threading.Tasks;
-using System.Windows;
-using System.Windows.Controls;
-using System.Windows.Media;
-using System.Windows.Media.Imaging;
 using VM.GUI;
-using static System.Windows.Forms.VisualStyles.VisualStyleElement.TrayNotify;
-
+using Microsoft.ClearScript.JavaScript;
+using System.IO;
+using System.Runtime.InteropServices;
+using System.Windows.Controls;
+using System.Windows.Media.Imaging;
+using System.Windows.Media;
+using System.Windows;
+using System.Linq;
 
 namespace VM.OS.JS
 {
-    public class JSInterop
+    internal class JSApp
     {
-
-        public Computer computer;
-        public Action<string, object?>? OnModuleExported;
-        public Func<string, object?>? OnModuleImported;
-        public Action<int>? OnComputerExit;
-        public static void forEach<T>(IEnumerable<object> source, Action<T> action)
-        {
-            try
-            {
-                foreach (var item in source)
-                {
-                    T instance = Cast<T>(item, out var success);
-
-                    if (success)
-                        action(instance);
-                }
-            }
-            catch (Exception e)
-            {
-                if (e is not ObjectDisposedException ode)
-                {
-                    Notifications.Now(e.Message);
-                }
-            }
-        }
-        public static T Cast<T>(object item, out bool success)
-        {
-            success = false;
-            if (item is T instance)
-            {
-                success = true;
-                return instance;
-            }
-            return default;
-        }
-        public JSInterop(Computer computer)
+        private Computer computer;
+        public JSApp(Computer computer)
         {
             this.computer = computer;
             EventActions.TryAdd("draw_pixels", DrawPixelsEvent);
@@ -64,174 +23,6 @@ namespace VM.OS.JS
             EventActions.TryAdd("set_content", SetContent);
             EventActions.TryAdd("get_content", GetContent);
         }
-   
-        public object toBytes(string background)
-        {
-            return Convert.FromBase64String(background);
-        }
-        public string toBase64(object ints)
-        {
-            List<byte> bytes = new List<byte>();
-
-            forEach<int>(ints.ToEnumerable(), (i) => bytes.Add((byte)i));
-
-            return Convert.ToBase64String(bytes.ToArray());
-        }
-
-        public bool call(string message)
-        {
-            return computer.OS.CommandLine.TryCommand(message);
-        }
-        public bool start(string path)
-        {
-            var window = Runtime.GetWindow(computer);
-            
-            if (path.Contains(".app"))
-            {
-                Task.Run(async() => { await window.OpenCustom(path); });
-                return true;
-            }
-
-            return false;
-        }
-        public void print(object message)
-        {
-            try
-            {
-                Runtime.GetWindow(computer).Dispatcher.Invoke(() =>
-                {
-                    Debug.WriteLine(message);
-
-                    var commandPrompt = Runtime.SearchForOpenWindowType<CommandPrompt>(computer);
-
-                    if (commandPrompt == default)
-                    {
-                        Notifications.Now(message?.ToString() ?? "Invalid Print.");
-                        return;
-                    }
-
-                    commandPrompt.output.AppendText($"\n {message}");
-                });
-            }
-            catch(Exception e)
-            {
-                Notifications.Now(e.Message);
-            }
-        }
-        public void export(string id, object? obj)
-        {
-            OnModuleExported?.Invoke(id, obj);
-        }
-        public void exit(int code)
-        {
-            OnComputerExit?.Invoke(code);
-        }
-        public void uninstall(string dir)
-        {
-            ComputerWindow window = Runtime.GetWindow(computer);
-
-            // js/html app
-            if (dir.Contains(".web"))
-            {
-                window.Uninstall(dir); 
-                return;
-            }
-
-            // wpf app
-            if (dir.Contains(".app"))
-            {
-                window.Uninstall(dir);
-                return;
-            }
-
-            Notifications.Now("Incorrect path for uninstall");
-
-        }
-        public async void install(string dir)
-        {
-            ComputerWindow window = Runtime.GetWindow(computer);
-
-            // js/html app
-            if (dir.Contains(".web"))
-            {
-                window.InstallJSHTML(dir);
-                return;
-            }
-
-            // wpf app
-            if (dir.Contains(".app"))
-            {
-                window.InstallWPF(dir);
-            }
-        }
-        public void alias(string alias, string path)
-        {
-            computer.OS.CommandLine.Aliases[alias] = Runtime.GetResourcePath(path + ".js") ?? "not found";
-        }
-        /// <summary>
-        /// this returns the callback, no need for extra listening
-        /// </summary>
-        /// <param name="id"></param>
-        /// <param name="eventType"></param>
-        /// <param name="data"></param>
-        /// <returns></returns>
-        
-        public object? require(string path)
-        {
-            return OnModuleImported?.Invoke(path);
-        }
-        public object? read_file(string path)
-        {
-            if (!File.Exists(path))
-            {
-                if (Runtime.GetResourcePath(path) is string AbsPath && !string.IsNullOrEmpty(AbsPath))
-                {
-                    return File.ReadAllText(AbsPath);
-                }
-
-                return null;
-            }
-            return File.ReadAllText(path);
-        }
-        public string fromFile(string path)
-        {
-            byte[] imageData = null;
-
-            if (!File.Exists(path))
-            {
-                if (Runtime.GetResourcePath(path) is string absPath && !string.IsNullOrEmpty(absPath))
-                {
-                    imageData = File.ReadAllBytes(absPath);
-                }
-            }
-            else
-            {
-                imageData = File.ReadAllBytes(path);
-            }
-
-            if (imageData != null)
-            {
-                return Convert.ToBase64String(imageData);
-            }
-
-            return null;
-        }
-        public void write_file(string path, string data)
-        {
-
-            if (Runtime.GetResourcePath(path) is string AbsPath && !string.IsNullOrEmpty(AbsPath))
-            {
-                File.WriteAllText(AbsPath, data);
-                return;
-            }
-
-            File.WriteAllText(path, data);
-        }
-        public bool file_exists(string path)
-        {
-            return File.Exists(path);
-        }
-
         #region C# Methods
         public T FindElementInUserControl<T>(UserControl userControl, string elementName) where T : FrameworkElement
         {
@@ -297,10 +88,10 @@ namespace VM.OS.JS
         public static UserControl? GetUserContent(string javascript_controL_class_instance_id, Computer computer)
         {
             var window = Runtime.GetWindow(computer);
-            var resizableWins = window?.USER_WINDOW_INSTANCES?.Where(W => W.Key == javascript_controL_class_instance_id);
+            var resizableWins = window.USER_WINDOW_INSTANCES.Where(W => W.Key == javascript_controL_class_instance_id);
             UserControl userContent = null;
 
-            if (resizableWins != null && resizableWins.Any())
+            if (resizableWins.Any())
             {
                 var win = resizableWins.First().Value;
 
@@ -426,7 +217,7 @@ namespace VM.OS.JS
 
             Runtime.GetWindow(computer)?.Dispatcher.Invoke(() =>
             {
-                var control = GetUserContent(id, computer);
+                var control = GetUserContent(id,computer);
 
                 var image = FindControl(control, target_control);
 
@@ -518,7 +309,6 @@ namespace VM.OS.JS
             if (window.USER_WINDOW_INSTANCES.TryGetValue(identifier, out var app))
                 app.JavaScriptEngine?.CreateEventHandler(identifier, targetControl, methodName, type);
         }
-
 
     }
 }

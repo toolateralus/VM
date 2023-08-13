@@ -1,4 +1,4 @@
 {
     args = [/***/];
-    interop.install(args[0]);
+    install(args[0]);
 }

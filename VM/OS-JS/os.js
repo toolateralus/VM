@@ -7,17 +7,10 @@ function alias(cmd, path){
 function call(command) {
     interop.call(command);
 }
-async function recieve(ch) {
 
-    let msg = "";
-    msg = network.recieve(ch);
-    while (msg === "") {
-        await sleep(1);
-    }
-    return msg;
-}
 
 function start(app) { interop.start(app) }
+
 class OS {
     id = 0;
 
@@ -33,4 +26,33 @@ class OS {
         return this.id;
     }
 }
+
+const XAML_EVENTS = {
+    MOUSE_DOWN: 0,
+    MOUSE_UP: 1,
+    MOUSE_MOVE: 2,
+    KEY_DOWN: 3,
+    KEY_UP: 4,
+    LOADED: 5,
+    WINDOW_CLOSE: 6,
+    RENDER: 7,
+};
+
+function install(directory) {
+    interop.install(directory)
+}
+
+class App {
+    install(directory) {
+        interop.install(directory)
+    }
+    eventHandler(id, control, method, type) {
+        interop.eventHandler(id, control, method, type)
+    }
+    pushEvent(id, control, type, data) {
+        interop.pushEvent(id, control, type, data);
+    }
+}
+
+let app = new App();
 let os = new OS()
