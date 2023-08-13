@@ -39,7 +39,18 @@ namespace VM.OS.JS
         {
             return computer.OS.CommandLine.TryCommand(message);
         }
+        public bool start(string path)
+        {
+            var window = Runtime.GetWindow(computer);
+            
+            if (path.Contains(".app"))
+            {
+                _ = window.OpenCustom(path);
+                return true;
+            }
 
+            return false;
+        }
         private object? GetContent(string id, string controlName, object? value)
         {
             object? output = null;

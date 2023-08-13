@@ -5,3 +5,5 @@ alias("connect", "connect")
 
 app.install("example.app")
 app.install("graphicTest.app")
+
+//network.connect(null);
