@@ -14,17 +14,13 @@ namespace VM.OS.JS
         public event Action<byte[]> OnSent;
         public Action<byte[]> OnRecieved;
         Computer Computer;
-        public JSNetworkHelpers(Computer computer, Action<byte[]> OutStream, Action<byte[]> InStream)
+        public JSNetworkHelpers(Computer computer, Action<byte[]> OutStream)
         {
             OnSent = OutStream;
-            OnRecieved += InStream;
-            OnRecieved += (e) =>
+            computer.Network.OnMessageRecieved += OnRecieved;
+            computer.Network.OnMessageRecieved += (bytes) =>
             {
-                string msg = "";
-                foreach (var item in e)
-                {
-                    msg += item;
-                }
+                string msg = Encoding.ASCII.GetString(bytes);
                 computer.OS.JavaScriptEngine.InteropModule.print(msg);
             };
             Computer = computer;
