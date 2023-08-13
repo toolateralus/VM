@@ -340,7 +340,7 @@ namespace VM.OS.JS
         {
             try
             {
-                Runtime.GetWindow(computer).Dispatcher.Invoke(() =>
+                Runtime.GetWindow(computer)?.Dispatcher.Invoke(() =>
                 {
                     Debug.WriteLine(message);
 

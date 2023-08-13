@@ -23,16 +23,13 @@ namespace VM.GUI
             get { return (string)GetValue(MessageProperty); }
             set { SetValue(MessageProperty, value); }
         }
-        Action onComplete = new(delegate {});
         public void Start()
         {
             fadeOutTimer.Start();
         }
-        public NotificationControl(Action complete)
+        public NotificationControl()
         {
             InitializeComponent();
-
-            onComplete += complete;
             Loaded += OnLoaded;
             MouseEnter += OnMouseEnter;
             MouseLeave += OnMouseLeave;
@@ -94,7 +91,6 @@ namespace VM.GUI
         {
             var parent = Parent as Panel;
             parent?.Children.Remove(this);
-            onComplete?.Invoke();
         }
     }
 }

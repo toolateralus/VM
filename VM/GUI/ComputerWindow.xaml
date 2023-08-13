@@ -23,10 +23,9 @@
 
         <Canvas x:Name="Desktop" Grid.Row="0" Grid.Column="0" Grid.ColumnSpan="2">
             <Image Stretch="Fill" x:Name="desktopBackground" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Width="Auto" Height="Auto"/>
-            <WrapPanel x:Name="DesktopIconPanel" Orientation="Horizontal" HorizontalAlignment="Left" VerticalAlignment="Top">
-            </WrapPanel>
+            <WrapPanel x:Name="DesktopIconPanel" Orientation="Horizontal" HorizontalAlignment="Left" VerticalAlignment="Top" />
         </Canvas>
-
+        <StackPanel x:Name="NotificationStackPanel" Grid.Column="1" VerticalAlignment="Bottom" />
         <Grid x:Name="Taskbar" Grid.Row="1" Grid.Column="0" Grid.ColumnSpan="2">
             <Grid.ColumnDefinitions>
                 <ColumnDefinition  Width="*"/>

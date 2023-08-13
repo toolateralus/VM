@@ -19,58 +19,17 @@ namespace VM
 
         static Notifications()
         {
-            MessageProcessed += ProcessNextMessage;
         }
 
         public static void Now(string message)
         {
-            lock (queueLock)
+            foreach (var cw in Runtime.Computers)
             {
-                MessageQueue.Enqueue(message);
-                if (!Preoccupied)
-                {
-                    Preoccupied = true;
-                    MessageProcessed?.Invoke(message);
-                }
-            }
-        }
+                var notif = new NotificationControl() { Message = message };
 
-        private static async void ProcessNextMessage(string message)
-        {
+                cw.Value.NotificationStackPanel.Children.Add(notif);
 
-            try
-            {
-
-                await Application.Current?.Dispatcher?.InvokeAsync(() =>
-                {
-                    void onTimerComplete()
-                    {
-                        lock (queueLock)
-                        {
-                            Preoccupied = false;
-                            if (MessageQueue.Any())
-                            {
-                                string nextMessage = MessageQueue.Dequeue();
-                                MessageProcessed?.Invoke(nextMessage);
-                            }
-                        }
-                    }
-
-
-                    foreach (var cw in Runtime.Computers)
-                    {
-                        var notif = new NotificationControl(onTimerComplete) { Message = message };
-
-                        cw.Value.Desktop.Children.Add(notif);
-
-                        notif.Start();
-                    }
-
-                });
-            }
-            catch
-            {
-
+                notif.Start();
             }
         }
     }
