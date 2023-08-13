@@ -7,7 +7,7 @@ class FS {
     }
     write(path, data)
     {
-        interop.write_file(path);
+        interop.write_file(path, data);
     }
     exists(path)
     {
