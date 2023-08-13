@@ -1,4 +1,4 @@
-﻿using System;
+﻿using System;   
 using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.CompilerServices;
@@ -25,11 +25,13 @@ namespace VM
         {
             foreach (var cw in Runtime.Computers)
             {
-                var notif = new NotificationControl() { Message = message };
+                App.Current.Dispatcher.Invoke(() =>
+                {
+                    var notif = new NotificationControl() { Message = message };
+                    cw.Value.NotificationStackPanel.Children.Add(notif);
+                    notif.Start();
+                });
 
-                cw.Value.NotificationStackPanel.Children.Add(notif);
-
-                notif.Start();
             }
         }
     }
