@@ -6,6 +6,7 @@ using System.ComponentModel.Design;
 using System.IO;
 using System.Linq;
 using System.Reflection;
+using System.Reflection.Metadata.Ecma335;
 using System.Security.AccessControl;
 using System.Security.Cryptography.X509Certificates;
 using System.Text;
@@ -30,6 +31,13 @@ namespace VM.OS.JS
         public JSNetworkHelpers NetworkModule { get; }
         public JSInterop InteropModule { get; }
         public bool Disposing { get; private set; }
+
+        class ExecutionInstance
+        {
+            public string code = "";
+            public Action<object?>? output = null;
+        }
+
         private readonly ConcurrentDictionary<int, (string code, Action<object?> output)> CodeDictionary = new();
         private readonly Thread executionThread;
 
@@ -133,23 +141,22 @@ namespace VM.OS.JS
             {
                 if (!CodeDictionary.IsEmpty)
                 {
+
+
                     var pair = CodeDictionary.Last();
                     CodeDictionary.Remove(pair.Key, out _);
 
-                        Task.Run(() =>
-                        {
-                            try
-                            {
-                                var result = engine.Evaluate(pair.Value.code);
-                                pair.Value.output?.Invoke(result);
-                            }
-                            catch (Exception e)
-                            {
-                                Notifications.Now(e.Message);
-                                computer.OS.JavaScriptEngine.InteropModule.print(e.Message);
-                            }
-                        });
-                   
+                    try
+                    {
+                        var result = engine.Evaluate(pair.Value.code);
+                        pair.Value.output?.Invoke(result);
+                    }
+                    catch (Exception e)
+                    {
+                        Notifications.Now(e.Message);
+                        computer.OS.JavaScriptEngine.InteropModule.print(e.Message);
+                    }
+                    continue;
                 }
                 Thread.SpinWait(1);
             }
