@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Windows;
 using System.Windows.Controls;
+using VM.OS;
+using VM.OS.JS;
 
 namespace VM.GUI
 {
@@ -16,14 +18,18 @@ namespace VM.GUI
         {
             InitializeComponent();
         }
-
-        internal void Init(ResizableWindow frame, UserControl actualUserContent)
+        public JavaScriptEngine JavaScriptEngine;
+        internal void Init(ResizableWindow frame, UserControl actualUserContent, JavaScriptEngine engine)
         {
             Owner = frame;
             ContentsFrame.Content = actualUserContent;
+            this.JavaScriptEngine = engine;
         }
+
+
         internal void Destroy()
         {
+
             if (Owner is null || Owner.Parent is not Canvas canvas)
                 throw new InvalidOperationException("Window was destroyed but it had no parent");
 

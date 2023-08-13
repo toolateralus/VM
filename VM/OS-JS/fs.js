@@ -1,4 +1,3 @@
-const internal = require("stream");
 
 // exposes basic file system functionality to the js env
 class FS {

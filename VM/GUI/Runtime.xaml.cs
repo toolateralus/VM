@@ -184,7 +184,7 @@ namespace VM.GUI
 
             string[] entries = Directory.GetFileSystemEntries(path, name, SearchOption.AllDirectories);
 
-            return entries.FirstOrDefault(" ");
+            return entries.FirstOrDefault();
         }
 
         internal static void VerifyOrCreateAppdataDir(string path)

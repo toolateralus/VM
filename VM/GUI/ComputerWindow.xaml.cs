@@ -14,6 +14,7 @@ using System.Windows.Media.Imaging;
 using System.Xml.Linq;
 using VM;
 using VM.OS;
+using VM.OS.JS;
 using VM.OS.UserInterface;
 
 namespace VM.GUI
@@ -202,15 +203,13 @@ namespace VM.GUI
             bitmapImage.EndInit();
             return bitmapImage;
         }
-        public void OpenApp(UserControl control, string title = "window", Brush? background = null, Brush? foreground = null)
+        public void OpenApp(UserControl control, string title = "window", Brush? background = null, Brush? foreground = null, JavaScriptEngine engine = null)
         {
             background ??= Brushes.LightGray;
             foreground ??= Brushes.Black;
 
-            // this has the actual 'window' behavior
             var window = new UserWindow();
 
-            // this is just an extended frame, so we do need the UserWindow to host it. (frames may only have one 'Content').
             var frame = new ResizableWindow
             {
                 Content = window,
@@ -221,7 +220,7 @@ namespace VM.GUI
                 Foreground = foreground,
             };
 
-            window.Init(frame, control);
+            window.Init(frame, control, engine);
 
             USER_WINDOW_INSTANCES[title] = window;
 
@@ -385,6 +384,7 @@ namespace VM.GUI
             }
             return false;
         }
+        JSApp AppModule;
         public async Task OpenCustom(string type)
         {
             var data = Runtime.GetAppDefinition(computer, type);
@@ -397,15 +397,18 @@ namespace VM.GUI
                 return;
             }
 
-            var JSResult = await HandleJS(type, data);
+            JavaScriptEngine engine = new(computer);
+
+            var jsResult = await HandleJS(type, data, engine);
 
             var wnd = Runtime.GetWindow(pc: computer);
+            
+            wnd.OpenApp(control, title:  jsResult.id, engine: engine);
 
-            wnd.OpenApp(control, JSResult.id);
+            await engine.Execute(jsResult.code);
 
-            await computer.OS.JavaScriptEngine.Execute(JSResult.code);
         }
-        private async Task<(string id, string code)> HandleJS(string type, (string XAML, string JS) data)
+        private async Task<(string id, string code)> HandleJS(string type, (string XAML, string JS) data, JavaScriptEngine engine)
         {
             var name = type.Split('.')[0];
             int id = 0;
@@ -421,11 +424,13 @@ namespace VM.GUI
 
             var JS = new string(data.JS);
 
-             _ = await computer.OS.JavaScriptEngine.Execute(JS);
+             _ = await engine.Execute(JS);
 
             var instance_name = "uid" + Guid.NewGuid().ToString().Split('-')[0];
 
             string instantiation_code = $"let {instance_name} = new {name}('{instance_name}')";
+
+
 
             return (instance_name, instantiation_code);
         }

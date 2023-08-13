@@ -24,6 +24,9 @@ using static VM.OS.JS.JSInterop;
 
 namespace VM.OS.JS
 {
+
+    
+
     public class JavaScriptEngine
     {
         IJsEngine engine;
@@ -33,19 +36,16 @@ namespace VM.OS.JS
         public Dictionary<string, object?> modules = new();
         public JSNetworkHelpers NetworkModule { get; }
         public JSInterop InteropModule { get; }
+        internal JSApp AppModule { get; }
         public bool Disposing { get; private set; }
-
-        class ExecutionInstance
-        {
-            public string code = "";
-            public Action<object?>? output = null;
-        }
-
+        Computer computer;
         private readonly ConcurrentDictionary<int, (string code, Action<object?> output)> CodeDictionary = new();
         private readonly BackgroundWorker executionThread;
+        public Dictionary<string, object> EmbeddedObjects = new();
+        public List<JSEventHandler> EventHandlers = new();
+        Thread renderThread;
 
-        Computer computer;
-        public JavaScriptEngine(string ProjectRoot, Computer computer)
+        public JavaScriptEngine(Computer computer)
         {
             this.computer = computer;
 
@@ -58,11 +58,15 @@ namespace VM.OS.JS
             engine = engineSwitcher.CreateDefaultEngine();
 
             NetworkModule = new JSNetworkHelpers(computer, computer.Network.OnSendMessage);
-            engine.EmbedHostObject("network", NetworkModule);
-
             InteropModule = new JSInterop(computer);
+            AppModule = new JSApp(computer);
+
             InteropModule.OnModuleImported += ImportModule;
-            engine.EmbedHostObject("interop", InteropModule);
+
+            EmbeddedObjects["network"] = NetworkModule;
+            EmbeddedObjects["interop"] = InteropModule;
+            
+            EmbedAllObjects();
 
             executionThread = new BackgroundWorker();
             executionThread.DoWork += ExecuteAsync;
@@ -71,11 +75,29 @@ namespace VM.OS.JS
             renderThread = new Thread(Render);
             renderThread.Start();
 
+            string jsDirectory = Computer.SearchForParentRecursive("VM");
+
+            LoadModules(jsDirectory + "\\OS-JS");
+
+            _ = Execute($"os.id = {computer.ID()}");
+
+            InteropModule.OnComputerExit += computer.Exit;
         }
 
-       
+        public void EmbedObject(string name, object? obj)
+        {
+            engine.EmbedHostObject(name, obj);
+        }
+        public void EmbedType(string name, Type obj)
+        {
+            engine.EmbedHostType(name, obj);
+        }
+        public void EmbedAllObjects()
+        {
+            foreach (var item in EmbeddedObjects)
+                engine.EmbedHostObject(item.Key, item.Value);
 
-        Thread renderThread;
+        }
         private void Render()
         {
             while (true)
@@ -99,17 +121,17 @@ namespace VM.OS.JS
                 Thread.Sleep(16);
             }
         }
-
         public object? GetVariable(string name)
         {
             return engine.GetVariableValue(name);
         }
         private object? ImportModule(string arg)
         {
-            if (modules.TryGetValue(arg, out var val))
-                return val;
+            if (Runtime.GetResourcePath(arg) is string AbsPath && !string.IsNullOrEmpty(AbsPath))
+            {
+                engine.ExecuteFile(AbsPath);
+            }
             return null;
-
         }
         public void LoadModules(string sourceDir)
         {
@@ -151,19 +173,20 @@ namespace VM.OS.JS
                     var pair = CodeDictionary.Last();
                     CodeDictionary.Remove(pair.Key, out _);
 
-                    try
+                    await Task.Run(() =>
                     {
-                        await Task.Run(() =>
+                        try
                         {
                             var result = engine.Evaluate(pair.Value.code);
                             pair.Value.output?.Invoke(result);
-                        });
-                    }
-                    catch (Exception e)
-                    {
-                        Notifications.Now(e.Message);
-                        computer.OS.JavaScriptEngine.InteropModule.print(e.Message);
-                    }
+                        }
+                        catch (Exception e)
+                        {
+                            Notifications.Now(e.Message);
+                            computer.OS.JavaScriptEngine.InteropModule.print(e.Message);
+                        }
+                    });
+                   
                     continue;
                 }
                 await Task.Delay(1); // Avoid busy-waiting
@@ -173,7 +196,6 @@ namespace VM.OS.JS
                 throw new JsEngineException("Something happened");
             }
         }
-
         public async Task<object?> Execute(string jsCode)
         {
             object? result = null;
@@ -229,8 +251,6 @@ namespace VM.OS.JS
                 Notifications.Now(e.Message);
             }
         }
-        public List<JSEventHandler> EventHandlers = new();
-
         internal async Task CreateEventHandler(string identifier, string targetControl, string methodName, int type)
         {
             var wnd = Runtime.GetWindow(computer);
@@ -250,7 +270,7 @@ namespace VM.OS.JS
             }
             wnd.Dispatcher.Invoke(() =>
             {
-                var content = InteropModule.GetUserContent(identifier);
+                var content = JSApp.GetUserContent(identifier, computer);
 
                 if (content == null)
                 {
@@ -266,7 +286,7 @@ namespace VM.OS.JS
                 }
                 else
                 {
-                    element = InteropModule.FindControl(content, targetControl);
+                    element = JSApp.FindControl(content, targetControl);
                 }
 
 
@@ -276,8 +296,8 @@ namespace VM.OS.JS
                     return;
                 }
 
-                var eh = new JSEventHandler(element, (XAML_EVENTS)type, computer.OS.JavaScriptEngine, identifier, methodName);
-                    
+                var eh = new JSEventHandler(element, (XAML_EVENTS)type, this, identifier, methodName);
+
                 if (wnd.USER_WINDOW_INSTANCES.TryGetValue(identifier, out var app))
                 {
                     app.OnClosed += () =>

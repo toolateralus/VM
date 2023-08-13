@@ -62,7 +62,7 @@ namespace VM.OS
         }
         internal void FinishInit(ComputerWindow wnd)
         {
-            OS.InitializeEngine(ID(), this);
+            OS.InitializeEngine(this);
 
             LoadBackground(this, wnd);
             InstallCoreApps(this);
