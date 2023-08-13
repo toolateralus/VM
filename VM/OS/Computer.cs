@@ -30,11 +30,13 @@ namespace VM.OS
         public Computer(uint id)
         {
             OS = new(id, this);
-            Network = new(this);
+            Network = new(this, OnShutdown);
         }
         public uint ID() => OS.ID;
 
         public OS OS;
+
+        public Action OnShutdown { get; }
 
         /// <summary>
         /// this closes the window associated with the pc, if you do so manually before or after this call, it will error.
@@ -55,6 +57,7 @@ namespace VM.OS
         internal void Shutdown()
         {
             OS.JavaScriptEngine.Dispose();
+            OnShutdown?.Invoke();
         }
 
         internal void FinishInit(ComputerWindow wnd)
