@@ -24,6 +24,7 @@ namespace VM.GUI
             Owner = frame;
             ContentsFrame.Content = actualUserContent;
             this.JavaScriptEngine = engine;
+            OnClosed += JavaScriptEngine.Dispose;
         }
 
 
