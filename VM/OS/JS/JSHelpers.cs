@@ -338,21 +338,27 @@ namespace VM.OS.JS
         #region System
         public void print(object message)
         {
-            Runtime.GetWindow(computer).Dispatcher.Invoke(() =>
+            try
             {
-                Debug.WriteLine(message);
-
-                var commandPrompt = Runtime.SearchForOpenWindowType<CommandPrompt>(computer);
-
-                if (commandPrompt == default)
+                Runtime.GetWindow(computer).Dispatcher.Invoke(() =>
                 {
-                    Notifications.Now(message?.ToString() ?? "Invalid Print.");
-                    return;
-                }
+                    Debug.WriteLine(message);
 
-                commandPrompt.output.AppendText($"\n {message}");
-            });
+                    var commandPrompt = Runtime.SearchForOpenWindowType<CommandPrompt>(computer);
 
+                    if (commandPrompt == default)
+                    {
+                        Notifications.Now(message?.ToString() ?? "Invalid Print.");
+                        return;
+                    }
+
+                    commandPrompt.output.AppendText($"\n {message}");
+                });
+            }
+            catch(Exception e)
+            {
+                Notifications.Now(e.Message);
+            }
         }
         public void export(string id, object? obj)
         {
