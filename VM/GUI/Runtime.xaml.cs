@@ -224,22 +224,21 @@ namespace VM.GUI
         {
             var wnd = Runtime.GetWindow(Computer);
 
-            foreach (var window in wnd.Windows)
-                if (window.Value.Content is UserWindow userWindow && userWindow.Content is Grid g)
-                {
-
-                    foreach (var item in g.Children)
+            foreach (var window in wnd.USER_WINDOW_INSTANCES)
+                    if (window.Value.Content is UserWindow userWindow && userWindow.Content is Grid g)
                     {
-                        if (item is Frame frame)
+                        foreach (var item in g.Children)
                         {
-                            if (frame.Content is T ActualApplication)
+                            if (item is Frame frame)
                             {
-                                return ActualApplication;
+                                if (frame.Content is T ActualApplication)
+                                {
+                                    return ActualApplication;
+                                }
                             }
                         }
-                    }
 
-                }
+                    }
             return default;
 
         }

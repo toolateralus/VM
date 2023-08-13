@@ -9,28 +9,27 @@ namespace VM.GUI
     /// </summary>
     public partial class UserWindow : UserControl
     {
-        private ResizableWindow owner;
+        public ResizableWindow Owner;
         internal Action? OnClosed;
 
         public UserWindow()
         {
             InitializeComponent();
-            
         }
 
-        internal void Init(ResizableWindow frame, UserControl contents)
+        internal void Init(ResizableWindow frame, UserControl actualUserContent)
         {
-            owner = frame;
-            ContentsFrame.Content = contents;
+            Owner = frame;
+            ContentsFrame.Content = actualUserContent;
         }
         internal void Destroy()
         {
-            if (owner is null || owner.Parent is not Canvas canvas)
+            if (Owner is null || Owner.Parent is not Canvas canvas)
                 throw new InvalidOperationException("Window was destroyed but it had no parent");
 
-            owner.OnClosed?.Invoke();
+            Owner.OnClosed?.Invoke();
 
-            canvas.Children.Remove(owner);
+            canvas.Children.Remove(Owner);
             OnClosed?.Invoke();
         }
 
@@ -42,10 +41,10 @@ namespace VM.GUI
         public void ToggleVisibility(object sender, RoutedEventArgs e)
         {
             Visibility ^= Visibility.Collapsed;
-            owner.Visibility = Visibility;
+            Owner.Visibility = Visibility;
            
             if (Visibility == Visibility.Visible)
-                owner.BringToTopOfDesktop();
+                Owner.BringToTopOfDesktop();
 
         }
 
@@ -58,23 +57,23 @@ namespace VM.GUI
             if (!Maximized)
             {
                 Maximized = true;
-                lastW = owner.Width;
-                lastH = owner.Height;
-                lastMargin = owner.Margin;
+                lastW = Owner.Width;
+                lastH = Owner.Height;
+                lastMargin = Owner.Margin;
 
-                owner.Height = 1080;
-                owner.Width = 1920;
-                owner.Margin = new(0, 0, 0, 0);
+                Owner.Height = 1080;
+                Owner.Width = 1920;
+                Owner.Margin = new(0, 0, 0, 0);
 
                 return;
             }
 
             Maximized = false;
 
-            owner.Height = lastH;
-            owner.Width = lastW;
-            owner.Margin = lastMargin;
-            owner.BringToTopOfDesktop();
+            Owner.Height = lastH;
+            Owner.Width = lastW;
+            Owner.Margin = lastMargin;
+            Owner.BringToTopOfDesktop();
         }
     }
 

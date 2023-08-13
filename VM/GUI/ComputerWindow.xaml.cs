@@ -172,6 +172,10 @@ namespace VM.GUI
     public partial class ComputerWindow : Window
     {
         public Computer computer;
+        public List<string> CustomApps = new();
+        public Dictionary<string, int> JS_WPF_APP_INSTANCES = new();
+        public Dictionary<string, UserWindow> USER_WINDOW_INSTANCES { get; private set; } = new();
+
         public ComputerWindow(Computer pc)
         {
             InitializeComponent();
@@ -198,7 +202,6 @@ namespace VM.GUI
             bitmapImage.EndInit();
             return bitmapImage;
         }
-        public Dictionary<string, ResizableWindow> Windows = new();
         public void OpenApp(UserControl control, string title = "window", Brush? background = null, Brush? foreground = null)
         {
             background ??= Brushes.LightGray;
@@ -220,7 +223,7 @@ namespace VM.GUI
 
             window.Init(frame, control);
 
-            Windows[title] = frame;
+            USER_WINDOW_INSTANCES[title] = window;
 
             Desktop.Children.Add(frame);
 
@@ -285,17 +288,6 @@ namespace VM.GUI
             btn.Click += Toggle;
             return btn;
         }
-        private void Taskbar_Click(object sender, RoutedEventArgs e)
-        {
-            FileExplorer control = new FileExplorer();
-            control.LateInit(computer);
-            OpenApp(control, "File Explorer");
-        }
-        /// <summary>
-        /// the instantiation of applications is handled in the button event
-        /// </summary>
-        /// <typeparam name="T"></typeparam>
-        /// <param name="exePath"></param>
         internal void RegisterApp(string exePath, Type type)
         {
             var name = exePath.Split('.')[0];
@@ -355,6 +347,7 @@ namespace VM.GUI
 
             return null;
         }
+
         /// <summary>
         /// performs init on LateInit method, explaied in tooltipf or IsValidType (a static method in this class)
         /// </summary>
@@ -381,7 +374,6 @@ namespace VM.GUI
         /// <param name="members"></param>
         /// <returns></returns>
         /// 
-
         private static bool IsValidType(MemberInfo[] members)
         {
             foreach (var member in members)
@@ -393,8 +385,6 @@ namespace VM.GUI
             }
             return false;
         }
-        public List<string> CustomApps = new();
-        public Dictionary<string, int> JSClassInstances = new();
         public async Task OpenCustom(string type)
         {
             var data = Runtime.GetAppDefinition(computer, type);
@@ -407,11 +397,6 @@ namespace VM.GUI
                 return;
             }
 
-            // we need to compile the js, somehow reflect for the class, get the methods,
-            // bind methods to c# actions(maybe optional) and setup events.
-            // bind ui events to js methods here.
-            // XamlJsInterop.InitializeControl(computer, control, new() { XamlJsInterop.EventInitializer }, new() { });
-
             var JSResult = await HandleJS(type, data);
 
             var wnd = Runtime.GetWindow(pc: computer);
@@ -420,19 +405,18 @@ namespace VM.GUI
 
             await computer.OS.JavaScriptEngine.Execute(JSResult.code);
         }
-
         private async Task<(string id, string code)> HandleJS(string type, (string XAML, string JS) data)
         {
             var name = type.Split('.')[0];
             int id = 0;
 
-            if (JSClassInstances.TryGetValue(type, out id))
+            if (JS_WPF_APP_INSTANCES.TryGetValue(type, out id))
             {
-                JSClassInstances[type]++;
+                JS_WPF_APP_INSTANCES[type]++;
             }
             else
             {
-                JSClassInstances.Add(type, 1);
+                JS_WPF_APP_INSTANCES.Add(type, 1);
             }
 
             var JS = new string(data.JS);
@@ -507,6 +491,11 @@ namespace VM.GUI
                 }
             });
         }
-     
+
+        private void ShutdownClick(object sender, RoutedEventArgs e)
+        {
+            App.Current.Shutdown();
+            Close();
+        }
     }
 }

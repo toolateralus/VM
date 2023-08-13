@@ -136,15 +136,19 @@ namespace VM.OS.JS
                     var pair = CodeDictionary.Last();
                     CodeDictionary.Remove(pair.Key, out _);
 
-                    try
-                    {
-                        var result = engine.Evaluate(pair.Value.code);
-                        pair.Value.output?.Invoke(result);
-                    }
-                    catch (Exception e)
-                    {
-                        Notifications.Now(e.Message);
-                    }
+                        Task.Run(() =>
+                        {
+                            try
+                            {
+                                var result = engine.Evaluate(pair.Value.code);
+                                pair.Value.output?.Invoke(result);
+                            }
+                            catch (Exception e)
+                            {
+                                Notifications.Now(e.Message);
+                            }
+                        });
+                   
                 }
                 Thread.SpinWait(1);
             }
@@ -183,7 +187,6 @@ namespace VM.OS.JS
             engine.Dispose();
             engine = null;
 
-
             Task.Run(() => executionThread.Join());
             Task.Run(() => renderThread.Join());
         }
@@ -211,7 +214,6 @@ namespace VM.OS.JS
         }
         public List<JSEventHandler> EventHandlers = new();
 
-        // async void for specific use
         internal async Task CreateEventHandler(string identifier, string targetControl, string methodName, int type)
         {
             var wnd = Runtime.GetWindow(computer);
@@ -259,7 +261,7 @@ namespace VM.OS.JS
 
                 var eh = new JSEventHandler(element, (XAML_EVENTS)type, computer.OS.JavaScriptEngine, identifier, methodName);
                     
-                if (wnd.Windows.TryGetValue(identifier, out var app))
+                if (wnd.USER_WINDOW_INSTANCES.TryGetValue(identifier, out var app))
                 {
                     app.OnClosed += () =>
                     {

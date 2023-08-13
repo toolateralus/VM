@@ -367,7 +367,7 @@ namespace VM.OS.JS
         public UserControl? GetUserContent(string javascript_controL_class_instance_id)
         {
             var window = Runtime.GetWindow(computer);
-            var resizableWins = window.Windows.Where(W => W.Key == javascript_controL_class_instance_id);
+            var resizableWins = window.USER_WINDOW_INSTANCES.Where(W => W.Key == javascript_controL_class_instance_id);
             UserControl userContent = null;
 
             if (resizableWins.Any())

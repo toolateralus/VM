@@ -79,7 +79,7 @@ namespace VM.OS.FS
         }
         private void LP(object[]? obj)
         {
-            foreach (var item in Runtime.GetWindow(Computer).Windows)
+            foreach (var item in Runtime.GetWindow(Computer).USER_WINDOW_INSTANCES)
             {
                 Computer.OS.JavaScriptEngine.InteropModule.print($"\n{item.Key}");
             }

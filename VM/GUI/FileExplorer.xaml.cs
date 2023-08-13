@@ -26,6 +26,9 @@ namespace VM.GUI
     public partial class FileExplorer : UserControl
     {
         public static string? DesktopIcon => Runtime.GetResourcePath("fileexplorer.png");
+
+        public Action<string> OnNavigated { get; internal set; }
+
         ObservableCollection<string> FileViewerData = new();
         Dictionary<string, string> OriginalPaths = new();
         public Computer computer;
@@ -47,6 +50,7 @@ namespace VM.GUI
         public void LateInit(Computer computer)
         {
             this.computer = computer;
+            UpdateView();
         }
 
         private void PreviewPath(object sender, SelectionChangedEventArgs e)
@@ -159,16 +163,16 @@ namespace VM.GUI
 
             if (exists)
             {
-                string dir = "";
                 if (computer.OS.FS.FileExists(path))
                 {
                     Runtime.GetWindow(computer).OpenApp(new TextEditor(computer, path));
+                    OnNavigated?.Invoke(path);
                 }
 
-                dir = path;
 
-                computer.OS.FS.ChangeDirectory(dir);
+                computer.OS.FS.ChangeDirectory(path);
             }
+
         }
 
         private void UpPressed(object sender, RoutedEventArgs e)

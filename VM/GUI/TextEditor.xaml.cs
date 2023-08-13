@@ -27,6 +27,12 @@ namespace VM.GUI
             computer = pc;
             LoadedFile = path;
 
+            LoadFile(path);
+            // change the highlighting based on file extension that's opened
+        }
+
+        private void LoadFile(string path)
+        {
             if (File.Exists(path))
             {
                 string extension = System.IO.Path.GetExtension(path)?.ToLower();
@@ -122,7 +128,6 @@ namespace VM.GUI
                 Contents = File.ReadAllText(path);
                 input.Text = Contents;
             }
-            // change the highlighting based on file extension that's opened
         }
 
         private void RunMarkdownViewer(string path)
@@ -149,6 +154,12 @@ namespace VM.GUI
             FileExplorer fileExplorer = new FileExplorer();
             fileExplorer.LateInit(computer);
             Runtime.GetWindow(computer).OpenApp(fileExplorer);
+
+            fileExplorer.OnNavigated += (file) =>
+            {
+                LoadFile(file);
+                
+            };
         }
         private void RenderMD_Click(object sender, RoutedEventArgs e)
         {
@@ -160,6 +171,7 @@ namespace VM.GUI
             {
                 var dialog = new SaveFileDialog();
                 dialog.InitialDirectory = computer.OS.FS_ROOT;
+
                 dialog.FileName = "New";
                 dialog.DefaultExt = ".js";
 

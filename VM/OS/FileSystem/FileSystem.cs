@@ -257,8 +257,6 @@ namespace VM.OS.FS
                     Directory.Move(path, dest);
                 }
 
-
-
            }
         }
     }

@@ -33,11 +33,11 @@
                 <ColumnDefinition  Width="auto"/>
             </Grid.ColumnDefinitions>
 
-            <StackPanel x:Name="TaskbarStackPanel" Orientation="Horizontal" Width="Auto" Height="25" Background="Gray">
-                <Button x:Name="HomeButton" Click="Taskbar_Click" Background="LightGray" Width="66" FontFamily="Consolas" FontSize="10" Content="Explorer"/>
+            <StackPanel x:Name="TaskbarStackPanel" Orientation="Horizontal" Width="Auto" Height="25" Background="#2f5c47">
+                <Button x:Name="ShutdownBtn" Click="ShutdownClick" Background="#2f5c47" Width="66" FontFamily="Consolas" FontSize="10" Foreground="White" Content="Shut down"/>
             </StackPanel>
 
-            <StackPanel FlowDirection="RightToLeft" Grid.Row="1" Grid.Column="2" x:Name="RightSideTaskbarPanel" Orientation="Horizontal" HorizontalAlignment="Right"  Width="400" Height="25" Background="Gray">
+            <StackPanel FlowDirection="RightToLeft" Grid.Row="1" Grid.Column="2" x:Name="RightSideTaskbarPanel" Orientation="Horizontal" HorizontalAlignment="Right"  Width="400" Height="25" Background="#2f5c47">
                 <Label Height="35" FontSize="15" Foreground="White" x:Name="IDLabel" Width="100" Content="computer 0"/>
                 <Label Height="35" FlowDirection="LeftToRight" FontSize="15" Foreground="White" x:Name="TimeLabel" Width="200" Content="08/07/23 || 12:00"/>
             </StackPanel>
