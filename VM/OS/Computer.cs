@@ -53,12 +53,14 @@ namespace VM.OS
             {
                 Notifications.Now($"Computer {ID()} has exited, most likely due to an error. code:{exitCode}");
             }
+
+            Shutdown();
         }
        
         internal void Shutdown()
         {
             Disposing = true;
-            OS.JavaScriptEngine.Dispose();
+            OS?.JavaScriptEngine?.Dispose();
             OnShutdown?.Invoke();
         }
 
