@@ -131,7 +131,7 @@ namespace VM.OS.JS
 
             if (parameters != null && parameters.Length > 0 && parameters[0] is int ch)
             {
-                var result = await Runtime.PullEvent(ch, Computer);
+                var result = Runtime.PullEvent(ch, Computer);
 
                 var val = result.value;
 
