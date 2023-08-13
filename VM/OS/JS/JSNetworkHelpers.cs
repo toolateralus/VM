@@ -20,8 +20,12 @@ namespace VM.OS.JS
             computer.Network.OnMessageRecieved += OnRecieved;
             computer.Network.OnMessageRecieved += (bytes) =>
             {
-                string msg = Encoding.ASCII.GetString(bytes);
-                computer.OS.JavaScriptEngine.InteropModule.print(msg);
+                var bytesLength = bytes.Length;
+                int reciever = BitConverter.ToInt32(bytes, bytesLength - 8);
+                int sender = BitConverter.ToInt32(bytes, bytesLength - 4);
+                string msg = Encoding.ASCII.GetString(bytes, 0, bytesLength - 8);
+                computer.OS.JavaScriptEngine.InteropModule.print($"recieved from {sender} to {reciever}: {msg}");
+                Runtime.NetworkEvents.Add(reciever, (msg, sender));
             };
             Computer = computer;
         }
