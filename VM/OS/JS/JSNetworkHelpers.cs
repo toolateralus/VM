@@ -53,7 +53,7 @@ namespace VM.OS.JS
                     Computer.OS.JavaScriptEngine.InteropModule.print($"Successfully connected to {IPString}.");
                 }
             }
-            else if (Computer.OS.Config?.Value<string>("DEFAULT_SERVER_IP") is string _IP && IPAddress.Parse(_IP) is var __IP)
+            else if (Computer.OS.Config?.Value<string>("DEFAULT_SERVER_IP") is string _IP && IPAddress.TryParse(_IP, out var __IP))
             {
                 Computer.OS.JavaScriptEngine.InteropModule.print($"Trying to connect to : {__IP}");
 
