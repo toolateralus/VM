@@ -90,13 +90,14 @@ namespace ServerExample
                         var bytesLength = dataBytes.Length;
                         int reciever = BitConverter.ToInt32(dataBytes, bytesLength - 8);
                         int sender = BitConverter.ToInt32(dataBytes, bytesLength - 4);
-                        string message = Encoding.ASCII.GetString(dataBytes, 0, bytesLength - 8);
-
-                        Console.WriteLine($"Received from client {client.GetHashCode()}: {sender} to {reciever} \"{message}\"");
-
-                        if (messageHandlers.TryGetValue(message, out var handler))
+                        if (bytesLength <= 1000)
                         {
-                            await handler.Invoke(((IPEndPoint)client.Client.RemoteEndPoint).Address.ToString());
+                            string message = Encoding.ASCII.GetString(dataBytes, 0, bytesLength - 8);
+                            Console.WriteLine($"Received from client {client.GetHashCode()}: {sender} to {reciever} \"{message}\"");
+                        }
+                        else
+                        {
+                            Console.WriteLine($"Received from client {client.GetHashCode()}: {sender} to {reciever}, {FormatBytes(bytesLength)}");
                         }
 
                         // Handle other message types or logic here
@@ -115,6 +116,16 @@ namespace ServerExample
                     Console.WriteLine($"Client {client.GetHashCode()} disconnected");
                 }
             });
+        }
+        static string FormatBytes(long bytes, int decimals = 2)
+        {
+            if (bytes == 0) return "0 Bytes";
+
+            const int k = 1024;
+            string[] units = { "Bytes", "KB", "MB", "GB", "TB", "PB", "EB", "ZB", "YB" };
+
+            int i = Convert.ToInt32(Math.Floor(Math.Log(bytes) / Math.Log(k)));
+            return string.Format("{0:F" + decimals + "} {1}", bytes / Math.Pow(k, i), units[i]);
         }
 
         private async Task BroadcastMessage(List<TcpClient> connectedClients, TcpClient client, byte[] broadcastBuffer, byte[] header)
