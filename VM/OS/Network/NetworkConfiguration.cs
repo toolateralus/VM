@@ -24,8 +24,10 @@ namespace VM.OS.Network
 
         public Thread receiveThread;
 
-        public NetworkConfiguration(Computer computer)
+        public NetworkConfiguration(Computer computer, Action onDisconnect)
         {
+
+            onDisconnect += TryHaltCurrentConnection;
             if (computer?.OS?.Config?.Value<bool>("ALWAYS_CONNECT") is bool connect && connect)
             {
                 if (computer?.OS?.Config?.Value<string>("DEFAULT_SERVER_IP") is string _IP && IPAddress.Parse(_IP) is IPAddress ip)
@@ -97,8 +99,8 @@ namespace VM.OS.Network
 
         internal void TryHaltCurrentConnection()
         {
-            client?.Dispose();
-            stream?.Dispose();
+            client?.Close();
+            stream?.Close();
             Task.Run(()=>receiveThread?.Join());
         }
     }
