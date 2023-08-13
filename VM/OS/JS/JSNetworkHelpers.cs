@@ -23,11 +23,24 @@ namespace VM.OS.JS
                 var bytesLength = bytes.Length;
                 int reciever = BitConverter.ToInt32(bytes, bytesLength - 8);
                 int sender = BitConverter.ToInt32(bytes, bytesLength - 4);
-                string msg = Encoding.ASCII.GetString(bytes, 0, bytesLength - 8);
-                computer.OS.JavaScriptEngine.InteropModule.print($"recieved from {sender} to {reciever}: {msg}");
-                Runtime.NetworkEvents.Add(reciever, (msg, sender));
+                string message = Encoding.ASCII.GetString(bytes, 0, bytesLength - 8);
+                if (bytesLength <= 1000)
+                    Console.WriteLine($"Received from server: {sender} to {reciever} \"{message}\"");
+                else
+                    Console.WriteLine($"Received from server: {sender} to {reciever}, {FormatBytes(bytesLength)}");
+                Runtime.NetworkEvents.Add(reciever, (message, sender));
             };
             Computer = computer;
+        }
+        static string FormatBytes(long bytes, int decimals = 2)
+        {
+            if (bytes == 0) return "0 Bytes";
+
+            const int k = 1024;
+            string[] units = { "Bytes", "KB", "MB", "GB", "TB", "PB", "EB", "ZB", "YB" };
+
+            int i = Convert.ToInt32(Math.Floor(Math.Log(bytes) / Math.Log(k)));
+            return string.Format("{0:F" + decimals + "} {1}", bytes / Math.Pow(k, i), units[i]);
         }
         public string? ip()
         {
