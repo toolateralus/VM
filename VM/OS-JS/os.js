@@ -7,6 +7,7 @@ function alias(cmd, path){
 function call(command) {
     interop.call(command);
 }
+function start(app) { interop.start(app) }
 class OS {
     id = 0;
 
