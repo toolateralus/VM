@@ -163,12 +163,13 @@ namespace VM.GUI
         }
 
         public static ConcurrentDictionary<int, (object? val, int replyCh)> NetworkEvents = new();
-        public static (object? value, int reply) PullEvent(int channel, Computer computer)
+
+        public static async Task<(object? value, int reply)> PullEvent(int channel, Computer computer)
         {
             (object? val, int replyCh) val;
             while (!NetworkEvents.Remove(channel, out val) && !computer.Disposing)
             {
-                Thread.SpinWait(1);
+                await Task.Delay(1);
             }
             return val;
         }

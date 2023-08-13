@@ -2,6 +2,7 @@
 using System.Collections;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.ComponentModel.Design;
 using System.IO;
 using System.Linq;
@@ -26,7 +27,9 @@ namespace VM.OS.JS
     public class JavaScriptEngine
     {
         IJsEngine engine;
+        
         IJsEngineSwitcher engineSwitcher;
+
         public Dictionary<string, object?> modules = new();
         public JSNetworkHelpers NetworkModule { get; }
         public JSInterop InteropModule { get; }
@@ -39,7 +42,7 @@ namespace VM.OS.JS
         }
 
         private readonly ConcurrentDictionary<int, (string code, Action<object?> output)> CodeDictionary = new();
-        private readonly Thread executionThread;
+        private readonly BackgroundWorker executionThread;
 
         Computer computer;
         public JavaScriptEngine(string ProjectRoot, Computer computer)
@@ -61,13 +64,17 @@ namespace VM.OS.JS
             InteropModule.OnModuleImported += ImportModule;
             engine.EmbedHostObject("interop", InteropModule);
 
-            executionThread = new Thread(Execute);
-            executionThread.Start();
+            executionThread = new BackgroundWorker();
+            executionThread.DoWork += ExecuteAsync;
+            executionThread.RunWorkerAsync();
 
             renderThread = new Thread(Render);
             renderThread.Start();
 
         }
+
+       
+
         Thread renderThread;
         private void Render()
         {
@@ -135,21 +142,22 @@ namespace VM.OS.JS
 
             RecursiveLoad(sourceDir);
         }
-        public void Execute()
+        private async void ExecuteAsync(object? sender, DoWorkEventArgs args)
         {
-            while (true && !Disposing)
+            while (!Disposing)
             {
                 if (!CodeDictionary.IsEmpty)
                 {
-
-
                     var pair = CodeDictionary.Last();
                     CodeDictionary.Remove(pair.Key, out _);
 
                     try
                     {
-                        var result = engine.Evaluate(pair.Value.code);
-                        pair.Value.output?.Invoke(result);
+                        await Task.Run(() =>
+                        {
+                            var result = engine.Evaluate(pair.Value.code);
+                            pair.Value.output?.Invoke(result);
+                        });
                     }
                     catch (Exception e)
                     {
@@ -158,13 +166,14 @@ namespace VM.OS.JS
                     }
                     continue;
                 }
-                Thread.SpinWait(1);
+                await Task.Delay(1); // Avoid busy-waiting
             }
             if (!Disposing)
             {
                 throw new JsEngineException("Something happened");
             }
         }
+
         public async Task<object?> Execute(string jsCode)
         {
             object? result = null;
@@ -194,8 +203,8 @@ namespace VM.OS.JS
             Disposing = true;
             engine.Dispose();
             engine = null;
-
-            Task.Run(() => executionThread.Join());
+            
+            Task.Run(() => executionThread.Dispose());
             Task.Run(() => renderThread.Join());
         }
         internal void ExecuteScript(string absPath)

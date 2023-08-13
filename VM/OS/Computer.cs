@@ -33,9 +33,7 @@ namespace VM.OS
             Network = new(this);
         }
         public uint ID() => OS.ID;
-
         public OS OS;
-
         public Action OnShutdown { get; set; }
         public bool Disposing { get; internal set; }
 
@@ -56,14 +54,12 @@ namespace VM.OS
 
             Shutdown();
         }
-       
         internal void Shutdown()
         {
             Disposing = true;
             OS?.JavaScriptEngine?.Dispose();
             OnShutdown?.Invoke();
         }
-
         internal void FinishInit(ComputerWindow wnd)
         {
             OS.InitializeEngine(ID(), this);
@@ -80,14 +76,12 @@ namespace VM.OS
                 this.Shutdown();
             };
         }
-
         private static void InstallCoreApps(Computer pc)
         {
             pc.OS.InstallApplication("CommandPrompt.app", typeof(CommandPrompt));
             pc.OS.InstallApplication("FileExplorer.app", typeof(FileExplorer));
             pc.OS.InstallApplication("TextEditor.app", typeof(TextEditor));
         }
-
         private static void LoadBackground(Computer pc, ComputerWindow wnd)
         {
             string backgroundPath = pc?.OS?.Config?.Value<string>("BACKGROUND") ?? "background.png";

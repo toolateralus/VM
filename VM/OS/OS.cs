@@ -50,7 +50,6 @@ namespace VM.OS
             ComputerWindow window = Runtime.GetWindow(FS.Computer);
             window.RegisterApp(exePath, type);
         }
-
         public OS(uint id, Computer computer)
         {
             CommandLine = new(computer);
@@ -66,7 +65,6 @@ namespace VM.OS
             Config = OSConfigLoader.Load();
 
         }
-
         public void InitializeEngine(uint id, Computer computer)
         {
             JavaScriptEngine = new(this.WORKING_DIR, computer);
@@ -84,7 +82,6 @@ namespace VM.OS
                 JavaScriptEngine.ExecuteScript(AbsPath);
             }
         }
-
         public void SaveConfig()
         {
             string configFilePath = Runtime.GetResourcePath("config.json");

@@ -4,6 +4,7 @@ using System.Diagnostics;
 using System.Linq;
 using System.Net;
 using System.Text;
+using System.Threading.Tasks;
 using VM.GUI;
 using VM.OS.Network;
 
@@ -123,6 +124,40 @@ namespace VM.OS.JS
 
 
         }
+
+        public async Task<TaskCompletionSource<object>>? recieve_async(params object?[]? parameters)
+        {
+            var tcs = new TaskCompletionSource<object>();
+
+            if (parameters != null && parameters.Length > 0 && parameters[0] is int ch)
+            {
+                var result = await Runtime.PullEvent(ch, Computer);
+
+                var val = result.value;
+
+                if (val is string inputString)
+                {
+                    byte[] byteArray = Encoding.UTF8.GetBytes(inputString);
+
+                    byte[] outBytes = BitConverter.GetBytes(ch);
+                    byte[] inBytes = BitConverter.GetBytes(result.reply);
+
+                    byte[] combinedBytes = new byte[byteArray.Length + sizeof(int) + sizeof(int)];
+                    Array.Copy(byteArray, 0, combinedBytes, 0, byteArray.Length);
+                    Array.Copy(outBytes, 0, combinedBytes, byteArray.Length, sizeof(int));
+                    Array.Copy(inBytes, 0, combinedBytes, byteArray.Length + sizeof(int), sizeof(int));
+
+                    OnRecieved?.Invoke(combinedBytes);
+
+                }
+                tcs.SetResult(val);
+                return tcs;
+            }
+            Notifications.Now("Insufficient arguments for a network connection");
+            tcs.SetException(new ArgumentNullException("Insufficient arguments for a network connection"));
+            return tcs;
+        }
+
         public object? recieve(params object?[]? parameters)
         {
             if (parameters != null && parameters.Length > 0 && parameters[0] is int ch) 
