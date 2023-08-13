@@ -4,6 +4,9 @@ function print(obj){
 function alias(cmd, path){
     interop.alias(cmd, path)
 }
+function call(command) {
+    interop.call(command);
+}
 class OS {
     id = 0;
 

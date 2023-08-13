@@ -333,7 +333,7 @@ namespace VM.OS.FS
                 await Computer.OS.JavaScriptEngine.Execute(File.ReadAllText(AbsPath));
             }
         }
-        internal bool TryCommand(string input)
+        public bool TryCommand(string input)
         {
             if (Find(input) is Command _cmd && _cmd.id != null && _cmd.id != "NULL" && _cmd.Method != null)
             {

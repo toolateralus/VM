@@ -35,6 +35,10 @@ namespace VM.OS.JS
             EventActions.TryAdd("set_content", SetContent);
             EventActions.TryAdd("get_content", GetContent);
         }
+        public bool call(string message)
+        {
+            return computer.OS.CommandLine.TryCommand(message);
+        }
 
         private object? GetContent(string id, string controlName, object? value)
         {
