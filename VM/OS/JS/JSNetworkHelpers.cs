@@ -35,7 +35,7 @@ namespace VM.OS.JS
         }
         public void connect(object? ip)
         {
-            if (ip is string IPString && IPAddress.Parse(IPString) is IPAddress IP)
+            if (ip is string IPString && IPAddress.TryParse(IPString, out var IP))
             {
                 Computer.OS.JavaScriptEngine.InteropModule.print($"Trying to connect to : {IPString}");
 
