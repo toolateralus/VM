@@ -8,6 +8,7 @@ using System.Linq;
 using System.Reflection;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
+using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Media;
@@ -45,7 +46,7 @@ namespace VM.OS.JS
             
             if (path.Contains(".app"))
             {
-                _ = window.OpenCustom(path);
+                Task.Run(async() => { await window.OpenCustom(path); });
                 return true;
             }
 

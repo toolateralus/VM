@@ -418,7 +418,7 @@ namespace VM.GUI
 
             wnd.OpenApp(control, JSResult.id);
 
-            computer.OS.JavaScriptEngine.Execute(JSResult.code);
+            await computer.OS.JavaScriptEngine.Execute(JSResult.code);
         }
 
         private async Task<(string id, string code)> HandleJS(string type, (string XAML, string JS) data)
