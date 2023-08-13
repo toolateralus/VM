@@ -37,6 +37,7 @@ namespace VM.OS
         public OS OS;
 
         public Action OnShutdown { get; set; }
+        public bool Disposing { get; internal set; }
 
         /// <summary>
         /// this closes the window associated with the pc, if you do so manually before or after this call, it will error.
@@ -56,6 +57,7 @@ namespace VM.OS
        
         internal void Shutdown()
         {
+            Disposing = true;
             OS.JavaScriptEngine.Dispose();
             OnShutdown?.Invoke();
         }

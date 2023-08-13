@@ -127,7 +127,7 @@ namespace VM.OS.JS
         {
             if (parameters != null && parameters.Length > 0 && parameters[0] is int ch) 
             {
-                var result = Runtime.PullEvent(ch);
+                var result = Runtime.PullEvent(ch, Computer);
                 var val = result.value;
 
                 if (val is string inputString)
