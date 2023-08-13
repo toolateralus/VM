@@ -112,8 +112,7 @@ namespace VM.OS.JS
         }
         public object? recieve(params object?[]? parameters)
         {
-            if (parameters != null && parameters.Length > 0 && parameters[0] is int ch &&
-                parameters != null && parameters.Length > 0 && parameters[0] is int replyCh)
+            if (parameters != null && parameters.Length > 0 && parameters[0] is int ch) 
             {
                 var result = Runtime.PullEvent(ch);
                 var val = result.value;
