@@ -15,6 +15,7 @@ using static System.Net.Mime.MediaTypeNames;
 using System.Xml.Linq;
 using System.Linq;
 using System.Windows.Controls;
+using System.Collections.Concurrent;
 
 namespace VM.GUI
 {
@@ -161,17 +162,15 @@ namespace VM.GUI
             onWindowStateChanged?.Invoke(WindowState.Minimized);
         }
 
-        public static Dictionary<int, (object? val, int replyCh)> NetworkEvents = new();
+        public static ConcurrentDictionary<int, (object? val, int replyCh)> NetworkEvents = new();
         public static (object? value, int reply) PullEvent(int channel)
         {
-            while (!NetworkEvents.ContainsKey(channel))
+            (object? val, int replyCh) val;
+            while (!NetworkEvents.Remove(channel, out val))
             {
                 Thread.SpinWait(1);
             }
-            var value = NetworkEvents[channel];
-            NetworkEvents.Remove(channel);
-            return value;
-
+            return val;
         }
         internal static void Broadcast(int outCh, int inCh, object? msg)
         {
