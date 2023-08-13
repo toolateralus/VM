@@ -30,13 +30,13 @@ namespace VM.OS
         public Computer(uint id)
         {
             OS = new(id, this);
-            Network = new(this, OnShutdown);
+            Network = new(this);
         }
         public uint ID() => OS.ID;
 
         public OS OS;
 
-        public Action OnShutdown { get; }
+        public Action OnShutdown { get; set; }
 
         /// <summary>
         /// this closes the window associated with the pc, if you do so manually before or after this call, it will error.

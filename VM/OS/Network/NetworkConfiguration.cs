@@ -24,10 +24,10 @@ namespace VM.OS.Network
 
         public Thread receiveThread;
 
-        public NetworkConfiguration(Computer computer, Action onDisconnect)
+        public NetworkConfiguration(Computer computer)
         {
 
-            onDisconnect += TryHaltCurrentConnection;
+            computer.OnShutdown += TryHaltCurrentConnection;
             if (computer?.OS?.Config?.Value<bool>("ALWAYS_CONNECT") is bool connect && connect)
             {
                 if (computer?.OS?.Config?.Value<string>("DEFAULT_SERVER_IP") is string _IP && IPAddress.Parse(_IP) is IPAddress ip)
