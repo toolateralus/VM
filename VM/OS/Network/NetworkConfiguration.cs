@@ -65,13 +65,13 @@ namespace VM.OS.Network
                     byte[] header = new byte[4]; // Assuming a 4-byte header size
 
                     // Read the message length
-                    if (stream.Read(header, 0, 4) <= 0)
+                    if (stream?.Read(header, 0, 4) <= 0)
                         break;
                     int messageLength = BitConverter.ToInt32(header, 0);
 
                     // Read the message content
                     byte[] dataBytes = new byte[messageLength];
-                    if (stream.Read(dataBytes, 0, messageLength) <= 0)
+                    if (stream?.Read(dataBytes, 0, messageLength) <= 0)
                         break;
                     OnMessageRecieved?.Invoke(dataBytes);
                 }
@@ -82,8 +82,8 @@ namespace VM.OS.Network
             finally
             {
                 // server disconnect
-                stream.Close();
-                client.Close();
+                stream?.Close();
+                client?.Close();
             }
         }
 
@@ -93,8 +93,8 @@ namespace VM.OS.Network
             MessageBox.Show($"Sent message on channel {dataBytes[0]}");
             int messageLength = dataBytes.Length;
             byte[] lengthBytes = BitConverter.GetBytes(messageLength);
-            stream.Write(lengthBytes, 0, 4); // Assuming a 4-byte header size
-            stream.Write(dataBytes, 0, dataBytes.Length);
+            stream?.Write(lengthBytes, 0, 4); // Assuming a 4-byte header size
+            stream?.Write(dataBytes, 0, dataBytes.Length);
         }
 
         internal void TryHaltCurrentConnection()
