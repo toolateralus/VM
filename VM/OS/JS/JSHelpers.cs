@@ -378,7 +378,7 @@ namespace VM.OS.JS
 
             if (resizableWins.Any())
             {
-                var win = resizableWins.First().Value.Content as UserWindow;
+                var win = resizableWins.First().Value;
 
                 if (win != null)
                 {
