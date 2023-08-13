@@ -146,6 +146,7 @@ namespace VM.OS.JS
                             catch (Exception e)
                             {
                                 Notifications.Now(e.Message);
+                                computer.OS.JavaScriptEngine.InteropModule.print(e.Message);
                             }
                         });
                    

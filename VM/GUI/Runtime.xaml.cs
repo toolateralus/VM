@@ -225,7 +225,7 @@ namespace VM.GUI
             var wnd = Runtime.GetWindow(Computer);
 
             foreach (var window in wnd.USER_WINDOW_INSTANCES)
-                    if (window.Value.Content is UserWindow userWindow && userWindow.Content is Grid g)
+                    if (window.Value is UserWindow userWindow && userWindow.Content is Grid g)
                     {
                         foreach (var item in g.Children)
                         {
