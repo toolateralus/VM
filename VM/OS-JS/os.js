@@ -7,6 +7,16 @@ function alias(cmd, path){
 function call(command) {
     interop.call(command);
 }
+async function recieve(ch) {
+
+    let msg = "";
+    msg = network.recieve(ch);
+    while (msg === "") {
+        await sleep(1);
+    }
+    return msg;
+}
+
 function start(app) { interop.start(app) }
 class OS {
     id = 0;
