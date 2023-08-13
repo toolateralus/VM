@@ -104,7 +104,10 @@ namespace VM.OS.JS
         {
             if (element != null && e.GetPosition(element) is Point pos)
             {
-                InstantiateCode(null, $"[{(e.LeftButton == System.Windows.Input.MouseButtonState.Pressed ? 1 : 0)},{(e.RightButton == System.Windows.Input.MouseButtonState.Pressed ? 1 : 0)}, [{pos.X},{pos.Y}] ,{(e.MiddleButton == System.Windows.Input.MouseButtonState.Pressed ? 1 : 0)}]");
+                InstantiateCode(null, $"[{(e.LeftButton == System.Windows.Input.MouseButtonState.Pressed ? 1 : 0)}" +
+                    $",{(e.RightButton == System.Windows.Input.MouseButtonState.Pressed ? 1 : 0)}" +
+                    $", [{pos.X},{pos.Y}] " +
+                    $",{(e.MiddleButton == System.Windows.Input.MouseButtonState.Pressed ? 1 : 0)}]");
                 InvokeEvent();
                 return;
             }
