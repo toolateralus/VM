@@ -92,8 +92,13 @@ namespace VM.OS.Network
         {
             int messageLength = dataBytes.Length;
             byte[] lengthBytes = BitConverter.GetBytes(messageLength);
-            stream?.Write(lengthBytes, 0, 4); // Assuming a 4-byte header size
-            stream?.Write(dataBytes, 0, dataBytes.Length);
+
+            if (stream != null && stream.CanWrite)
+            {
+                stream.Write(lengthBytes, 0, 4); // Assuming a 4-byte header size
+                stream.Write(dataBytes, 0, dataBytes.Length);
+            }
+
         }
 
         internal void TryHaltCurrentConnection()
