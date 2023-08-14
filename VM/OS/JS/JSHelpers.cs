@@ -218,13 +218,8 @@ namespace VM.OS.JS
         }
         public void write_file(string path, string data)
         {
-
-            if (Runtime.GetResourcePath(path) is string AbsPath && !string.IsNullOrEmpty(AbsPath))
-            {
-                File.WriteAllText(AbsPath, data);
-                return;
-            }
-
+            if (!Path.IsPathFullyQualified(path))
+                path = Path.Combine(computer.OS.FS_ROOT, path);
             File.WriteAllText(path, data);
         }
         public bool file_exists(string path)
