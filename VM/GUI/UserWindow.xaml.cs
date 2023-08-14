@@ -33,12 +33,11 @@ namespace VM.GUI
         internal void Destroy()
         {
 
-            if (Owner is null || Owner.Parent is not Canvas canvas)
-                throw new InvalidOperationException("Window was destroyed but it had no parent");
-
-            Owner.OnClosed?.Invoke();
-
-            canvas.Children.Remove(Owner);
+            if (Owner is not null && Owner.Parent is Canvas canvas)
+            {
+                Owner.OnClosed?.Invoke();
+                canvas.Children.Remove(Owner);
+            }
             OnClosed?.Invoke();
         }
 
