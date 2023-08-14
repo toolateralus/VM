@@ -223,7 +223,7 @@ namespace VM.OS.JS
         public void Dispose()
         {
             Disposing = true;
-            engine.Dispose();
+            engine?.Dispose();
             engine = null;
             
             Task.Run(() => executionThread.Dispose());
