@@ -15,20 +15,28 @@ namespace VM.OS.Network
     using System.Windows.Markup;
     using System.Windows.Shapes;
     using VM.GUI;
+    using VM.OS.Network.Server;
 
     public class NetworkConfiguration
     {
         private TcpClient client;
         private NetworkStream stream;
-        const int DEFAULT_PORT = 8080;
+        public const int DEFAULT_PORT = 8080;
         public static string LAST_KNOWN_SERVER_IP => "192.168.0.138";
 
-        public static int RequestReplyChannel = 6996;
+        public void StopHosting(object?[] args)
+        {
+            host?.Dispose();
+        }
+
+        public const int REQUEST_RESPONSE_CHANNEL = 6996;
+        public const int DOWNLOAD_RESPONSE_CHANNEL = 6997;
 
         public static IPAddress SERVER_IP = IPAddress.Parse(LAST_KNOWN_SERVER_IP);
         public Action<byte[]>? OnMessageRecieved;
         public Thread receiveThread;
-      
+        private Host? host = null;
+
         public NetworkConfiguration(Computer computer)
         {
             computer.OnShutdown += TryHaltCurrentConnection;
@@ -66,7 +74,7 @@ namespace VM.OS.Network
         {
             try
             {
-                while (true)
+                while (IsConnected())
                 {
                     byte[] header = new byte[4]; // Assuming a 4-byte header size
 
@@ -95,14 +103,6 @@ namespace VM.OS.Network
                 stream?.Close();
                 client?.Close();
             }
-        }
-        public enum TransmissionType
-        {
-            Path,
-            Data,
-            Message,
-            Download,
-            Request,
         }
         private string PopulateJsonTemplate(int dataSize, byte[] data, TransmissionType type, int ch, int reply, bool isDir = false)
         {
@@ -143,6 +143,25 @@ namespace VM.OS.Network
         internal bool IsConnected()
         {
             return client.Connected;
+        }
+
+        internal async Task<bool> StartHosting(int port)
+        {
+            if (host != null && host.Running)
+            {
+                return false;
+            }
+
+            host ??= new();
+
+            await host.Open(port);
+
+            return host.Running;
+        }
+
+        internal object GetIPPortString()
+        {
+            return $"{LANIPFetcher.GetLocalIPAddress().MapToIPv4()}:{host?.OPEN_PORT}";
         }
     }
 }

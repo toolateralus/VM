@@ -25,8 +25,4 @@
     <Page Include="App.xaml" />
   </ItemGroup>
 
-  <ItemGroup>
-    <Folder Include="OS\Network\" />
-  </ItemGroup>
-
 </Project>

@@ -1,29 +1,22 @@
-﻿using Microsoft.ClearScript.JavaScript;
-using Newtonsoft.Json.Linq;
+﻿using Newtonsoft.Json.Linq;
 using System;
-using System.Collections;
-using System.Collections.Generic;
-using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Net;
-using System.Printing.IndexedProperties;
 using System.Text;
-using System.Threading.Tasks;
-using System.Threading.Tasks.Dataflow;
-using System.Windows.Media.Media3D;
 using VM.GUI;
 using VM.OS.Network;
+using VM.OS.Network.Server;
 
 namespace VM.OS.JS
 {
     public class JSNetworkHelpers
     {
-        // data, type, outCh, replyCh, PATH, IS_DIR,
-        public event Action<byte[], NetworkConfiguration.TransmissionType, int, int, bool> OnSent;
+        // data, type, outCh, replyCh, IS_DIR,
+        public event Action<byte[], TransmissionType, int, int, bool> OnSent;
         public Action<byte[]> OnRecieved;
         Computer Computer;
-        public JSNetworkHelpers(Computer computer, Action<byte[], NetworkConfiguration.TransmissionType, int, int, bool> OutStream)
+        public JSNetworkHelpers(Computer computer, Action<byte[], TransmissionType, int, int, bool> OutStream)
         {
             OnSent = OutStream;
             computer.Network.OnMessageRecieved += OnRecieved;
@@ -38,21 +31,11 @@ namespace VM.OS.JS
                 var dataBytes = Convert.FromBase64String(dataString);
                 var bytesLength = dataBytes.Length;
 
-                Runtime.Broadcast(NetworkConfiguration.RequestReplyChannel, -1, dataBytes);
-
+                Runtime.Broadcast(sender_ch, reciever_ch, dataBytes);
             };
             Computer = computer;
         }
-        static string FormatBytes(long bytes, int decimals = 2)
-        {
-            if (bytes == 0) return "0 Bytes";
-
-            const int k = 1024;
-            string[] units = { "Bytes", "KB", "MB", "GB", "TB", "PB", "EB", "ZB", "YB" };
-
-            int i = Convert.ToInt32(Math.Floor(Math.Log(bytes) / Math.Log(k)));
-            return string.Format("{0:F" + decimals + "} {1}", bytes / Math.Pow(k, i), units[i]);
-        }
+        
         public string? ip()
         {
             return NetworkConfiguration.LAST_KNOWN_SERVER_IP;
@@ -111,24 +94,31 @@ namespace VM.OS.JS
                 string root_dir = AbsPath.Split('\\').Last();
                 byte[] bytePath = Encoding.UTF8.GetBytes(root_dir);
 
-                OnSent?.Invoke(bytePath, NetworkConfiguration.TransmissionType.Path, -1, -1, true);
+                OnSent?.Invoke(bytePath, TransmissionType.Path, -1, -1, true);
 
                 foreach (var item in Directory.GetFileSystemEntries(AbsPath))
                 {
                     string strPath = item.Replace(AbsPath, root_dir);
                     bytePath = Encoding.UTF8.GetBytes(strPath);
-                    byte[] fileBytes = File.ReadAllBytes(item);
+                    try
+                    {
+                        byte[] fileBytes = File.ReadAllBytes(item);
 
-                    if (Directory.Exists(item))
-                    {
-                        OnSent?.Invoke(bytePath, NetworkConfiguration.TransmissionType.Path, -1, -1, true);
-                        Notifications.Now($"Uploading directory item: from {strPath}::{item}");
+                        if (Directory.Exists(item))
+                        {
+                            OnSent?.Invoke(bytePath, TransmissionType.Path, -1, -1, true);
+                            Notifications.Now($"Uploading directory item: from {strPath}::{item}");
+                        }
+                        else if (File.Exists(item))
+                        {
+                            OnSent?.Invoke(bytePath, TransmissionType.Path, -1, -1, false);
+                            OnSent?.Invoke(fileBytes, TransmissionType.Data, -1, -1, false);
+                            Notifications.Now("Uploading path: " + item);
+                        }
                     }
-                    else if (File.Exists(item))
+                    catch (Exception ex) when (ex is not UnauthorizedAccessException)
                     {
-                        OnSent?.Invoke(bytePath, NetworkConfiguration.TransmissionType.Path, -1, -1, false);
-                        OnSent?.Invoke(fileBytes, NetworkConfiguration.TransmissionType.Data, -1, -1, false);
-                        Notifications.Now("Uploading path: " + item);
+                        Console.WriteLine($"Caught exception: {ex.Message}");
                     }
                 }
             }
@@ -137,39 +127,56 @@ namespace VM.OS.JS
                 byte[] pathBytes = Encoding.UTF8.GetBytes(path);
                 byte[] fileBytes = File.ReadAllBytes(AbsPath.Split('\\').Last());
 
-                OnSent?.Invoke(pathBytes, NetworkConfiguration.TransmissionType.Path, -1, -1, false);
-                OnSent?.Invoke(fileBytes, NetworkConfiguration.TransmissionType.Data, -1, -1, false);
+                OnSent?.Invoke(pathBytes, TransmissionType.Path, -1, -1, false);
+                OnSent?.Invoke(fileBytes, TransmissionType.Data, -1, -1, false);
 
                 Notifications.Now("Uploading path: " + path);
             }
         }
         public object downloads()
         {
-            OnSent?.Invoke(Encoding.UTF8.GetBytes("GET_DOWNLOADS"), NetworkConfiguration.TransmissionType.Request, -1, NetworkConfiguration.RequestReplyChannel, false);
-            var response = Runtime.PullEvent(NetworkConfiguration.RequestReplyChannel, Computer);
+            OnSent?.Invoke(Encoding.UTF8.GetBytes("GET_DOWNLOADS"), TransmissionType.Request, -1, NetworkConfiguration.REQUEST_RESPONSE_CHANNEL, false);
+            var response = Runtime.PullEvent(NetworkConfiguration.REQUEST_RESPONSE_CHANNEL, Computer);
             var stringResponse = Encoding.UTF8.GetString(response.value as byte[] ?? Encoding.UTF8.GetBytes("No data found"));
             return stringResponse;
         }
-        public object? download(string path, int ch)
+        public object? download(string path)
         {
-            OnSent?.Invoke(Encoding.UTF8.GetBytes(path), NetworkConfiguration.TransmissionType.Download, -1, -1, false);
+            OnSent?.Invoke(Encoding.UTF8.GetBytes(path), TransmissionType.Download, 0, NetworkConfiguration.DOWNLOAD_RESPONSE_CHANNEL, false);
 
-            var result = Runtime.PullEvent(ch, Computer);
+            var root = Computer.OS.FS_ROOT + "\\downloads";
 
-            if (result.value is byte[] message)
+            if (!Directory.Exists(root))
             {
-                byte[] InChannel = BitConverter.GetBytes(ch);
-                byte[] ReplyChannel = BitConverter.GetBytes(result.reply);
-
-                byte[] combinedBytes = new byte[message.Length + sizeof(int) + sizeof(int)];
-
-                Array.Copy(message, 0, combinedBytes, 0, message.Length);
-                Array.Copy(InChannel, 0, combinedBytes, message.Length, sizeof(int));
-                Array.Copy(InChannel, 0, combinedBytes, message.Length + sizeof(int), sizeof(int));
-
-                OnRecieved?.Invoke(combinedBytes);
+                Directory.CreateDirectory(root);
             }
-            return result;
+
+            while (true)
+            {
+                var pathItem = Encoding.UTF8.GetString((byte[])Runtime.PullEvent(NetworkConfiguration.DOWNLOAD_RESPONSE_CHANNEL, Computer).value);
+                var data = (byte[])Runtime.PullEvent(NetworkConfiguration.DOWNLOAD_RESPONSE_CHANNEL, Computer).value;
+
+                if (pathItem == "END_DOWNLOAD")
+                {
+                    break;
+                }
+
+                // Combine the root path and the received path item to get the full file path
+                var fullPath = Path.Combine(root, pathItem);
+
+                // Create the directory structure if it doesn't exist
+                var directoryPath = Path.GetDirectoryName(fullPath);
+                if (!Directory.Exists(directoryPath))
+                {
+                    Directory.CreateDirectory(directoryPath);
+                }
+
+                // Save the file using the full path
+                File.WriteAllBytes(fullPath, data);
+            }
+
+            // Return whatever you want as the result of the download method
+            return null;
         }
         public bool IsConnected => Computer.Network.IsConnected();
         public void send(params object?[]? parameters)
@@ -190,7 +197,7 @@ namespace VM.OS.JS
                     outCh = 0; // Specify the outgoing channel
                     inCh = 0;  // Specify the reply channel
 
-                    OnSent?.Invoke(outgoingData, NetworkConfiguration.TransmissionType.Message, outCh, inCh,  false);
+                    OnSent?.Invoke(outgoingData, TransmissionType.Message, outCh, inCh,  false);
                     Runtime.Broadcast(outCh, inCh, Encoding.UTF8.GetString(outgoingData)); 
                 }
             }

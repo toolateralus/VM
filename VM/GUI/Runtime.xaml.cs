@@ -167,7 +167,7 @@ namespace VM.GUI
         public static (object? value, int reply) PullEvent(int channel, Computer computer)
         {
             (object? val, int replyCh) val;
-            while (!NetworkEvents.Remove(channel, out val) && !computer.Disposing)
+            while (!NetworkEvents.Remove(channel, out val) && !computer.Disposing && computer.Network.IsConnected())
             {
                 Thread.SpinWait(1);
             }

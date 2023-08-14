@@ -16,6 +16,7 @@ using System.Windows.Forms.VisualStyles;
 using VM.GUI;
 using VM.OS;
 using VM.OS.Network;
+using VM.OS.Network.Server;
 
 namespace VM.OS.FS
 {
@@ -45,9 +46,6 @@ namespace VM.OS.FS
         public List<Command> Commands = new();
         public Dictionary<string, string> Aliases = new();
 
-        
-
-
         public CommandLine(Computer computer)
         {
             Computer = computer;
@@ -69,9 +67,28 @@ namespace VM.OS.FS
                 new("ip", getIP, "fetches the local ip address of wifi/ethernet"),
                 new("rename", Rename, "fetches the local ip address of wifi/ethernet"),
                 new("restart", (_) => Runtime.Restart(computer.ID()), "restarts this computer"),
-                new("lp", LP, "restarts this computer"),
+                new("lp", LP, "lists all the running proccesses"),
+                new("host", Host, "hosts a server on the provided <port>, none provided it will default to 8080"),
+                new("closehost", (_) => Computer.Network.StopHosting(_), "if a server is currently running on this machine this halts any active connections and closes the sever.")
+
+
             };
         }
+
+        private void Host(object[]? obj)
+        {
+            Task.Run(async () =>
+            {
+                int? port = obj?[0] as int?;
+                if (await Computer.Network.StartHosting(port ?? NetworkConfiguration.DEFAULT_PORT))
+                {
+                    Computer.OS.JavaScriptEngine.InteropModule.print($"Hosting on {Computer.Network.GetIPPortString()}");
+                    return;
+                }
+                Computer.OS.JavaScriptEngine.InteropModule.print($"Failed to begin hosting on {LANIPFetcher.GetLocalIPAddress().MapToIPv4()}:{port}");
+            });
+        }
+
         private void Rename(object[]? obj)
         {
             Computer.OS.FS.Rename(obj[0] as string, obj[1] as string);
@@ -126,7 +143,7 @@ namespace VM.OS.FS
             }
         }
 
-
+      
         private void Config(object[]? obj)
         {
             if (obj != null && obj.Length > 0 && obj[0] is string getset)
@@ -305,8 +322,13 @@ namespace VM.OS.FS
                 Computer.OS.FS.NewFile(Path);
             }
         }
-        private void Help(object[]? obj)
+        private void Help(params object[]? obj)
         {
+            if (obj.Length > 0)
+            {
+                GetSpecificHelp(obj);
+            }
+
             var commandPrompt = Runtime.SearchForOpenWindowType<CommandPrompt>(Computer);
 
             if (commandPrompt == default)
@@ -327,6 +349,20 @@ namespace VM.OS.FS
             commandPrompt.output.AppendText(aliasbuilder.ToString());
 
         }
+
+        private void GetSpecificHelp(params object[] parameters)
+        {
+            var name = parameters[0] as string;
+            List<string> args = new();
+            for (int i = 0; i < parameters.Length; ++i)
+            {
+                if (parameters[i] is string arg)
+                {
+                    args.Add(arg);
+                }
+            }
+        }
+
         private async void RunJs(object[]? obj)
         {
             if (obj.Length > 0 && obj[0] is string path && Runtime.GetResourcePath(path + ".js") is string AbsPath &&  File.Exists(AbsPath))
@@ -382,7 +418,6 @@ namespace VM.OS.FS
             }
             return default;
         }
-      
         public void TryInvoke(string name, string[] args)
         {
             if (Find(name) is Command command && command.id != null && command.id != "NULL" && command.Method != null)
