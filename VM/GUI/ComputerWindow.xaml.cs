@@ -183,6 +183,14 @@ namespace VM.GUI
             desktopBackground.Source = LoadImage(Runtime.GetResourcePath("Background.png") ?? "background.png");
             KeyDown += Computer_KeyDown;
             computer = pc;
+            Closing += (s, eA)
+            =>
+            {
+                foreach (var item in USER_WINDOW_INSTANCES)
+                {
+                    item.Value.Destroy();
+                }
+            };
         }
         private void Computer_KeyDown(object sender, System.Windows.Input.KeyEventArgs e)
         {

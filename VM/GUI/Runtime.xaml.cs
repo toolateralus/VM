@@ -68,6 +68,7 @@ namespace VM.GUI
                 }
             }
 
+
         }
         public static Action<WindowState>? onWindowStateChanged;
         public static void Restart(uint id)

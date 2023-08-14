@@ -4,6 +4,7 @@ using VM.GUI;
 using System.Threading.Tasks;
 using System.Text;
 using Button = System.Windows.Controls.Button;
+using System.Windows.Input;
 
 namespace VM.OS.JS
 {
