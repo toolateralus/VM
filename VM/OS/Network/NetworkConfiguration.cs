@@ -16,7 +16,7 @@ namespace VM.OS.Network
         private NetworkStream stream;
 
         const int DEFAULT_PORT = 8080;
-        public static string LAST_KNOWN_SERVER_IP => "192.168.0.138";
+        public static string LAST_KNOWN_SERVER_IP => "192.168.0.141";
 
         public static IPAddress SERVER_IP = IPAddress.Parse(LAST_KNOWN_SERVER_IP);
 
@@ -26,7 +26,6 @@ namespace VM.OS.Network
 
         public NetworkConfiguration(Computer computer)
         {
-
             computer.OnShutdown += TryHaltCurrentConnection;
             if (computer?.OS?.Config?.Value<bool>("ALWAYS_CONNECT") is bool connect && connect)
             {
@@ -95,7 +94,7 @@ namespace VM.OS.Network
 
             if (stream != null && stream.CanWrite)
             {
-                stream.Write(lengthBytes, 0, 4); // Assuming a 4-byte header size
+                stream.Write(lengthBytes, 0, 4);
                 stream.Write(dataBytes, 0, dataBytes.Length);
             }
 
