@@ -65,7 +65,7 @@ namespace VM.OS.FS
                 new("font", SetFont, "sets the command prompts font for this session. call this from a startup to set as default"),
                 new("config" ,Config, "config <set or get> <property name> (set only) <new value>"),
                 new("ip", getIP, "fetches the local ip address of wifi/ethernet"),
-                new("rename", Rename, "fetches the local ip address of wifi/ethernet"),
+                new("move", Move, "moves a file/changes its name"),
                 new("restart", (_) => Runtime.Restart(computer.ID()), "restarts this computer"),
                 new("lp", LP, "lists all the running proccesses"),
                 new("host", Host, "hosts a server on the provided <port>, none provided it will default to 8080"),
@@ -82,30 +82,32 @@ namespace VM.OS.FS
                 int? port = obj?[0] as int?;
                 if (await Computer.Network.StartHosting(port ?? NetworkConfiguration.DEFAULT_PORT))
                 {
-                    Computer.OS.JavaScriptEngine.InteropModule.print($"Hosting on {Computer.Network.GetIPPortString()}");
+                    Notifications.Now($"Hosting on {Computer.Network.GetIPPortString()}");
                     return;
                 }
-                Computer.OS.JavaScriptEngine.InteropModule.print($"Failed to begin hosting on {LANIPFetcher.GetLocalIPAddress().MapToIPv4()}:{port}");
+                Notifications.Now($"Failed to begin hosting on {LANIPFetcher.GetLocalIPAddress().MapToIPv4()}:{port}");
             });
         }
 
-        private void Rename(object[]? obj)
+        private void Move(object[]? obj)
         {
-            Computer.OS.FS.Rename(obj[0] as string, obj[1] as string);
-
+            string? a = obj[0] as string;
+            string? b = obj[1] as string;
+            Computer.OS.FS.Move(a, b);
+            Notifications.Now($"Moved {a}->{b}");
         }
         private void LP(object[]? obj)
         {
             foreach (var item in Runtime.GetWindow(Computer).USER_WINDOW_INSTANCES)
             {
-                Computer.OS.JavaScriptEngine.InteropModule.print($"\n{item.Key}");
+                Notifications.Now($"\n{item.Key}");
             }
 
         }
         private void getIP(object[]? obj)
         {
             var IP = LANIPFetcher.GetLocalIPAddress().MapToIPv4();
-            Computer.OS.JavaScriptEngine.InteropModule.print(IP.ToString());
+            Notifications.Now(IP.ToString());
         }
 
         private void Delete(object[]? obj)
@@ -321,6 +323,7 @@ namespace VM.OS.FS
                         continue;
                     }
                     Computer.OS.FS.Copy(Path, Destination);
+                    Notifications.Now($"Copied from {Path}->{Destination}");
                 }
             }
         }
@@ -328,7 +331,8 @@ namespace VM.OS.FS
         {
             if (obj != null && obj.Length > 0 && obj[0] is string Path)
             {
-                Computer.OS.FS.NewFile(Path);
+                Computer.OS.FS.NewFile(Path); 
+                Notifications.Now($"Created directory {Path}");
             }
         }
         private void Help(params object[]? obj)
@@ -377,6 +381,7 @@ namespace VM.OS.FS
             if (obj.Length > 0 && obj[0] is string path && Runtime.GetResourcePath(path + ".js") is string AbsPath &&  File.Exists(AbsPath))
             {
                 await Computer.OS.JavaScriptEngine.Execute(File.ReadAllText(AbsPath));
+                Notifications.Now($"running {AbsPath}...");
             }
         }
         public bool TryCommand(string input)

@@ -65,7 +65,7 @@ namespace VM.OS.Network.Server
 
             List<TcpClient> CLIENTS = new();
 
-            Notifications.Now($"Server started on IP {GetLocalIPAddress().MapToIPv4()}::{OPEN_PORT}. Waiting for connections...");
+            Notifications.Now($"SERVER:Server started on IP {GetLocalIPAddress().MapToIPv4()}::{OPEN_PORT}. Waiting for connections...");
 
             SERVER = new TcpListener(IPAddress.Any, OPEN_PORT);
 
@@ -164,9 +164,8 @@ namespace VM.OS.Network.Server
             int reciever_ch = metadata.Value<int>("reply");
 
             // Base64 string represnetation of data
-            string dataString = metadata.Value<string>("data") ?? "Data not found! something has gone wrong with the client's json construction";
+            string dataString = metadata.Value<string>("data") ?? "Server:Data not found! something has gone wrong with the client's json construction";
 
-            Notifications.Now($"Incoming::{FormatBytes(messageLength)} from {sender_ch}, waiting on callback on {reciever_ch}::\n{dataString}");
 
             // byte representation of data, original.
             var dataBytes = Convert.FromBase64String(dataString);
@@ -176,11 +175,11 @@ namespace VM.OS.Network.Server
 
             if (bytesLength <= 1000)
             {
-                Notifications.Now($"Received from client {client.GetHashCode()}: {sender_ch} to {reciever_ch} \n \"{dataString}\"\n");
+                Notifications.Now($"SERVER:Received from client {client.GetHashCode()}: {sender_ch} to {reciever_ch} \"{dataString}\"");
             }
             else
             {
-                Notifications.Now($"Received from client {client.GetHashCode()}: {sender_ch} to {reciever_ch}, {FormatBytes(bytesLength)}");
+                Notifications.Now($"SERVER:Received {FormatBytes(bytesLength)} client {{{client.GetHashCode()}: {{{sender_ch}->{reciever_ch}}}}}");
             }
 
             return new(metadata, dataBytes, client, stream);
@@ -201,7 +200,7 @@ namespace VM.OS.Network.Server
         {
             TcpClient client = await server.AcceptTcpClientAsync();
             connectedClients.Add(client);
-            Notifications.Now($"Client {client.GetHashCode()} connected ");
+            Notifications.Now($"SERVER:Client {client.GetHashCode()} connected ");
             _ = HandleClientCommunicationAsync(client, connectedClients);
         }
         private async Task HandleClientCommunicationAsync(TcpClient client, List<TcpClient> connectedClients)
@@ -217,13 +216,13 @@ namespace VM.OS.Network.Server
             }
             catch (Exception ex)
             {
-                Notifications.Now($"Client {client.GetHashCode()} errored::\n{ex.Message}\n{ex.InnerException}\n{ex}");
+                Notifications.Now($"SERVER:Client {client.GetHashCode()} errored:: \n{ex.Message}\n{ex.InnerException}\n{ex}");
             }
             finally
             {
                 client.Close();
                 connectedClients.Remove(client);
-                Notifications.Now($"Client {client.GetHashCode()} disconnected");
+                Notifications.Now($"SERVER:Client {client.GetHashCode()} disconnected");
             }
         }
         private async Task TryHandleMessages(Packet packet, List<TcpClient> clients)
@@ -368,7 +367,7 @@ namespace VM.OS.Network.Server
         }
         private async void HandleRequest(string requestType, Packet packet)
         {
-            Notifications.Now($"Client {packet.Client.GetHashCode()} has made a {requestType} request.");
+            Notifications.Now($"SERVER:Client {packet.Client.GetHashCode()} has made a {requestType} request.");
             switch (requestType)
             {
                 case "GET_DOWNLOADS":
@@ -379,7 +378,7 @@ namespace VM.OS.Network.Server
                     JObject metadata = JObject.Parse(PopulateJsonTemplate(bytes.Length, bytes, TransmissionType.Request, REQUEST_REPLY_CHANNEL, -1, false));
                     await SendJsonToClient(packet.Client, metadata);
 
-                    Notifications.Now($"Responding with {names}");
+                    Notifications.Now($"SERVER:Responding with {names}");
                     break;
 
                 default:

@@ -87,5 +87,10 @@ namespace VM.OS
             string backgroundPath = pc?.OS?.Config?.Value<string>("BACKGROUND") ?? "background.png";
             wnd.desktopBackground.Source = ComputerWindow.LoadImage(Runtime.GetResourcePath(backgroundPath) ?? "background.png");
         }
+
+        internal void Print(object? obj)
+        {
+            OS?.JavaScriptEngine?.InteropModule?.print(obj ?? "null");
+        }
     }
 }

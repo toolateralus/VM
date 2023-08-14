@@ -237,11 +237,11 @@ namespace VM.OS.FS
             }
             else
             {
-                throw new FileNotFoundException("Source file or directory not found.", sourcePath);
+                Notifications.Now("Source file or directory not found.. \n" + sourcePath);
             }
         }
 
-        internal void Rename(string? path, string? dest)
+        internal void Move(string? path, string? dest)
         {
            if (path != null && dest != null)
            {

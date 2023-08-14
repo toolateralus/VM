@@ -158,50 +158,37 @@ namespace VM.OS.JS
                 (object? value, int reply) path_event = Runtime.PullEvent(NetworkConfiguration.DOWNLOAD_RESPONSE_CHANNEL, Computer);
 
                 string pathString = null;
-
                 if (path_event.value is not byte[] pathBytes)
                 {
                     Notifications.Now($"Invalid path item gotten from server {root}");
                     return null;
                 } 
-                else
-                {
-                    pathString = Encoding.UTF8.GetString(pathBytes);
-                }
-
-
-                (object? value, int reply) data_event = Runtime.PullEvent(NetworkConfiguration.DOWNLOAD_RESPONSE_CHANNEL, Computer);
-
-
-
-                if (path_event.value is not byte[] dataBytes)
-                {
-                    Notifications.Now($"Invalid file data item gotten from server {root}");
-                    return null;
-                }
-
-
+                pathString = Encoding.UTF8.GetString(pathBytes);
                 if (pathString == "END_DOWNLOAD")
                 {
                     Notifications.Now($"Download complete for {root}");
                     break;
                 }
+                (object? value, int reply) data_event = Runtime.PullEvent(NetworkConfiguration.DOWNLOAD_RESPONSE_CHANNEL, Computer);
+                if (path_event.value is not byte[] dataBytes)
+                {
+                    Notifications.Now($"Invalid file data item gotten from server {root}");
+                    return null;
+                }
+                
 
-                // Combine the root path and the received path item to get the full file path
                 var fullPath = Path.Combine(root, pathString);
 
-                // Create the directory structure if it doesn't exist
                 var directoryPath = Path.GetDirectoryName(fullPath);
+
                 if (!Directory.Exists(directoryPath))
                 {
                     Directory.CreateDirectory(directoryPath);
                 }
 
-                // Save the file using the full path
                 File.WriteAllBytes(fullPath, dataBytes);
             }
 
-            // Return whatever you want as the result of the download method
             return null;
         }
         public bool IsConnected => Computer.Network.IsConnected();
