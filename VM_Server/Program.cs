@@ -185,12 +185,12 @@ namespace ServerExample
                 while (true)
                 {
                     Packet packet = RecieveMessage(stream, client);
-                    await BroadcastMessage(connectedClients, client, packet.Header, packet.Data);
+                    await TryHandleMessages(packet, connectedClients);
                 }
             }
             catch (Exception ex)
             {
-                // Handle the exception, log the error, etc.
+                Console.WriteLine($"Client {client.GetHashCode()} errored::\n{ex.Message}\n{ex.InnerException}\n{ex}");
             }
             finally
             {
@@ -199,6 +199,53 @@ namespace ServerExample
                 Console.WriteLine($"Client {client.GetHashCode()} disconnected");
             }
         }
+
+        public Dictionary<string, TcpClient> FileTransfersPending = new();
+
+        private async Task TryHandleMessages(Packet packet, List<TcpClient> clients)
+        {
+            if (packet.Metadata.Value<string>("type") is string tTypeStr)
+            {
+                var transmissionType = Enum.Parse<TransmissionType>(tTypeStr);
+
+                switch (transmissionType)
+                {
+                    case TransmissionType.Path:
+                        if (Encoding.UTF8.GetString(packet.Data) is string Path)
+                        {
+                            FileTransfersPending.Add(Path, packet.Client);
+                        }
+                        break;
+                    case TransmissionType.Data:
+                        string toRemove = "";
+                        foreach (var item in FileTransfersPending)
+                        {
+                            if (item.Value == packet.Client)
+                            {
+                                if (packet.Metadata.Value<bool>("isDir"))
+                                {
+                                    Directory.CreateDirectory(Encoding.UTF8.GetString(packet.Data));
+                                }
+                                else
+                                {
+                                    File.WriteAllBytes(item.Key, packet.Data);
+                                }
+                                toRemove = item.Key;
+                            }
+                        }
+                        if (toRemove != "")
+                        {
+                            FileTransfersPending.Remove(toRemove);
+                        }
+                        break;
+                    case TransmissionType.Message:
+                        await BroadcastMessage(clients, packet.Client, packet.Metadata, packet.Data);
+                        break;
+                }
+               
+            }
+        }
+
         static string FormatBytes(long bytes, int decimals = 2)
         {
             if (bytes == 0) return "0 Bytes";
@@ -209,14 +256,16 @@ namespace ServerExample
             int i = Convert.ToInt32(Math.Floor(Math.Log(bytes) / Math.Log(k)));
             return string.Format("{0:F" + decimals + "} {1}", bytes / Math.Pow(k, i), units[i]);
         }
-        private async Task BroadcastMessage(List<TcpClient> connectedClients, TcpClient client, byte[] header, byte[] broadcastBuffer)
+        private async Task BroadcastMessage(List<TcpClient> connectedClients, TcpClient client, JObject header, byte[] broadcastBuffer)
         {
             foreach (TcpClient connectedClient in connectedClients)
             {
                 if (connectedClient != client)
                 {
                     NetworkStream connectedStream = connectedClient.GetStream();
-                    await connectedStream.WriteAsync(header, 0, header.Length);
+                    byte[] bytes = Encoding.UTF8.GetBytes(header.Value<string>("data") ?? "");
+
+                    await connectedStream.WriteAsync(bytes, 0, bytes.Length);
                     await connectedStream.WriteAsync(broadcastBuffer, 0, broadcastBuffer.Length);
                 }
             }
