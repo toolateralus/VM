@@ -55,13 +55,15 @@ namespace ServerExample
         {
             int MY_PORT = 8080;
 
+#if !DEBUG
+
             Console.WriteLine("Enter a port ie. '8080' \n or send an empty message to run on 8080, or your default port which can be set in the src");
 
             if (!int.TryParse(Console.ReadLine(), out MY_PORT) || MY_PORT == 0)
             {
                 MY_PORT = 8080;
             }
-
+#endif
             List<TcpClient> CLIENTS = new();
 
             Console.WriteLine($"Server started on IP {GetLocalIPAddress().MapToIPv4()}::{MY_PORT}. Waiting for connections...");
@@ -102,6 +104,11 @@ namespace ServerExample
         
         string UPLOAD_DIR = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData) + "\\VM_SERVER_DATA";
 
+        public Server()
+        {
+            if (!Directory.Exists(UPLOAD_DIR))
+                Directory.CreateDirectory(UPLOAD_DIR);
+        }
         public enum TransmissionType
         {
             Path,
@@ -216,7 +223,15 @@ namespace ServerExample
                     case TransmissionType.Path:
                         if (Encoding.UTF8.GetString(packet.Data) is string Path)
                         {
-                            FileTransfersPending.Add(Path, packet.Client);
+                            // write the dir, or we wait for file data.
+                            if (packet.Metadata.Value<bool>("isDir"))
+                            {
+                                Directory.CreateDirectory(UPLOAD_DIR + "\\" + Encoding.UTF8.GetString(packet.Data));
+                            }
+                            else
+                            {
+                                FileTransfersPending[Path] = packet.Client;
+                            }
                         }
                         break;
                     case TransmissionType.Data:
@@ -227,11 +242,18 @@ namespace ServerExample
                             {
                                 if (packet.Metadata.Value<bool>("isDir"))
                                 {
-                                    Directory.CreateDirectory(Encoding.UTF8.GetString(packet.Data));
+                                    Directory.CreateDirectory(UPLOAD_DIR + "\\" + Encoding.UTF8.GetString(packet.Data));
                                 }
                                 else
                                 {
-                                    File.WriteAllBytes(System.IO.Path.Combine(UPLOAD_DIR,item.Key), packet.Data);
+                                    string path = "";
+
+                                    if (item.Key.StartsWith('\\'))
+                                        path = item.Key.Remove(0, 1);
+
+                                    path = UPLOAD_DIR + "\\" + item.Key;
+
+                                    File.WriteAllBytes(path, packet.Data);
                                 }
                                 toRemove = item.Key;
                             }

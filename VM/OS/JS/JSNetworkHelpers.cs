@@ -108,25 +108,38 @@ namespace VM.OS.JS
 
             if (isDir)
             {
+                string root_dir = AbsPath.Split('\\').Last();
+                byte[] bytePath = Encoding.UTF8.GetBytes(root_dir);
+
+                OnSent?.Invoke(bytePath, NetworkConfiguration.TransmissionType.Path, -1, -1, true);
+
                 foreach (var item in Directory.GetFileSystemEntries(AbsPath))
                 {
+                    string strPath = item.Replace(AbsPath, root_dir);
+                    bytePath = Encoding.UTF8.GetBytes(strPath);
+                    byte[] fileBytes = File.ReadAllBytes(item);
+
                     if (Directory.Exists(item))
                     {
-                        OnSent?.Invoke(Encoding.UTF8.GetBytes(item.Replace(AbsPath, "")), NetworkConfiguration.TransmissionType.Path, -1, -1, true);
-                        Notifications.Now($"Uploading directory item: from {path}::{item}");
+                        OnSent?.Invoke(bytePath, NetworkConfiguration.TransmissionType.Path, -1, -1, true);
+                        Notifications.Now($"Uploading directory item: from {strPath}::{item}");
                     }
                     else if (File.Exists(item))
                     {
-                        OnSent?.Invoke(Encoding.UTF8.GetBytes(item.Replace(AbsPath, "")), NetworkConfiguration.TransmissionType.Path, -1, -1, false);
-                        OnSent?.Invoke(File.ReadAllBytes(item), NetworkConfiguration.TransmissionType.Data, -1, -1, false);
+                        OnSent?.Invoke(bytePath, NetworkConfiguration.TransmissionType.Path, -1, -1, false);
+                        OnSent?.Invoke(fileBytes, NetworkConfiguration.TransmissionType.Data, -1, -1, false);
                         Notifications.Now("Uploading path: " + item);
                     }
                 }
             }
             else
             {
-                OnSent?.Invoke(Encoding.UTF8.GetBytes(path), NetworkConfiguration.TransmissionType.Path, -1, -1, false);
-                OnSent?.Invoke(File.ReadAllBytes(AbsPath), NetworkConfiguration.TransmissionType.Data, -1, -1, false);
+                byte[] pathBytes = Encoding.UTF8.GetBytes(path);
+                byte[] fileBytes = File.ReadAllBytes(AbsPath.Split('\\').Last());
+
+                OnSent?.Invoke(pathBytes, NetworkConfiguration.TransmissionType.Path, -1, -1, false);
+                OnSent?.Invoke(fileBytes, NetworkConfiguration.TransmissionType.Data, -1, -1, false);
+
                 Notifications.Now("Uploading path: " + path);
             }
         }
