@@ -343,37 +343,28 @@ namespace ServerExample
             int i = Convert.ToInt32(Math.Floor(Math.Log(bytes) / Math.Log(k)));
             return string.Format("{0:F" + decimals + "} {1}", bytes / Math.Pow(k, i), units[i]);
         }
-        private async Task Reply(List<TcpClient> connectedClients, TcpClient client, JObject header)
+        private async Task Reply(List<TcpClient> connectedClients, TcpClient sender, JObject header)
         {
-            foreach (TcpClient connectedClient in connectedClients)
-            {
-                if (connectedClient == client)
-                {
-                    NetworkStream connectedStream = connectedClient.GetStream();
-                    byte[] bytes = Encoding.UTF8.GetBytes(header.ToString());
-                    var length = BitConverter.GetBytes(bytes.Length);
-
-                    // header defining length of message.
-                    await connectedStream.WriteAsync(length, 0, 4);
-                    await connectedStream.WriteAsync(bytes, 0, bytes.Length);
-                }
-            }
+            foreach (TcpClient client in connectedClients)
+                if (client == sender)
+                    await SendJsonToClient(header, client);
         }
         private async Task BroadcastMessage(List<TcpClient> connectedClients, TcpClient client, JObject header)
         {
             foreach (TcpClient connectedClient in connectedClients)
-            {
                 if (connectedClient != client)
-                {
-                    NetworkStream connectedStream = connectedClient.GetStream();
-                    byte[] bytes = Encoding.UTF8.GetBytes(header.Value<string>("data") ?? "");
-                    var length = BitConverter.GetBytes(bytes.Length);
+                    await SendJsonToClient(header, connectedClient);
+        }
 
-                    // header defining length of message.
-                    await connectedStream.WriteAsync(length, 0, 4);
-                    await connectedStream.WriteAsync(bytes, 0, bytes.Length);
-                }
-            }
+        private static async Task SendJsonToClient(JObject data, TcpClient client)
+        {
+            NetworkStream connectedStream = client.GetStream();
+            byte[] bytes = Encoding.UTF8.GetBytes(data.ToString());
+            var length = BitConverter.GetBytes(bytes.Length);
+
+            // header defining length of message.
+            await connectedStream.WriteAsync(length, 0, 4);
+            await connectedStream.WriteAsync(bytes, 0, bytes.Length);
         }
     }
 }

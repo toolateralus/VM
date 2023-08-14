@@ -30,8 +30,6 @@ namespace VM.OS.JS
             computer.Network.OnMessageRecieved += (bytes) =>
             {
                 string JsonString = Encoding.UTF8.GetString(bytes);
-
-
                 var metadata = JObject.Parse(JsonString);
                 int messageLength = metadata.Value<int>("size");
                 int sender_ch = metadata.Value<int>("ch");
