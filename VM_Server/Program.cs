@@ -57,7 +57,10 @@ namespace ServerExample
 
             Console.WriteLine("Enter a port ie. '8080' \n or send an empty message to run on 8080, or your default port which can be set in the src");
 
-            int.TryParse(Console.ReadLine(), out MY_PORT);
+            if (!int.TryParse(Console.ReadLine(), out MY_PORT) || MY_PORT == 0)
+            {
+                MY_PORT = 8080;
+            }
 
             List<TcpClient> CLIENTS = new();
 
@@ -228,7 +231,7 @@ namespace ServerExample
                                 }
                                 else
                                 {
-                                    File.WriteAllBytes(item.Key, packet.Data);
+                                    File.WriteAllBytes(System.IO.Path.Combine(UPLOAD_DIR,item.Key), packet.Data);
                                 }
                                 toRemove = item.Key;
                             }
