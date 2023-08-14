@@ -253,6 +253,7 @@ namespace VM.OS.FS
                 }
 
                 commandPrompt.output.FontFamily = font;
+                commandPrompt.input.FontFamily = font;
                 Notifications.Now($"Font '{FontName}' set successfully.");
             }
             else

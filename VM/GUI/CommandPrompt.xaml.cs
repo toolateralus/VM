@@ -80,7 +80,9 @@ namespace VM.GUI
         {
             this.computer = computer;
             Engine = computer.OS.JavaScriptEngine;
-            output.FontFamily = new(computer.OS.Config.Value<string>("font") ?? "Consolas");
+
+            output.FontFamily = new(computer.OS.Config.Value<string>("FONT") ?? "Consolas");
+            input.FontFamily = new(computer.OS.Config.Value<string>("FONT") ?? "Consolas");
         }
         private async void CommandPrompt_PreviewKeyDown(object sender, System.Windows.Input.KeyEventArgs e)
         {
