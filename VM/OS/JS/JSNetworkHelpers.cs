@@ -24,10 +24,12 @@ namespace VM.OS.JS
             {
                 string JsonString = Encoding.UTF8.GetString(bytes);
                 var metadata = JObject.Parse(JsonString);
+
                 int messageLength = metadata.Value<int>("size");
                 int sender_ch = metadata.Value<int>("ch");
                 int reciever_ch = metadata.Value<int>("reply");
                 string dataString = metadata.Value<string>("data") ?? "Data not found! something has gone wrong with the client's json construction";
+                 
                 var dataBytes = Convert.FromBase64String(dataString);
                 var bytesLength = dataBytes.Length;
 
@@ -133,7 +135,7 @@ namespace VM.OS.JS
                 Notifications.Now("Uploading path: " + path);
             }
         }
-        public object downloads()
+        public object check_for_downloadable_content()
         {
             OnSent?.Invoke(Encoding.UTF8.GetBytes("GET_DOWNLOADS"), TransmissionType.Request, -1, NetworkConfiguration.REQUEST_RESPONSE_CHANNEL, false);
             var response = Runtime.PullEvent(NetworkConfiguration.REQUEST_RESPONSE_CHANNEL, Computer);
@@ -153,16 +155,40 @@ namespace VM.OS.JS
 
             while (true)
             {
-                var pathItem = Encoding.UTF8.GetString((byte[])Runtime.PullEvent(NetworkConfiguration.DOWNLOAD_RESPONSE_CHANNEL, Computer).value);
-                var data = (byte[])Runtime.PullEvent(NetworkConfiguration.DOWNLOAD_RESPONSE_CHANNEL, Computer).value;
+                (object? value, int reply) path_event = Runtime.PullEvent(NetworkConfiguration.DOWNLOAD_RESPONSE_CHANNEL, Computer);
 
-                if (pathItem == "END_DOWNLOAD")
+                string pathString = null;
+
+                if (path_event.value is not byte[] pathBytes)
                 {
+                    Notifications.Now($"Invalid path item gotten from server {root}");
+                    return null;
+                } 
+                else
+                {
+                    pathString = Encoding.UTF8.GetString(pathBytes);
+                }
+
+
+                (object? value, int reply) data_event = Runtime.PullEvent(NetworkConfiguration.DOWNLOAD_RESPONSE_CHANNEL, Computer);
+
+
+
+                if (path_event.value is not byte[] dataBytes)
+                {
+                    Notifications.Now($"Invalid file data item gotten from server {root}");
+                    return null;
+                }
+
+
+                if (pathString == "END_DOWNLOAD")
+                {
+                    Notifications.Now($"Download complete for {root}");
                     break;
                 }
 
                 // Combine the root path and the received path item to get the full file path
-                var fullPath = Path.Combine(root, pathItem);
+                var fullPath = Path.Combine(root, pathString);
 
                 // Create the directory structure if it doesn't exist
                 var directoryPath = Path.GetDirectoryName(fullPath);
@@ -172,7 +198,7 @@ namespace VM.OS.JS
                 }
 
                 // Save the file using the full path
-                File.WriteAllBytes(fullPath, data);
+                File.WriteAllBytes(fullPath, dataBytes);
             }
 
             // Return whatever you want as the result of the download method

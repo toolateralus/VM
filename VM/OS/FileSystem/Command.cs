@@ -311,8 +311,17 @@ namespace VM.OS.FS
         {
             if (obj != null && obj.Length > 1 && obj[0] is string Path)
             {
-                foreach (string Destination in obj[0..].Where(o => o.GetType() == typeof(string) && !string.IsNullOrEmpty(o as string)).Cast<string>())
+                for (int i = 1; i < obj.Length; i++)
+                {
+                    string Destination = obj[i] as string;
+                    
+                    if (Destination is null || string.IsNullOrEmpty(Destination))
+                    {
+                        Notifications.Now($"Invalid path {Destination} in Copy");
+                        continue;
+                    }
                     Computer.OS.FS.Copy(Path, Destination);
+                }
             }
         }
         private void MkDir(object[]? obj)
@@ -324,7 +333,7 @@ namespace VM.OS.FS
         }
         private void Help(params object[]? obj)
         {
-            if (obj.Length > 0)
+            if (obj?.Length > 0)
             {
                 GetSpecificHelp(obj);
             }

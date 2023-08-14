@@ -270,14 +270,19 @@ namespace VM.OS.Network.Server
             async Task SendDataRecusive(string file)
             {
                 string path = file;
-
                 if (!file.Contains(UPLOAD_DIR))
                     path = UPLOAD_DIR + "\\" + file;
 
+                file = file.Replace(UPLOAD_DIR + "\\", "");
+
                 if (File.Exists(path))
                 {
+                    var fileName = Encoding.UTF8.GetBytes(file);
+                    var metadata = PopulateJsonTemplate(fileName.Length, fileName, TransmissionType.Download, DOWNLOAD_REPLY_CHANNEL, -1);
+                    await SendJsonToClient(packet.Client, JObject.Parse(metadata));
+
                     var fileContents = File.ReadAllBytes(path);
-                    var metadata = PopulateJsonTemplate(fileContents.Length, fileContents, TransmissionType.Download, DOWNLOAD_REPLY_CHANNEL, -1);
+                    metadata = PopulateJsonTemplate(fileContents.Length, fileContents, TransmissionType.Download, DOWNLOAD_REPLY_CHANNEL, -1);
                     await SendJsonToClient(packet.Client, JObject.Parse(metadata));
                 }
                 else if (Directory.Exists(path))

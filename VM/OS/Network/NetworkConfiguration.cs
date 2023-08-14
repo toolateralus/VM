@@ -142,7 +142,7 @@ namespace VM.OS.Network
         }
         internal bool IsConnected()
         {
-            return client.Connected;
+            return client?.Connected ?? false;
         }
 
         internal async Task<bool> StartHosting(int port)
