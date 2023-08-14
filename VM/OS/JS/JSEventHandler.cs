@@ -120,7 +120,7 @@ namespace VM.OS.JS
         {
             if (LastCode.ToString() is string Code)
             {
-                js.DIRECT_EXECUTE(Code);
+                js.Execute(Code);
                 LastCode.Clear();
             }
         }
