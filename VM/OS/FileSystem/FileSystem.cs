@@ -126,7 +126,6 @@ namespace VM.OS.FS
             {
                 if (!File.Exists(path) && !Directory.Exists(path))
                 {
-                    Directory.CreateDirectory(path);
                     File.Create(path).Close();
                 }
                 else
