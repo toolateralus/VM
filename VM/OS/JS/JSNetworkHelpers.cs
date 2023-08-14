@@ -143,6 +143,7 @@ namespace VM.OS.JS
                 Notifications.Now("Uploading path: " + path);
             }
         }
+        public bool IsConnected => Computer.Network.IsConnected();
         public void send(params object?[]? parameters)
         {
             int outCh, inCh;

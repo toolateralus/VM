@@ -113,7 +113,7 @@ namespace ServerExample
         {
             Path,
             Data,
-            Message
+            Message,
         }
 
         public Packet RecieveMessage(NetworkStream stream, TcpClient client)
@@ -141,6 +141,7 @@ namespace ServerExample
             // we can decide on a fixed buffer length for an incoming file transfer and fragment it accordingly on client side.
             int messageLength = metadata.Value<int>("size");
 
+
             // sender channel
             int sender_ch = metadata.Value<int>("ch");
             // reply channel
@@ -148,6 +149,8 @@ namespace ServerExample
 
             // Base64 string represnetation of data
             string dataString = metadata.Value<string>("data") ?? "Data not found! something has gone wrong with the client's json construction";
+            
+            Console.WriteLine($"Incoming::{messageLength} bytes from {sender_ch}, waiting on callback on {reciever_ch}::\n{dataString}");
 
             // byte representation of data, original.
             var dataBytes = Convert.FromBase64String(dataString);
@@ -157,11 +160,11 @@ namespace ServerExample
 
             if (bytesLength <= 1000)
             {
-                Console.WriteLine($"Received from client {client.GetHashCode()}: {sender_ch} to {reciever_ch} \n \"{dataString}\"\n");
+                //Console.WriteLine($"Received from client {client.GetHashCode()}: {sender_ch} to {reciever_ch} \n \"{dataString}\"\n");
             }
             else
             {
-                Console.WriteLine($"Received from client {client.GetHashCode()}: {sender_ch} to {reciever_ch}, {FormatBytes(bytesLength)}");
+                //Console.WriteLine($"Received from client {client.GetHashCode()}: {sender_ch} to {reciever_ch}, {FormatBytes(bytesLength)}");
             }
 
             return new(metadata, dataBytes, client, stream);

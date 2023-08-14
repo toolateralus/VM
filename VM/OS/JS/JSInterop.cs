@@ -166,7 +166,26 @@ namespace VM.OS.JS
         }
         public void alias(string alias, string path)
         {
-            computer.OS.CommandLine.Aliases[alias] = Runtime.GetResourcePath(path + ".js") ?? "not found";
+
+            if (path.Split('.') is string[] arr)
+            {
+                if (arr.Length > 1)
+                {
+                    if (arr[1] != "js")
+                    {
+                        Notifications.Now("invalid file extension for alias");
+                        return;
+                    }
+                    // valid .js extension
+                }
+                else
+                {
+                    // needs appended .js
+                    path = path += ".js";
+                }
+            }
+
+            computer.OS.CommandLine.Aliases[alias] = Runtime.GetResourcePath(path) ?? "not found";
         }
         /// <summary>
         /// this returns the callback, no need for extra listening
