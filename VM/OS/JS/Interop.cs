@@ -57,7 +57,7 @@ namespace VM.OS.JS
 
             engine = engineSwitcher.CreateDefaultEngine();
 
-            NetworkModule = new JSNetworkHelpers(computer, computer.Network.OnSendMessage);
+            NetworkModule = new JSNetworkHelpers(computer, computer.Network.OnSendMessage, computer.Network.OnUploadFile);
             InteropModule = new JSInterop(computer);
             AppModule = new JSApp(computer);
 

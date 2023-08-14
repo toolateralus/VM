@@ -1,10 +1,16 @@
-﻿using System;
+﻿using Microsoft.ClearScript.JavaScript;
+using System;
 using System.Collections;
+using System.Collections.Generic;
 using System.Diagnostics;
+using System.IO;
 using System.Linq;
 using System.Net;
+using System.Printing.IndexedProperties;
 using System.Text;
 using System.Threading.Tasks;
+using System.Threading.Tasks.Dataflow;
+using System.Windows.Media.Media3D;
 using VM.GUI;
 using VM.OS.Network;
 
@@ -13,23 +19,29 @@ namespace VM.OS.JS
     public class JSNetworkHelpers
     {
         public event Action<byte[]> OnSent;
+        public event Action<byte[]> OnUpload;
         public Action<byte[]> OnRecieved;
         Computer Computer;
-        public JSNetworkHelpers(Computer computer, Action<byte[]> OutStream)
+        public JSNetworkHelpers(Computer computer, Action<byte[]> OutStream, Action<byte[]> UploadStream)
         {
             OnSent = OutStream;
+            OnUpload = UploadStream;
+
             computer.Network.OnMessageRecieved += OnRecieved;
             computer.Network.OnMessageRecieved += (bytes) =>
             {
                 var bytesLength = bytes.Length;
                 int reciever = BitConverter.ToInt32(bytes, bytesLength - 8);
                 int sender = BitConverter.ToInt32(bytes, bytesLength - 4);
+
                 string message = Encoding.ASCII.GetString(bytes, 0, bytesLength - 8);
                 if (bytesLength <= 1000)
                     Console.WriteLine($"Received from server: {sender} to {reciever} \"{message}\"");
                 else
                     Console.WriteLine($"Received from server: {sender} to {reciever}, {FormatBytes(bytesLength)}");
-                Runtime.NetworkEvents[reciever] = (message, sender);
+
+
+                Runtime.NetworkEvents[reciever] = (bytes, sender);
             };
             Computer = computer;
         }
@@ -49,47 +61,54 @@ namespace VM.OS.JS
         }
         public void connect(object? ip)
         {
-            if (ip is string IPString && IPAddress.TryParse(IPString, out var IP))
-            {
-                Computer.OS.JavaScriptEngine.InteropModule.print($"Trying to connect to : {IPString}");
+            IPAddress targetIP = null;
 
-                Computer.Network.TryHaltCurrentConnection();
-                try
+            if (ip is string IPString && IPAddress.TryParse(IPString, out targetIP))
+            {
+                ConnectToIP(targetIP, IPString);
+            }
+            else if (Computer.OS.Config?.Value<string>("DEFAULT_SERVER_IP") is string defaultIP && IPAddress.TryParse(defaultIP, out targetIP))
+            {
+                ConnectToIP(targetIP, defaultIP);
+            }
+        }
+        private void ConnectToIP(IPAddress targetIP, string ipString)
+        {
+            Computer.OS.JavaScriptEngine.InteropModule.print($"Trying to connect to: {ipString}");
+
+            Computer.Network.TryHaltCurrentConnection();
+
+            try
+            {
+                Computer.Network.StartClient(targetIP);
+
+                if (Computer.Network.IsConnected())
                 {
-                    Computer.Network.StartClient(IP);
+                    Computer.OS.JavaScriptEngine.InteropModule.print($"Successfully connected to {ipString}.");
                 }
-                catch (Exception e)
+                else
                 {
-                    Computer.OS.JavaScriptEngine.InteropModule.print($"Failed to connect to : {IPString} :: {e.Message}");
-                }
-                finally
-                {
-                    Computer.OS.JavaScriptEngine.InteropModule.print($"Successfully connected to {IPString}.");
+                    Computer.OS.JavaScriptEngine.InteropModule.print($"Failed to connect to {ipString} :: Not found.");
                 }
             }
-            else if (Computer.OS.Config?.Value<string>("DEFAULT_SERVER_IP") is string _IP && IPAddress.TryParse(_IP, out var __IP))
+            catch (Exception e)
             {
-                Computer.OS.JavaScriptEngine.InteropModule.print($"Trying to connect to : {__IP}");
-
-                Computer.Network.TryHaltCurrentConnection();
-                try
-                {
-                    Computer.Network.StartClient(__IP);
-                }
-                catch (Exception e)
-                {
-                    Computer.OS.JavaScriptEngine.InteropModule.print($"Failed to connect to : {__IP} :: {e.Message}");
-                }
-                finally
-                {
-                    Computer.OS.JavaScriptEngine.InteropModule.print($"Successfully connected to {__IP}.");
-                }
+                Computer.OS.JavaScriptEngine.InteropModule.print($"Failed to connect to {ipString} :: {e.Message}");
             }
+        }
+        public void upload(string path)
+        {
+            byte[] outgoingPath = Encoding.UTF8.GetBytes(path);
+                                    
+            OnUpload?.Invoke(outgoingPath);
+
+            Notifications.Now("Insufficient arguments for a network connection");
         }
         public void send(params object?[]? parameters)
         {
             int outCh, inCh;
-            object msg;
+            object? msg;
+            byte[] outgoingData = null;
 
             if (parameters is not null && parameters.Length > 2)
             {
@@ -97,21 +116,26 @@ namespace VM.OS.JS
 
                 if (msg is string inputString)
                 {
-                    byte[] byteArray = Encoding.UTF8.GetBytes(inputString);
-
-                    if (parameters.Length >= 3 && parameters[0] is int __out && parameters[1] is int __in)
+                    outgoingData = Encoding.UTF8.GetBytes(inputString);
+                }
+                try
+                {
+                    if ((IEnumerable<byte>)msg.ToEnumerable() != null)
                     {
-                        byte[] outBytes = BitConverter.GetBytes(__out);
-                        byte[] inBytes = BitConverter.GetBytes(__in);
-
-                        byte[] combinedBytes = new byte[byteArray.Length + sizeof(int) + sizeof(int)];
-                        Array.Copy(byteArray, 0, combinedBytes, 0, byteArray.Length);
-                        Array.Copy(outBytes, 0, combinedBytes, byteArray.Length, sizeof(int));
-                        Array.Copy(inBytes, 0, combinedBytes, byteArray.Length + sizeof(int), sizeof(int));
-
-                        OnSent?.Invoke(combinedBytes);
+                        outgoingData = (byte[])(IEnumerable<byte>)msg.ToEnumerable();
                     }
                 }
+                catch
+                {
+                    Notifications.Now("Invalid data passed into network.send... it must be a string or byte array.");
+                    return;
+                }
+
+                if (outgoingData != null)
+                {
+                    OnSent?.Invoke(outgoingData);
+                }
+
                 if (parameters[0] is int _out && parameters[1] is int _in)
                 {
                     outCh = _out;
@@ -124,40 +148,6 @@ namespace VM.OS.JS
 
 
         }
-
-        public async Task<TaskCompletionSource<object>>? recieve_async(params object?[]? parameters)
-        {
-            var tcs = new TaskCompletionSource<object>();
-
-            if (parameters != null && parameters.Length > 0 && parameters[0] is int ch)
-            {
-                var result = Runtime.PullEvent(ch, Computer);
-
-                var val = result.value;
-
-                if (val is string inputString)
-                {
-                    byte[] byteArray = Encoding.UTF8.GetBytes(inputString);
-
-                    byte[] outBytes = BitConverter.GetBytes(ch);
-                    byte[] inBytes = BitConverter.GetBytes(result.reply);
-
-                    byte[] combinedBytes = new byte[byteArray.Length + sizeof(int) + sizeof(int)];
-                    Array.Copy(byteArray, 0, combinedBytes, 0, byteArray.Length);
-                    Array.Copy(outBytes, 0, combinedBytes, byteArray.Length, sizeof(int));
-                    Array.Copy(inBytes, 0, combinedBytes, byteArray.Length + sizeof(int), sizeof(int));
-
-                    OnRecieved?.Invoke(combinedBytes);
-
-                }
-                tcs.SetResult(val);
-                return tcs;
-            }
-            Notifications.Now("Insufficient arguments for a network connection");
-            tcs.SetException(new ArgumentNullException("Insufficient arguments for a network connection"));
-            return tcs;
-        }
-
         public object? recieve(params object?[]? parameters)
         {
             if (parameters != null && parameters.Length > 0 && parameters[0] is int ch) 
@@ -165,17 +155,16 @@ namespace VM.OS.JS
                 var result = Runtime.PullEvent(ch, Computer);
                 var val = result.value;
 
-                if (val is string inputString)
+                if (val is byte[] message)
                 {
-                    byte[] byteArray = Encoding.UTF8.GetBytes(inputString);
+                    byte[] InChannel = BitConverter.GetBytes(ch);
+                    byte[] ReplyChannel = BitConverter.GetBytes(result.reply);
 
-                    byte[] outBytes = BitConverter.GetBytes(ch);
-                    byte[] inBytes = BitConverter.GetBytes(result.reply);
+                    byte[] combinedBytes = new byte[message.Length + sizeof(int) + sizeof(int)];
 
-                    byte[] combinedBytes = new byte[byteArray.Length + sizeof(int) + sizeof(int)];
-                    Array.Copy(byteArray, 0, combinedBytes, 0, byteArray.Length);
-                    Array.Copy(outBytes, 0, combinedBytes, byteArray.Length, sizeof(int));
-                    Array.Copy(inBytes, 0, combinedBytes, byteArray.Length + sizeof(int), sizeof(int));
+                    Array.Copy(message, 0, combinedBytes, 0, message.Length);
+                    Array.Copy(InChannel, 0, combinedBytes, message.Length, sizeof(int));
+                    Array.Copy(InChannel, 0, combinedBytes, message.Length + sizeof(int), sizeof(int));
 
                     OnRecieved?.Invoke(combinedBytes);
 
