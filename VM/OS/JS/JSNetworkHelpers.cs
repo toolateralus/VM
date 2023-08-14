@@ -1,4 +1,5 @@
 ﻿using Microsoft.ClearScript.JavaScript;
+using Newtonsoft.Json.Linq;
 using System;
 using System.Collections;
 using System.Collections.Generic;
@@ -28,18 +29,19 @@ namespace VM.OS.JS
             computer.Network.OnMessageRecieved += OnRecieved;
             computer.Network.OnMessageRecieved += (bytes) =>
             {
-                var bytesLength = bytes.Length;
-                int reciever = BitConverter.ToInt32(bytes, bytesLength - 8);
-                int sender = BitConverter.ToInt32(bytes, bytesLength - 4);
-
-                string message = Encoding.ASCII.GetString(bytes, 0, bytesLength - 8);
-                if (bytesLength <= 1000)
-                    Console.WriteLine($"Received from server: {sender} to {reciever} \"{message}\"");
-                else
-                    Console.WriteLine($"Received from server: {sender} to {reciever}, {FormatBytes(bytesLength)}");
+                string JsonString = Encoding.UTF8.GetString(bytes);
 
 
-                Runtime.NetworkEvents[reciever] = (bytes, sender);
+                var metadata = JObject.Parse(JsonString);
+                int messageLength = metadata.Value<int>("size");
+                int sender_ch = metadata.Value<int>("ch");
+                int reciever_ch = metadata.Value<int>("reply");
+                string dataString = metadata.Value<string>("data") ?? "Data not found! something has gone wrong with the client's json construction";
+                var dataBytes = Convert.FromBase64String(dataString);
+                var bytesLength = dataBytes.Length;
+
+                Runtime.Broadcast(NetworkConfiguration.RequestReplyChannel, -1, dataBytes);
+
             };
             Computer = computer;
         }
@@ -143,6 +145,34 @@ namespace VM.OS.JS
                 Notifications.Now("Uploading path: " + path);
             }
         }
+        public object downloads()
+        {
+            OnSent?.Invoke(Encoding.UTF8.GetBytes("GET_DOWNLOADS"), NetworkConfiguration.TransmissionType.Request, -1, NetworkConfiguration.RequestReplyChannel, false);
+            var response = Runtime.PullEvent(NetworkConfiguration.RequestReplyChannel, Computer);
+            var stringResponse = Encoding.UTF8.GetString(response.value as byte[] ?? Encoding.UTF8.GetBytes("No data found"));
+            return stringResponse;
+        }
+        public object? download(string path, int ch)
+        {
+            OnSent?.Invoke(Encoding.UTF8.GetBytes(path), NetworkConfiguration.TransmissionType.Download, -1, -1, false);
+
+            var result = Runtime.PullEvent(ch, Computer);
+
+            if (result.value is byte[] message)
+            {
+                byte[] InChannel = BitConverter.GetBytes(ch);
+                byte[] ReplyChannel = BitConverter.GetBytes(result.reply);
+
+                byte[] combinedBytes = new byte[message.Length + sizeof(int) + sizeof(int)];
+
+                Array.Copy(message, 0, combinedBytes, 0, message.Length);
+                Array.Copy(InChannel, 0, combinedBytes, message.Length, sizeof(int));
+                Array.Copy(InChannel, 0, combinedBytes, message.Length + sizeof(int), sizeof(int));
+
+                OnRecieved?.Invoke(combinedBytes);
+            }
+            return result;
+        }
         public bool IsConnected => Computer.Network.IsConnected();
         public void send(params object?[]? parameters)
         {
@@ -186,7 +216,6 @@ namespace VM.OS.JS
                     Array.Copy(InChannel, 0, combinedBytes, message.Length + sizeof(int), sizeof(int));
 
                     OnRecieved?.Invoke(combinedBytes);
-
                 }
                 return val;
             }

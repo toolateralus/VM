@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Buffers.Text;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -72,7 +73,7 @@ namespace ServerExample
 
             SERVER.Start();
 
-            Server networkConfig = new Server();
+            Server networkConfig = new Server(CLIENTS);
 
             while (true)
             {
@@ -99,21 +100,32 @@ namespace ServerExample
 
     public class Server
     {
+        private const int REQUEST_REPLY_CHANNEL = 6996;
         public Dictionary<byte[], Func<Packet, Task<Packet>>> ServerTasks = new();
         // sender, path, data
         
         string UPLOAD_DIR = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData) + "\\VM_SERVER_DATA";
 
-        public Server()
+        public Server(List<TcpClient> cLIENTS)
         {
+            this.clients = cLIENTS;
+
             if (!Directory.Exists(UPLOAD_DIR))
                 Directory.CreateDirectory(UPLOAD_DIR);
+
+            foreach (var item in Directory.EnumerateFileSystemEntries(UPLOAD_DIR))
+            {
+                AvailableForDownload.Add(item.Split('\\').Last());
+            }
+
         }
         public enum TransmissionType
         {
             Path,
             Data,
             Message,
+            Download,
+            Request,
         }
 
         public Packet RecieveMessage(NetworkStream stream, TcpClient client)
@@ -150,7 +162,7 @@ namespace ServerExample
             // Base64 string represnetation of data
             string dataString = metadata.Value<string>("data") ?? "Data not found! something has gone wrong with the client's json construction";
             
-            Console.WriteLine($"Incoming::{messageLength} bytes from {sender_ch}, waiting on callback on {reciever_ch}::\n{dataString}");
+            Console.WriteLine($"Incoming::{FormatBytes(messageLength)} from {sender_ch}, waiting on callback on {reciever_ch}::\n{dataString}");
 
             // byte representation of data, original.
             var dataBytes = Convert.FromBase64String(dataString);
@@ -214,6 +226,8 @@ namespace ServerExample
         }
 
         public Dictionary<string, TcpClient> FileTransfersPending = new();
+        public List<string> AvailableForDownload = new();
+        private List<TcpClient> clients;
 
         private async Task TryHandleMessages(Packet packet, List<TcpClient> clients)
         {
@@ -267,11 +281,56 @@ namespace ServerExample
                         }
                         break;
                     case TransmissionType.Message:
-                        await BroadcastMessage(clients, packet.Client, packet.Metadata, packet.Data);
+
+                        var bytes = Convert.FromBase64String(packet.Metadata.Value<string>("data"));
+                        var responseMetadata = JObject.Parse(PopulateJsonTemplate(bytes.Length, bytes, TransmissionType.Message, packet.Metadata.Value<int>("reply"), -1, false));
+                        await BroadcastMessage(clients, packet.Client, responseMetadata);
                         break;
+                    case TransmissionType.Download:
+                        // check for available downloads, load the content, and send it directly back to the client
+                        break;
+                    case TransmissionType.Request:
+                        TryHandleRequest(Encoding.UTF8.GetString(packet.Data), packet);
+                        break;
+
                 }
-               
+
             }
+        }
+        private string PopulateJsonTemplate(int dataSize, byte[] data, TransmissionType type, int ch, int reply, bool isDir = false)
+        {
+            var json = new
+            {
+                size = dataSize,
+                data = Convert.ToBase64String(data),
+                type = type.ToString(),
+                ch = ch,
+                reply = reply,
+                isDir = isDir
+            };
+
+            return JsonConvert.SerializeObject(json);
+        }
+        private async void TryHandleRequest(string requestType, Packet packet)
+        {
+            Console.WriteLine($"Client {packet.Client.GetHashCode()} has made a {requestType} request.");
+            switch (requestType)
+            {
+                case "GET_DOWNLOADS":
+
+                    var names = string.Join(",\n", AvailableForDownload);
+                    var bytes = Encoding.UTF8.GetBytes(names);
+
+                    JObject metadata = JObject.Parse(PopulateJsonTemplate(bytes.Length, bytes, TransmissionType.Request, REQUEST_REPLY_CHANNEL, -1, false));
+                    await Reply(clients, packet.Client, metadata);
+
+                    Console.WriteLine($"Responding with {names}");
+                    break;
+
+                default:
+                    break;
+            }
+
         }
 
         static string FormatBytes(long bytes, int decimals = 2)
@@ -284,7 +343,23 @@ namespace ServerExample
             int i = Convert.ToInt32(Math.Floor(Math.Log(bytes) / Math.Log(k)));
             return string.Format("{0:F" + decimals + "} {1}", bytes / Math.Pow(k, i), units[i]);
         }
-        private async Task BroadcastMessage(List<TcpClient> connectedClients, TcpClient client, JObject header, byte[] broadcastBuffer)
+        private async Task Reply(List<TcpClient> connectedClients, TcpClient client, JObject header)
+        {
+            foreach (TcpClient connectedClient in connectedClients)
+            {
+                if (connectedClient == client)
+                {
+                    NetworkStream connectedStream = connectedClient.GetStream();
+                    byte[] bytes = Encoding.UTF8.GetBytes(header.ToString());
+                    var length = BitConverter.GetBytes(bytes.Length);
+
+                    // header defining length of message.
+                    await connectedStream.WriteAsync(length, 0, 4);
+                    await connectedStream.WriteAsync(bytes, 0, bytes.Length);
+                }
+            }
+        }
+        private async Task BroadcastMessage(List<TcpClient> connectedClients, TcpClient client, JObject header)
         {
             foreach (TcpClient connectedClient in connectedClients)
             {
@@ -292,9 +367,11 @@ namespace ServerExample
                 {
                     NetworkStream connectedStream = connectedClient.GetStream();
                     byte[] bytes = Encoding.UTF8.GetBytes(header.Value<string>("data") ?? "");
+                    var length = BitConverter.GetBytes(bytes.Length);
 
+                    // header defining length of message.
+                    await connectedStream.WriteAsync(length, 0, 4);
                     await connectedStream.WriteAsync(bytes, 0, bytes.Length);
-                    await connectedStream.WriteAsync(broadcastBuffer, 0, broadcastBuffer.Length);
                 }
             }
         }

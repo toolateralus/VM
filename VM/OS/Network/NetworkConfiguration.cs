@@ -22,6 +22,9 @@ namespace VM.OS.Network
         private NetworkStream stream;
         const int DEFAULT_PORT = 8080;
         public static string LAST_KNOWN_SERVER_IP => "192.168.0.138";
+
+        public static int RequestReplyChannel = 6996;
+
         public static IPAddress SERVER_IP = IPAddress.Parse(LAST_KNOWN_SERVER_IP);
         public Action<byte[]>? OnMessageRecieved;
         public Thread receiveThread;
@@ -70,6 +73,7 @@ namespace VM.OS.Network
                     // Read the message length
                     if (stream?.Read(header, 0, 4) <= 0)
                         break;
+
                     int messageLength = BitConverter.ToInt32(header, 0);
 
                     // Read the message content
@@ -96,7 +100,9 @@ namespace VM.OS.Network
         {
             Path,
             Data,
-            Message
+            Message,
+            Download,
+            Request,
         }
         private string PopulateJsonTemplate(int dataSize, byte[] data, TransmissionType type, int ch, int reply, bool isDir = false)
         {
