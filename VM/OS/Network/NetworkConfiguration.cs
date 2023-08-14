@@ -5,6 +5,7 @@ using System.Threading;
 namespace VM.OS.Network
 {
     using CefNet.WinApi;
+    using Newtonsoft.Json;
     using System;
     using System.Buffers.Text;
     using System.IO;
@@ -20,41 +21,11 @@ namespace VM.OS.Network
         private TcpClient client;
         private NetworkStream stream;
         const int DEFAULT_PORT = 8080;
-        public static string LAST_KNOWN_SERVER_IP => "192.168.0.141";
+        public static string LAST_KNOWN_SERVER_IP => "192.168.0.138";
         public static IPAddress SERVER_IP = IPAddress.Parse(LAST_KNOWN_SERVER_IP);
         public Action<byte[]>? OnMessageRecieved;
         public Thread receiveThread;
-
-        const string START = "START_UPLOAD";
-        const string END = "END_UPLOAD";
-        const string NEXTDIR = "NEXTDIR_UPLOAD";
-        const string METADATA = "::METADATA::";
-        const string PATH = "PATH";
-        const string DATA = "DATA";
-
-        static byte[] PATH_MESSAGE = UPLOADING_PATH();
-        static byte[] DATA_MESSAGE = UPLOADING_DATA();
-        static byte[] UPLOADING_DATA()
-        {
-            return Encoding.UTF8.GetBytes(DATA);
-        }
-        static byte[] UPLOADING_PATH()
-        {
-            return Encoding.UTF8.GetBytes(DATA);
-        }
-        static byte[] UPLOAD_START_MESSAGE(string path, bool isDir)
-        {
-            return Encoding.UTF8.GetBytes($"{START}{METADATA}{{path{path},isDir:{isDir}}}");
-        }
-        static byte[] UPLOAD_END_MESSAGE(string path)
-        {
-            return Encoding.UTF8.GetBytes($"{END}{METADATA}{{path:{path}}}");
-        }
-        static byte[] UPLOAD_NEXT_DIR_MESSAGE(string path, string dir)
-        {
-            return Encoding.UTF8.GetBytes($"{NEXTDIR}{METADATA}{{path:{path},dir:{dir}}}");
-        }
-
+      
         public NetworkConfiguration(Computer computer)
         {
             computer.OnShutdown += TryHaltCurrentConnection;
@@ -121,78 +92,41 @@ namespace VM.OS.Network
                 client?.Close();
             }
         }
-        internal void OnUploadFile(byte[] path)
+        public enum TransmissionType
         {
-
-            string inputPath = Encoding.UTF8.GetString(path);
-            byte[] endMsg = UPLOAD_END_MESSAGE(inputPath);
-
-            if (Runtime.GetResourcePath(inputPath) is string AbsPath)
-            {
-                var isDir = Directory.Exists(AbsPath);
-                var isFile = File.Exists(AbsPath);
-
-                var msg = UPLOAD_START_MESSAGE(inputPath, isDir);
-                stream.Write(msg, 0, msg.Length);
-
-                if (isDir)
-                {
-                    UploadDirectories(path, AbsPath);
-                }
-                if (isFile)
-                {
-                    var file = File.ReadAllBytes(AbsPath);
-                    UploadFile(file, path);
-                }
-            }
-
-            // close uploading
-            stream.Write(endMsg, 0, endMsg.Length);
+            Path,
+            Data,
+            Message
         }
-
-        private void UploadDirectories(byte[] path, string AbsPath)
+        private string PopulateJsonTemplate(int dataSize, byte[] data, TransmissionType type, int ch, int reply, bool isDir = false)
         {
-            var entries = Directory.GetFileSystemEntries(AbsPath);
-
-            foreach (var entry in entries)
+            var json = new
             {
-                if (Directory.Exists(entry))
-                {
-                    var message = UPLOAD_NEXT_DIR_MESSAGE(AbsPath, entry);
-                    stream.Write(message, 0, message.Length);
-                }
-                if (File.Exists(entry))
-                {
-                    var file = File.ReadAllBytes(entry);
-                    UploadFile(file, path);
-                }
-            }
+                size = dataSize,
+                data = Convert.ToBase64String(data),
+                type = type.ToString(),
+                ch = ch,
+                reply = reply,
+                isDir = isDir
+            };
+
+            return JsonConvert.SerializeObject(json);
         }
-
-        private void UploadFile(byte[] data, byte[] path)
+      
+        internal void OnSendMessage(byte[] dataBytes, TransmissionType type, int ch, int reply, bool isDir = false)
         {
-            if (stream != null && stream.CanWrite)
-            {
-                stream.Write(PATH_MESSAGE, 0, PATH_MESSAGE.Length);
-                stream.Write(path, 0, path.Length);
-                stream.Write(PATH_MESSAGE, 0, PATH_MESSAGE.Length);
-                stream.Write(data, 0, data.Length);
-            }
-        }
+            var metadata = PopulateJsonTemplate(dataBytes.Length, dataBytes, type, ch, reply, isDir);
 
-        
-
-        internal void OnSendMessage(byte[] dataBytes)
-        {
-            int messageLength = dataBytes.Length;
-            byte[] lengthBytes = BitConverter.GetBytes(messageLength);
+            byte[] metadataBytes = Encoding.UTF8.GetBytes(metadata);
+            byte[] lengthBytes = BitConverter.GetBytes(metadataBytes.Length);
 
             if (stream != null && stream.CanWrite)
             {
+                // header to indicate Metadata length.
                 stream.Write(lengthBytes, 0, 4);
-                stream.Write(dataBytes, 0, dataBytes.Length);
+                // metadata for file transfer, contains the data for the transfer as well.
+                stream.Write(metadataBytes, 0, metadataBytes.Length);
             }
-
         }
         internal void TryHaltCurrentConnection()
         {
@@ -200,7 +134,6 @@ namespace VM.OS.Network
             stream?.Close();
             Task.Run(()=>receiveThread?.Join());
         }
-
         internal bool IsConnected()
         {
             return client.Connected;

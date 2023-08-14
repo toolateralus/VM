@@ -18,15 +18,13 @@ namespace VM.OS.JS
 {
     public class JSNetworkHelpers
     {
-        public event Action<byte[]> OnSent;
-        public event Action<byte[]> OnUpload;
+        // data, type, outCh, replyCh, PATH, IS_DIR,
+        public event Action<byte[], NetworkConfiguration.TransmissionType, int, int, bool> OnSent;
         public Action<byte[]> OnRecieved;
         Computer Computer;
-        public JSNetworkHelpers(Computer computer, Action<byte[]> OutStream, Action<byte[]> UploadStream)
+        public JSNetworkHelpers(Computer computer, Action<byte[], NetworkConfiguration.TransmissionType, int, int, bool> OutStream)
         {
             OnSent = OutStream;
-            OnUpload = UploadStream;
-
             computer.Network.OnMessageRecieved += OnRecieved;
             computer.Network.OnMessageRecieved += (bytes) =>
             {
@@ -98,11 +96,34 @@ namespace VM.OS.JS
         }
         public void upload(string path)
         {
-            byte[] outgoingPath = Encoding.UTF8.GetBytes(path);
-                                    
-            OnUpload?.Invoke(outgoingPath);
+            var isDir = false;
 
-            Notifications.Now("Insufficient arguments for a network connection");
+            if (Runtime.GetResourcePath(path) is var AbsPath)
+                path = AbsPath;
+
+            isDir = Directory.Exists(path) && !File.Exists(path);
+
+            if (isDir)
+            {
+                foreach (var item in Directory.GetFileSystemEntries(path))
+                {
+                    if (Directory.Exists(item))
+                    {
+                        OnSent?.Invoke(Encoding.UTF8.GetBytes(item), NetworkConfiguration.TransmissionType.Path, -1, -1, true);
+                        Notifications.Now($"Uploading directory item: from {path}::{item}");
+                    }
+                    else if (File.Exists(item))
+                    {
+                        OnSent?.Invoke(File.ReadAllBytes(item), NetworkConfiguration.TransmissionType.Path, -1, -1, false);
+                        Notifications.Now("Uploading path: " + item);
+                    }
+                }
+            }
+            else
+            {
+                OnSent?.Invoke(File.ReadAllBytes(path), NetworkConfiguration.TransmissionType.Path, -1, -1, false);
+                Notifications.Now("Uploading path: " + path);
+            }
         }
         public void send(params object?[]? parameters)
         {
@@ -114,39 +135,18 @@ namespace VM.OS.JS
             {
                 msg = parameters[2];
 
-                if (msg is string inputString)
-                {
-                    outgoingData = Encoding.UTF8.GetBytes(inputString);
-                }
-                try
-                {
-                    if ((IEnumerable<byte>)msg.ToEnumerable() != null)
-                    {
-                        outgoingData = (byte[])(IEnumerable<byte>)msg.ToEnumerable();
-                    }
-                }
-                catch
-                {
-                    Notifications.Now("Invalid data passed into network.send... it must be a string or byte array.");
-                    return;
-                }
+                // Process and convert the message to byte array if necessary
 
                 if (outgoingData != null)
                 {
-                    OnSent?.Invoke(outgoingData);
-                }
+                    // Specify the appropriate channel and reply values
+                    outCh = 0; // Specify the outgoing channel
+                    inCh = 0;  // Specify the reply channel
 
-                if (parameters[0] is int _out && parameters[1] is int _in)
-                {
-                    outCh = _out;
-                    inCh = _in;
-                    Runtime.Broadcast(outCh, inCh, msg);
-                    return;
+                    OnSent?.Invoke(outgoingData, NetworkConfiguration.TransmissionType.Message, outCh, inCh,  false);
+                    Runtime.Broadcast(outCh, inCh, Encoding.UTF8.GetString(outgoingData)); 
                 }
             }
-            Notifications.Now("Insufficient arguments for a network connection");
-
-
         }
         public object? recieve(params object?[]? parameters)
         {

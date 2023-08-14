@@ -1,12 +1,18 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Net;
 using System.Net.NetworkInformation;
 using System.Net.Sockets;
 using System.Runtime.InteropServices;
+using System.Runtime.Serialization;
 using System.Text;
+using System.Text.Json;
+using System.Text.Json.Serialization;
 using System.Threading.Tasks;
+using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 
 namespace ServerExample
 {
@@ -72,14 +78,14 @@ namespace ServerExample
 
     public class Packet
     {
-        public byte[] Header = Array.Empty<byte>();
+        public JObject Metadata;
         public byte[] Data = Array.Empty<byte>();
         public TcpClient Client = default!;
         public NetworkStream stream = default!;
 
-        public Packet(byte[] header, byte[] message, TcpClient client, NetworkStream stream)
+        public Packet(JObject header, byte[] message, TcpClient client, NetworkStream stream)
         {
-            this.Header = header;
+            this.Metadata = header;
             this.Data = message;
             this.Client = client;
             this.stream = stream;
@@ -89,109 +95,81 @@ namespace ServerExample
     public class Server
     {
         public Dictionary<byte[], Func<Packet, Task<Packet>>> ServerTasks = new();
-        public List<TcpClient> ActiveUploaders = new();
-        public Dictionary<byte[], byte[]> UploadChannels = new();
+        // sender, path, data
         
         string UPLOAD_DIR = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData) + "\\VM_SERVER_DATA";
 
-        public Server()
+        public enum TransmissionType
         {
-            const string START = "START_UPLOAD";
-            const string END = "END_UPLOAD";
-            const string NEXTDIR = "NEXTDIR_UPLOAD";
-
-            // we need to add a parser to our messages and 
-            // parse our metadata out.
-            const string METADATA = "::METADATA::";
-
-            const string PATH = "PATH";
-            const string DATA = "DATA";
-
-            ServerTasks[Encoding.UTF8.GetBytes(START)] = HandleUpload;
-            ServerTasks[Encoding.UTF8.GetBytes(END)] = HandleUpload;
-
-            ServerTasks[Encoding.UTF8.GetBytes(NEXTDIR)] = HandleNextDir;
-            ServerTasks[Encoding.UTF8.GetBytes(PATH)] = HandlePath;
-            ServerTasks[Encoding.UTF8.GetBytes(DATA)] = TryUpload;
+            Path,
+            Data,
+            Message
         }
 
-        private Task<Packet> HandleNextDir(Packet arg)
-        {
-            if (UploadChannels.TryGetValue(arg.Header, out var ch))
-            {
-                if ()
-            }
-        }
-
-        private Task<Packet> HandlePath(Packet arg)
-        {
-            throw new NotImplementedException();
-        }
-
-        public async Task<Packet> HandleUpload(Packet packet)
-        {
-            if (ActiveUploaders.Contains(packet.Client))
-            {
-                ActiveUploaders.Remove(packet.Client);
-
-                File.WriteAllBytes(UPLOAD_DIR, UploadChannels[packet.Header]);
-
-                UploadChannels.Remove(packet.Header);
-            }
-            else
-            {
-                // start upload
-                ActiveUploaders.Add(packet.Client);
-                UploadChannels.Add(packet.Header, Array.Empty<byte>());
-            }
-            return default!;
-        }
-        public async Task<Packet> TryHandleMessage(Packet packet)
-        {
-            Packet reply_transmission = null;
-
-            await Task.Run(async () => { 
-            
-                if (ServerTasks.TryGetValue(packet.Data, out var handler))
-                {
-                    reply_transmission = await handler.Invoke(packet);
-                }
-            });
-
-            return reply_transmission;
-        }
         public Packet RecieveMessage(NetworkStream stream, TcpClient client)
         {
+            
+            // this header will indicate the size of the actual metadata
             byte[] header = new byte[4]; 
 
             // 4 byte header for i/o channels
             if (stream.Read(header, 0, 4) <= 0)
                 return default;
 
-            int messageLength = BitConverter.ToInt32(header, 0);
+            int metadataLength = BitConverter.ToInt32(header, 0);
 
-            byte[] dataBytes = new byte[messageLength];
+            byte[] metaData = new byte[metadataLength];
 
-            if (stream.Read(dataBytes, 0, messageLength) <= 0)
+            // metadata file, json object with infos and the actual data for the xfer
+            if (stream.Read(metaData, 0, metadataLength) <= 0)
                 return default;
 
-            var bytesLength = dataBytes.Length;
+            var metadata = ParseMetadata(metaData);
 
-            int reciever = BitConverter.ToInt32(dataBytes, bytesLength - 8);
-            int sender = BitConverter.ToInt32(dataBytes, bytesLength - 4);
+            // length of the data message, we don't use this now, but for doing fragmented transfers for larger files,
+            // we'd want to know the full length of the incoming data for reconstruction.
+            // we can decide on a fixed buffer length for an incoming file transfer and fragment it accordingly on client side.
+            int messageLength = metadata.Value<int>("size");
+
+            // sender channel
+            int sender_ch = metadata.Value<int>("ch");
+            // reply channel
+            int reciever_ch  = metadata.Value<int>("reply");
+
+            // Base64 string represnetation of data
+            string dataString = metadata.Value<string>("data") ?? "Data not found! something has gone wrong with the client's json construction";
+
+            // byte representation of data, original.
+            var dataBytes = Convert.FromBase64String(dataString);
+
+            // sizeof data.
+            var bytesLength = dataBytes.Length;
 
             if (bytesLength <= 1000)
             {
-                string message = Encoding.ASCII.GetString(dataBytes, 0, bytesLength - 8);
-                Console.WriteLine($"Received from client {client.GetHashCode()}: {sender} to {reciever} \"{message}\"");
+                Console.WriteLine($"Received from client {client.GetHashCode()}: {sender_ch} to {reciever_ch} \n \"{dataString}\"\n");
             }
             else
             {
-                Console.WriteLine($"Received from client {client.GetHashCode()}: {sender} to {reciever}, {FormatBytes(bytesLength)}");
+                Console.WriteLine($"Received from client {client.GetHashCode()}: {sender_ch} to {reciever_ch}, {FormatBytes(bytesLength)}");
             }
 
-            return new(header, dataBytes, client, stream);
+            return new(metadata, dataBytes, client, stream);
         }
+
+        private JObject ParseMetadata(byte[] metaData)
+        {
+            try
+            {
+                return JObject.Parse(Encoding.UTF8.GetString(metaData));
+            }
+            catch
+            {
+
+            }
+            return new JObject();
+        }
+
         public async Task ConnectClientAsync(TcpListener server, List<TcpClient> connectedClients)
         {
             TcpClient client = await server.AcceptTcpClientAsync();
@@ -207,19 +185,7 @@ namespace ServerExample
                 while (true)
                 {
                     Packet packet = RecieveMessage(stream, client);
-
-                    var messageResult = await TryHandleMessage(packet);
-
-
-
-                    if (messageResult != default)
-                    {
-                        await BroadcastMessage(connectedClients, client, messageResult.Header, messageResult.Data);
-                    }
-                    else
-                    {
-                        await BroadcastMessage(connectedClients, client, packet.Header, packet.Data);
-                    }
+                    await BroadcastMessage(connectedClients, client, packet.Header, packet.Data);
                 }
             }
             catch (Exception ex)
@@ -232,24 +198,6 @@ namespace ServerExample
                 connectedClients.Remove(client);
                 Console.WriteLine($"Client {client.GetHashCode()} disconnected");
             }
-        }
-        private Task<Packet> TryUpload(Packet packet)
-        {
-           
-
-            if (ActiveUploaders.Contains(packet.Client))
-            {
-                if (UploadChannels.TryGetValue(packet.Header, out var bytes))
-                {
-                    var newData = new byte[bytes.Length + packet.Data.Length];
-
-                    Array.Copy(bytes, newData, bytes.Length);
-                    Array.Copy(packet.Data, 0, newData, bytes.Length, packet.Data.Length);
-
-                    UploadChannels[packet.Header] = newData;
-                }
-            }
-            return null;
         }
         static string FormatBytes(long bytes, int decimals = 2)
         {
