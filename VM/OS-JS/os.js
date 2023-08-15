@@ -7,7 +7,9 @@ function alias(cmd, path){
 function call(command) {
     interop.call(command);
 }
-
+function random(max = 1) {
+    return interop.random(max);
+}
 
 function start(app) { interop.start(app) }
 

@@ -5,18 +5,21 @@ using System.Threading;
 namespace VM.OS.Network
 {
     using CefNet.WinApi;
+    using Microsoft.ClearScript.JavaScript;
     using Newtonsoft.Json;
+    using Newtonsoft.Json.Linq;
     using System;
     using System.Buffers.Text;
     using System.IO;
     using System.Net;
+    using System.Net.Security;
     using System.Threading.Tasks;
     using System.Windows;
     using System.Windows.Markup;
     using System.Windows.Shapes;
     using VM.GUI;
     using VM.OS.Network.Server;
-
+    using static Server.Server;
     public class NetworkConfiguration
     {
         private TcpClient client;
@@ -70,32 +73,44 @@ namespace VM.OS.Network
                 }
             });
         }
+        public static bool IsValidJson(string jsonString)
+        {
+            try
+            {
+                JToken.Parse(jsonString);
+                return true;
+            }
+            catch (JsonReaderException)
+            {
+                return false;
+            }
+        }
         public void ReceiveMessages()
         {
             try
             {
                 while (IsConnected())
                 {
-                    byte[] header = new byte[4]; // Assuming a 4-byte header size
+                    var packet = RecieveMessage(stream, client, false);
+                    int messageLength = packet.Metadata.Value<int>("size");
+                    int sender_ch = packet.Metadata.Value<int>("ch");
+                    int reciever_ch = packet.Metadata.Value<int>("reply");
+                    string dataString = packet.Metadata.Value<string>("data");
+                    var path = packet.Metadata.Value<string>("path");
 
-                    // Read the message length
-                    if (stream?.Read(header, 0, 4) <= 0)
-                        break;
-
-                    int messageLength = BitConverter.ToInt32(header, 0);
-
-                    // Read the message content
-                    byte[] dataBytes = new byte[messageLength];
-                    
-                    if (stream?.Read(dataBytes, 0, messageLength) <= 0)
-                        break;
-
-
-                    OnMessageRecieved?.Invoke(dataBytes);
+                    if (path is null)
+                    {
+                        Runtime.Broadcast(sender_ch, reciever_ch, packet.Data);
+                    }
+                    else
+                    {
+                        Runtime.Broadcast(sender_ch, reciever_ch, packet.Metadata);
+                    }
                 }
             }
             catch (Exception e)
             {
+                Notifications.Now(e.Message);
             }
             finally
             {
@@ -104,24 +119,11 @@ namespace VM.OS.Network
                 client?.Close();
             }
         }
-        private string PopulateJsonTemplate(int dataSize, byte[] data, TransmissionType type, int ch, int reply, bool isDir = false)
-        {
-            var json = new
-            {
-                size = dataSize,
-                data = Convert.ToBase64String(data),
-                type = type.ToString(),
-                ch = ch,
-                reply = reply,
-                isDir = isDir
-            };
-
-            return JsonConvert.SerializeObject(json);
-        }
+        
       
         internal void OnSendMessage(byte[] dataBytes, TransmissionType type, int ch, int reply, bool isDir = false)
         {
-            var metadata = PopulateJsonTemplate(dataBytes.Length, dataBytes, type, ch, reply, isDir);
+            var metadata = Server.Server.ToJson(dataBytes.Length, dataBytes, type, ch, reply, isDir);
 
             byte[] metadataBytes = Encoding.UTF8.GetBytes(metadata);
             byte[] lengthBytes = BitConverter.GetBytes(metadataBytes.Length);

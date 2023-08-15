@@ -8,6 +8,7 @@ using System.Linq;
 using System.Reflection;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
+using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
@@ -26,6 +27,39 @@ namespace VM.OS.JS
         public Action<string, object?>? OnModuleExported;
         public Func<string, object?>? OnModuleImported;
         public Action<int>? OnComputerExit;
+
+        public string? read()
+        {
+            CommandPrompt cmd = null;
+            cmd = Runtime.SearchForOpenWindowType<CommandPrompt>(computer);
+            var waiting = true;
+            string result = "";
+            if (cmd is null)
+            {
+                Notifications.Now("No console was open, so reading is impossible");
+                return null;
+            }
+            cmd.Dispatcher.Invoke(() => {
+
+                cmd.OnSend += end;
+                void end(string output)
+                {
+                    result = output;
+                    waiting = false;
+                }
+                while (waiting)
+                {
+                    Thread.Sleep(1);
+                }
+            });
+            return result;
+
+           
+        }
+        public double random(double max)
+        {
+            return System.Random.Shared.NextDouble() * max;
+        }
         public static void forEach<T>(IEnumerable<object> source, Action<T> action)
         {
             try
@@ -104,11 +138,7 @@ namespace VM.OS.JS
 
                     var commandPrompt = Runtime.SearchForOpenWindowType<CommandPrompt>(computer);
 
-                    if (commandPrompt == default)
-                    {
-                        Notifications.Now(message?.ToString() ?? "Invalid Print.");
-                        return;
-                    }
+                    Notifications.Now(message?.ToString() ?? "Invalid Print.");
 
                     commandPrompt.output.AppendText($"\n {message}");
                 });

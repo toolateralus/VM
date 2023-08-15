@@ -164,10 +164,10 @@ namespace VM.GUI
             onWindowStateChanged?.Invoke(WindowState.Minimized);
         }
 
-        public static Dictionary<int, Stack<(object? val, int replyCh)>> NetworkEvents = new();
+        public static Dictionary<int, Queue<(object? val, int replyCh)>> NetworkEvents = new();
         public static async Task<(object? value, int reply)> PullEvent(int channel, Computer computer, int timeout = 50000, [CallerMemberName] string callerName = "unknown")
         {
-            Stack<(object? val, int replyCh)> stack;
+            Queue<(object? val, int replyCh)> stack;
             var timeoutTask = Task.Delay(timeout);
 
             while (!NetworkEvents.TryGetValue(channel, out stack) && !computer.Disposing && computer.Network.IsConnected())
@@ -181,7 +181,7 @@ namespace VM.GUI
                 }
             }
 
-            var val = stack?.Pop();
+            var val = stack?.Dequeue();
 
             if (stack?.Count == 0)
                 NetworkEvents.Remove(channel);
@@ -195,7 +195,7 @@ namespace VM.GUI
                 NetworkEvents.Add(outCh, new());
             }
 
-            NetworkEvents[outCh].Push((msg, inCh)); 
+            NetworkEvents[outCh].Enqueue((msg, inCh)); 
         }
         internal static string GetResourcePath(string name)
         {
@@ -242,7 +242,7 @@ namespace VM.GUI
         }
         public static T SearchForOpenWindowType<T>(Computer Computer)
         {
-            var wnd = Runtime.GetWindow(Computer);
+            var wnd = GetWindow(Computer);
 
             foreach (var window in wnd.USER_WINDOW_INSTANCES)
                     if (window.Value is UserWindow userWindow && userWindow.Content is Grid g)

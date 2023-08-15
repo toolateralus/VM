@@ -18,11 +18,16 @@ namespace VM.GUI
         private string tempInput = ""; 
         public Computer computer;
         public static string? DesktopIcon => Runtime.GetResourcePath("commandprompt.png");
+
+        public Action<string> OnSend { get; internal set; }
+
         public CommandPrompt()
         {
             InitializeComponent();
             PreviewKeyDown += CommandPrompt_PreviewKeyDown;
             DrawTextBox("type 'help' for commands, \nor enter any valid single-line java script to interact with the environment. \nby default, results of expressions get printed to this console.");
+            input.Focus();
+            
         }
         public void DrawTextBox(string content)
         {
@@ -88,6 +93,8 @@ namespace VM.GUI
         {
             if (e.Key == System.Windows.Input.Key.Enter || e.Key == System.Windows.Input.Key.F5)
             {
+                OnSend?.Invoke(input.Text);
+                output.ScrollToLine(output.Text.Length);
                 await ExecuteJavaScript();
                 e.Handled = true;
                 input.Clear();

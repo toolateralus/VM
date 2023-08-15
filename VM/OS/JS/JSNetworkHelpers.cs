@@ -1,4 +1,5 @@
-﻿using Newtonsoft.Json.Linq;
+﻿using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 using System;
 using System.IO;
 using System.Linq;
@@ -23,36 +24,6 @@ namespace VM.OS.JS
         public JSNetworkHelpers(Computer computer, Action<byte[], TransmissionType, int, int, bool> OutStream)
         {
             OnSent = OutStream;
-            computer.Network.OnMessageRecieved += (bytes) =>
-            {
-                string JsonString = Encoding.UTF8.GetString(bytes);
-                var metadata = JObject.Parse(JsonString);
-
-                int messageLength = metadata.Value<int>("size");
-                int sender_ch = metadata.Value<int>("ch");
-                int reciever_ch = metadata.Value<int>("reply");
-                string dataString = metadata.Value<string>("data") ?? "Data not found! something has gone wrong with the client's json construction";
-
-                var path = metadata.Value<string>("path");
-
-                if (path == null)
-                {
-                    var dataBytes = Convert.FromBase64String(dataString);
-                    var bytesLength = dataBytes.Length;
-
-                    Runtime.Broadcast(sender_ch, reciever_ch, dataBytes);
-                }
-                else
-                {
-                    // file recieve, so we actually just send the entire json object.
-                    Runtime.Broadcast(sender_ch, reciever_ch, metadata);
-                }
-
-
-
-
-
-            };
             Computer = computer;
         }
         
@@ -158,16 +129,15 @@ namespace VM.OS.JS
             OnSent?.Invoke(Encoding.UTF8.GetBytes("GET_DOWNLOADS"), TransmissionType.Request, -1, NetworkConfiguration.REQUEST_RESPONSE_CHANNEL, false);
             var response = await Runtime.PullEvent(NetworkConfiguration.REQUEST_RESPONSE_CHANNEL, Computer);
             var stringResponse = Encoding.UTF8.GetString(response.value as byte[] ?? Encoding.UTF8.GetBytes("No data found"));
+            Notifications.Now(stringResponse);
             return;
         }
         public async void download(string path)
         {
             await DownloadAsync(path);
         }
-
         private async Task<object?> DownloadAsync(string path)
         {
-            OnSent?.Invoke(Encoding.UTF8.GetBytes(path), TransmissionType.Download, 0, NetworkConfiguration.DOWNLOAD_RESPONSE_CHANNEL, false);
 
             Notifications.Now($"Downloading {path}..");
 
@@ -178,17 +148,28 @@ namespace VM.OS.JS
                 Directory.CreateDirectory(root);
             }
 
+            OnSent?.Invoke(Encoding.UTF8.GetBytes(path), TransmissionType.Download, 0, NetworkConfiguration.DOWNLOAD_RESPONSE_CHANNEL, false);
+
             while (true)
             {
-                (object? value, int reply) = await Runtime.PullEvent(NetworkConfiguration.DOWNLOAD_RESPONSE_CHANNEL, Computer);
+                (object? value, int reply) = await Runtime.PullEvent(Server.DOWNLOAD_REPLY_CHANNEL, Computer);
                 string pathString = null;
 
                 if (value is not JObject metadata)
                 {
-                    if (value is byte[] bytes && Encoding.UTF8.GetString(bytes) == "END_DOWNLOAD")
+                    if (value is byte[] bytes && Encoding.UTF8.GetString(bytes) is string dataStr)
                     {
-                        Notifications.Now($"Download complete for {path}");
-                        return null;
+                        switch (dataStr)
+                        {
+                            case "END_DOWNLOAD":
+                                Notifications.Now($"Download complete for {path}");
+                                return null;
+
+                            case "FAILED_DOWNLOAD":
+                                Notifications.Now($"Download failed for {path}");
+                                return null;
+                        }
+                       
                     }
 
                     Notifications.Now($"Invalid data gotten from server for {path}");
@@ -229,7 +210,6 @@ namespace VM.OS.JS
             Notifications.Now($"{{{Server.FormatBytes(size)}}} {path} installed.");
             return null;
         }
-
         public bool IsConnected => Computer.Network.IsConnected();
         public void send(params object?[]? parameters)
         {

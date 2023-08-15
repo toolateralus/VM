@@ -71,7 +71,7 @@ namespace VM.OS.Network.Server
 
             SERVER.Start();
 
-            Server networkConfig = new Server(CLIENTS);
+            Server networkConfig = new Server();
 
             while (true)
             {
@@ -92,13 +92,13 @@ namespace VM.OS.Network.Server
         public JObject Metadata;
         public byte[] Data = Array.Empty<byte>();
         public TcpClient Client = default!;
-        public NetworkStream stream = default!;
+        public NetworkStream Stream = default!;
         public Packet(JObject header, byte[] message, TcpClient client, NetworkStream stream)
         {
             this.Metadata = header;
             this.Data = message;
             this.Client = client;
-            this.stream = stream;
+            this.Stream = stream;
         }
     }
     public enum TransmissionType
@@ -112,20 +112,15 @@ namespace VM.OS.Network.Server
 
     public class Server
     {
-        private const int REQUEST_REPLY_CHANNEL = 6996;
-        const int DOWNLOAD_REPLY_CHANNEL = 6997;
-        public Dictionary<byte[], Func<Packet, Task<Packet>>> ServerTasks = new();
-        string UPLOAD_DIR = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData) + "\\VM_SERVER_DATA";
-        public Dictionary<string, TcpClient> IncomingFileTransfersPending = new();
-        public List<string> AvailableForDownload = new();
-        public List<TcpClient> Clients;
+        public const int REQUEST_REPLY_CHANNEL = 6996;
+        public const int DOWNLOAD_REPLY_CHANNEL = 6997;
+        private Dictionary<byte[], Func<Packet, Task<Packet>>> ServerTasks = new();
+        private string UPLOAD_DIR = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData) + "\\VM_SERVER_DATA";
+        private Dictionary<string, TcpClient> IncomingFileTransfersPending = new();
+        private List<string> AvailableForDownload = new();
 
-        public List<TcpClient> FileWaiters { get; private set; } = new();
-
-        public Server(List<TcpClient> cLIENTS)
+        public Server()
         {
-            this.Clients = cLIENTS;
-
             if (!Directory.Exists(UPLOAD_DIR))
                 Directory.CreateDirectory(UPLOAD_DIR);
 
@@ -135,8 +130,9 @@ namespace VM.OS.Network.Server
             }
 
         }
-        public Packet RecieveMessage(NetworkStream stream, TcpClient client)
+        public static Packet RecieveMessage(NetworkStream stream, TcpClient client, bool isServer)
         {
+            string ID() => !isServer ? "client" : "server";
 
             // this header will indicate the size of the actual metadata
             byte[] header = new byte[4];
@@ -153,13 +149,12 @@ namespace VM.OS.Network.Server
             if (stream.Read(metaData, 0, metadataLength) <= 0)
                 return default;
 
-            var metadata = ParseMetadata(metaData);
+            var metadata = Server.ParseMetadata(metaData);
 
             // length of the data message, we don't use this now, but for doing fragmented transfers for larger files,
             // we'd want to know the full length of the incoming data for reconstruction.
             // we can decide on a fixed buffer length for an incoming file transfer and fragment it accordingly on client side.
             int messageLength = metadata.Value<int>("size");
-
 
             // sender channel
             int sender_ch = metadata.Value<int>("ch");
@@ -167,27 +162,19 @@ namespace VM.OS.Network.Server
             int reciever_ch = metadata.Value<int>("reply");
 
             // Base64 string represnetation of data
-            string dataString = metadata.Value<string>("data") ?? "Server:Data not found! something has gone wrong with the client's json construction";
-
+            string dataString = metadata.Value<string>("data") ?? $"{ID()} : Data not found! something has gone wrong with the other's json construction";
 
             // byte representation of data, original.
             var dataBytes = Convert.FromBase64String(dataString);
 
             // sizeof data.
             var bytesLength = dataBytes.Length;
-
-            if (bytesLength <= 1000)
-            {
-                Notifications.Now($"SERVER:Received from client {client.GetHashCode()}: {sender_ch} to {reciever_ch} \"{dataString}\"");
-            }
-            else
-            {
-                Notifications.Now($"SERVER:Received {FormatBytes(bytesLength)} client {{{client.GetHashCode()}: {{{sender_ch}->{reciever_ch}}}}}");
-            }
+            
+            Notifications.Now($"{ID()} Received {FormatBytes(bytesLength)} from {client.GetHashCode()}: CH {{{sender_ch}}} -->> CH{{{reciever_ch}}}");
 
             return new(metadata, dataBytes, client, stream);
         }
-        private JObject ParseMetadata(byte[] metaData)
+        public static JObject ParseMetadata(byte[] metaData)
         {
             try
             {
@@ -213,7 +200,7 @@ namespace VM.OS.Network.Server
             {
                 while (true)
                 {
-                    Packet packet = RecieveMessage(stream, client);
+                    Packet packet = RecieveMessage(stream, client, true);
                     await TryHandleMessages(packet, connectedClients);
                 }
             }
@@ -237,10 +224,10 @@ namespace VM.OS.Network.Server
                 switch (transmissionType)
                 {
                     case TransmissionType.Path:
-                        HandlePathTransmission(packet);
+                        HandleIncomingPathTransmission(packet);
                         break;
                     case TransmissionType.Data:
-                        HandleDataTransmission(packet);
+                        HandleIncomingDataTransmission(packet);
                         break;
                     case TransmissionType.Message:
                         await HandleMessageTransmission(packet, clients);
@@ -254,24 +241,19 @@ namespace VM.OS.Network.Server
                 }
             }
         }
-
         private async Task HandleDownloadRequest(Packet packet)
         {
             var file = Encoding.UTF8.GetString(packet.Data);
             if (AvailableForDownload.Contains(file))
             {
                 await SendDataRecusive(file);
-                
-                // message signaling the end of the download.
-                var message = Encoding.UTF8.GetBytes("END_DOWNLOAD");
-                var length = message.Length;
-                JObject endPacket = JObject.Parse(PopulateJsonTemplate(length, message, TransmissionType.Download, DOWNLOAD_REPLY_CHANNEL, -1));
-                await SendJsonToClient(packet.Client, endPacket);
+                await SendDownloadMessage(packet, "END_DOWNLOAD");
             }
 
             async Task SendDataRecusive(string file)
             {
                 string path = file;
+                
                 if (!file.Contains(UPLOAD_DIR))
                     path = UPLOAD_DIR + "\\" + file;
 
@@ -281,7 +263,7 @@ namespace VM.OS.Network.Server
                 {
                     var fileName = Encoding.UTF8.GetBytes(file);
                     var fileContents = File.ReadAllBytes(path);
-                    var metadata = PopulateJsonTemplate(fileContents.Length, fileContents, TransmissionType.Download, DOWNLOAD_REPLY_CHANNEL, -1, false, fileName);
+                    var metadata = ToJson(fileContents.Length, fileContents, TransmissionType.Download, DOWNLOAD_REPLY_CHANNEL, -1, false, fileName);
                     await SendJsonToClient(packet.Client, JObject.Parse(metadata));
                 }
                 else if (Directory.Exists(path))
@@ -293,18 +275,28 @@ namespace VM.OS.Network.Server
                         await SendDataRecusive(entry);
                     }
                 }
+                else
+                {
+                    await SendDownloadMessage(packet, "FAILED_DOWNLOAD");
+                }
 
             }
         }
-
-        private async Task HandleMessageTransmission(Packet packet, List<TcpClient> clients)
+        private static async Task SendDownloadMessage(Packet packet, string Message)
+        {
+            // message signaling the end of the download.
+            var message = Encoding.UTF8.GetBytes(Message);
+            var length = message.Length;
+            JObject endPacket = JObject.Parse(ToJson(length, message, TransmissionType.Download, DOWNLOAD_REPLY_CHANNEL, -1));
+            await SendJsonToClient(packet.Client, endPacket);
+        }
+        private static async Task HandleMessageTransmission(Packet packet, List<TcpClient> clients)
         {
             var bytes = Convert.FromBase64String(packet.Metadata.Value<string>("data"));
-            var responseMetadata = JObject.Parse(PopulateJsonTemplate(bytes.Length, bytes, TransmissionType.Message, packet.Metadata.Value<int>("reply"), -1, false));
+            var responseMetadata = JObject.Parse(ToJson(bytes.Length, bytes, TransmissionType.Message, packet.Metadata.Value<int>("reply"), -1, false));
             await BroadcastMessage(clients, packet.Client, responseMetadata);
         }
-
-        private void HandleDataTransmission(Packet packet)
+        private void HandleIncomingDataTransmission(Packet packet)
         {
             string toRemove = "";
             foreach (var item in IncomingFileTransfersPending)
@@ -334,8 +326,7 @@ namespace VM.OS.Network.Server
                 IncomingFileTransfersPending.Remove(toRemove);
             }
         }
-
-        private void HandlePathTransmission(Packet packet)
+        private void HandleIncomingPathTransmission(Packet packet)
         {
             if (Encoding.UTF8.GetString(packet.Data) is string Path)
             {
@@ -350,8 +341,7 @@ namespace VM.OS.Network.Server
                 }
             }
         }
-
-        private string PopulateJsonTemplate(int dataSize, byte[] data, TransmissionType type, int ch, int reply, bool isDir = false, byte[] path = null)
+        public static string ToJson(int dataSize, byte[] data, TransmissionType type, int ch, int reply, bool isDir = false, byte[] path = null)
         {
             var json = new
             {
@@ -376,12 +366,13 @@ namespace VM.OS.Network.Server
                     var names = string.Join(",\n", AvailableForDownload);
                     var bytes = Encoding.UTF8.GetBytes(names);
 
-                    JObject metadata = JObject.Parse(PopulateJsonTemplate(bytes.Length, bytes, TransmissionType.Request, REQUEST_REPLY_CHANNEL, -1, false));
+                    JObject metadata = JObject.Parse(ToJson(bytes.Length, bytes, TransmissionType.Request, REQUEST_REPLY_CHANNEL, -1, false));
                     await SendJsonToClient(packet.Client, metadata);
 
                     Notifications.Now($"SERVER:Responding with {names}");
                     break;
                 default:
+                    Notifications.Now($"SERVER:Client made unrecognized request for : {requestType}");
                     break;
             }
 
@@ -396,7 +387,7 @@ namespace VM.OS.Network.Server
             int i = Convert.ToInt32(Math.Floor(Math.Log(bytes) / Math.Log(k)));
             return string.Format("{0:F" + decimals + "} {1}", bytes / Math.Pow(k, i), units[i]);
         }
-        private async Task BroadcastMessage(List<TcpClient> connectedClients, TcpClient client, JObject header)
+        private static async Task BroadcastMessage(List<TcpClient> connectedClients, TcpClient client, JObject header)
         {
             foreach (TcpClient connectedClient in connectedClients)
                 if (connectedClient != client)
