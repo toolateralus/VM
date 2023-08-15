@@ -570,6 +570,8 @@ namespace VM.OS.JS
         {
             var bytesPerPixel = 4;
             var pixelCount = colorData.Count / bytesPerPixel;
+            if (pixelCount <= 1)
+                return;
 
             var width = (int)Math.Sqrt(pixelCount);
             var height = pixelCount / width;
