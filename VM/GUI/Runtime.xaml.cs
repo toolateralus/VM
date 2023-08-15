@@ -263,27 +263,21 @@ namespace VM.GUI
         {
             var wnd = GetWindow(Computer);
 
-            T output = default!;
-
-            wnd?.Dispatcher?.Invoke(() =>
-            {
-
-                foreach (var window in wnd.USER_WINDOW_INSTANCES)
-                    if (window.Value is UserWindow userWindow && userWindow.Content is Grid g)
+            foreach (var window in wnd.USER_WINDOW_INSTANCES)
+                if (window.Value is UserWindow userWindow && userWindow.Content is Grid g)
+                {
+                    foreach (var item in g.Children)
                     {
-                        foreach (var item in g.Children)
+                        if (item is Frame frame)
                         {
-                            if (item is Frame frame)
+                            if (frame.Content is T ActualApplication)
                             {
-                                if (frame.Content is T ActualApplication)
-                                {
-                                    output = ActualApplication;
-                                }
+                                return ActualApplication;
                             }
                         }
-
                     }
-            });
+
+                }
             return default;
 
         }

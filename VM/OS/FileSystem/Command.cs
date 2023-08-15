@@ -306,7 +306,7 @@ namespace VM.OS.FS
         }
         private void Clear(object[]? obj)
         {
-            Runtime.SearchForOpenWindowType<CommandPrompt>(Computer)?.output?.Clear();
+            Runtime.GetWindow(Computer)?.Dispatcher?.Invoke(() => { Runtime.SearchForOpenWindowType<CommandPrompt>(Computer)?.output?.Clear(); });
         }
         private void Copy(object[]? obj)
         {
