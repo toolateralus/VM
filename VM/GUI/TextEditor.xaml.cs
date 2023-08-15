@@ -184,7 +184,11 @@ namespace VM.GUI
                     File.WriteAllText(LoadedFile, input.Text);
                 }
             }
-             File.WriteAllText(LoadedFile, input.Text);
+
+            if (string.IsNullOrEmpty(LoadedFile))
+                return;
+
+            File.WriteAllText(LoadedFile, input.Text);
         }
         private async void RunButton_Click(object sender, RoutedEventArgs e)
         {
