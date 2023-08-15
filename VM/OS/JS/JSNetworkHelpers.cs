@@ -164,7 +164,7 @@ namespace VM.OS.JS
                         switch (dataStr)
                         {
                             case "END_DOWNLOAD":
-                                Notifications.Now($"{{{Server.FormatBytes(size)}}} downloads\\{path} downloaded.. use the 'install' command with argument {path} to install to the desktop.");
+                                Notifications.Now($"{{{Server.FormatBytes(size)}}} downloads\\{path} downloaded.. run  the <install '{path}' to install it.");
                                 return;
                             case "FAILED_DOWNLOAD":
                                 Notifications.Now($"Download failed for {path}");

@@ -184,13 +184,21 @@ namespace VM.GUI
             desktopBackground.Source = LoadImage(Runtime.GetResourcePath("Background.png") ?? "background.png");
             KeyDown += Computer_KeyDown;
             computer = pc;
-            Closing += (s, eA)
-            =>
+            Closing += async (s, eA) =>
             {
                 foreach (var item in USER_WINDOW_INSTANCES)
                 {
                     item.Value.Close();
                 }
+
+
+
+                Dispatcher.BeginInvokeShutdown(System.Windows.Threading.DispatcherPriority.Normal);
+                while (!Dispatcher.HasShutdownFinished)
+                {
+                    await Task.Delay(1);
+                }
+
             };
         }
         private void Computer_KeyDown(object sender, System.Windows.Input.KeyEventArgs e)
@@ -394,6 +402,7 @@ namespace VM.GUI
         }
         public async Task OpenCustom(string type)
         {
+
             var data = Runtime.GetAppDefinition(computer, type);
 
             var control = XamlJsInterop.ParseUserControl(data.XAML);
@@ -406,7 +415,7 @@ namespace VM.GUI
 
             JavaScriptEngine engine = new(computer);
 
-            var jsResult = await HandleJS(type, data, engine);
+            var jsResult = await InstantiateWindowClass(type, data, engine);
 
             var wnd = Runtime.GetWindow(pc: computer);
             
@@ -415,19 +424,9 @@ namespace VM.GUI
             await engine.Execute(jsResult.code);
 
         }
-        private async Task<(string id, string code)> HandleJS(string type, (string XAML, string JS) data, JavaScriptEngine engine)
+        private static async Task<(string id, string code)> InstantiateWindowClass(string type, (string XAML, string JS) data, JavaScriptEngine engine)
         {
             var name = type.Split('.')[0];
-            int id = 0;
-
-            if (JS_WPF_APP_INSTANCES.TryGetValue(type, out id))
-            {
-                JS_WPF_APP_INSTANCES[type]++;
-            }
-            else
-            {
-                JS_WPF_APP_INSTANCES.Add(type, 1);
-            }
 
             var JS = new string(data.JS);
 
@@ -437,14 +436,11 @@ namespace VM.GUI
 
             string instantiation_code = $"let {instance_name} = new {name}('{instance_name}')";
 
-
-
             return (instance_name, instantiation_code);
         }
         public void InstallWPF(string type)
         {
-            Dispatcher.Invoke(delegate
-            {
+            Dispatcher.Invoke(() => { 
                 CustomApps.Add(type);
 
                 var btn = GetDesktopIconButton(type);
@@ -458,13 +454,12 @@ namespace VM.GUI
 
                 DesktopIconPanel.Children.Add(btn);
                 DesktopIconPanel.UpdateLayout();
-
-            });
             
+            });
         }
         internal void InstallJSHTML(string type)
         {
-            Dispatcher.Invoke(delegate
+            Dispatcher.Invoke(() =>
             {
                 CustomApps.Add(type);
 
@@ -477,7 +472,7 @@ namespace VM.GUI
                     var app = new UserWebApplet();
 
                     // we add the appropriate extension within navigate.
-                    app.Path = (type.Replace(".web", ""));
+                    app.Path = type.Replace(".web", "");
                     OpenApp(app);
                 }
 
@@ -488,9 +483,10 @@ namespace VM.GUI
         }
         internal void Uninstall(string name)
         {
-            CustomApps.Remove(name);
+            Dispatcher.Invoke(() =>
+            {
+                CustomApps.Remove(name);
 
-            Dispatcher.Invoke(() => { 
                 System.Collections.IList list = DesktopIconPanel.Children;
 
                 for (int i = 0; i < list.Count; i++)

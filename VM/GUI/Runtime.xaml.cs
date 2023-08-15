@@ -43,8 +43,11 @@ namespace VM.GUI
             IDBox.Text = "0";
 
             StartPerpetualColorAnimation();
+
+
             TryStartPC();
             Close();
+
         }
 
         public const string COMPUTER = "computer";
@@ -83,12 +86,16 @@ namespace VM.GUI
             if (pc.Key != null && pc.Value != null)
             {
                 var computer = pc.Key;
-                computer.Exit(0);
+                Computers.Remove(computer);
+                Thread.Sleep(250);
 
+                computer.Exit(0);
                 var window = pc.Value;
+
+                Thread.Sleep(250);
                 window.Close();
 
-                Computers.Remove(computer);
+                Thread.Sleep(250);
                 InstantiateComputer(id);
             }
         }
@@ -129,17 +136,10 @@ namespace VM.GUI
         {
             
         }
-
-
-        public static ComputerWindow GetWindow(Computer pc)
+        public static ComputerWindow? GetWindow(Computer pc)
         {
-            if (Computers.TryGetValue(pc, out var val))
-            {
-                return val;
-            }
-
-            Notifications.Now("Window not found");
-            return null;
+            Computers.TryGetValue(pc, out var val);
+            return val!;
         }
         private void NewComputerButton(object sender, RoutedEventArgs e)
         {
@@ -182,7 +182,7 @@ namespace VM.GUI
         public static Dictionary<int, Queue<(object? val, int replyCh)>> NetworkEvents = new();
         public static async Task<(object? value, int reply)> PullEvent(int channel, Computer computer, int timeout = 50000, [CallerMemberName] string callerName = "unknown")
         {
-            Queue<(object? val, int replyCh)>? stack;
+            Queue<(object? val, int replyCh)> stack;
             var timeoutTask = Task.Delay(timeout);
 
             while (!NetworkEvents.TryGetValue(channel, out stack) && !computer.Disposing && computer.Network.IsConnected())
@@ -222,7 +222,7 @@ namespace VM.GUI
             {
                 string[] entries = Directory.GetFileSystemEntries(path, name, SearchOption.AllDirectories);
 
-                return entries?.FirstOrDefault()!;
+                return entries.FirstOrDefault();
             }
 
             return "";
@@ -256,13 +256,13 @@ namespace VM.GUI
                     Notifications.Now("Matching XAML and XAML.js files not found.");
                 }
             }
+
             return ("Not found!", "Not Found!");
         }
         public static T SearchForOpenWindowType<T>(Computer Computer)
         {
             var wnd = GetWindow(Computer);
             
-
             foreach (var window in wnd.USER_WINDOW_INSTANCES)
                     if (window.Value is UserWindow userWindow && userWindow.Content is Grid g)
                     {
@@ -278,7 +278,7 @@ namespace VM.GUI
                         }
 
                     }
-            return default!;
+            return default;
 
         }
 
