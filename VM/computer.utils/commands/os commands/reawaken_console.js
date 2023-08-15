@@ -1,0 +1,3 @@
+{
+    interop.reawaken_console();
+}

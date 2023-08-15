@@ -1,24 +1,17 @@
-// COMMON OS ALIASES
-alias("-install", "install.js")
-alias("-uninstall", "uninstall.js")
+// Operating System Commands 
+alias("install", "install.js")
+alias("uninstall", "uninstall.js")
 alias("exit", "exitcmd.js")
 
-
-// NETWORK ALIASES
+// Network Commands
 alias("connect", "connect.js")
-alias("send", "sendfile.js")
-alias("get", "sendfile.js")
+alias("disconnect", "disconnect.js")
+
 alias('upload', 'upload.js');
+alias('download', 'download.js')
+alias('fetch', 'fetch.js')
 
-
-install("example.app")
-install("graphicTest.app")
-install("transfer.app")
-install("test.web")
-install("webapp.web")
-install("networkInterface.app")
-
-/*
-call('config set DEFAULT_SERVER_IP 192.168.0.141')
-call('config set ALWAYS_CONNECT true')
-*/
+// Install Default Apps.
+install("imageviewer.app")
+install("webConsole.web")
+install('graphicTest.app');

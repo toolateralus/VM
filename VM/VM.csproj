@@ -29,4 +29,10 @@
     <Folder Include="computer.utils\scripts\8ball.js\" />
   </ItemGroup>
 
+  <ItemGroup>
+    <None Include="computer.utils\downloads\.git\COMMIT_EDITMSG" />
+    <None Include="computer.utils\downloads\.git\config" />
+    <None Include="computer.utils\downloads\.git\description" />
+  </ItemGroup>
+
 </Project>
