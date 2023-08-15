@@ -1,10 +1,10 @@
 {
   "BACKGROUND": "Background.png",
   "NAME": "Your Computer",
-  "FONT": "Consolas",
+  "FONT": "Consolas MS",
   "IP_ADDRESS": "0.01",
   "DEFAULT_SERVER_IP": "192.168.0.138",
-  "ALWAYS_CONNECT" : false,
+  "ALWAYS_CONNECT": true,
   "OPEN_PORTS": [
     "0000",
     "8080"

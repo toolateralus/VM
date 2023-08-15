@@ -1,8 +1,8 @@
 // -- user -- name this class the (case sensitive) same as the name of the xaml file and this file. for generated code purposes.
 class graphicTest {
     frames = 0;
-    speed = 2;
-    width = 32;
+    speed = 250;
+    width = 256;
     bytesPerPixel = 4;
     data = [];
     newWidth = this.width;

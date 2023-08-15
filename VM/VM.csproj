@@ -25,4 +25,8 @@
     <Page Include="App.xaml" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Folder Include="computer.utils\scripts\8ball.js\" />
+  </ItemGroup>
+
 </Project>
