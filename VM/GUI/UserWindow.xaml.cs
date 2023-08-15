@@ -30,7 +30,7 @@ namespace VM.GUI
         }
 
 
-        internal void Destroy()
+        internal void Close()
         {
 
             if (Owner is not null && Owner.Parent is Canvas canvas)
@@ -43,7 +43,7 @@ namespace VM.GUI
 
         private void CloseWindow(object sender, RoutedEventArgs e)
         {
-            Destroy();
+            Close();
         }
 
         public void ToggleVisibility(object sender, RoutedEventArgs e)

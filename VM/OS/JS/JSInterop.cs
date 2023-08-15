@@ -15,6 +15,7 @@ using System.Windows.Controls;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using VM.GUI;
+using VM.OS.Network;
 using static System.Windows.Forms.VisualStyles.VisualStyleElement.TrayNotify;
 
 
@@ -27,6 +28,49 @@ namespace VM.OS.JS
         public Action<string, object?>? OnModuleExported;
         public Func<string, object?>? OnModuleImported;
         public Action<int>? OnComputerExit;
+
+
+        public object getentries(string path)
+        {
+            if (File.Exists(path))
+                return path;
+
+            if (!Directory.Exists(path))
+            {
+                return "";
+            }
+
+            return Directory.GetFileSystemEntries(path);
+        }
+
+        public void disconnect()
+        {
+            computer.Network.StopClient();
+            Notifications.Now($"Disconnected from {NetworkConfiguration.LAST_KNOWN_SERVER_IP}::{NetworkConfiguration.LAST_KNOWN_SERVER_PORT}");
+        }
+
+        public void reawaken_console()
+        {
+            CommandPrompt cmd = null;
+
+            cmd = Runtime.SearchForOpenWindowType<CommandPrompt>(computer);
+
+            Runtime.GetWindow(computer)?.Dispatcher?.Invoke(() => { 
+
+                var history = CommandPrompt.LastUploaded;
+
+                if (cmd is null)
+                {
+                    Notifications.Now("No console was open, so reading is impossible");
+                    return;
+                }
+         
+                cmd.Dispatcher.Invoke(() => {
+                    cmd.output.Text = history;
+                });
+
+            });
+        }
 
         public string? read()
         {
@@ -112,10 +156,12 @@ namespace VM.OS.JS
             return Convert.ToBase64String(bytes.ToArray());
         }
 
-        public bool call(string message)
+        public async void call(string message)
         {
-            return computer.OS.CommandLine.TryCommand(message);
+            if (!computer.OS.CommandLine.TryCommand(message))
+                await computer.OS.JavaScriptEngine.Execute(message);
         }
+
         public bool start(string path)
         {
             var window = Runtime.GetWindow(computer);
@@ -135,12 +181,7 @@ namespace VM.OS.JS
                 Runtime.GetWindow(computer)?.Dispatcher.Invoke(() =>
                 {
                     Debug.WriteLine(message);
-
-                    var commandPrompt = Runtime.SearchForOpenWindowType<CommandPrompt>(computer);
-
                     Notifications.Now(message?.ToString() ?? "Invalid Print.");
-
-                    commandPrompt.output.AppendText($"\n {message}");
                 });
             }
             catch(Exception e)
@@ -180,6 +221,13 @@ namespace VM.OS.JS
         public async void install(string dir)
         {
             ComputerWindow window = Runtime.GetWindow(computer);
+
+            if (window == null)
+            {
+                Notifications.Now("Window was null during install, something's gone wrong.");
+                return;
+            }
+
 
             // js/html app
             if (dir.Contains(".web"))
@@ -225,6 +273,11 @@ namespace VM.OS.JS
         /// <param name="data"></param>
         /// <returns></returns>
         
+        public async void sleep(int ms)
+        {
+            await Task.Delay(ms);
+        }
+
         public object? require(string path)
         {
             return OnModuleImported?.Invoke(path);

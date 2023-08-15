@@ -6,13 +6,13 @@
              xmlns:avalonEdit="http://icsharpcode.net/sharpdevelop/avalonedit"
              mc:Ignorable="d" 
              d:DesignHeight="450" d:DesignWidth="800" Background="Black" BorderBrush="White" BorderThickness="5">
-    <Grid>
+    <Grid MouseDown="Grid_MouseDown" >
         <Grid.RowDefinitions>
             <RowDefinition Height="*"/>
             <RowDefinition Height="auto"/>
         </Grid.RowDefinitions>
             
-        <avalonEdit:TextEditor IsReadOnly="true" BorderBrush="White" BorderThickness="1" Grid.Row="0" Background="Black" Foreground="White" SyntaxHighlighting="JavaScriptCustom" FontSize="16" x:Name="output"  FontFamily="MS Gothic Bold" Height="Auto" Width="Auto" HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Auto"/>
-        <avalonEdit:TextEditor BorderBrush="White" BorderThickness="1" Grid.Row="1" Background="Black" Foreground="White" SyntaxHighlighting="JavaScriptCustom" FontSize="16" x:Name="input" IsReadOnly="false"  FontFamily="MS Gothic Bold" Height="Auto" Width="Auto" HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Auto"/>
+        <avalonEdit:TextEditor IsReadOnly="true" BorderBrush="White" BorderThickness="1" Grid.Row="0" Background="Black" Foreground="White" SyntaxHighlighting="JavaScriptCustom" FontSize="16" x:Name="output"  FontFamily="MS Gothic Bold" Height="Auto" Width="Auto" HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Auto" WordWrap="True" />
+        <avalonEdit:TextEditor BorderBrush="White" BorderThickness="1" Grid.Row="1" Background="Black" Foreground="White" SyntaxHighlighting="JavaScriptCustom" FontSize="16" x:Name="input" IsReadOnly="false"  FontFamily="MS Gothic Bold" Height="Auto" Width="Auto" HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Auto" WordWrap="True"/>
     </Grid>
 </UserControl>

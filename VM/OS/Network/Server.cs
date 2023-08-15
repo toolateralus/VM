@@ -65,7 +65,7 @@ namespace VM.OS.Network.Server
 
             List<TcpClient> CLIENTS = new();
 
-            Notifications.Now($"SERVER:Server started on IP {GetLocalIPAddress().MapToIPv4()}::{OPEN_PORT}. Waiting for connections...");
+            Notifications.Now($"SERVER : Starting on :: {{'ip':{GetLocalIPAddress().MapToIPv4()}, 'port':{OPEN_PORT}}}. Waiting for connections...");
 
             SERVER = new TcpListener(IPAddress.Any, OPEN_PORT);
 
@@ -382,7 +382,7 @@ namespace VM.OS.Network.Server
             if (bytes == 0) return "0 Bytes";
 
             const int k = 1024;
-            string[] units = { "Bytes", "KB", "MB", "GB", "TB", "PB", "EB", "ZB", "YB" };
+            string[] units = { "'Bytes'", "'KB'", "'MB'", "'GB'", "'TB'", "'PB'", "'EB'", "'ZB'", "'YB'" };
 
             int i = Convert.ToInt32(Math.Floor(Math.Log(bytes) / Math.Log(k)));
             return string.Format("{0:F" + decimals + "} {1}", bytes / Math.Pow(k, i), units[i]);

@@ -35,7 +35,10 @@ namespace VM.GUI
         {
             if (File.Exists(path))
             {
-                string extension = System.IO.Path.GetExtension(path)?.ToLower();
+                string? extension = System.IO.Path.GetExtension(path)?.ToLower();
+
+                if (extension == null)
+                    return;
 
                 switch (extension)
                 {
@@ -136,7 +139,7 @@ namespace VM.GUI
             mdViewer = new MarkdownViewer();
             Contents = File.ReadAllText(path);
             mdViewer.RenderMarkdown(Contents);
-            wnd.OpenApp(mdViewer, "Markdown Renderer");
+            wnd?.OpenApp(mdViewer, "Markdown Renderer");
         }
 
         public void LateInit(Computer pc)
@@ -153,12 +156,12 @@ namespace VM.GUI
         {
             FileExplorer fileExplorer = new FileExplorer();
             fileExplorer.LateInit(computer);
-            Runtime.GetWindow(computer).OpenApp(fileExplorer);
+
+            Runtime.GetWindow(computer)?.OpenApp(fileExplorer);
 
             fileExplorer.OnNavigated += (file) =>
             {
                 LoadFile(file);
-                
             };
         }
         private void RenderMD_Click(object sender, RoutedEventArgs e)

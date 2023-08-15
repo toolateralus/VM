@@ -10,6 +10,9 @@ function call(command) {
 function random(max = 1) {
     return interop.random(max);
 }
+function sleep(ms) {
+    return interop.sleep();
+}
 
 function start(app) { interop.start(app) }
 
@@ -55,6 +58,6 @@ class App {
         interop.pushEvent(id, control, type, data);
     }
 }
-
 let app = new App();
+
 let os = new OS()

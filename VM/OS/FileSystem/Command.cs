@@ -69,9 +69,7 @@ namespace VM.OS.FS
                 new("restart", (_) => Runtime.Restart(computer.ID()), "restarts this computer"),
                 new("lp", LP, "lists all the running proccesses"),
                 new("host", Host, "hosts a server on the provided <port>, none provided it will default to 8080"),
-                new("closehost", (_) => Computer.Network.StopHosting(_), "if a server is currently running on this machine this halts any active connections and closes the sever.")
-
-
+                new("unhost", (_) => Computer.Network.StopHosting(_), "if a server is currently running on this machine this halts any active connections and closes the sever.")
             };
         }
 

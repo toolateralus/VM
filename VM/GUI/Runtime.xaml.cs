@@ -30,7 +30,7 @@ namespace VM.GUI
         {
             InitializeComponent();
             IDBox.KeyDown += IDBox_KeyDown;
-            
+
             onWindowStateChanged += (ws) => WindowState = ws;
 
             using (XmlReader reader = XmlReader.Create(new StringReader(JAVASCRIPT_SYNTAX_HIGHLIGHTING.HIGHLIGHTING)))
@@ -43,10 +43,15 @@ namespace VM.GUI
             IDBox.Text = "0";
 
             StartPerpetualColorAnimation();
+            TryStartPC();
+            Close();
+        }
 
-            const string COMPUTER = "computer";
-            const string FAST_BOOT_FILENAME = "this.ins";
+        public const string COMPUTER = "computer";
+        public const string FAST_BOOT_FILENAME = "this.ins";
 
+        private static void TryStartPC()
+        {
             if (GetResourcePath(FAST_BOOT_FILENAME) is string path && path.Contains(COMPUTER))
             {
                 int startIndex = path.IndexOf(COMPUTER) + COMPUTER.Length;
@@ -54,6 +59,7 @@ namespace VM.GUI
                 if (startIndex < path.Length)
                 {
                     string computerNumber = path.Substring(startIndex);
+
                     int endIndex = computerNumber.IndexOfAny(new char[] { '/', '\\' });
 
                     if (endIndex != -1)
@@ -64,17 +70,27 @@ namespace VM.GUI
                     if (uint.TryParse(computerNumber, out uint number))
                     {
                         InstantiateComputer(number);
-                        Close();
                     }
                 }
             }
-
-
         }
+
         public static Action<WindowState>? onWindowStateChanged;
         public static void Restart(uint id)
         {
+            var pc = Computers.Where(C => C.Key.ID() == id).FirstOrDefault();
 
+            if (pc.Key != null && pc.Value != null)
+            {
+                var computer = pc.Key;
+                computer.Exit(0);
+
+                var window = pc.Value;
+                window.Close();
+
+                Computers.Remove(computer);
+                InstantiateComputer(id);
+            }
         }
 
         #region Color Animation
@@ -113,17 +129,16 @@ namespace VM.GUI
         {
             
         }
+
+
         public static ComputerWindow GetWindow(Computer pc)
         {
-            // TODO : fix this;
-            try
+            if (Computers.TryGetValue(pc, out var val))
             {
-                return Computers[pc];
+                return val;
             }
-            catch
-            {
 
-            }
+            Notifications.Now("Window not found");
             return null;
         }
         private void NewComputerButton(object sender, RoutedEventArgs e)
@@ -167,7 +182,7 @@ namespace VM.GUI
         public static Dictionary<int, Queue<(object? val, int replyCh)>> NetworkEvents = new();
         public static async Task<(object? value, int reply)> PullEvent(int channel, Computer computer, int timeout = 50000, [CallerMemberName] string callerName = "unknown")
         {
-            Queue<(object? val, int replyCh)> stack;
+            Queue<(object? val, int replyCh)>? stack;
             var timeoutTask = Task.Delay(timeout);
 
             while (!NetworkEvents.TryGetValue(channel, out stack) && !computer.Disposing && computer.Network.IsConnected())
@@ -203,11 +218,15 @@ namespace VM.GUI
 
             VerifyOrCreateAppdataDir(path);
 
-            string[] entries = Directory.GetFileSystemEntries(path, name, SearchOption.AllDirectories);
+            if (Directory.Exists(path) || File.Exists(path))
+            {
+                string[] entries = Directory.GetFileSystemEntries(path, name, SearchOption.AllDirectories);
 
-            return entries.FirstOrDefault();
+                return entries?.FirstOrDefault()!;
+            }
+
+            return "";
         }
-
         internal static void VerifyOrCreateAppdataDir(string path)
         {
             if (!Directory.Exists(path))
@@ -237,12 +256,12 @@ namespace VM.GUI
                     Notifications.Now("Matching XAML and XAML.js files not found.");
                 }
             }
-
             return ("Not found!", "Not Found!");
         }
         public static T SearchForOpenWindowType<T>(Computer Computer)
         {
             var wnd = GetWindow(Computer);
+            
 
             foreach (var window in wnd.USER_WINDOW_INSTANCES)
                     if (window.Value is UserWindow userWindow && userWindow.Content is Grid g)
@@ -259,7 +278,7 @@ namespace VM.GUI
                         }
 
                     }
-            return default;
+            return default!;
 
         }
 

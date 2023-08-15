@@ -174,6 +174,7 @@ namespace VM.GUI
     {
         public Computer computer;
         public List<string> CustomApps = new();
+
         public Dictionary<string, int> JS_WPF_APP_INSTANCES = new();
         public Dictionary<string, UserWindow> USER_WINDOW_INSTANCES { get; private set; } = new();
 
@@ -188,7 +189,7 @@ namespace VM.GUI
             {
                 foreach (var item in USER_WINDOW_INSTANCES)
                 {
-                    item.Value.Destroy();
+                    item.Value.Close();
                 }
             };
         }
@@ -239,7 +240,6 @@ namespace VM.GUI
             TaskbarStackPanel.Children.Add(btn);
 
             window.OnClosed += () => RemoveTaskbarButton(title);
-
             IDLabel.Content = $"computer {computer.ID()}";
             
             CompositionTarget.Rendering += (e, o) => UpdateComputerTime();
@@ -257,7 +257,7 @@ namespace VM.GUI
             for (int i = 0; i < list.Count; i++)
             {
                 object? item = list[i];
-                if (item is Button button && button.Content == title)
+                if (item is Button button && button.Content as string == title)
                 {
                     TaskbarStackPanel.Children.Remove(button);
                     break;
@@ -392,7 +392,6 @@ namespace VM.GUI
             }
             return false;
         }
-        JSApp AppModule;
         public async Task OpenCustom(string type)
         {
             var data = Runtime.GetAppDefinition(computer, type);
@@ -411,7 +410,7 @@ namespace VM.GUI
 
             var wnd = Runtime.GetWindow(pc: computer);
             
-            wnd.OpenApp(control, title:  jsResult.id, engine: engine);
+            wnd?.OpenApp(control, title:  jsResult.id, engine: engine);
 
             await engine.Execute(jsResult.code);
 
@@ -497,7 +496,7 @@ namespace VM.GUI
                 for (int i = 0; i < list.Count; i++)
                 {
                     object? item = list[i];
-                    if (item is Button btn && btn.Name == name)
+                    if (item is Button btn && btn.Name == name.Replace(".app", "").Replace(".web", ""))
                     {
                         DesktopIconPanel.Children.Remove(btn);
                     }

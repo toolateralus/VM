@@ -37,24 +37,17 @@ namespace VM.OS
         public Action OnShutdown { get; set; }
         public bool Disposing { get; internal set; }
 
-        /// <summary>
-        /// this closes the window associated with the pc, if you do so manually before or after this call, it will error.
-        /// </summary>
-        /// <param name="exitCode"></param>
+        
         internal void Exit(int exitCode)
         {
-            ComputerWindow computerWindow = Runtime.GetWindow(this);
-            
-            computerWindow.Close();
-
-            if (Runtime.Computers.Count > 0 && exitCode != 0)
+            if (exitCode != 0)
             {
                 Notifications.Now($"Computer {ID()} has exited, most likely due to an error. code:{exitCode}");
             }
 
             Shutdown();
         }
-        internal void Shutdown()
+        private void Shutdown()
         {
             Disposing = true;
             OS?.JavaScriptEngine?.Dispose();

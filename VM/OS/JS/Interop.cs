@@ -24,26 +24,21 @@ using static VM.OS.JS.JSInterop;
 
 namespace VM.OS.JS
 {
-
-    
-
     public class JavaScriptEngine
     {
         IJsEngine engine;
-        
         IJsEngineSwitcher engineSwitcher;
 
         public Dictionary<string, object?> modules = new();
         public JSNetworkHelpers NetworkModule { get; }
         public JSInterop InteropModule { get; }
-        internal JSApp AppModule { get; }
         public bool Disposing { get; private set; }
         Computer computer;
         private readonly ConcurrentDictionary<int, (string code, Action<object?> output)> CodeDictionary = new();
         private readonly BackgroundWorker executionThread;
         public Dictionary<string, object> EmbeddedObjects = new();
         public List<JSEventHandler> EventHandlers = new();
-        Thread renderThread;
+        readonly Thread renderThread;
 
         public JavaScriptEngine(Computer computer)
         {
@@ -58,14 +53,13 @@ namespace VM.OS.JS
             engine = engineSwitcher.CreateDefaultEngine();
 
             NetworkModule = new JSNetworkHelpers(computer, computer.Network.OnSendMessage);
-            InteropModule = new JSInterop(computer);
-            AppModule = new JSApp(computer);
 
+            InteropModule = new JSInterop(computer);
             InteropModule.OnModuleImported += ImportModule;
 
             EmbeddedObjects["network"] = NetworkModule;
             EmbeddedObjects["interop"] = InteropModule;
-            
+
             EmbedAllObjects();
 
             executionThread = new BackgroundWorker();

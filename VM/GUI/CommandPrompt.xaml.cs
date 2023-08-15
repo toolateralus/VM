@@ -6,13 +6,14 @@ using VM.OS.JS;
 using VM.OS;
 using System.Windows;
 using System.Linq;
+using System.Windows.Input;
 
 namespace VM.GUI
 {
     
     public partial class CommandPrompt : UserControl
     {
-        private JavaScriptEngine Engine;
+        private JavaScriptEngine? Engine;
         private List<string> commandHistory = new List<string>();
         private int historyIndex = -1; 
         private string tempInput = ""; 
@@ -20,15 +21,24 @@ namespace VM.GUI
         public static string? DesktopIcon => Runtime.GetResourcePath("commandprompt.png");
 
         public Action<string> OnSend { get; internal set; }
-
+        public static string? LastUploaded;
+        string uploaded_buffer = "";
         public CommandPrompt()
         {
             InitializeComponent();
             PreviewKeyDown += CommandPrompt_PreviewKeyDown;
             DrawTextBox("type 'help' for commands, \nor enter any valid single-line java script to interact with the environment. \nby default, results of expressions get printed to this console.");
             input.Focus();
+
+            output.TextChanged += Output_TextChanged;
             
         }
+
+        private void Output_TextChanged(object? sender, EventArgs e)
+        {
+            output.ScrollToLine(output.Text.Length);
+        }
+
         public void DrawTextBox(string content)
         {
             List<string> contentLines = content.Split('\n').ToList();
@@ -93,14 +103,30 @@ namespace VM.GUI
         {
             if (e.Key == System.Windows.Input.Key.Enter || e.Key == System.Windows.Input.Key.F5)
             {
-                OnSend?.Invoke(input.Text);
-                output.ScrollToLine(output.Text.Length);
-                await ExecuteJavaScript();
-                e.Handled = true;
-                input.Clear();
+                await Send(e);
                 return;
             }
+            ManageCommandHistoryKeys(e);
+        }
 
+        private async Task Send(KeyEventArgs? e)
+        {
+            OnSend?.Invoke(input.Text);
+
+            await ExecuteJavaScript(input.Text);
+            
+            if (e != null && e.RoutedEvent != null)
+                e.Handled = true;
+
+            input.Clear();
+
+
+            LastUploaded = uploaded_buffer;
+            uploaded_buffer = output.Text;
+        }
+
+        private void ManageCommandHistoryKeys(KeyEventArgs e)
+        {
             if (e.Key == System.Windows.Input.Key.Up)
             {
                 if (historyIndex == -1)
@@ -113,7 +139,6 @@ namespace VM.GUI
                     historyIndex++;
                     input.Text = commandHistory[commandHistory.Count - 1 - historyIndex];
                 }
-                e.Handled = true;
             }
 
             if (e.Key == System.Windows.Input.Key.Down)
@@ -130,12 +155,13 @@ namespace VM.GUI
                         input.Text = commandHistory[commandHistory.Count - 1 - historyIndex];
                     }
                 }
-                e.Handled = true;
             }
+
+         
         }
-        private async Task ExecuteJavaScript()
+
+        private async Task ExecuteJavaScript(string code)
         {
-            string code = input.Text;
 
             if (computer.OS.CommandLine.TryCommand(code))
             {
@@ -152,7 +178,7 @@ namespace VM.GUI
             input.Clear();
             try
             {
-                var task = Engine.Execute(code);
+                var task = Engine?.Execute(code);
                 await task;
                 var result = task.Result;
 
@@ -168,6 +194,10 @@ namespace VM.GUI
                 this.output.Text += ex.Message + Environment.NewLine;
             }
         }
-       
+
+        private void Grid_MouseDown(object sender, System.Windows.Input.MouseButtonEventArgs e)
+        {
+            input.Focus();
+        }
     }
 }

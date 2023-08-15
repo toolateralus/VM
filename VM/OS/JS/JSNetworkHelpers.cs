@@ -6,6 +6,7 @@ using System.Linq;
 using System.Net;
 using System.Text;
 using System.Threading.Tasks;
+using System.Windows.Controls;
 using System.Windows.Markup;
 using VM.GUI;
 using VM.OS.Network;
@@ -13,17 +14,16 @@ using VM.OS.Network.Server;
 
 namespace VM.OS.JS
 {
+    public delegate void TransmissionStream(byte[] data, TransmissionType type, int outCh, int replyCh, bool isDir);
     public class JSNetworkHelpers
     {
-        // data, type, outCh, replyCh, IS_DIR,
-        public event Action<byte[], TransmissionType, int, int, bool> OnSent;
-        public Action<byte[]> OnRecieved;
+        public event TransmissionStream OnTransmit;
         Computer Computer;
         private int size;
 
-        public JSNetworkHelpers(Computer computer, Action<byte[], TransmissionType, int, int, bool> OutStream)
+        public JSNetworkHelpers(Computer computer, TransmissionStream transmissionStream)
         {
-            OnSent = OutStream;
+            OnTransmit = transmissionStream;
             Computer = computer;
         }
         
@@ -48,7 +48,7 @@ namespace VM.OS.JS
         {
             Computer.OS.JavaScriptEngine.InteropModule.print($"Trying to connect to: {ipString}");
 
-            Computer.Network.TryHaltCurrentConnection();
+            Computer.Network.StopClient();
 
             try
             {
@@ -68,7 +68,7 @@ namespace VM.OS.JS
                 Computer.OS.JavaScriptEngine.InteropModule.print($"Failed to connect to {ipString} :: {e.Message}");
             }
         }
-        public void upload(string path)
+        public async void upload(string path)
         {
             var isDir = false;
 
@@ -85,7 +85,7 @@ namespace VM.OS.JS
                 string root_dir = AbsPath.Split('\\').Last();
                 byte[] bytePath = Encoding.UTF8.GetBytes(root_dir);
 
-                OnSent?.Invoke(bytePath, TransmissionType.Path, -1, -1, true);
+                OnTransmit?.Invoke(bytePath, TransmissionType.Path, -1, -1, true);
 
                 foreach (var item in Directory.GetFileSystemEntries(AbsPath))
                 {
@@ -93,17 +93,17 @@ namespace VM.OS.JS
                     bytePath = Encoding.UTF8.GetBytes(strPath);
                     try
                     {
-                        byte[] fileBytes = File.ReadAllBytes(item);
+                        byte[] fileBytes = await File.ReadAllBytesAsync(item);
 
                         if (Directory.Exists(item))
                         {
-                            OnSent?.Invoke(bytePath, TransmissionType.Path, -1, -1, true);
+                            OnTransmit?.Invoke(bytePath, TransmissionType.Path, -1, -1, true);
                             Notifications.Now($"Uploading directory item: from {strPath}::{item}");
                         }
                         else if (File.Exists(item))
                         {
-                            OnSent?.Invoke(bytePath, TransmissionType.Path, -1, -1, false);
-                            OnSent?.Invoke(fileBytes, TransmissionType.Data, -1, -1, false);
+                            OnTransmit?.Invoke(bytePath, TransmissionType.Path, -1, -1, false);
+                            OnTransmit?.Invoke(fileBytes, TransmissionType.Data, -1, -1, false);
                             Notifications.Now("Uploading path: " + item);
                         }
                     }
@@ -116,28 +116,30 @@ namespace VM.OS.JS
             else
             {
                 byte[] pathBytes = Encoding.UTF8.GetBytes(path);
-                byte[] fileBytes = File.ReadAllBytes(AbsPath.Split('\\').Last());
+                byte[] fileBytes = await File.ReadAllBytesAsync(AbsPath.Split('\\').Last());
 
-                OnSent?.Invoke(pathBytes, TransmissionType.Path, -1, -1, false);
-                OnSent?.Invoke(fileBytes, TransmissionType.Data, -1, -1, false);
+                OnTransmit?.Invoke(pathBytes, TransmissionType.Path, -1, -1, false);
+                OnTransmit?.Invoke(fileBytes, TransmissionType.Data, -1, -1, false);
 
                 Notifications.Now("Uploading path: " + path);
             }
         }
         public async void check_for_downloadable_content()
         {
-            OnSent?.Invoke(Encoding.UTF8.GetBytes("GET_DOWNLOADS"), TransmissionType.Request, -1, NetworkConfiguration.REQUEST_RESPONSE_CHANNEL, false);
-            var response = await Runtime.PullEvent(NetworkConfiguration.REQUEST_RESPONSE_CHANNEL, Computer);
+            OnTransmit?.Invoke(Encoding.UTF8.GetBytes("GET_DOWNLOADS"), TransmissionType.Request, -1, Server.REQUEST_REPLY_CHANNEL, false);
+            var response = await Runtime.PullEvent(Server.REQUEST_REPLY_CHANNEL, Computer);
             var stringResponse = Encoding.UTF8.GetString(response.value as byte[] ?? Encoding.UTF8.GetBytes("No data found"));
             Notifications.Now(stringResponse);
             return;
         }
         public async void download(string path)
         {
-            await DownloadAsync(path);
-        }
-        private async Task<object?> DownloadAsync(string path)
-        {
+
+            if (!Computer.Network.IsConnected())
+            {
+                Notifications.Now("Not connected to network");
+                return;
+            }
 
             Notifications.Now($"Downloading {path}..");
 
@@ -148,9 +150,9 @@ namespace VM.OS.JS
                 Directory.CreateDirectory(root);
             }
 
-            OnSent?.Invoke(Encoding.UTF8.GetBytes(path), TransmissionType.Download, 0, NetworkConfiguration.DOWNLOAD_RESPONSE_CHANNEL, false);
+            OnTransmit?.Invoke(Encoding.UTF8.GetBytes(path), TransmissionType.Download, 0, Server.DOWNLOAD_REPLY_CHANNEL, false);
 
-            while (true)
+            while (Computer.Network.IsConnected())
             {
                 (object? value, int reply) = await Runtime.PullEvent(Server.DOWNLOAD_REPLY_CHANNEL, Computer);
                 string pathString = null;
@@ -162,34 +164,31 @@ namespace VM.OS.JS
                         switch (dataStr)
                         {
                             case "END_DOWNLOAD":
-                                Notifications.Now($"Download complete for {path}");
-                                return null;
-
+                                Notifications.Now($"{{{Server.FormatBytes(size)}}} downloads\\{path} downloaded.. use the 'install' command with argument {path} to install to the desktop.");
+                                return;
                             case "FAILED_DOWNLOAD":
                                 Notifications.Now($"Download failed for {path}");
-                                return null;
+                                return;
                         }
-                       
                     }
-
                     Notifications.Now($"Invalid data gotten from server for {path}");
-                    return null;
+                    return;
                 }
 
                 if (metadata.Value<string>("data") is not string dataString || Convert.FromBase64String(dataString) is not byte[] dataBytes)
                 {
                     Notifications.Now($"Invalid data for {path}");
-                    return null;
+                    return;
                 }
 
                 if (Convert.FromBase64String(metadata.Value<string>("path")) is not byte[] pathBytes)
                 {
                     Notifications.Now($"Invalid path for {path}");
-                    return null;
+                    return;
                 }
 
                 pathString = Encoding.UTF8.GetString(pathBytes);
-              
+
 
                 var fullPath = Path.Combine(root, pathString);
 
@@ -204,12 +203,10 @@ namespace VM.OS.JS
                 size += dataBytes.Length;
 
                 await Task.Delay(1);
-
-
             }
-            Notifications.Now($"{{{Server.FormatBytes(size)}}} {path} installed.");
-            return null;
+            Notifications.Now("Not connected to network, or download failed");
         }
+      
         public bool IsConnected => Computer.Network.IsConnected();
         public void send(params object?[]? parameters)
         {
@@ -229,7 +226,7 @@ namespace VM.OS.JS
                     outCh = 0; // Specify the outgoing channel
                     inCh = 0;  // Specify the reply channel
 
-                    OnSent?.Invoke(outgoingData, TransmissionType.Message, outCh, inCh,  false);
+                    OnTransmit?.Invoke(outgoingData, TransmissionType.Message, outCh, inCh,  false);
                     Runtime.Broadcast(outCh, inCh, Encoding.UTF8.GetString(outgoingData)); 
                 }
             }

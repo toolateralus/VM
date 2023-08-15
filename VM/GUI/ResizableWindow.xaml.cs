@@ -8,11 +8,26 @@ namespace VM.GUI
 {
     public partial class ResizableWindow : Frame
     {
+        private const int ResizeMargin = 30;
         private bool isDragging = false;
         private bool isResizing = false;
         private Point dragOffset;
         private double originalWidth;
         private double originalHeight;
+        private enum ResizeDirection
+        {
+            None,
+            Left,
+            Right,
+            Top,
+            Bottom,
+            TopLeft,
+            TopRight,
+            BottomLeft,
+            BottomRight
+        }
+        private ResizeDirection resizeDirection;
+        public Action OnClosed { get; internal set; }
 
         public ResizableWindow()
         {
@@ -26,14 +41,12 @@ namespace VM.GUI
             // taskbar margin
             MaxHeight = 1080 - 25;
         }
-
         private void onMouseLeave(object sender, MouseEventArgs e)
         {
             isDragging = false;
             isResizing = false;
             this.ReleaseMouseCapture();
         }
-
         protected void OnMouseDown(object sender, MouseButtonEventArgs e)
         {
             if (e.LeftButton == MouseButtonState.Pressed)
@@ -56,7 +69,6 @@ namespace VM.GUI
             }
             dragOffset = e.GetPosition(this);
         }
-
         public void BringToTopOfDesktop()
         {
             if (Parent is Grid grid && grid.Children.Contains(this))
@@ -64,23 +76,6 @@ namespace VM.GUI
                 grid.Children.Remove(this);
                 grid.Children.Add(this);
             }
-        }
-        private ResizeDirection resizeDirection;
-        private const int ResizeMargin = 10;
-
-        public Action OnClosed { get; internal set; }
-
-        private enum ResizeDirection
-        {
-            None,
-            Left,
-            Right,
-            Top,
-            Bottom,
-            TopLeft,
-            TopRight,
-            BottomLeft,
-            BottomRight
         }
         protected void OnMouseMove(object sender, MouseEventArgs e)
         {
@@ -104,7 +99,6 @@ namespace VM.GUI
                 PerformResizing(e);
             }
         }
-
         private ResizeDirection DetectResizeDirection(Point mousePosition)
         {
             bool leftEdge = mousePosition.X < ResizeMargin;
@@ -123,7 +117,6 @@ namespace VM.GUI
 
             return ResizeDirection.None;
         }
-
         private void ChangeCursor()
         {
             switch (resizeDirection)

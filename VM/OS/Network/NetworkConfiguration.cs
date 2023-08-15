@@ -32,17 +32,17 @@ namespace VM.OS.Network
             host?.Dispose();
         }
 
-        public const int REQUEST_RESPONSE_CHANNEL = 6996;
-        public const int DOWNLOAD_RESPONSE_CHANNEL = 6997;
+        public static IPAddress SERVER_IP => IPAddress.Parse(LAST_KNOWN_SERVER_IP);
 
-        public static IPAddress SERVER_IP = IPAddress.Parse(LAST_KNOWN_SERVER_IP);
+        public static int LAST_KNOWN_SERVER_PORT { get; internal set; }
+
         public Action<byte[]>? OnMessageRecieved;
         public Thread receiveThread;
         private Host? host = null;
 
         public NetworkConfiguration(Computer computer)
         {
-            computer.OnShutdown += TryHaltCurrentConnection;
+            computer.OnShutdown += StopClient;
             if (computer?.OS?.Config?.Value<bool>("ALWAYS_CONNECT") is bool connect && connect)
             {
                 if (computer?.OS?.Config?.Value<string>("DEFAULT_SERVER_IP") is string _IP && IPAddress.Parse(_IP) is IPAddress ip)
@@ -62,8 +62,13 @@ namespace VM.OS.Network
                 try
                 {
                     var ip_str = ip.ToString();
-                    client = new TcpClient(ip_str, DEFAULT_PORT);
+                    // for when we support any port
+                    var port = DEFAULT_PORT;
+                    LAST_KNOWN_SERVER_PORT = port;
+
+                    client = new TcpClient(ip_str, port);
                     stream = client.GetStream();
+
                     receiveThread = new Thread(ReceiveMessages);
                     receiveThread.Start();
                 }
@@ -73,31 +78,19 @@ namespace VM.OS.Network
                 }
             });
         }
-        public static bool IsValidJson(string jsonString)
-        {
-            try
-            {
-                JToken.Parse(jsonString);
-                return true;
-            }
-            catch (JsonReaderException)
-            {
-                return false;
-            }
-        }
         public void ReceiveMessages()
         {
             try
             {
                 while (IsConnected())
                 {
+                    // blocking call to server that actually reads data.
                     var packet = RecieveMessage(stream, client, false);
                     int messageLength = packet.Metadata.Value<int>("size");
                     int sender_ch = packet.Metadata.Value<int>("ch");
                     int reciever_ch = packet.Metadata.Value<int>("reply");
-                    string dataString = packet.Metadata.Value<string>("data");
-                    var path = packet.Metadata.Value<string>("path");
 
+                    var path = packet.Metadata.Value<string>("path");
                     if (path is null)
                     {
                         Runtime.Broadcast(sender_ch, reciever_ch, packet.Data);
@@ -136,7 +129,7 @@ namespace VM.OS.Network
                 stream.Write(metadataBytes, 0, metadataBytes.Length);
             }
         }
-        internal void TryHaltCurrentConnection()
+        internal void StopClient()
         {
             client?.Close();
             stream?.Close();
