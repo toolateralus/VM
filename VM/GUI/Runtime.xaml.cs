@@ -262,8 +262,13 @@ namespace VM.GUI
         public static T SearchForOpenWindowType<T>(Computer Computer)
         {
             var wnd = GetWindow(Computer);
-            
-            foreach (var window in wnd.USER_WINDOW_INSTANCES)
+
+            T output = default!;
+
+            wnd?.Dispatcher?.Invoke(() =>
+            {
+
+                foreach (var window in wnd.USER_WINDOW_INSTANCES)
                     if (window.Value is UserWindow userWindow && userWindow.Content is Grid g)
                     {
                         foreach (var item in g.Children)
@@ -272,12 +277,13 @@ namespace VM.GUI
                             {
                                 if (frame.Content is T ActualApplication)
                                 {
-                                    return ActualApplication;
+                                    output = ActualApplication;
                                 }
                             }
                         }
 
                     }
+            });
             return default;
 
         }
