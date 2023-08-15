@@ -116,9 +116,12 @@ namespace VM.OS.Network.Server
         const int DOWNLOAD_REPLY_CHANNEL = 6997;
         public Dictionary<byte[], Func<Packet, Task<Packet>>> ServerTasks = new();
         string UPLOAD_DIR = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData) + "\\VM_SERVER_DATA";
-        public Dictionary<string, TcpClient> FileTransfersPending = new();
+        public Dictionary<string, TcpClient> IncomingFileTransfersPending = new();
         public List<string> AvailableForDownload = new();
         public List<TcpClient> Clients;
+
+        public List<TcpClient> FileWaiters { get; private set; } = new();
+
         public Server(List<TcpClient> cLIENTS)
         {
             this.Clients = cLIENTS;
@@ -243,7 +246,7 @@ namespace VM.OS.Network.Server
                         await HandleMessageTransmission(packet, clients);
                         break;
                     case TransmissionType.Download:
-                        await HandleDownloadRequest(packet);
+                         await HandleDownloadRequest(packet);
                         break;
                     case TransmissionType.Request:
                         HandleRequest(Encoding.UTF8.GetString(packet.Data), packet);
@@ -258,10 +261,10 @@ namespace VM.OS.Network.Server
             if (AvailableForDownload.Contains(file))
             {
                 await SendDataRecusive(file);
-
+                
+                // message signaling the end of the download.
                 var message = Encoding.UTF8.GetBytes("END_DOWNLOAD");
                 var length = message.Length;
-
                 JObject endPacket = JObject.Parse(PopulateJsonTemplate(length, message, TransmissionType.Download, DOWNLOAD_REPLY_CHANNEL, -1));
                 await SendJsonToClient(packet.Client, endPacket);
             }
@@ -277,11 +280,8 @@ namespace VM.OS.Network.Server
                 if (File.Exists(path))
                 {
                     var fileName = Encoding.UTF8.GetBytes(file);
-                    var metadata = PopulateJsonTemplate(fileName.Length, fileName, TransmissionType.Download, DOWNLOAD_REPLY_CHANNEL, -1);
-                    await SendJsonToClient(packet.Client, JObject.Parse(metadata));
-
                     var fileContents = File.ReadAllBytes(path);
-                    metadata = PopulateJsonTemplate(fileContents.Length, fileContents, TransmissionType.Download, DOWNLOAD_REPLY_CHANNEL, -1);
+                    var metadata = PopulateJsonTemplate(fileContents.Length, fileContents, TransmissionType.Download, DOWNLOAD_REPLY_CHANNEL, -1, false, fileName);
                     await SendJsonToClient(packet.Client, JObject.Parse(metadata));
                 }
                 else if (Directory.Exists(path))
@@ -307,7 +307,7 @@ namespace VM.OS.Network.Server
         private void HandleDataTransmission(Packet packet)
         {
             string toRemove = "";
-            foreach (var item in FileTransfersPending)
+            foreach (var item in IncomingFileTransfersPending)
             {
                 if (item.Value == packet.Client)
                 {
@@ -331,7 +331,7 @@ namespace VM.OS.Network.Server
             }
             if (toRemove != "")
             {
-                FileTransfersPending.Remove(toRemove);
+                IncomingFileTransfersPending.Remove(toRemove);
             }
         }
 
@@ -346,12 +346,12 @@ namespace VM.OS.Network.Server
                 }
                 else
                 {
-                    FileTransfersPending[Path] = packet.Client;
+                    IncomingFileTransfersPending[Path] = packet.Client;
                 }
             }
         }
 
-        private string PopulateJsonTemplate(int dataSize, byte[] data, TransmissionType type, int ch, int reply, bool isDir = false)
+        private string PopulateJsonTemplate(int dataSize, byte[] data, TransmissionType type, int ch, int reply, bool isDir = false, byte[] path = null)
         {
             var json = new
             {
@@ -360,7 +360,8 @@ namespace VM.OS.Network.Server
                 type = type.ToString(),
                 ch = ch,
                 reply = reply,
-                isDir = isDir
+                isDir = isDir,
+                path = path,
             };
 
             return JsonConvert.SerializeObject(json);
@@ -380,13 +381,12 @@ namespace VM.OS.Network.Server
 
                     Notifications.Now($"SERVER:Responding with {names}");
                     break;
-
                 default:
                     break;
             }
 
         }
-        static string FormatBytes(long bytes, int decimals = 2)
+        public static string FormatBytes(long bytes, int decimals = 2)
         {
             if (bytes == 0) return "0 Bytes";
 

@@ -4,6 +4,8 @@ using System.IO;
 using System.Linq;
 using System.Net;
 using System.Text;
+using System.Threading.Tasks;
+using System.Windows.Markup;
 using VM.GUI;
 using VM.OS.Network;
 using VM.OS.Network.Server;
@@ -16,10 +18,11 @@ namespace VM.OS.JS
         public event Action<byte[], TransmissionType, int, int, bool> OnSent;
         public Action<byte[]> OnRecieved;
         Computer Computer;
+        private int size;
+
         public JSNetworkHelpers(Computer computer, Action<byte[], TransmissionType, int, int, bool> OutStream)
         {
             OnSent = OutStream;
-            computer.Network.OnMessageRecieved += OnRecieved;
             computer.Network.OnMessageRecieved += (bytes) =>
             {
                 string JsonString = Encoding.UTF8.GetString(bytes);
@@ -29,11 +32,26 @@ namespace VM.OS.JS
                 int sender_ch = metadata.Value<int>("ch");
                 int reciever_ch = metadata.Value<int>("reply");
                 string dataString = metadata.Value<string>("data") ?? "Data not found! something has gone wrong with the client's json construction";
-                 
-                var dataBytes = Convert.FromBase64String(dataString);
-                var bytesLength = dataBytes.Length;
 
-                Runtime.Broadcast(sender_ch, reciever_ch, dataBytes);
+                var path = metadata.Value<string>("path");
+
+                if (path == null)
+                {
+                    var dataBytes = Convert.FromBase64String(dataString);
+                    var bytesLength = dataBytes.Length;
+
+                    Runtime.Broadcast(sender_ch, reciever_ch, dataBytes);
+                }
+                else
+                {
+                    // file recieve, so we actually just send the entire json object.
+                    Runtime.Broadcast(sender_ch, reciever_ch, metadata);
+                }
+
+
+
+
+
             };
             Computer = computer;
         }
@@ -135,16 +153,23 @@ namespace VM.OS.JS
                 Notifications.Now("Uploading path: " + path);
             }
         }
-        public object check_for_downloadable_content()
+        public async void check_for_downloadable_content()
         {
             OnSent?.Invoke(Encoding.UTF8.GetBytes("GET_DOWNLOADS"), TransmissionType.Request, -1, NetworkConfiguration.REQUEST_RESPONSE_CHANNEL, false);
-            var response = Runtime.PullEvent(NetworkConfiguration.REQUEST_RESPONSE_CHANNEL, Computer);
+            var response = await Runtime.PullEvent(NetworkConfiguration.REQUEST_RESPONSE_CHANNEL, Computer);
             var stringResponse = Encoding.UTF8.GetString(response.value as byte[] ?? Encoding.UTF8.GetBytes("No data found"));
-            return stringResponse;
+            return;
         }
-        public object? download(string path)
+        public async void download(string path)
+        {
+            await DownloadAsync(path);
+        }
+
+        private async Task<object?> DownloadAsync(string path)
         {
             OnSent?.Invoke(Encoding.UTF8.GetBytes(path), TransmissionType.Download, 0, NetworkConfiguration.DOWNLOAD_RESPONSE_CHANNEL, false);
+
+            Notifications.Now($"Downloading {path}..");
 
             var root = Computer.OS.FS_ROOT + "\\downloads";
 
@@ -155,27 +180,35 @@ namespace VM.OS.JS
 
             while (true)
             {
-                (object? value, int reply) path_event = Runtime.PullEvent(NetworkConfiguration.DOWNLOAD_RESPONSE_CHANNEL, Computer);
-
+                (object? value, int reply) = await Runtime.PullEvent(NetworkConfiguration.DOWNLOAD_RESPONSE_CHANNEL, Computer);
                 string pathString = null;
-                if (path_event.value is not byte[] pathBytes)
+
+                if (value is not JObject metadata)
                 {
-                    Notifications.Now($"Invalid path item gotten from server {root}");
+                    if (value is byte[] bytes && Encoding.UTF8.GetString(bytes) == "END_DOWNLOAD")
+                    {
+                        Notifications.Now($"Download complete for {path}");
+                        return null;
+                    }
+
+                    Notifications.Now($"Invalid data gotten from server for {path}");
                     return null;
-                } 
+                }
+
+                if (metadata.Value<string>("data") is not string dataString || Convert.FromBase64String(dataString) is not byte[] dataBytes)
+                {
+                    Notifications.Now($"Invalid data for {path}");
+                    return null;
+                }
+
+                if (Convert.FromBase64String(metadata.Value<string>("path")) is not byte[] pathBytes)
+                {
+                    Notifications.Now($"Invalid path for {path}");
+                    return null;
+                }
+
                 pathString = Encoding.UTF8.GetString(pathBytes);
-                if (pathString == "END_DOWNLOAD")
-                {
-                    Notifications.Now($"Download complete for {root}");
-                    break;
-                }
-                (object? value, int reply) data_event = Runtime.PullEvent(NetworkConfiguration.DOWNLOAD_RESPONSE_CHANNEL, Computer);
-                if (path_event.value is not byte[] dataBytes)
-                {
-                    Notifications.Now($"Invalid file data item gotten from server {root}");
-                    return null;
-                }
-                
+              
 
                 var fullPath = Path.Combine(root, pathString);
 
@@ -187,10 +220,16 @@ namespace VM.OS.JS
                 }
 
                 File.WriteAllBytes(fullPath, dataBytes);
-            }
+                size += dataBytes.Length;
 
+                await Task.Delay(1);
+
+
+            }
+            Notifications.Now($"{{{Server.FormatBytes(size)}}} {path} installed.");
             return null;
         }
+
         public bool IsConnected => Computer.Network.IsConnected();
         public void send(params object?[]? parameters)
         {
@@ -219,13 +258,14 @@ namespace VM.OS.JS
         {
             if (parameters != null && parameters.Length > 0 && parameters[0] is int ch) 
             {
-                var result = Runtime.PullEvent(ch, Computer);
-                var val = result.value;
+                var TaskOutcome = Task.Run<(object? value, int reply)>(async () => await Runtime.PullEvent(ch, Computer));
+                
+                var val = TaskOutcome.Result.value;
 
                 if (val is byte[] message)
                 {
                     byte[] InChannel = BitConverter.GetBytes(ch);
-                    byte[] ReplyChannel = BitConverter.GetBytes(result.reply);
+                    byte[] ReplyChannel = BitConverter.GetBytes(TaskOutcome.Result.reply);
 
                     byte[] combinedBytes = new byte[message.Length + sizeof(int) + sizeof(int)];
 
@@ -233,7 +273,6 @@ namespace VM.OS.JS
                     Array.Copy(InChannel, 0, combinedBytes, message.Length, sizeof(int));
                     Array.Copy(InChannel, 0, combinedBytes, message.Length + sizeof(int), sizeof(int));
 
-                    OnRecieved?.Invoke(combinedBytes);
                 }
                 return val;
             }

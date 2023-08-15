@@ -16,6 +16,7 @@ using System.Xml.Linq;
 using System.Linq;
 using System.Windows.Controls;
 using System.Collections.Concurrent;
+using System.Runtime.CompilerServices;
 
 namespace VM.GUI
 {
@@ -163,19 +164,38 @@ namespace VM.GUI
             onWindowStateChanged?.Invoke(WindowState.Minimized);
         }
 
-        public static ConcurrentDictionary<int, (object? val, int replyCh)> NetworkEvents = new();
-        public static (object? value, int reply) PullEvent(int channel, Computer computer)
+        public static Dictionary<int, Stack<(object? val, int replyCh)>> NetworkEvents = new();
+        public static async Task<(object? value, int reply)> PullEvent(int channel, Computer computer, int timeout = 50000, [CallerMemberName] string callerName = "unknown")
         {
-            (object? val, int replyCh) val;
-            while (!NetworkEvents.Remove(channel, out val) && !computer.Disposing && computer.Network.IsConnected())
+            Stack<(object? val, int replyCh)> stack;
+            var timeoutTask = Task.Delay(timeout);
+
+            while (!NetworkEvents.TryGetValue(channel, out stack) && !computer.Disposing && computer.Network.IsConnected())
             {
-                Thread.SpinWait(1);
+                var completedTask = await Task.WhenAny(Task.Delay(1), timeoutTask);
+
+                if (completedTask == timeoutTask)
+                {
+                    Notifications.Now($"timed out fetching from {callerName} event on channel {channel}");
+                    return (null, -1); 
+                }
             }
-            return val;
+
+            var val = stack?.Pop();
+
+            if (stack?.Count == 0)
+                NetworkEvents.Remove(channel);
+
+            return val ?? default;
         }
         internal static void Broadcast(int outCh, int inCh, object? msg)
         {
-            NetworkEvents[outCh] = (msg, inCh);
+            if (!NetworkEvents.TryGetValue(outCh, out var e))
+            {
+                NetworkEvents.Add(outCh, new());
+            }
+
+            NetworkEvents[outCh].Push((msg, inCh)); 
         }
         internal static string GetResourcePath(string name)
         {
