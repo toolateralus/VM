@@ -14,7 +14,7 @@ using VM;
 
 namespace VM.JS
 {
-    public class JavaScriptEngine
+    public class JavaScriptEngine : IDisposable
     {
         internal IJsEngine ENGINE_JS;
         IJsEngineSwitcher engineSwitcher;
@@ -25,10 +25,10 @@ namespace VM.JS
         public bool Disposing { get; private set; }
         Computer computer;
         private readonly ConcurrentDictionary<int, (string code, Action<object?> output)> CodeDictionary = new();
-        private readonly BackgroundWorker executionThread;
         public Dictionary<string, object> EmbeddedObjects = new();
         public List<JSEventHandler> EventHandlers = new();
-        readonly Thread renderThread;
+        private readonly Task executionThread;
+        readonly Task renderThread;
 
         public JavaScriptEngine(Computer computer)
         {
@@ -52,11 +52,9 @@ namespace VM.JS
 
             EmbedAllObjects();
 
-            executionThread = new BackgroundWorker();
-            executionThread.DoWork += ExecuteAsync;
-            executionThread.RunWorkerAsync();
-
-            renderThread = new Thread(Render);
+            executionThread = new Task(ExecuteAsync);
+            executionThread.Start();
+            renderThread = new Task(RenderAsync);
             renderThread.Start();
 
             string jsDirectory = Computer.SearchForParentRecursive("VM");
@@ -82,7 +80,7 @@ namespace VM.JS
                 ENGINE_JS.EmbedHostObject(item.Key, item.Value);
 
         }
-        private void Render()
+        private async void RenderAsync()
         {
             while (!Disposing)
             {
@@ -109,6 +107,8 @@ namespace VM.JS
                         EventHandlers.Remove(item);
                     }
                 }
+
+                await Task.Delay(16);
             }
         }
         public object? GetVariable(string name)
@@ -154,7 +154,7 @@ namespace VM.JS
 
             RecursiveLoad(sourceDir);
         }
-        private async void ExecuteAsync(object? sender, DoWorkEventArgs args)
+        private async void ExecuteAsync()
         {
             while (!Disposing)
             {
@@ -217,7 +217,7 @@ namespace VM.JS
             ENGINE_JS = null;
             
             Task.Run(() => executionThread.Dispose());
-            Task.Run(() => renderThread.Join());
+            Task.Run(() => renderThread.Dispose());
         }
         internal void ExecuteScript(string absPath)
         {
