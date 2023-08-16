@@ -243,21 +243,35 @@ namespace VM.OS.FS
 
         internal void Move(string? path, string? dest)
         {
-           if (path != null && dest != null)
-           {
-              path = GetRelativeOrAbsolute(path);
-              dest = GetRelativeOrAbsolute(path);
-
+            if (path != null && dest != null)
+            {
+                path = GetRelativeOrAbsolute(path);
+                dest = GetRelativeOrAbsolute(dest);
                 if (File.Exists(path))
                 {
-                    File.Move(path, dest);
+                    if (!File.Exists(dest))
+                    {
+                        File.Move(path, dest);
+                    }
+                    else
+                    {
+                        Copy(path, dest);
+                        File.Delete(path);
+                    }
                 }
                 else if (Directory.Exists(path))
                 {
-                    Directory.Move(path, dest);
+                    if (!Directory.Exists(dest))
+                    {
+                        Directory.Move(path, dest);
+                    }
+                    else
+                    {
+                        Copy(path, dest);
+                        Directory.Delete(path, true);
+                    }
                 }
-
-           }
+            }
         }
     }
 }
