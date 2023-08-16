@@ -1,23 +1,10 @@
-﻿using Newtonsoft.Json;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Text.Json.Nodes;
-using System.Text.Json;
-using System.Windows.Controls;
 using VM.GUI;
 using VM.OS.FS;
 using VM.OS.JS;
 using Newtonsoft.Json.Linq;
-using System.Net;
-using System.Xml.Linq;
-using static System.Windows.Forms.VisualStyles.VisualStyleElement.TrayNotify;
-using System.Windows.Media.Imaging;
-using static System.Windows.Forms.VisualStyles.VisualStyleElement;
-using Microsoft.VisualBasic.Devices;
-using System.Threading;
-using System.Windows.Threading;
-using System.Reflection.Metadata;
 
 namespace VM.OS
 {
@@ -62,7 +49,7 @@ namespace VM.OS
 
             FS = new(FS_ROOT, computer);
 
-            Config = OSConfigLoader.Load();
+            Config = OSConfigManager.Load();
 
         }
         public void InitializeEngine(Computer computer)
@@ -74,21 +61,6 @@ namespace VM.OS
                 JavaScriptEngine.ExecuteScript(AbsPath);
             }
         }
-        public void SaveConfig()
-        {
-            string configFilePath = Runtime.GetResourcePath("config.json");
-
-            if (!string.IsNullOrEmpty(configFilePath))
-            {
-                try
-                {
-                    File.WriteAllText(configFilePath, Config.ToString());
-                }
-                catch (Exception ex)
-                {
-                    Notifications.Now($"Error saving JSON config: {ex.Message}");
-                }
-            }
-        }
+      
     }
 }

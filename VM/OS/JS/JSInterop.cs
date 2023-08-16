@@ -120,7 +120,7 @@ namespace VM.OS.JS
             {
                 if (e is not ObjectDisposedException ode)
                 {
-                    Notifications.Now(e.Message);
+                    Notifications.Exception(e);
                 }
             }
         }
@@ -186,7 +186,7 @@ namespace VM.OS.JS
             }
             catch(Exception e)
             {
-                Notifications.Now(e.Message);
+                Notifications.Exception(e);
             }
         }
         public void export(string id, object? obj)

@@ -26,7 +26,7 @@ namespace VM.OS.JS
 {
     public class JavaScriptEngine
     {
-        IJsEngine engine;
+        internal IJsEngine ENGINE_JS;
         IJsEngineSwitcher engineSwitcher;
 
         public Dictionary<string, object?> modules = new();
@@ -50,7 +50,7 @@ namespace VM.OS.JS
 
             engineSwitcher.DefaultEngineName = V8JsEngine.EngineName;
 
-            engine = engineSwitcher.CreateDefaultEngine();
+            ENGINE_JS = engineSwitcher.CreateDefaultEngine();
 
             NetworkModule = new JSNetworkHelpers(computer, computer.Network.OnSendMessage);
 
@@ -80,50 +80,56 @@ namespace VM.OS.JS
 
         public void EmbedObject(string name, object? obj)
         {
-            engine.EmbedHostObject(name, obj);
+            ENGINE_JS.EmbedHostObject(name, obj);
         }
         public void EmbedType(string name, Type obj)
         {
-            engine.EmbedHostType(name, obj);
+            ENGINE_JS.EmbedHostType(name, obj);
         }
         public void EmbedAllObjects()
         {
             foreach (var item in EmbeddedObjects)
-                engine.EmbedHostObject(item.Key, item.Value);
+                ENGINE_JS.EmbedHostObject(item.Key, item.Value);
 
         }
         private void Render()
         {
-            while (true)
+            while (!Disposing)
             {
                 if (Disposing)
                     return;
 
-                var collection = EventHandlers.Where(e => e.Event == XAML_EVENTS.RENDER);
-                for (int i = 0; i < collection.Count(); ++i)
+                for (int i = 0; i < EventHandlers.Count(); ++i)
                 {
-                    var item = collection.ElementAt(i);
-                    if (!item.Disposed)
+                    var item = EventHandlers[i];
+
+                    if (item != null && !item.Disposing && item.Event == XAML_EVENTS.RENDER)
                     {
-                        item?.InvokeGeneric(null, null);
+                        try
+                        {
+                            item?.jsEngine?.ENGINE_JS?.CallFunction(item.FUNCTION_HANDLE);
+                        }
+                        catch (Exception e)
+                        {
+                            Notifications.Exception(e);
+                        }
                     }
                     else
                     {
                         EventHandlers.Remove(item);
                     }
                 }
-                Thread.Sleep(16);
             }
         }
         public object? GetVariable(string name)
         {
-            return engine.GetVariableValue(name);
+            return ENGINE_JS.GetVariableValue(name);
         }
         private object? ImportModule(string arg)
         {
             if (Runtime.GetResourcePath(arg) is string AbsPath && !string.IsNullOrEmpty(AbsPath))
             {
-                engine.ExecuteFile(AbsPath);
+                ENGINE_JS.ExecuteFile(AbsPath);
             }
             return null;
         }
@@ -142,11 +148,11 @@ namespace VM.OS.JS
 
                     try
                     {
-                        engine.Execute(File.ReadAllText(file));
+                        ENGINE_JS.Execute(File.ReadAllText(file));
                     }
                     catch (Exception e)
                     {
-                        Notifications.Now(e.Message);
+                        Notifications.Exception(e);
                     }
                 }
 
@@ -171,12 +177,12 @@ namespace VM.OS.JS
                     {
                         try
                         {
-                            var result = engine.Evaluate(pair.Value.code);
+                            var result = ENGINE_JS.Evaluate(pair.Value.code);
                             pair.Value.output?.Invoke(result);
                         }
                         catch (Exception e)
                         {
-                            Notifications.Now(e.Message);
+                            Notifications.Exception(e);
                             computer.OS.JavaScriptEngine.InteropModule.print(e.Message);
                         }
                     });
@@ -217,8 +223,8 @@ namespace VM.OS.JS
         public void Dispose()
         {
             Disposing = true;
-            engine?.Dispose();
-            engine = null;
+            ENGINE_JS?.Dispose();
+            ENGINE_JS = null;
             
             Task.Run(() => executionThread.Dispose());
             Task.Run(() => renderThread.Join());
@@ -226,7 +232,7 @@ namespace VM.OS.JS
         internal void ExecuteScript(string absPath)
         {
             if (File.Exists(absPath))
-                Task.Run(()=> { try { engine.Execute(File.ReadAllText(absPath)); } catch { } });
+                Task.Run(()=> { try { ENGINE_JS.Execute(File.ReadAllText(absPath)); } catch { } });
         }
         /// <summary>
         /// this method is used for executing js events
@@ -238,11 +244,11 @@ namespace VM.OS.JS
                 return;
             try
             {
-                engine.Execute(code);
+                ENGINE_JS.Execute(code);
             }
             catch(Exception e)
             {
-                Notifications.Now(e.Message);
+                Notifications.Exception(e);
             }
         }
         internal async Task CreateEventHandler(string identifier, string targetControl, string methodName, int type)

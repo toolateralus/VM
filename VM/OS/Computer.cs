@@ -65,7 +65,7 @@ namespace VM.OS
             wnd.Closed += (o, e) =>
             {
                 Runtime.Computers.Remove(this);
-                Task.Run(() => this.OS.SaveConfig());
+                Task.Run(() => OSConfigManager.Save(OS.Config.ToString()));
                 this.Shutdown();
             };
         }

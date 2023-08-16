@@ -103,7 +103,7 @@ namespace VM.OS.Network
             }
             catch (Exception e)
             {
-                Notifications.Now(e.Message);
+                Notifications.Exception(e);
             }
             finally
             {

@@ -5,7 +5,7 @@ using Newtonsoft.Json.Linq;
 
 namespace VM.OS
 {
-    internal class OSConfigLoader
+    internal class OSConfigManager
     {
         internal static JObject Load()
         {
@@ -31,6 +31,22 @@ namespace VM.OS
             }
 
             return null;
+        }
+        public static void Save(string config)
+        {
+            string configFilePath = Runtime.GetResourcePath("config.json");
+
+            if (!string.IsNullOrEmpty(configFilePath))
+            {
+                try
+                {
+                    File.WriteAllText(configFilePath, config);
+                }
+                catch (Exception ex)
+                {
+                    Notifications.Now($"Error saving JSON config: {ex.Message}");
+                }
+            }
         }
     }
 }

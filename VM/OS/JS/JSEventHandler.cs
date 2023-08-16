@@ -10,21 +10,25 @@ namespace VM.OS.JS
 {
     public class JSEventHandler
     {
-        StringBuilder LastCode = new("");
-        readonly string TemplateCode;
-        JavaScriptEngine js;
+        internal JavaScriptEngine jsEngine;
         public XAML_EVENTS Event = XAML_EVENTS.RENDER;
         public Action OnUnhook;
         FrameworkElement element;
+
+        internal readonly string methodHandle;
+        internal readonly string FUNCTION_HANDLE;
+
         public JSEventHandler(FrameworkElement control, XAML_EVENTS @event, JavaScriptEngine js, string id, string method)
         {
             Event = @event;
-            this.js = js;
+            this.jsEngine = js;
             element = control;
-            SetCode(id, method);
+            FUNCTION_HANDLE = CreateFunction(id, method);
+            CreateHook(control, @event);
+        }
 
-            TemplateCode ??= LastCode.ToString();
-
+        private void CreateHook(FrameworkElement control, XAML_EVENTS @event)
+        {
             switch (@event)
             {
                 case XAML_EVENTS.MOUSE_DOWN:
@@ -63,76 +67,63 @@ namespace VM.OS.JS
                     break;
 
                 case XAML_EVENTS.RENDER:
+                    // render events are handled elsewhere for performance and threading reasons.
+                    // they are properly unhooked on their own.
                 default:
                     break;
             }
-
         }
 
-
-        public string GetCode()
+        public string CreateFunction(string identifier, string methodName)
         {
-            return LastCode.ToString();
-        }
-        public void SetCode(string identifier, string methodName)
-        {
-            LastCode.Clear();
-            LastCode.Append($"{identifier}.{methodName}({arguments_placeholder})");
-        }
-        const string arguments_placeholder = $"{{!arguments}}";
-
-        public bool Disposed { get; internal set; }
-
-        public void InstantiateCode(object? sender, object? args)
-        {
-            LastCode.Clear();
-
-            StringBuilder argsBldr = new("\"");
-            var arg0 = sender?.ToString() + '\"';
-
-            if (!string.IsNullOrEmpty(arg0))
-                argsBldr.Append(arg0);
-
-            var arg1 = args?.ToString();
-
-            if (!string.IsNullOrEmpty(arg1))
-                argsBldr.Append(" ," + arg1);
-
-            LastCode.Append(TemplateCode.Replace(arguments_placeholder, $"{argsBldr.ToString()}"));
+            var event_call = $"{ identifier }.{ methodName}{ARGS_STRING}";
+            var id = $"{ identifier }{ methodName}";
+            string func = $"function {id} {ARGS_STRING} {{ {event_call}; }}";
+            Task.Run(() => jsEngine?.Execute(func));
+            return id;
         }
 
+        const string ARGS_STRING = "(arg1, arg2)";
+
+        public bool Disposing { get; internal set; }
         public void InvokeMouse(object? sender, System.Windows.Input.MouseEventArgs e)
         {
+            var Args = new object?[]
+            {
+                 e.LeftButton == MouseButtonState.Pressed,
+                 e.RightButton == MouseButtonState.Pressed,
+                 e.MiddleButton == MouseButtonState.Pressed,
+                 null!, // for pos array
+            };
+
             if (element != null && e.GetPosition(element) is Point pos)
             {
-                InstantiateCode(null, $"[{(e.LeftButton == System.Windows.Input.MouseButtonState.Pressed ? 1 : 0)}" +
-                    $",{(e.RightButton == System.Windows.Input.MouseButtonState.Pressed ? 1 : 0)}" +
-                    $", [{pos.X},{pos.Y}] " +
-                    $",{(e.MiddleButton == System.Windows.Input.MouseButtonState.Pressed ? 1 : 0)}]");
-                InvokeEvent();
+                Args[3] = new object[] { pos.X, pos.Y };
+                InvokeEvent(Args);
                 return;
             }
-            InstantiateCode(null, $"[{(e.LeftButton == System.Windows.Input.MouseButtonState.Pressed ? 1 : 0)},{(e.RightButton == System.Windows.Input.MouseButtonState.Pressed ? 1 : 0)},{(e.MiddleButton == System.Windows.Input.MouseButtonState.Pressed ? 1 : 0)}]");
-            InvokeEvent();
+
+            InvokeEvent(Args);
         }
 
-        private void InvokeEvent()
+        private void InvokeEvent(params object?[] args)
         {
-            if (LastCode.ToString() is string Code)
+            try
             {
-                js.Execute(Code);
-                LastCode.Clear();
+                jsEngine.ENGINE_JS.CallFunction(FUNCTION_HANDLE, args);
+            }
+            catch (Exception e)
+            {
+                Notifications.Exception(e);
             }
         }
 
         public void InvokeKeyboard(object? sender, System.Windows.Input.KeyEventArgs e)
         {
-            InstantiateCode(null, $"[{e.Key},{e.IsDown},{e.SystemKey}]");
-            InvokeEvent();
+            InvokeEvent(new object?[] { e.Key, e.IsDown, e.SystemKey });
         }
         public void InvokeGeneric(object? sender, object? arguments)
         {
-            InstantiateCode(null, null);
             InvokeEvent();
         }
     }
