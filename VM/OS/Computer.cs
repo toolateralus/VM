@@ -85,5 +85,6 @@ namespace VM.OS
         {
             OS?.JavaScriptEngine?.InteropModule?.print(obj ?? "null");
         }
+
     }
 }

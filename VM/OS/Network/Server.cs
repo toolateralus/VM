@@ -65,7 +65,7 @@ namespace VM.OS.Network.Server
 
             List<TcpClient> CLIENTS = new();
 
-            Notifications.Now($"SERVER : Starting on :: {{'ip':{GetLocalIPAddress().MapToIPv4()}, 'port':{OPEN_PORT}}}. Waiting for connections...");
+            Notifications.Now($"SERVER : Starting on :: {{'ip':{GetLocalIPAddress().MapToIPv4()}, port':{OPEN_PORT}}}. Waiting for connections...");
 
             SERVER = new TcpListener(IPAddress.Any, OPEN_PORT);
 
@@ -352,6 +352,7 @@ namespace VM.OS.Network.Server
                 reply = reply,
                 isDir = isDir,
                 path = path,
+                
             };
 
             return JsonConvert.SerializeObject(json);
