@@ -22,13 +22,21 @@ namespace VM.JS
 {
     public class JSInterop
     {
-
-        public Computer computer;
+        public Computer Computer;
         public Action<string, object?>? OnModuleExported;
         public Func<string, object?>? OnModuleImported;
         public Action<int>? OnComputerExit;
 
-
+        public JSInterop(Computer computer)
+        {
+            this.Computer = computer;
+            EventActions.TryAdd("draw_pixels", DrawPixelsEvent);
+            EventActions.TryAdd("draw_image", DrawImageEvent);
+            EventActions.TryAdd("set_content", SetContent);
+            EventActions.TryAdd("get_content", GetContent);
+                       
+        }
+        
         public object getentries(string path)
         {
             if (File.Exists(path))
@@ -41,20 +49,18 @@ namespace VM.JS
 
             return Directory.GetFileSystemEntries(path);
         }
-
         public void disconnect()
         {
-            computer.Network.StopClient();
+            Computer.Network.StopClient();
             Notifications.Now($"Disconnected from {NetworkConfiguration.LAST_KNOWN_SERVER_IP}::{NetworkConfiguration.LAST_KNOWN_SERVER_PORT}");
         }
-
         public void reawaken_console()
         {
             CommandPrompt cmd = null;
 
-            cmd = Runtime.SearchForOpenWindowType<CommandPrompt>(computer);
+            cmd = Runtime.SearchForOpenWindowType<CommandPrompt>(Computer);
 
-            Runtime.GetWindow(computer)?.Dispatcher?.Invoke(() => { 
+            Computer.Window?.Dispatcher?.Invoke(() => { 
 
                 var history = CommandPrompt.LastUploaded;
 
@@ -70,11 +76,10 @@ namespace VM.JS
 
             });
         }
-
         public string? read()
         {
             CommandPrompt cmd = null;
-            cmd = Runtime.SearchForOpenWindowType<CommandPrompt>(computer);
+            cmd = Runtime.SearchForOpenWindowType<CommandPrompt>(Computer);
             var waiting = true;
             string result = "";
             if (cmd is null)
@@ -133,15 +138,6 @@ namespace VM.JS
             }
             return default;
         }
-        public JSInterop(Computer computer)
-        {
-            this.computer = computer;
-            EventActions.TryAdd("draw_pixels", DrawPixelsEvent);
-            EventActions.TryAdd("draw_image", DrawImageEvent);
-            EventActions.TryAdd("set_content", SetContent);
-            EventActions.TryAdd("get_content", GetContent);
-        }
-   
         public object toBytes(string background)
         {
             return Convert.FromBase64String(background);
@@ -154,33 +150,28 @@ namespace VM.JS
 
             return Convert.ToBase64String(bytes.ToArray());
         }
-
         public async void call(string message)
         {
-            if (!computer.CommandLine.TryCommand(message))
-                await computer.JavaScriptEngine.Execute(message);
+            if (!Computer.CommandLine.TryCommand(message))
+                await Computer.JavaScriptEngine.Execute(message);
         }
-
         public bool start(string path)
         {
-            var window = Runtime.GetWindow(computer);
-            
             if (path.Contains(".app"))
             {
-                Task.Run(async() => { await window.OpenCustom(path); });
+                Task.Run(async() => { await Computer.OpenCustom(path); });
                 return true;
             }
-
             return false;
         }
         public void print(object message)
         {
             try
             {
-                Runtime.GetWindow(computer)?.Dispatcher.Invoke(() =>
+                Computer.Window?.Dispatcher.Invoke(() =>
                 {
                     Debug.WriteLine(message);
-                    Notifications.Now(message?.ToString() ?? "Invalid Print.");
+                    Notifications.Now(message?.ToString() ?? "null");
                 });
             }
             catch(Exception e)
@@ -198,7 +189,7 @@ namespace VM.JS
         }
         public void uninstall(string dir)
         {
-            ComputerWindow window = Runtime.GetWindow(computer);
+            ComputerWindow window = Computer.Window;
 
             // js/html app
             if (dir.Contains(".web"))
@@ -219,7 +210,7 @@ namespace VM.JS
         }
         public async void install(string dir)
         {
-            ComputerWindow window = Runtime.GetWindow(computer);
+            ComputerWindow window = Computer.Window;
 
             if (window == null)
             {
@@ -262,7 +253,7 @@ namespace VM.JS
                 }
             }
 
-            computer.CommandLine.Aliases[alias] = Runtime.GetResourcePath(path) ?? "not found";
+            Computer.CommandLine.Aliases[alias] = Runtime.GetResourcePath(path) ?? "not found";
         }
         /// <summary>
         /// this returns the callback, no need for extra listening
@@ -271,12 +262,10 @@ namespace VM.JS
         /// <param name="eventType"></param>
         /// <param name="data"></param>
         /// <returns></returns>
-        
         public async void sleep(int ms)
         {
             await Task.Delay(ms);
         }
-
         public object? require(string path)
         {
             return OnModuleImported?.Invoke(path);
@@ -320,15 +309,49 @@ namespace VM.JS
         public void write_file(string path, string data)
         {
             if (!Path.IsPathFullyQualified(path))
-                path = Path.Combine(computer.FS_ROOT, path);
+                path = Path.Combine(Computer.FS_ROOT, path);
             File.WriteAllText(path, data);
         }
         public bool file_exists(string path)
         {
             return File.Exists(path);
         }
+        private object? getProperty(string id, string controlName, object? property)
+        {
+            object? output = null;
+
+            Computer.Window?.Dispatcher.Invoke((Delegate)(() =>
+            {
+                var userControl = GetUserContent(id, Computer);
+                var control = FindControl(userControl, controlName);
+
+                if (control is null)
+                    return;
+
+                output = GetProperty(control, property as string);
+            }));
+
+            return output;
+        }
+        private void setProperty(string id, string controlName, object? property, object? value)
+        {
+            object? output = null;
+
+            Computer.Window?.Dispatcher.Invoke((Delegate)(() =>
+            {
+                var userControl = GetUserContent(id, Computer);
+                var control = FindControl(userControl, controlName);
+
+                if (control is null)
+                    return;
+
+                SetProperty(control, property as string, value);
+            }));
+
+        }
 
         #region C# Methods
+
         public T FindElementInUserControl<T>(UserControl userControl, string elementName) where T : FrameworkElement
         {
             var elementType = typeof(T);
@@ -370,9 +393,9 @@ namespace VM.JS
         {
             object? output = null;
 
-            Runtime.GetWindow(computer)?.Dispatcher.Invoke(() =>
+            Computer.Window?.Dispatcher.Invoke(() =>
             {
-                var userControl = GetUserContent(id, computer);
+                var userControl = GetUserContent(id, Computer);
                 var control = FindControl(userControl, controlName);
 
                 if (control is null)
@@ -392,7 +415,7 @@ namespace VM.JS
         }
         public static UserControl? GetUserContent(string javascript_controL_class_instance_id, Computer computer)
         {
-            var window = Runtime.GetWindow(computer);
+            var window = computer.Window;
             var resizableWins = window?.USER_WINDOW_INSTANCES?.Where(W => W.Key == javascript_controL_class_instance_id);
             UserControl userContent = null;
 
@@ -467,11 +490,11 @@ namespace VM.JS
         {
             object? output = null;
 
-            var wnd = Runtime.GetWindow(computer);
+            var wnd = Computer.Window;
 
             wnd?.Dispatcher.Invoke(() =>
             {
-                var userControl = GetUserContent(id, computer);
+                var userControl = GetUserContent(id, Computer);
 
                 if (userControl == null)
                     return;
@@ -520,9 +543,9 @@ namespace VM.JS
             if (value is null)
                 return null;
 
-            Runtime.GetWindow(computer)?.Dispatcher.Invoke(() =>
+            Computer.Window?.Dispatcher.Invoke(() =>
             {
-                var control = GetUserContent(id, computer);
+                var control = GetUserContent(id, Computer);
 
                 var image = FindControl(control, target_control);
 
@@ -546,9 +569,9 @@ namespace VM.JS
 
             JSInterop.forEach<int>(value.ToEnumerable(), (item) => colorData.Add((byte)item));
 
-            Runtime.GetWindow(computer)?.Dispatcher.Invoke(() =>
+            Computer.Window?.Dispatcher.Invoke(() =>
             {
-                var control = GetUserContent(id, computer);
+                var control = GetUserContent(id, Computer);
                 if (control?.Content is Grid grid)
                 {
                     if (grid != null)
@@ -601,7 +624,6 @@ namespace VM.JS
         }
         #endregion
         public static Dictionary<string, Func<string, string, object?, object?>> EventActions = new();
-
         public object? pushEvent(string id, string targetControl, string eventType, object? data)
         {
             if (EventActions.TryGetValue(eventType, out var handler))
@@ -612,7 +634,7 @@ namespace VM.JS
         }
         public void eventHandler(string identifier, string targetControl, string methodName, int type)
         {
-            var window = Runtime.GetWindow(computer);
+            var window = Computer.Window;
 
             if (window.USER_WINDOW_INSTANCES.TryGetValue(identifier, out var app))
                 app.JavaScriptEngine?.CreateEventHandler(identifier, targetControl, methodName, type);

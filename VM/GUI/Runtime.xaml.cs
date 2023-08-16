@@ -173,16 +173,11 @@ namespace VM.GUI
         }
         private static void InstantiateComputer(uint cpu_id)
         {
-
-            // there's a strange interdependence between the initialization of these two objects
-            // which creates a scenario where we need to do this kind of stagger
-            // we should seperate the PC and window logic.
-
             Computer pc = new(cpu_id);
             ComputerWindow wnd = new(pc);
+            pc.Window = wnd;
             Computers[pc] = wnd;
             pc.FinishInit(wnd);
-
             onWindowStateChanged?.Invoke(WindowState.Minimized);
         }
 

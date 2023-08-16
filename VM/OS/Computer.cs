@@ -11,13 +11,15 @@ using VM.FS;
 using VM.JS;
 using VM;
 using Microsoft.VisualBasic.Devices;
+using System.Collections;
+using VM.UserInterface;
 
 namespace VM
 {
     public class Computer
     {
         public NetworkConfiguration Network = null!;
-
+        public ComputerWindow Window;
         public FileSystem FS;
         public JavaScriptEngine JavaScriptEngine;
         public CommandLine CommandLine;
@@ -44,8 +46,8 @@ namespace VM
             }
             NativeCSharpApps[exePath] = type;
             Notifications.Now($"{exePath} installed!");
-            ComputerWindow window = Runtime.GetWindow(FS.Computer);
-            window.RegisterApp(exePath, type);
+            ComputerWindow window = Window;
+            window.InstallCSharpWPFApp(exePath, type);
         }
         public void InitializeEngine(Computer computer)
         {
@@ -89,6 +91,9 @@ namespace VM
             Config = LoadConfig();
 
             Network = new(this);
+
+            InitializeEngine(this);
+
         }
         internal static JObject LoadConfig()
         {
@@ -148,11 +153,7 @@ namespace VM
         }
         internal void FinishInit(ComputerWindow wnd)
         {
-            InitializeEngine(this);
-
             LoadBackground(this, wnd);
-
-            InstallCoreApps(this);
 
             wnd.Show();
 
@@ -162,6 +163,8 @@ namespace VM
                 Task.Run(() => SaveConfig(Config.ToString()));
                 this.Shutdown();
             };
+
+            InstallCoreApps(this);
         }
         private static void InstallCoreApps(Computer pc)
         {
@@ -178,5 +181,37 @@ namespace VM
         {
             JavaScriptEngine?.InteropModule?.print(obj ?? "null");
         }
+
+        #region Application
+        private static async Task<(string id, string code)> InstantiateWindowClass(string type, (string XAML, string JS) data, JavaScriptEngine engine)
+        {
+            var name = type.Split('.')[0];
+
+            var JS = new string(data.JS);
+
+            _ = await engine.Execute(JS);
+
+            var instance_name = "uid" + Guid.NewGuid().ToString().Split('-')[0];
+
+            string instantiation_code = $"let {instance_name} = new {name}('{instance_name}')";
+
+            return (instance_name, instantiation_code);
+        }
+        public async Task OpenCustom(string type)
+        {
+            var data = Runtime.GetAppDefinition(this, type);
+            var control = XamlJsInterop.ParseUserControl(data.XAML);
+            if (control == null)
+            {
+                Notifications.Now($"Error : either the app was not found or there was an error parsing xaml or js for {type}.");
+                return;
+            }
+            JavaScriptEngine engine = new(this);
+            var jsResult = await InstantiateWindowClass(type, data, engine);
+            Window.OpenApp(control, title: jsResult.id, engine: engine);
+            await engine.Execute(jsResult.code);
+        }
+        #endregion
+
     }
 }

@@ -57,6 +57,12 @@ class App {
     pushEvent(id, control, type, data) {
         interop.pushEvent(id, control, type, data);
     }
+    getProperty(id, control, propertyName) {
+        return interop.getProperty(id, control, propertyName);
+    }
+    setProperty(id, control, propertyName, value) {
+        interop.setProperty(id, control, propertyName, value);
+    }
 }
 let app = new App();
 

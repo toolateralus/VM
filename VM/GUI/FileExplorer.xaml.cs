@@ -163,7 +163,7 @@ namespace VM.GUI
             {
                 if (computer.FS.FileExists(path))
                 {
-                    Runtime.GetWindow(computer)?.OpenApp(new TextEditor(computer, path));
+                    computer.Window?.OpenApp(new TextEditor(computer, path));
                     OnNavigated?.Invoke(path);
                 }
 

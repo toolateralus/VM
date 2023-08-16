@@ -5,6 +5,7 @@ using System.Threading.Tasks;
 using System.Text;
 using Button = System.Windows.Controls.Button;
 using System.Windows.Input;
+using System.Reflection;
 
 namespace VM.JS
 {
@@ -86,36 +87,37 @@ namespace VM.JS
         const string ARGS_STRING = "(arg1, arg2)";
 
         public bool Disposing { get; internal set; }
-        public void InvokeMouse(object? sender, System.Windows.Input.MouseEventArgs e)
+        public void InvokeMouse(object? sender, object? e)
         {
-            var Args = new object?[]
+            if (e is MouseEventArgs mvA && mvA.GetPosition(sender as IInputElement ?? element) is Point pos)
             {
-                 e.LeftButton == MouseButtonState.Pressed,
-                 e.RightButton == MouseButtonState.Pressed,
-                 e.MiddleButton == MouseButtonState.Pressed,
-                 null!, // for pos array
-            };
-
-            if (element != null && e.GetPosition(element) is Point pos)
-            {
-                Args[3] = new object[] { pos.X, pos.Y };
-                InvokeEvent(Args);
+                InvokeEvent(pos.Y, pos.X);
                 return;
             }
+            else if (e is object?[] mouse_args)
+            {
+                InvokeEvent(mouse_args[0], mouse_args[1]);
+            }
+            else if (e is MouseEventArgs _mvA)
+            {
+                InvokeEvent(_mvA.LeftButton == MouseButtonState.Pressed, _mvA.RightButton == MouseButtonState.Pressed);
+            }
 
-            InvokeEvent(Args);
+
         }
 
-        private void InvokeEvent(params object?[] args)
+        private void InvokeEvent(object? arg1 = null, object? arg2 = null)
         {
-            try
-            {
-                jsEngine.ENGINE_JS.CallFunction(FUNCTION_HANDLE, args);
-            }
-            catch (Exception e)
-            {
-                Notifications.Exception(e);
-            }
+            Task.Run(() => {
+                try
+                {
+                    jsEngine.ENGINE_JS.CallFunction(FUNCTION_HANDLE, arg1, arg2);
+                }
+                catch (Exception e)
+                {
+                    Notifications.Exception(e);
+                }
+            });
         }
 
         public void InvokeKeyboard(object? sender, System.Windows.Input.KeyEventArgs e)
@@ -124,7 +126,16 @@ namespace VM.JS
         }
         public void InvokeGeneric(object? sender, object? arguments)
         {
-            InvokeEvent();
+            if (arguments is RoutedEventArgs args)
+            {
+                var mouseArgs = new object[] { Mouse.LeftButton is MouseButtonState.Pressed, Mouse.RightButton is MouseButtonState.Pressed};
+                InvokeMouse(sender?.GetType()?.GetProperty("Name")?.GetValue(sender) ?? "unknown", mouseArgs); 
+                
+            }
+            else
+            {
+                InvokeEvent();
+            }
         }
     }
 }

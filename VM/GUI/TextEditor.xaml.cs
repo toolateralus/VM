@@ -135,7 +135,7 @@ namespace VM.GUI
 
         private void RunMarkdownViewer(string path)
         {
-            var wnd = Runtime.GetWindow(computer);
+            var wnd = computer.Window;
             mdViewer = new MarkdownViewer();
             Contents = File.ReadAllText(path);
             mdViewer.RenderMarkdown(Contents);
@@ -157,7 +157,7 @@ namespace VM.GUI
             FileExplorer fileExplorer = new FileExplorer();
             fileExplorer.LateInit(computer);
 
-            Runtime.GetWindow(computer)?.OpenApp(fileExplorer);
+            computer.Window?.OpenApp(fileExplorer);
 
             fileExplorer.OnNavigated += (file) =>
             {

@@ -23,16 +23,16 @@ namespace VM.JS
         public JSNetworkHelpers NetworkModule { get; }
         public JSInterop InteropModule { get; }
         public bool Disposing { get; private set; }
-        Computer computer;
         private readonly ConcurrentDictionary<int, (string code, Action<object?> output)> CodeDictionary = new();
         public Dictionary<string, object> EmbeddedObjects = new();
         public List<JSEventHandler> EventHandlers = new();
+        private Computer Computer;
         private readonly Task executionThread;
         readonly Task renderThread;
 
         public JavaScriptEngine(Computer computer)
         {
-            this.computer = computer;
+            Computer = computer;
 
             engineSwitcher = JsEngineSwitcher.Current;
 
@@ -80,6 +80,9 @@ namespace VM.JS
                 ENGINE_JS.EmbedHostObject(item.Key, item.Value);
 
         }
+
+
+        // Resource intensive loops
         private async void RenderAsync()
         {
             while (!Disposing)
@@ -102,7 +105,7 @@ namespace VM.JS
                             Notifications.Exception(e);
                         }
                     }
-                    else
+                    else if (item != null)
                     {
                         EventHandlers.Remove(item);
                     }
@@ -111,6 +114,37 @@ namespace VM.JS
                 await Task.Delay(16);
             }
         }
+        private async void ExecuteAsync()
+        {
+            while (!Disposing)
+            {
+                if (!CodeDictionary.IsEmpty)
+                {
+                    var pair = CodeDictionary.Last();
+                    CodeDictionary.Remove(pair.Key, out _);
+
+                    try
+                    {
+                        var result = ENGINE_JS.Evaluate(pair.Value.code);
+                        pair.Value.output?.Invoke(result);
+                    }
+                    catch (Exception e)
+                    {
+                        Notifications.Exception(e);
+                        Computer.JavaScriptEngine.InteropModule.print(e.Message);
+                    }
+                   
+                    continue;
+                }
+                await Task.Delay(1);
+            }
+            if (!Disposing)
+            {
+                throw new JsEngineException("Something happened");
+            }
+        }
+        // 
+
         public object? GetVariable(string name)
         {
             return ENGINE_JS.GetVariableValue(name);
@@ -153,38 +187,6 @@ namespace VM.JS
             }
 
             RecursiveLoad(sourceDir);
-        }
-        private async void ExecuteAsync()
-        {
-            while (!Disposing)
-            {
-                if (!CodeDictionary.IsEmpty)
-                {
-                    var pair = CodeDictionary.Last();
-                    CodeDictionary.Remove(pair.Key, out _);
-
-                    await Task.Run(() =>
-                    {
-                        try
-                        {
-                            var result = ENGINE_JS.Evaluate(pair.Value.code);
-                            pair.Value.output?.Invoke(result);
-                        }
-                        catch (Exception e)
-                        {
-                            Notifications.Exception(e);
-                            computer.JavaScriptEngine.InteropModule.print(e.Message);
-                        }
-                    });
-                   
-                    continue;
-                }
-                await Task.Delay(1); // Avoid busy-waiting
-            }
-            if (!Disposing)
-            {
-                throw new JsEngineException("Something happened");
-            }
         }
         public async Task<object?> Execute(string jsCode)
         {
@@ -243,7 +245,7 @@ namespace VM.JS
         }
         internal async Task CreateEventHandler(string identifier, string targetControl, string methodName, int type)
         {
-            var wnd = Runtime.GetWindow(computer);
+            var wnd = Computer.Window;
 
             var result = await Execute($"{identifier} != null");
 
@@ -260,7 +262,7 @@ namespace VM.JS
             }
             wnd.Dispatcher.Invoke(() =>
             {
-                var content = JSApp.GetUserContent(identifier, computer);
+                var content = JSInterop.GetUserContent(identifier, Computer);
 
                 if (content == null)
                 {
@@ -276,7 +278,7 @@ namespace VM.JS
                 }
                 else
                 {
-                    element = JSApp.FindControl(content, targetControl);
+                    element = JSInterop.FindControl(content, targetControl);
                 }
 
 

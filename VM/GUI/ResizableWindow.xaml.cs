@@ -31,15 +31,14 @@ namespace VM.GUI
 
         public ResizableWindow()
         {
-            MouseDown += OnMouseDown;
-            MouseMove += OnMouseMove;
-            MouseUp += OnMouseUp;
-            MouseLeave += onMouseLeave;
-            MinWidth = 50;
-            MinHeight = 50;
-            MaxWidth = 1920;
-            // taskbar margin
-            MaxHeight = 1080 - 25;
+           MouseDown += OnMouseDown;
+           MouseMove += OnMouseMove;
+           MouseUp += OnMouseUp;
+           MouseLeave += onMouseLeave;
+           MinWidth = 50;
+           MinHeight = 50;
+           MaxWidth = 1920;
+           MaxHeight = 1080 - 25;
         }
         private void onMouseLeave(object sender, MouseEventArgs e)
         {

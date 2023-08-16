@@ -97,7 +97,7 @@ namespace VM.FS
         }
         private void LP(object[]? obj)
         {
-            foreach (var item in Runtime.GetWindow(Computer).USER_WINDOW_INSTANCES)
+            foreach (var item in Computer.Window.USER_WINDOW_INSTANCES)
             {
                 Notifications.Now($"\n{item.Key}");
             }
@@ -133,7 +133,7 @@ namespace VM.FS
                         var str = File.Create(AbsPath);
                         str.Close();
                     }
-                    var wnd = Runtime.GetWindow(Computer);
+                    var wnd = Computer.Window;
                     var tEdit = new TextEditor(Computer, AbsPath);
                     wnd.OpenApp(tEdit);
                 } 
@@ -306,7 +306,7 @@ namespace VM.FS
         }
         private void Clear(object[]? obj)
         {
-            Runtime.GetWindow(Computer)?.Dispatcher?.Invoke(() => { Runtime.SearchForOpenWindowType<CommandPrompt>(Computer)?.output?.Clear(); });
+            Computer.Window?.Dispatcher?.Invoke(() => { Runtime.SearchForOpenWindowType<CommandPrompt>(Computer)?.output?.Clear(); });
         }
         private void Copy(object[]? obj)
         {
@@ -345,7 +345,7 @@ namespace VM.FS
 
             if (commandPrompt == default)
             {
-                //Runtime.GetWindow(Computer).Open();
+                //Computer.Window.Open();
             }
 
             StringBuilder cmdbuilder = new();

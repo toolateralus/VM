@@ -19,7 +19,7 @@ namespace VM.GUI
             InitializeComponent();
         }
         public JavaScriptEngine JavaScriptEngine;
-        internal void Init(ResizableWindow frame, UserControl actualUserContent, JavaScriptEngine engine)
+        internal void InitializeUserContent(ResizableWindow frame, UserControl actualUserContent, JavaScriptEngine engine)
         {
             Owner = frame;
             ContentsFrame.Content = actualUserContent;
