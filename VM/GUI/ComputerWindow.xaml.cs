@@ -13,9 +13,9 @@ using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Xml.Linq;
 using VM;
-using VM.OS;
-using VM.OS.JS;
-using VM.OS.UserInterface;
+using VM;
+using VM.JS;
+using VM.UserInterface;
 
 namespace VM.GUI
 {
@@ -248,7 +248,7 @@ namespace VM.GUI
             TaskbarStackPanel.Children.Add(btn);
 
             window.OnClosed += () => RemoveTaskbarButton(title);
-            IDLabel.Content = $"computer {computer.ID()}";
+            IDLabel.Content = $"computer {computer.ID}";
             
             CompositionTarget.Rendering += (e, o) => UpdateComputerTime();
 
@@ -276,11 +276,11 @@ namespace VM.GUI
         {
             var btn = new Button()
             {
-                Background = computer.OS.Theme.Background,
-                BorderBrush = computer.OS.Theme.Border,
-                BorderThickness = computer.OS.Theme.BorderThickness,
-                FontFamily = computer.OS.Theme.Font,
-                FontSize = computer.OS.Theme.FontSize,
+                Background = computer.Theme.Background,
+                BorderBrush = computer.Theme.Border,
+                BorderThickness = computer.Theme.BorderThickness,
+                FontFamily = computer.Theme.Font,
+                FontSize = computer.Theme.FontSize,
                 Width = width,
                 Height = height,
             };

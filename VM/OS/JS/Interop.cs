@@ -1,28 +1,18 @@
 ﻿using System;
-using System.Collections;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.ComponentModel;
-using System.ComponentModel.Design;
 using System.IO;
 using System.Linq;
-using System.Reflection;
-using System.Reflection.Metadata.Ecma335;
-using System.Security.AccessControl;
-using System.Security.Cryptography.X509Certificates;
-using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
-using System.Windows.Controls;
-using System.Windows.Media;
 using JavaScriptEngineSwitcher.Core;
 using JavaScriptEngineSwitcher.V8;
-using Microsoft.VisualBasic.Devices;
 using VM.GUI;
-using static VM.OS.JS.JSInterop;
+using VM;
 
-namespace VM.OS.JS
+namespace VM.JS
 {
     public class JavaScriptEngine
     {
@@ -73,7 +63,7 @@ namespace VM.OS.JS
 
             LoadModules(jsDirectory + "\\OS-JS");
 
-            _ = Execute($"os.id = {computer.ID()}");
+            _ = Execute($"os.id = {computer.ID}");
 
             InteropModule.OnComputerExit += computer.Exit;
         }
@@ -183,7 +173,7 @@ namespace VM.OS.JS
                         catch (Exception e)
                         {
                             Notifications.Exception(e);
-                            computer.OS.JavaScriptEngine.InteropModule.print(e.Message);
+                            computer.JavaScriptEngine.InteropModule.print(e.Message);
                         }
                     });
                    

@@ -10,13 +10,14 @@ using KeyEventArgs = System.Windows.Input.KeyEventArgs;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using System.Threading;
-using VM.OS;
+using VM;
 using static System.Net.Mime.MediaTypeNames;
 using System.Xml.Linq;
 using System.Linq;
 using System.Windows.Controls;
 using System.Collections.Concurrent;
 using System.Runtime.CompilerServices;
+using VM;
 
 namespace VM.GUI
 {
@@ -81,7 +82,7 @@ namespace VM.GUI
         public static Action<WindowState>? onWindowStateChanged;
         public static void Restart(uint id)
         {
-            var pc = Computers.Where(C => C.Key.ID() == id).FirstOrDefault();
+            var pc = Computers.Where(C => C.Key.ID == id).FirstOrDefault();
 
             if (pc.Key != null && pc.Value != null)
             {
@@ -172,10 +173,16 @@ namespace VM.GUI
         }
         private static void InstantiateComputer(uint cpu_id)
         {
-            OS.Computer pc = new(cpu_id);
+
+            // there's a strange interdependence between the initialization of these two objects
+            // which creates a scenario where we need to do this kind of stagger
+            // we should seperate the PC and window logic.
+
+            Computer pc = new(cpu_id);
             ComputerWindow wnd = new(pc);
             Computers[pc] = wnd;
             pc.FinishInit(wnd);
+
             onWindowStateChanged?.Invoke(WindowState.Minimized);
         }
 

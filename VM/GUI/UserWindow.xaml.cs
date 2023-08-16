@@ -1,8 +1,8 @@
 ﻿using System;
 using System.Windows;
 using System.Windows.Controls;
-using VM.OS;
-using VM.OS.JS;
+using VM;
+using VM.JS;
 
 namespace VM.GUI
 {

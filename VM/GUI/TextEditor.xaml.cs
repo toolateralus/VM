@@ -5,7 +5,7 @@ using System.IO;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Shapes;
-using VM.OS;
+using VM;
 
 namespace VM.GUI
 {
@@ -173,7 +173,7 @@ namespace VM.GUI
             if (!File.Exists(LoadedFile))
             {
                 var dialog = new SaveFileDialog();
-                dialog.InitialDirectory = computer.OS.FS_ROOT;
+                dialog.InitialDirectory = computer.FS_ROOT;
 
                 dialog.FileName = "New";
                 dialog.DefaultExt = ".js";
@@ -195,7 +195,7 @@ namespace VM.GUI
         }
         private async void RunButton_Click(object sender, RoutedEventArgs e)
         {
-            await computer.OS.JavaScriptEngine.Execute(input.Text);
+            await computer.JavaScriptEngine.Execute(input.Text);
         }
     }
 }

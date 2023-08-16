@@ -15,11 +15,10 @@ using System.Windows.Controls;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using VM.GUI;
-using VM.OS.Network;
-using static System.Windows.Forms.VisualStyles.VisualStyleElement.TrayNotify;
+using VM.Network;
+using VM;
 
-
-namespace VM.OS.JS
+namespace VM.JS
 {
     public class JSInterop
     {
@@ -158,8 +157,8 @@ namespace VM.OS.JS
 
         public async void call(string message)
         {
-            if (!computer.OS.CommandLine.TryCommand(message))
-                await computer.OS.JavaScriptEngine.Execute(message);
+            if (!computer.CommandLine.TryCommand(message))
+                await computer.JavaScriptEngine.Execute(message);
         }
 
         public bool start(string path)
@@ -263,7 +262,7 @@ namespace VM.OS.JS
                 }
             }
 
-            computer.OS.CommandLine.Aliases[alias] = Runtime.GetResourcePath(path) ?? "not found";
+            computer.CommandLine.Aliases[alias] = Runtime.GetResourcePath(path) ?? "not found";
         }
         /// <summary>
         /// this returns the callback, no need for extra listening
@@ -321,7 +320,7 @@ namespace VM.OS.JS
         public void write_file(string path, string data)
         {
             if (!Path.IsPathFullyQualified(path))
-                path = Path.Combine(computer.OS.FS_ROOT, path);
+                path = Path.Combine(computer.FS_ROOT, path);
             File.WriteAllText(path, data);
         }
         public bool file_exists(string path)

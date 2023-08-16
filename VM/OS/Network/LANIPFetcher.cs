@@ -1,4 +1,4 @@
-﻿namespace VM.OS.Network
+﻿namespace VM.Network
 {
     using System.Net;
     using System.Net.NetworkInformation;

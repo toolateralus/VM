@@ -9,10 +9,11 @@ using System.Threading.Tasks;
 using System.Windows.Controls;
 using System.Windows.Markup;
 using VM.GUI;
-using VM.OS.Network;
-using VM.OS.Network.Server;
+using VM.Network;
+using VM.Network.Server;
+using VM;
 
-namespace VM.OS.JS
+namespace VM.JS
 {
     public delegate void TransmissionStream(byte[] data, TransmissionType type, int outCh, int replyCh, bool isDir);
     public class JSNetworkHelpers
@@ -39,14 +40,14 @@ namespace VM.OS.JS
             {
                 ConnectToIP(targetIP, IPString);
             }
-            else if (Computer.OS.Config?.Value<string>("DEFAULT_SERVER_IP") is string defaultIP && IPAddress.TryParse(defaultIP, out targetIP))
+            else if (Computer.Config?.Value<string>("DEFAULT_SERVER_IP") is string defaultIP && IPAddress.TryParse(defaultIP, out targetIP))
             {
                 ConnectToIP(targetIP, defaultIP);
             }
         }
         private void ConnectToIP(IPAddress targetIP, string ipString)
         {
-            Computer.OS.JavaScriptEngine.InteropModule.print($"Trying to connect to: {ipString}");
+            Computer.JavaScriptEngine.InteropModule.print($"Trying to connect to: {ipString}");
 
             Computer.Network.StopClient();
 
@@ -56,16 +57,16 @@ namespace VM.OS.JS
 
                 if (Computer.Network.IsConnected())
                 {
-                    Computer.OS.JavaScriptEngine.InteropModule.print($"Successfully connected to {ipString}.");
+                    Computer.JavaScriptEngine.InteropModule.print($"Successfully connected to {ipString}.");
                 }
                 else
                 {
-                    Computer.OS.JavaScriptEngine.InteropModule.print($"Failed to connect to {ipString} :: Not found.");
+                    Computer.JavaScriptEngine.InteropModule.print($"Failed to connect to {ipString} :: Not found.");
                 }
             }
             catch (Exception e)
             {
-                Computer.OS.JavaScriptEngine.InteropModule.print($"Failed to connect to {ipString} :: {e.Message}");
+                Computer.JavaScriptEngine.InteropModule.print($"Failed to connect to {ipString} :: {e.Message}");
             }
         }
         public async void upload(string path)
@@ -143,7 +144,7 @@ namespace VM.OS.JS
 
             Notifications.Now($"Downloading {path}..");
 
-            var root = Computer.OS.FS_ROOT + "\\downloads";
+            var root = Computer.FS_ROOT + "\\downloads";
 
             if (!Directory.Exists(root))
             {

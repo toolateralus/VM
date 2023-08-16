@@ -2,7 +2,7 @@
 using System.Text;
 using System.Threading;
 
-namespace VM.OS.Network
+namespace VM.Network
 {
     using CefNet.WinApi;
     using Microsoft.ClearScript.JavaScript;
@@ -18,7 +18,7 @@ namespace VM.OS.Network
     using System.Windows.Markup;
     using System.Windows.Shapes;
     using VM.GUI;
-    using VM.OS.Network.Server;
+    using VM.Network.Server;
     using static Server.Server;
     public class NetworkConfiguration
     {
@@ -43,9 +43,9 @@ namespace VM.OS.Network
         public NetworkConfiguration(Computer computer)
         {
             computer.OnShutdown += StopClient;
-            if (computer?.OS?.Config?.Value<bool>("ALWAYS_CONNECT") is bool connect && connect)
+            if (computer?.Config?.Value<bool>("ALWAYS_CONNECT") is bool connect && connect)
             {
-                if (computer?.OS?.Config?.Value<string>("DEFAULT_SERVER_IP") is string _IP && IPAddress.Parse(_IP) is IPAddress ip)
+                if (computer?.Config?.Value<string>("DEFAULT_SERVER_IP") is string _IP && IPAddress.Parse(_IP) is IPAddress ip)
                 {
                     StartClient(ip);
                 }

@@ -2,10 +2,10 @@
 using System.IO;
 using System.Linq;
 using System.Security.Cryptography.X509Certificates;
-using VM.OS;
+using VM;
 using VM.Types;
 
-namespace VM.OS.FS
+namespace VM.FS
 {
     public class FileSystem
     {
@@ -85,7 +85,7 @@ namespace VM.OS.FS
         {
             if (path == "..")
             {
-                string currentDirectory = Computer.OS.FS.CurrentDirectory;
+                string currentDirectory = Computer.FS.CurrentDirectory;
 
                 string[] components = currentDirectory.Split('\\');
 
@@ -95,7 +95,7 @@ namespace VM.OS.FS
 
                     string parentDirectory = string.Join("\\", parentComponents);
 
-                    Computer.OS.FS.ChangeDirectory(parentDirectory);
+                    Computer.FS.ChangeDirectory(parentDirectory);
                 }
                 return;
             }
@@ -161,7 +161,7 @@ namespace VM.OS.FS
 
             if (!Path.IsPathFullyQualified(targetPath))
             {
-                targetPath = Path.Combine(Computer.OS.FS_ROOT, fileName);
+                targetPath = Path.Combine(Computer.FS_ROOT, fileName);
             }
 
             return targetPath;

@@ -2,8 +2,8 @@
 using System.Windows.Controls;
 using System.Threading.Tasks;
 using System.Collections.Generic;
-using VM.OS.JS;
-using VM.OS;
+using VM.JS;
+using VM;
 using System.Windows;
 using System.Linq;
 using System.Windows.Input;
@@ -94,10 +94,10 @@ namespace VM.GUI
         public void LateInit(Computer computer)
         {
             this.computer = computer;
-            Engine = computer.OS.JavaScriptEngine;
+            Engine = computer.JavaScriptEngine;
 
-            output.FontFamily = new(computer.OS.Config.Value<string>("FONT") ?? "Consolas");
-            input.FontFamily = new(computer.OS.Config.Value<string>("FONT") ?? "Consolas");
+            output.FontFamily = new(computer.Config.Value<string>("FONT") ?? "Consolas");
+            input.FontFamily = new(computer.Config.Value<string>("FONT") ?? "Consolas");
         }
         private async void CommandPrompt_PreviewKeyDown(object sender, System.Windows.Input.KeyEventArgs e)
         {
@@ -163,7 +163,7 @@ namespace VM.GUI
         private async Task ExecuteJavaScript(string code)
         {
 
-            if (computer.OS.CommandLine.TryCommand(code))
+            if (computer.CommandLine.TryCommand(code))
             {
                 return;
             }
