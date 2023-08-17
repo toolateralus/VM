@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Linq;
 using System.Reflection;
+using System.Reflection.Metadata.Ecma335;
 using System.Runtime.InteropServices;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
@@ -52,10 +53,15 @@ namespace VM.GUI
         private void Computer_KeyDown(object sender, System.Windows.Input.KeyEventArgs e)
         {
             foreach (var userWindow in Computer.Window.USER_WINDOW_INSTANCES)
+            {
+                if (userWindow.Value?.JavaScriptEngine?.EventHandlers == null)
+                    continue;
+
                 foreach (var eventHandler in userWindow.Value.JavaScriptEngine.EventHandlers)
                 {
                     InvokeKeyEvent(sender, e, eventHandler);
                 }
+            }
 
             switch (e.Key)
             {

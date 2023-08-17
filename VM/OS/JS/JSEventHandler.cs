@@ -6,16 +6,17 @@ using System.Text;
 using Button = System.Windows.Controls.Button;
 using System.Windows.Input;
 using System.Reflection;
+using System.Threading;
 
 namespace VM.JS
 {
-    public class JSEventHandler
+    public class JSEventHandler : IDisposable
     {
         internal JavaScriptEngine jsEngine;
         public XAML_EVENTS Event = XAML_EVENTS.RENDER;
         public Action OnUnhook;
         FrameworkElement element;
-
+        public Thread? thread = null;
         internal readonly string methodHandle;
         internal readonly string FUNCTION_HANDLE;
 
@@ -82,13 +83,21 @@ namespace VM.JS
                     break;
 
                 case XAML_EVENTS.RENDER:
-                    // render events are handled elsewhere for performance and threading reasons.
-                    // they are properly unhooked on their own.
+                    thread = new(WorkerLoop);
+                    thread.Start();
+                    break;
                 default:
                     break;
             }
         }
-
+        public void WorkerLoop()
+        {
+            while (!Disposing)
+            {
+                InvokeEventUnsafe(null, null);
+                Thread.Sleep(16);
+            }
+        }
         public string CreateFunction(string identifier, string methodName)
         {
             var event_call = $"{ identifier }.{ methodName}{ARGS_STRING}";
@@ -118,7 +127,17 @@ namespace VM.JS
             }
 
         }
-
+        private void InvokeEventUnsafe(object? arg1 = null, object? arg2 = null)
+        {
+            try
+            {
+                jsEngine.ENGINE_JS.CallFunction(FUNCTION_HANDLE, arg1, arg2);
+            }
+            catch (Exception e)
+            {
+                Notifications.Exception(e);
+            }
+        }
         private void InvokeEvent(object? arg1 = null, object? arg2 = null)
         {
             Task.Run(() => {
@@ -148,6 +167,15 @@ namespace VM.JS
             {
                 InvokeEvent();
             }
+        }
+        public void TryRelease()
+        {
+            (this as IDisposable)?.Dispose();
+        }
+        void IDisposable.Dispose()
+        {
+            Disposing = true;
+            thread?.Join(10_000);
         }
     }
 }

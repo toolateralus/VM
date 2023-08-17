@@ -28,7 +28,6 @@ namespace VM.JS
         public List<JSEventHandler> EventHandlers = new();
         private Computer Computer;
         private readonly Thread executionThread;
-        readonly Thread renderThread;
 
         public JavaScriptEngine(Computer computer)
         {
@@ -55,9 +54,6 @@ namespace VM.JS
             executionThread = new Thread(ExecuteAsync);
             executionThread.Start();
 
-            renderThread = new Thread(RenderAsync);
-            renderThread.Start();
-
             string jsDirectory = Computer.SearchForParentRecursive("VM");
 
             LoadModules(jsDirectory + "\\OS-JS");
@@ -66,7 +62,6 @@ namespace VM.JS
 
             InteropModule.OnComputerExit += computer.Exit;
         }
-
         public void EmbedObject(string name, object? obj)
         {
             ENGINE_JS.EmbedHostObject(name, obj);
@@ -81,40 +76,7 @@ namespace VM.JS
                 ENGINE_JS.EmbedHostObject(item.Key, item.Value);
 
         }
-
-
         // Resource intensive loops
-        private async void RenderAsync()
-        {
-            while (!Disposing)
-            {
-                if (Disposing)
-                    return;
-
-                for (int i = 0; i < EventHandlers.Count(); ++i)
-                {
-                    var item = EventHandlers[i];
-
-                    if (item != null && !item.Disposing && item.Event == XAML_EVENTS.RENDER)
-                    {
-                        try
-                        {
-                            item?.jsEngine?.ENGINE_JS?.CallFunction(item.FUNCTION_HANDLE);
-                        }
-                        catch (Exception e)
-                        {
-                            Notifications.Exception(e);
-                        }
-                    }
-                    else if (item == null)
-                    {
-                        EventHandlers.Remove(item);
-                    }
-                }
-
-                await Task.Delay(16);
-            }
-        }
         private async void ExecuteAsync()
         {
             while (!Disposing)
@@ -144,8 +106,6 @@ namespace VM.JS
                 throw new JsEngineException("Something happened");
             }
         }
-        // 
-
         public object? GetVariable(string name)
         {
             return ENGINE_JS.GetVariableValue(name);
@@ -221,7 +181,14 @@ namespace VM.JS
             ENGINE_JS = null!;
             
             Task.Run(() => executionThread.Join());
-            Task.Run(() => renderThread.Join());
+            Task.Run(() =>
+            {
+                for (int i = 0; i < EventHandlers.Count; i++)
+                {
+                    JSEventHandler? eventHandler = EventHandlers[i];
+                    eventHandler.TryRelease();
+                }
+            });
         }
         internal void ExecuteScript(string absPath)
         {
