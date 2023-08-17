@@ -27,8 +27,8 @@ namespace VM.JS
         public Dictionary<string, object> EmbeddedObjects = new();
         public List<JSEventHandler> EventHandlers = new();
         private Computer Computer;
-        private readonly Task executionThread;
-        readonly Task renderThread;
+        private readonly Thread executionThread;
+        readonly Thread renderThread;
 
         public JavaScriptEngine(Computer computer)
         {
@@ -52,9 +52,10 @@ namespace VM.JS
 
             EmbedAllObjects();
 
-            executionThread = new Task(ExecuteAsync);
+            executionThread = new Thread(ExecuteAsync);
             executionThread.Start();
-            renderThread = new Task(RenderAsync);
+
+            renderThread = new Thread(RenderAsync);
             renderThread.Start();
 
             string jsDirectory = Computer.SearchForParentRecursive("VM");
@@ -105,7 +106,7 @@ namespace VM.JS
                             Notifications.Exception(e);
                         }
                     }
-                    else if (item != null)
+                    else if (item == null)
                     {
                         EventHandlers.Remove(item);
                     }
@@ -215,11 +216,12 @@ namespace VM.JS
         public void Dispose()
         {
             Disposing = true;
-            ENGINE_JS?.Dispose();
-            ENGINE_JS = null;
             
-            Task.Run(() => executionThread.Dispose());
-            Task.Run(() => renderThread.Dispose());
+            ENGINE_JS?.Dispose();
+            ENGINE_JS = null!;
+            
+            Task.Run(() => executionThread.Join());
+            Task.Run(() => renderThread.Join());
         }
         internal void ExecuteScript(string absPath)
         {

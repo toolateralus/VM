@@ -33,38 +33,52 @@ namespace VM.JS
             switch (@event)
             {
                 case XAML_EVENTS.MOUSE_DOWN:
-                    if (control is Button button)
                     {
-                        button.Click += InvokeGeneric;
-                        OnUnhook = () => button.Click -= InvokeGeneric;
-                        break;
+                        if (control is Button button)
+                        {
+                            button.Click += InvokeGeneric;
+                            OnUnhook += () => button.Click -= InvokeGeneric;
+                            break;
+                        }
+                        control.MouseDown += InvokeGeneric;
+                        OnUnhook += () => control.MouseDown -= InvokeGeneric;
                     }
-                    control.MouseDown += InvokeMouse;
-                    OnUnhook = () => control.MouseDown -= InvokeMouse;
                     break;
                 case XAML_EVENTS.MOUSE_UP:
-                    control.MouseUp += InvokeMouse;
-                    OnUnhook = () => control.MouseUp -= InvokeMouse;
+                    {
+                        control.MouseUp += InvokeGeneric;
+                        OnUnhook += () => control.MouseUp -= InvokeGeneric;
+                    }
                     break;
                 case XAML_EVENTS.MOUSE_MOVE:
-                    control.MouseMove += InvokeMouse;
-                    OnUnhook = () => control.MouseMove -= InvokeMouse;
+                    {
+                        control.MouseMove += InvokeMouse;
+                        OnUnhook += () => control.MouseMove -= InvokeMouse;
+                    }
                     break;
                 case XAML_EVENTS.KEY_DOWN:
-                    control.KeyDown += InvokeKeyboard;
-                    OnUnhook = () => control.KeyDown -= InvokeKeyboard;
+                    {
+                        OnKeyDown += InvokeKeyboard;
+                        OnUnhook += () => OnKeyDown -= InvokeKeyboard;
+                    }
                     break;
                 case XAML_EVENTS.KEY_UP:
-                    control.KeyUp += InvokeKeyboard;
-                    OnUnhook = () => control.KeyUp -= InvokeKeyboard;
+                    {
+                        OnKeyUp += InvokeKeyboard;
+                        OnUnhook += () => OnKeyUp -= InvokeKeyboard;
+                    }
                     break;
                 case XAML_EVENTS.LOADED:
-                    control.Loaded += InvokeGeneric;
-                    OnUnhook = () => control.Loaded -= InvokeGeneric;
+                    {
+                        control.Loaded += InvokeGeneric;
+                        OnUnhook += () => control.Loaded -= InvokeGeneric;
+                    }
                     break;
                 case XAML_EVENTS.WINDOW_CLOSE:
-                    control.Unloaded += InvokeGeneric;
-                    OnUnhook = () => control.Unloaded -= InvokeGeneric;
+                    {
+                        control.Unloaded += InvokeGeneric;
+                        OnUnhook += () => control.Unloaded -= InvokeGeneric;
+                    }
                     break;
 
                 case XAML_EVENTS.RENDER:
@@ -87,22 +101,21 @@ namespace VM.JS
         const string ARGS_STRING = "(arg1, arg2)";
 
         public bool Disposing { get; internal set; }
+        public Action<object?, KeyEventArgs> OnKeyUp;
+
+        public Action<object?, KeyEventArgs> OnKeyDown; 
+
         public void InvokeMouse(object? sender, object? e)
         {
             if (e is MouseEventArgs mvA && mvA.GetPosition(sender as IInputElement ?? element) is Point pos)
             {
-                InvokeEvent(pos.Y, pos.X);
+                InvokeEvent(pos.X, pos.Y);
                 return;
             }
             else if (e is object?[] mouse_args)
             {
                 InvokeEvent(mouse_args[0], mouse_args[1]);
             }
-            else if (e is MouseEventArgs _mvA)
-            {
-                InvokeEvent(_mvA.LeftButton == MouseButtonState.Pressed, _mvA.RightButton == MouseButtonState.Pressed);
-            }
-
 
         }
 
@@ -122,15 +135,14 @@ namespace VM.JS
 
         public void InvokeKeyboard(object? sender, System.Windows.Input.KeyEventArgs e)
         {
-            InvokeEvent(new object?[] { e.Key, e.IsDown, e.SystemKey });
+            InvokeEvent(e.Key.ToString(), e.IsDown);
         }
         public void InvokeGeneric(object? sender, object? arguments)
         {
             if (arguments is RoutedEventArgs args)
             {
-                var mouseArgs = new object[] { Mouse.LeftButton is MouseButtonState.Pressed, Mouse.RightButton is MouseButtonState.Pressed};
-                InvokeMouse(sender?.GetType()?.GetProperty("Name")?.GetValue(sender) ?? "unknown", mouseArgs); 
-                
+                var mouseArgs = new object[] { Mouse.LeftButton is MouseButtonState.Pressed, Mouse.RightButton is MouseButtonState.Pressed };
+                InvokeMouse(sender?.GetType()?.GetProperty("Name")?.GetValue(sender) ?? "unknown", mouseArgs);
             }
             else
             {

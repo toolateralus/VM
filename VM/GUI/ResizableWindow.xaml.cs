@@ -28,9 +28,10 @@ namespace VM.GUI
         }
         private ResizeDirection resizeDirection;
         public Action OnClosed { get; internal set; }
-
-        public ResizableWindow()
+        ComputerWindow Owner;
+        public ResizableWindow(ComputerWindow owner)
         {
+           Owner = owner;
            MouseDown += OnMouseDown;
            MouseMove += OnMouseMove;
            MouseUp += OnMouseUp;
@@ -70,10 +71,11 @@ namespace VM.GUI
         }
         public void BringToTopOfDesktop()
         {
-            if (Parent is Grid grid && grid.Children.Contains(this))
+            if (Parent is Canvas grid && grid.Children.Contains(this))
             {
                 grid.Children.Remove(this);
                 grid.Children.Add(this);
+                Canvas.SetZIndex(this, Owner.TopMostZIndex);
             }
         }
         protected void OnMouseMove(object sender, MouseEventArgs e)

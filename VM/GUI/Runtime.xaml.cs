@@ -182,7 +182,7 @@ namespace VM.GUI
         }
 
         public static Dictionary<int, Queue<(object? val, int replyCh)>> NetworkEvents = new();
-        public static async Task<(object? value, int reply)> PullEvent(int channel, Computer computer, int timeout = 50000, [CallerMemberName] string callerName = "unknown")
+        public static async Task<(object? value, int reply)> PullEventAsync(int channel, Computer computer, int timeout = 50000, [CallerMemberName] string callerName = "unknown")
         {
             Queue<(object? val, int replyCh)> stack;
             var timeoutTask = Task.Delay(timeout);
@@ -201,6 +201,29 @@ namespace VM.GUI
             var val = stack?.Dequeue();
 
             if (stack?.Count == 0)
+                NetworkEvents.Remove(channel);
+
+            return val ?? default;
+        }
+        public static (object? value, int reply) PullEvent(int channel, Computer computer)
+        {
+            Queue<(object? val, int replyCh)>? queue;
+
+            const int timeout = int.MaxValue;
+            int it = 0;
+
+            while ((!NetworkEvents.TryGetValue(channel, out  queue) || queue is null || queue.Count == 0) && !computer.Disposing)
+            {
+                if (it < timeout)
+                    it++;
+                else break;
+
+                Thread.Sleep(1);
+            }
+
+            var val = queue?.Dequeue();
+
+            if (queue?.Count == 0)
                 NetworkEvents.Remove(channel);
 
             return val ?? default;

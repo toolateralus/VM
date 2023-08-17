@@ -17,6 +17,7 @@ using System.Windows.Media.Imaging;
 using VM.GUI;
 using VM.Network;
 using VM;
+using System.Runtime.Serialization.Formatters.Binary;
 
 namespace VM.JS
 {
@@ -306,17 +307,24 @@ namespace VM.JS
 
             return null;
         }
-        public void write_file(string path, string data)
+        public void write_file(string path, object? data)
         {
+            if (string.IsNullOrEmpty(path))
+            {
+                Notifications.Exception(e : new ArgumentNullException("Tried to write a file with a null or empty path, this is not allowed."));
+                return;
+            }
+                    
             if (!Path.IsPathFullyQualified(path))
                 path = Path.Combine(Computer.FS_ROOT, path);
-            File.WriteAllText(path, data);
+
+            File.WriteAllText(path, data?.ToString() ?? "");
         }
         public bool file_exists(string path)
         {
             return File.Exists(path);
         }
-        private object? getProperty(string id, string controlName, object? property)
+        public object? getProperty(string id, string controlName, object? property)
         {
             object? output = null;
 
@@ -333,7 +341,7 @@ namespace VM.JS
 
             return output;
         }
-        private void setProperty(string id, string controlName, object? property, object? value)
+        public void setProperty(string id, string controlName, object? property, object? value)
         {
             object? output = null;
 

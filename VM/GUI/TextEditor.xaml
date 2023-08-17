@@ -28,6 +28,6 @@
             <Button FontFamily="Consolas" Click="RunButton_Click"  Name="RunButton" TextBlock.TextAlignment="Center" Height="20" Width="80" Content="run .js" />
             <Button FontFamily="Consolas" Click="RenderMD_Click"  Name="RenderMDButton" TextBlock.TextAlignment="Center" Height="20" Width="80" Content="render .md" />
         </StackPanel>
-        <avalonEdit:TextEditor Foreground="White" Background="#28262e" Grid.Row="1" Grid.RowSpan="4" Grid.ColumnSpan="4" SyntaxHighlighting="JavaScriptCustom" ShowLineNumbers="True" FontSize="16" x:Name="input" IsReadOnly="false"  FontFamily="Consolas" Height="Auto" Width="Auto" HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Auto"/>
+        <avalonEdit:TextEditor WordWrap="True" Foreground="White" Background="#28262e" Grid.Row="1" Grid.RowSpan="4" Grid.ColumnSpan="4" SyntaxHighlighting="JavaScriptCustom" ShowLineNumbers="True" FontSize="16" x:Name="input" IsReadOnly="false"  FontFamily="Consolas" Height="Auto" Width="Auto" HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Auto"/>
     </Grid>
 </UserControl>

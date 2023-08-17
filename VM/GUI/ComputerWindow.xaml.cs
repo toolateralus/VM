@@ -25,11 +25,14 @@ namespace VM.GUI
         public Computer Computer;
         public readonly List<string> LoadedInstalledApplications = new();
         public readonly Dictionary<string, UserWindow> USER_WINDOW_INSTANCES = new();
+
+        public int TopMostZIndex { get; internal set; } = 0;
+
         public ComputerWindow(Computer pc)
         {
             InitializeComponent();
             desktopBackground.Source = LoadImage(Runtime.GetResourcePath("Background.png") ?? "background.png");
-            KeyDown += Computer_KeyDown;
+            Keyboard.AddKeyDownHandler(this, Computer_KeyDown);
             Computer = pc;
             Closing += OnClosingCustom;
             IDLabel.Content = $"computer {Computer.ID}";
@@ -48,15 +51,37 @@ namespace VM.GUI
         }
         private void Computer_KeyDown(object sender, System.Windows.Input.KeyEventArgs e)
         {
+            foreach (var userWindow in Computer.Window.USER_WINDOW_INSTANCES)
+                foreach (var eventHandler in userWindow.Value.JavaScriptEngine.EventHandlers)
+                {
+                    InvokeKeyEvent(sender, e, eventHandler);
+                }
+
             switch (e.Key)
             {
                 case Key.OemTilde:
-                    var cmd = new CommandPrompt();
-                    OpenApp(cmd, "Cmd");
-                    cmd.LateInit(Computer);
+                    if (Keyboard.IsKeyDown(Key.LeftCtrl))
+                    {
+                        var cmd = new CommandPrompt();
+                        OpenApp(cmd, "Cmd");
+                        cmd.LateInit(Computer);
+                    }
                     break;
             }
         }
+
+        private static void InvokeKeyEvent(object sender, KeyEventArgs e, JSEventHandler eventHandler)
+        {
+            if (eventHandler.Event == XAML_EVENTS.KEY_DOWN)
+            {
+                eventHandler.OnKeyDown?.Invoke(sender, e);
+            }
+            if (eventHandler.Event == XAML_EVENTS.KEY_UP)
+            {
+                eventHandler.OnKeyUp?.Invoke(sender, e);
+            }
+        }
+
         private void ShutdownClick(object sender, RoutedEventArgs e)
         {
             App.Current.Shutdown();
@@ -194,16 +219,20 @@ namespace VM.GUI
         }
         public void OpenApp(UserControl control, string title = "window", Brush? background = null, Brush? foreground = null, JavaScriptEngine engine = null)
         {
+
+            // basically app count, a way for us to force to top.
+            TopMostZIndex++;
+
             background ??= Computer.Theme.Background;
             foreground ??= Computer.Theme.Foreground;
 
-            var window = new UserWindow()
+            var window = new UserWindow
             {
                 Background = background,
                 Foreground = foreground,
             };
 
-            var frame = new ResizableWindow
+            var frame = new ResizableWindow(this)
             {
                 Content = window,
                 Width = 800,
@@ -223,7 +252,11 @@ namespace VM.GUI
 
             TaskbarStackPanel.Children.Add(btn);
 
-            window.OnClosed += () => RemoveTaskbarButton(title);
+            window.OnClosed += () =>
+            {
+                USER_WINDOW_INSTANCES.Remove(title);
+                RemoveTaskbarButton(title);
+            };
         }
         public void InstallWPF(string type)
         {
