@@ -82,21 +82,33 @@ namespace VM.JS
                     }
                     break;
 
+                /// the lower the delay, the faster the calls back to js, however this can have
+                /// a counterintuitive effect when too short or too many running, since
+                /// a low delay introduces large cpu overhead.
                 case XAML_EVENTS.RENDER:
-                    thread = new(WorkerLoop);
+                    // going for 60+ fps
+                    DELAY_BETWEEN_WORK_ITERATIONS = 14;
+                    thread = new(HeavyWorkerLoop);
+                    thread.Start();
+                    break;
+                case XAML_EVENTS.PHYSICS:
+                    // going for ~40-50fps
+                    DELAY_BETWEEN_WORK_ITERATIONS = 24;
+                    thread = new(HeavyWorkerLoop);
                     thread.Start();
                     break;
                 default:
                     break;
             }
         }
-        public void WorkerLoop()
+        public void HeavyWorkerLoop()
         {
-            while (!Disposing)
+            while (!Disposing && !jsEngine.Disposing)
             {
                 InvokeEventUnsafe(null, null);
-                Thread.Sleep(16);
+                Thread.Sleep(DELAY_BETWEEN_WORK_ITERATIONS);
             }
+            Dispose();
         }
         public string CreateFunction(string identifier, string methodName)
         {
@@ -110,6 +122,8 @@ namespace VM.JS
         const string ARGS_STRING = "(arg1, arg2)";
 
         public bool Disposing { get; internal set; }
+        public int DELAY_BETWEEN_WORK_ITERATIONS { get; private set; }
+
         public Action<object?, KeyEventArgs> OnKeyUp;
 
         public Action<object?, KeyEventArgs> OnKeyDown; 
@@ -168,14 +182,12 @@ namespace VM.JS
                 InvokeEvent();
             }
         }
-        public void TryRelease()
+        public void Dispose()
         {
-            (this as IDisposable)?.Dispose();
-        }
-        void IDisposable.Dispose()
-        {
+            if (!Disposing)
+                thread?.Join(10_000);
+
             Disposing = true;
-            thread?.Join(10_000);
         }
     }
 }

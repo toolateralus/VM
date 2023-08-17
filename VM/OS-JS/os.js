@@ -41,6 +41,7 @@ const XAML_EVENTS = {
     LOADED: 5,
     WINDOW_CLOSE: 6,
     RENDER: 7,
+    PHYSICS: 8,
 };
 
 function install(directory) {

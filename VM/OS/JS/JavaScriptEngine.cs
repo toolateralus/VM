@@ -186,7 +186,7 @@ namespace VM.JS
                 for (int i = 0; i < EventHandlers.Count; i++)
                 {
                     JSEventHandler? eventHandler = EventHandlers[i];
-                    eventHandler.TryRelease();
+                    eventHandler?.Dispose();
                 }
             });
         }
