@@ -199,10 +199,10 @@ namespace VM.GUI
         public static Dictionary<int, Queue<(object? val, int replyCh)>> NetworkEvents = new();
         public static async Task<(object? value, int reply)> PullEventAsync(int channel, Computer computer, int timeout = 20_000, [CallerMemberName] string callerName = "unknown")
         {
-            Queue<(object? val, int replyCh)> stack;
+            Queue<(object? val, int replyCh)> queue;
             var timeoutTask = Task.Delay(timeout);
 
-            while (!NetworkEvents.TryGetValue(channel, out stack) && !computer.Disposing && computer.Network.IsConnected())
+            while (!NetworkEvents.TryGetValue(channel, out queue) || queue is null || queue.Count == 0 && !computer.Disposing && computer.Network.IsConnected())
             {
                 var completedTask = await Task.WhenAny(Task.Delay(1), timeoutTask);
 
@@ -213,9 +213,9 @@ namespace VM.GUI
                 }
             }
 
-            var val = stack?.Dequeue();
+            var val = queue?.Dequeue();
 
-            if (stack?.Count == 0)
+            if (queue?.Count == 0)
                 NetworkEvents.Remove(channel);
 
             return val ?? default;
