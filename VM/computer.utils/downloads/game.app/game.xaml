@@ -6,7 +6,19 @@
              mc:Ignorable="d" 
              d:DesignHeight="450" d:DesignWidth="800" Background="#474354" BorderBrush="White" BorderThickness="5">
     <Grid>
-        <Image Margin="10,10,10,10" x:Name="renderTarget" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Stretch="Fill"/>
+          <Grid.RowDefinitions>
+               <RowDefinition Height="*"/>
+          </Grid.RowDefinitions>
+          
+          <Image
+               Grid.RowSpan="3"
+               Margin="2,2,2,2"
+               x:Name="renderTarget" 
+               HorizontalAlignment="Stretch" 
+               VerticalAlignment="Stretch"
+               Stretch="Fill" 
+               RenderOptions.BitmapScalingMode="NearestNeighbor"/>
+
     </Grid>
 </UserControl>
 

@@ -1,0 +1,22 @@
+<UserControl xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:local="clr-namespace:System.Windows.Controls;assembly=PresentationFramework"
+             mc:Ignorable="d" 
+             d:DesignHeight="450" d:DesignWidth="800" Background="#474354" BorderBrush="White" BorderThickness="5">
+    <Grid>
+         <Image Margin="1,1,1,1" x:Name="renderTarget" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Stretch="Fill" RenderOptions.BitmapScalingMode="NearestNeighbor"/>
+         <StackPanel Margin="5,5,5,5" Orientation="Horizontal" Opacity="0.55" Background="Black" MinHeight="30" MaxHeight="30" VerticalAlignment="Bottom">
+          <Label x:Name="framerateLabel" FontFamily="Consolas MS Bold" FontSize="20" Foreground="#61c28e"/>
+          <Image Margin="2,2,2,2" x:Name="brushColorImage" MinWidth="60" MinHeight="60" Stretch="Fill"/>
+          <Button x:Name="changeColorBtn" FontFamily="Consolas MS Bold" FontSize="20" Foreground="#61c28e" BorderBrush="Purple" Background="Black" MinWidth="60" MaxWidth="250" Content="Next"/>
+          <TextBox BorderBrush="Black" Margin="2,2,2,2" x:Name="channelTxt" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Text="Outgoing Channel"/>
+          <TextBox BorderBrush="Black" Margin="2,2,2,2" x:Name="replyTxt" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Text="Reply Channel"/>
+          <Button BorderBrush="Black" Margin="2,2,2,2" x:Name="connectBtn" HorizontalAlignment="Left" VerticalAlignment="Top" Content="Connect To Another Player"/>
+          <Label Content="Check to host, leave unchecked to join." x:Name="checkBoxLabel" FontFamily="Consolas MS Bold" FontSize="20" Foreground="#61c28e"/>
+          <CheckBox x:Name="isHostCheckbox"/>
+         </StackPanel>
+    </Grid>
+</UserControl>
+

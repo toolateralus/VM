@@ -28,6 +28,7 @@
 
 	
 }
+
 class xaml_js_project_generator{
 	saveFiles(root, files, paths) {
 
