@@ -1,5 +1,5 @@
 // -- user -- name this class the (case sensitive) same as the name of the xaml file and this file. for generated code purposes.
-class graphicTest {
+class trippy {
     frameCt = 0;
     speed = 10;
     width = 32;

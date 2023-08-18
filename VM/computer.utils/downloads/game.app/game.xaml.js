@@ -82,40 +82,47 @@ class renderer {
         }
         if (this.isDirty)
         {
-            const polys = scene.getPolys();
 
-            for (let y = 0; y < this.width; y++) 
+            const gameObjects = scene.gameObjects();
+
+            // iterate through gameObjects
+            for (let z = 0; z < gameObjects.length; ++z)
             {
-                for (let x = 0; x < this.width; x++) 
+                const gameObject = gameObjects[z];
+                const pos = gameObject.pos;
+                const size = new point()
+                // draw sprite
+                for (let _y = 0; _y < gameObject.size.x; _y++) 
                 {
-                    for (let z = 0; z < polys.length; ++z)
+                    for (let _x = 0; _x < gameObject.size.h; _x++) 
                     {
-                        const poly = polys[z];
                         
-                        if (poly.collides(x, y) === true) 
-                        {
-                            const points = poly.getClosestPoints(x, y);
-
-                            /* -- end user -- 
-                                to easily manipulate polygon drawing, you can make a custom 'shader' 
-                                by making a new function to pass in here, and modifying the polygon 
-                                blend function to take in more parameters, such as screen space coords, 
-                                texture coords, gameObject position, more colors, noise inputs, masks/maps , etc.
-                            */
-                            
-                            const blended = poly.getBlendedColor(points, this.lerpColors);
-                            this.writePixel(x, y, blended);
-                        } 
-                        else 
-                        {
-                            // draw background here
-                            const color = this.palette[14];
-                            this.writePixel(x, y, color);
-                        }
                     }
-                    
                 }
             }
+           
+            if (poly.collides(x, y) === true) 
+            {
+                const points = poly.getClosestPoints(x, y);
+
+                /* -- end user -- 
+                    to easily manipulate polygon drawing, you can make a custom 'shader' 
+                    by making a new function to pass in here, and modifying the polygon 
+                    blend function to take in more parameters, such as screen space coords, 
+                    texture coords, gameObject position, more colors, noise inputs, masks/maps , etc.
+                */
+                
+                const blended = poly.getBlendedColor(points, this.lerpColors);
+                this.writePixel(x, y, blended);
+            } 
+            else 
+            {
+                // draw background here
+                const color = this.palette[14];
+                this.writePixel(x, y, color);
+            }
+
+          
             
             this.isDirty = false;
             return true;
@@ -147,10 +154,8 @@ class game {
         this.player.move()
         print(`velocity :: ${JSON.stringify(this.player.velocity)}`)
     }
-    
     // simply uncomment this to get a physics loop
     //_physics(){}
-        
     _render() {
         // returns a bool indicating whether anything was actually drawn or not
         if (this.renderer._drawScene(this.scene) === true){
@@ -180,7 +185,7 @@ class game {
         
         // make a player object
         const verts = this._getSquare(16);
-        const scale = 1;
+        const scale = new point(1, 1);
         const pos = new point(24, 24);
         this.player = new gameObject(verts, scale, pos);
         
@@ -197,13 +202,15 @@ class game {
 
     }
 }
-class scene{
-    getPolys = () => this.gameObjects;
 
-    constructor(polygons){
-        this.gameObjects = polygons;
+class scene {
+    // array of all gameobjects in scene.
+    gameObjects = () => this.gOs;
+    constructor(gOs){
+        this.gOs = gOs;
     }
 }
+
 class line {
     constructor(point1, point2) {
         this.point1 = point1;
@@ -217,6 +224,7 @@ class line {
         return u >= 0 && u <= 1 ? this.point1 : u < 0 ? this.point1 : this.point2;
     }
 }
+
 class point {
     constructor(x, y, color) {
         this.x = x;
@@ -300,10 +308,11 @@ class point {
     }
     
 }
+
 class gameObject {
-    constructor(points, scale, pos) {
+    constructor(points, size, pos) {
+        this.size = size
         this.pos = pos ?? new point(0,0);
-        this.scale = scale;
         this.points = this.applyScale(points, scale);
         this.edges = this.createEdges(this.points);
         this._cachedRatio = undefined;
@@ -375,8 +384,8 @@ class gameObject {
     applyScale(points) {
         for (let i = 0; i < points.length; ++i) {
             const pt = points[i];
-            points[i].x = pt.x * this.scale;
-            points[i].y = pt.y * this.scale;
+            points[i].x = pt.x * this.size.x;
+            points[i].y = pt.y * this.size.y;
         }
         return points;
     }

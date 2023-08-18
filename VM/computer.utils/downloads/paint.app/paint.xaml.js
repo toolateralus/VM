@@ -135,7 +135,7 @@ class paint {
     }
 
     getIndexedColorData(){
-        const data = [];
+        const data = [0,0,0,0,0,0,0];
         for (let i = 0; i < this.frameData.length; i += 4) {
             const color = [
                 this.frameData[i],

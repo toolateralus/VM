@@ -6,5 +6,14 @@
   "OPEN_PORTS": [
     "8080"
   ],
-  "ALWAYS_CONNECT": true
+  "ALWAYS_CONNECT": true,
+  "ALIAS_PATH": "C:\\Users\\Josh\\AppData\\Roaming\\VM\\computer0\\commands",
+  "INSTALLED_APPS": [
+    "imageviewer.app",
+    "webConsole.web",
+    "graphicTest.app",
+    "paint.app",
+    "PaintNet.app",
+    "game.app"
+  ]
 }
