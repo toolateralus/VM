@@ -20,6 +20,8 @@ using VM.Network;
 using VM;
 using VM.Types;
 using System.Runtime.Serialization.Formatters.Binary;
+using VM.FS;
+using System.Text.RegularExpressions;
 
 namespace VM.JS
 {
@@ -335,6 +337,43 @@ namespace VM.JS
         {
             return File.Exists(path);
         }
+
+        public void setAliasDirectory(string path, string regex = "")
+        {
+            if (Runtime.GetResourcePath(path) is string AbsPath && !string.IsNullOrEmpty(AbsPath))
+            {
+                // validated path.
+                path = AbsPath;
+                Computer.Config["ALIAS_PATH"] = path;
+            }
+            else
+            {
+                Notifications.Now("Attempted to set command directory to an emtpy or null string");
+                return;
+            } 
+            if (File.Exists(path) && !Directory.Exists(path))
+            {
+                Notifications.Now("Attempted to set command directory to an existing file or a nonexistent directory");
+                return;
+            }
+            Action<string, string> procFile = (rootDir, file) =>
+            {
+                string name = "";
+                if (regex != "")
+                {
+                    name = Regex.Match(file, regex).Value;
+                }
+                else
+                {
+                    name = Path.GetFileName(file).Replace(Path.GetExtension(file), "");
+                }
+
+                Computer.CommandLine.Aliases[name] = file;
+            };
+            Action<string, string> procDir = delegate { }; 
+            FileSystem.ProcessDirectoriesAndFilesRecursively(path, /*UNUSED*/ procDir, procFile);
+        }
+
         public object? getProperty(string id, string controlName, object? property)
         {
             object? output = null;

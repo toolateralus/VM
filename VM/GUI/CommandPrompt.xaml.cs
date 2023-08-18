@@ -7,6 +7,7 @@ using VM;
 using System.Windows;
 using System.Linq;
 using System.Windows.Input;
+using System.Threading;
 
 namespace VM.GUI
 {
@@ -104,7 +105,6 @@ namespace VM.GUI
             if (e.Key == System.Windows.Input.Key.Enter || e.Key == System.Windows.Input.Key.F5)
             {
                 await Send(e);
-                return;
             }
             ManageCommandHistoryKeys(e);
         }
@@ -113,7 +113,7 @@ namespace VM.GUI
         {
             OnSend?.Invoke(input.Text);
 
-            await ExecuteJavaScript(input.Text);
+            await ExecuteJavaScript(input.Text, computer.Config.Value<int?>("CMD_LINE_TMOUT") ?? 10_000);
             
             if (e != null && e.RoutedEvent != null)
                 e.Handled = true;
@@ -160,9 +160,8 @@ namespace VM.GUI
          
         }
 
-        private async Task ExecuteJavaScript(string code)
+        private async Task ExecuteJavaScript(string code, int timeout = int.MaxValue)
         {
-
             if (computer.CommandLine.TryCommand(code))
             {
                 return;
@@ -176,17 +175,31 @@ namespace VM.GUI
             commandHistory.Add(code);
 
             input.Clear();
+
             try
             {
-                var task = Engine?.Execute(code);
-                await task;
-                var result = task.Result;
-
-                string? output = result?.ToString();
-
-                if (!string.IsNullOrEmpty(output))
+                using (var cts = new CancellationTokenSource())
                 {
-                     this.output.AppendText("\n" + output);
+                    var executionTask = Engine.Execute(code, cts.Token);
+                    var timeoutTask = Task.Delay(timeout);
+
+                    var completedTask = await Task.WhenAny(executionTask, timeoutTask);
+
+                    if (completedTask == timeoutTask)
+                    {
+                        cts.Cancel(); // Cancel the execution task
+                        this.output.AppendText("\nExecution timed out.");
+                    }
+                    else
+                    {
+                        var result = await executionTask;
+                        string? output = result?.ToString();
+
+                        if (!string.IsNullOrEmpty(output))
+                        {
+                            this.output.AppendText("\n" + output);
+                        }
+                    }
                 }
             }
             catch (Exception ex)
@@ -194,6 +207,8 @@ namespace VM.GUI
                 this.output.Text += ex.Message + Environment.NewLine;
             }
         }
+
+
 
         private void Grid_MouseDown(object sender, System.Windows.Input.MouseButtonEventArgs e)
         {

@@ -34,11 +34,7 @@ namespace VM.GUI
 
             onWindowStateChanged += (ws) => WindowState = ws;
 
-            using (XmlReader reader = XmlReader.Create(new StringReader(JAVASCRIPT_SYNTAX_HIGHLIGHTING.HIGHLIGHTING)))
-            {
-                IHighlightingDefinition jsHighlighting = HighlightingLoader.Load(reader, HighlightingManager.Instance);
-                HighlightingManager.Instance.RegisterHighlighting("JavaScriptCustom", new[] { ".js" }, jsHighlighting);
-            }
+            LoadCustomSyntaxHighlighting();
 
             IDBox.Focus();
             IDBox.Text = "0";
@@ -49,6 +45,26 @@ namespace VM.GUI
             TryStartPC();
             Close();
 
+        }
+
+        private static void LoadCustomSyntaxHighlighting()
+        {
+            var path = GetResourcePath("javascript_syntax_highlighting.xhsd");
+
+            StreamReader sReader = new(path);
+
+            using (XmlReader reader = XmlReader.Create(sReader))
+            {
+                IHighlightingDefinition jsHighlighting = HighlightingLoader.Load(reader, HighlightingManager.Instance);
+
+                if (HighlightingManager.Instance.GetDefinition("JavaScriptCustom") is IHighlightingDefinition ihd && ihd != default && ihd != null)
+                {
+                    // we already registered this highlighing definition.
+                    return;
+                }
+
+                HighlightingManager.Instance.RegisterHighlighting("JavaScriptCustom", new[] { ".js" }, jsHighlighting);
+            }
         }
 
         public const string COMPUTER = "computer";
@@ -182,7 +198,7 @@ namespace VM.GUI
         }
 
         public static Dictionary<int, Queue<(object? val, int replyCh)>> NetworkEvents = new();
-        public static async Task<(object? value, int reply)> PullEventAsync(int channel, Computer computer, int timeout = 50000, [CallerMemberName] string callerName = "unknown")
+        public static async Task<(object? value, int reply)> PullEventAsync(int channel, Computer computer, int timeout = 20_000, [CallerMemberName] string callerName = "unknown")
         {
             Queue<(object? val, int replyCh)> stack;
             var timeoutTask = Task.Delay(timeout);

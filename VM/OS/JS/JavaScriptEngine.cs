@@ -149,7 +149,7 @@ namespace VM.JS
 
             RecursiveLoad(sourceDir);
         }
-        public async Task<object?> Execute(string jsCode)
+        public async Task<object?> Execute(string jsCode, CancellationToken token = default)
         {
             object? result = null;
 
@@ -159,8 +159,14 @@ namespace VM.JS
 
             CodeDictionary.TryAdd(handle, (jsCode, callback));
 
-            while (CodeDictionary.TryGetValue(handle, out _))
-                await Task.Delay(1);
+            while (CodeDictionary.TryGetValue(handle, out _) && !token.IsCancellationRequested)
+                await Task.Delay(1, token);
+
+            if (token.IsCancellationRequested)
+            {
+                CodeDictionary.TryRemove(handle, out _);
+                return null;
+            }
 
             return result;
         }

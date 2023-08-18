@@ -17,6 +17,7 @@ using VM.GUI;
 using VM;
 using VM.Network;
 using VM.Network.Server;
+using VM.JS;
 
 namespace VM.FS
 {
@@ -49,6 +50,11 @@ namespace VM.FS
         public CommandLine(Computer computer)
         {
             Computer = computer;
+            RegisterNativeCommands(computer);
+        }
+
+        private void RegisterNativeCommands(Computer computer)
+        {
             Commands = new()
             {
                 // we need Delete, Edit (open text editor/create new file)
@@ -69,11 +75,31 @@ namespace VM.FS
                 new("restart", (_) => Runtime.Restart(computer.ID), "restarts this computer"),
                 new("lp", LP, "lists all the running proccesses"),
                 new("host", Host, "hosts a server on the provided <port>, none provided it will default to 8080"),
-                new("unhost", (_) => Computer.Network.StopHosting(_), "if a server is currently running on this machine this halts any active connections and closes the sever.")
-
+                new("unhost", (_) => Computer.Network.StopHosting(_), "if a server is currently running on this machine this halts any active connections and closes the sever."),
+                new("dispose", DisposeJSEnv, "disposes of the current running javascript environment, and instantiates a new one.")
             };
         }
+        private void DisposeJSEnv(object[]? obj)
+        {
+            if (Computer.JavaScriptEngine.Disposing)
+            {
+                Notifications.Now("You cannot reset the JS environment while it's in the process of disposing.");
+                return;
+            }
 
+            var oldEngine = Computer.JavaScriptEngine;
+            oldEngine.Dispose();
+
+            JavaScriptEngine newEngine = new(Computer);
+            Computer.JavaScriptEngine = newEngine;
+
+            if (Computer.JavaScriptEngine == newEngine)
+            {
+                Notifications.Now("Engine successfully swapped");
+                return;
+            }
+            Notifications.Now("Engine swap failed. Please restart your computer.");
+        }
         private void Host(object[]? obj)
         {
             Task.Run(async () =>
@@ -350,15 +376,19 @@ namespace VM.FS
 
             StringBuilder cmdbuilder = new();
             StringBuilder aliasbuilder = new();
+            commandPrompt?.DrawTextBox(" ### Native Commands ### ");
 
             foreach (var item in Commands)
-                cmdbuilder.Append($"\n{{{item.id}}} \t\n\'{string.Join(",", item.infos)}\'");
+                cmdbuilder?.Append($"\n{{{item.id}}} \t\n\'{string.Join(",", item.infos)}\'");
+
+            commandPrompt?.DrawTextBox(" ### Command Aliases ### ");
+
 
             foreach (var item in Aliases)
                 aliasbuilder.Append($"\n{item.Key} -> {item.Value.Split('\\').Last()}");
 
-            commandPrompt.output.AppendText(cmdbuilder.ToString());
-            commandPrompt.output.AppendText(aliasbuilder.ToString());
+            commandPrompt?.output.AppendText(cmdbuilder.ToString());
+            commandPrompt?.output.AppendText(aliasbuilder.ToString());
 
         }
 
@@ -438,9 +468,13 @@ namespace VM.FS
                 command.Method.Invoke(args);
             }
         }
-        internal void RootCmd(object[]? args)
+        public void RootCmd(object[]? args)
         {
             Computer.FS.ChangeDirectory(Computer.FS_ROOT);
         }
+
+     
+
     }
 }
+

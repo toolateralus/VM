@@ -47,17 +47,17 @@ namespace VM.Network
             {
                 if (computer?.Config?.Value<string>("DEFAULT_SERVER_IP") is string _IP && IPAddress.Parse(_IP) is IPAddress ip)
                 {
-                    StartClient(ip);
+                    _ = StartClient(ip);
                 }
                 else
                 {
-                    StartClient(SERVER_IP);
+                    _ = StartClient(SERVER_IP);
                 }
             }
         }
-        public void StartClient(IPAddress ip)
+        public async Task StartClient(IPAddress ip)
         {
-            Task.Run(() =>
+            await Task.Run(() =>
             {
                 try
                 {

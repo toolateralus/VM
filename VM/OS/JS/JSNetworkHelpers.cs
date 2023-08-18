@@ -32,8 +32,13 @@ namespace VM.JS
         
         public string? ip()
         {
-            return NetworkConfiguration.LAST_KNOWN_SERVER_IP;
+            return LANIPFetcher.GetLocalIPAddress().MapToIPv4().ToString();
         }
+        public void disconnect()
+        {
+            Computer.Network.StopClient();
+        }
+
         public void connect(object? ip)
         {
             IPAddress targetIP = null;
@@ -46,8 +51,12 @@ namespace VM.JS
             {
                 ConnectToIP(targetIP, defaultIP);
             }
+            else
+            {
+                Notifications.Now("DEFAULT_SERVER_IP not found in this computer's config, nor was an IP provided. please, enter an IP address to connect to.");
+            }
         }
-        private void ConnectToIP(IPAddress targetIP, string ipString)
+        private async Task ConnectToIP(IPAddress targetIP, string ipString)
         {
             Computer.JavaScriptEngine.InteropModule.print($"Trying to connect to: {ipString}");
 
@@ -55,7 +64,7 @@ namespace VM.JS
 
             try
             {
-                Computer.Network.StartClient(targetIP);
+                await Computer.Network.StartClient(targetIP);
 
                 if (Computer.Network.IsConnected())
                 {
@@ -116,10 +125,10 @@ namespace VM.JS
                     }
                 }
             }
-            else
+            else if (File.Exists(AbsPath))
             {
                 byte[] pathBytes = Encoding.UTF8.GetBytes(path);
-                byte[] fileBytes = await File.ReadAllBytesAsync(AbsPath.Split('\\').Last());
+                byte[] fileBytes = await File.ReadAllBytesAsync(AbsPath);
 
                 OnTransmit?.Invoke(pathBytes, TransmissionType.Path, -1, -1, false);
                 OnTransmit?.Invoke(fileBytes, TransmissionType.Data, -1, -1, false);
@@ -246,22 +255,27 @@ namespace VM.JS
                 return null;
             }
 
-            int ch = 0;
-
-            if (parameters[0] is not string p1 || !int.TryParse(p1, out ch) && ch.GetType() != typeof(int))
+            if (parameters[0] is string p1 && int.TryParse(p1, out int ch))
             {
-                Notifications.Now($"Invalid parameter for reiceve {parameters[0]}");
+                @event = Runtime.PullEvent(ch, Computer);
+            }
+            else if (parameters[0] is int chInt)
+            {
+                @event = Runtime.PullEvent(chInt, Computer);
+            }
+            else
+            {
+                Notifications.Now($"Invalid parameter for receive {parameters[0]}");
                 return null;
             }
 
-            @event = Runtime.PullEvent(ch, Computer);
-
             if (@event.value is byte[] message)
             {
-                // process incoming messages?
+                // Process incoming messages?
             }
 
-            return Encoding.UTF8.GetString(result); 
+            return Encoding.UTF8.GetString(result);
         }
+
     }
 }

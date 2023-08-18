@@ -45,7 +45,23 @@ namespace VM.FS
                 }
             }
         }
+        public static void ProcessDirectoriesAndFilesRecursively(string directory, Action<string, string> processDirAction, Action<string, string> processFileAction)
+        {
+            // Process files in the current directory
+            foreach (string file in Directory.EnumerateFiles(directory))
+            {
+                processFileAction(directory, file);
+            }
 
+            // Process subdirectories in the current directory
+            foreach (string subDir in Directory.EnumerateDirectories(directory))
+            {
+                processDirAction(directory, subDir);
+
+                // Recursively process subdirectories
+                ProcessDirectoriesAndFilesRecursively(subDir, processDirAction, processFileAction);
+            }
+        }
 
         public FileSystem(string root, Computer computer)
         {
@@ -154,7 +170,6 @@ namespace VM.FS
                 }
             }
         }
-
         private string GetRelativeOrAbsolute(string fileName)
         {
             var targetPath = fileName;
@@ -166,7 +181,6 @@ namespace VM.FS
 
             return targetPath;
         }
-
         public void Write(string fileName, string content)
         {
             fileName = GetRelativeOrAbsolute(fileName);
@@ -195,16 +209,11 @@ namespace VM.FS
             directoryName = GetRelativeOrAbsolute(directoryName);
             return Directory.Exists(directoryName);
         }
-        public string GetFullPath(string path)
-        {
-            return Path.GetFullPath(path);
-        }
         public string[] DirectoryListing()
         {
             string[] content = Directory.GetFileSystemEntries(currentDirectory);
             return content;
         }
-
         internal void Copy(string sourcePath, string destinationPath)
         {
             sourcePath = GetRelativeOrAbsolute(sourcePath);
@@ -240,7 +249,6 @@ namespace VM.FS
                 Notifications.Now("Source file or directory not found.. \n" + sourcePath);
             }
         }
-
         internal void Move(string? path, string? dest)
         {
             if (path != null && dest != null)
