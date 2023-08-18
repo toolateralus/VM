@@ -13,12 +13,14 @@ namespace VM.GUI
     {
         public ResizableWindow Owner;
         internal Action? OnClosed;
-
+        public double lastW = 0, lastH = 0;
+        public Point lastPos = new();
+        public bool Maximized = false;
+        public JavaScriptEngine JavaScriptEngine;
         public UserWindow()
         {
             InitializeComponent();
         }
-        public JavaScriptEngine JavaScriptEngine;
         internal void InitializeUserContent(ResizableWindow frame, UserControl actualUserContent, JavaScriptEngine engine)
         {
             Owner = frame;
@@ -28,11 +30,8 @@ namespace VM.GUI
             if (engine != null) 
                 OnClosed += engine.Dispose;
         }
-
-
         internal void Close()
         {
-
             if (Owner is not null && Owner.Parent is Canvas canvas)
             {
                 Owner.OnClosed?.Invoke();
@@ -40,12 +39,15 @@ namespace VM.GUI
             }
             OnClosed?.Invoke();
         }
-
+        /// <summary>
+        /// Wrapper for the button
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
         private void CloseWindow(object sender, RoutedEventArgs e)
         {
             Close();
         }
-
         public void ToggleVisibility(object sender, RoutedEventArgs e)
         {
             Visibility ^= Visibility.Collapsed;
@@ -55,34 +57,39 @@ namespace VM.GUI
                 Owner.BringToTopOfDesktop();
 
         }
-
-        public double lastW = 0, lastH = 0;
-        public Point lastPos = new();
-        public bool Maximized = false;
         public void ToggleMaximize(object sender, RoutedEventArgs e)
         {
             Visibility = Visibility.Visible;
             if (!Maximized)
             {
-                Maximized = true;
-                lastW = Owner.Width;
-                lastH = Owner.Height;
-                lastPos = new (Canvas.GetLeft(Owner), Canvas.GetTop(Owner));
-
-                Canvas.SetTop(Owner, 0);
-                Canvas.SetLeft(Owner, 0);
-                Owner.Width = 1920;
-                Owner.Height = 1080;
+                Maximize();
                 return;
             }
-
+            UnMaximize();
+        }
+        /// <summary>
+        /// Not quite a minimize, just a maximization cancel.
+        /// </summary>
+        private void UnMaximize()
+        {
             Maximized = false;
-
             Owner.Height = lastH;
             Owner.Width = lastW;
             Canvas.SetLeft(Owner, lastPos.X);
             Canvas.SetTop(Owner, lastPos.Y);
+        }
+        private void Maximize()
+        {
+            Maximized = true;
+            lastW = Owner.Width;
+            lastH = Owner.Height;
+            lastPos = new(Canvas.GetLeft(Owner), Canvas.GetTop(Owner));
+            Canvas.SetTop(Owner, 0);
+            Canvas.SetLeft(Owner, 0);
+            Owner.Width = 1920;
+            Owner.Height = 1080;
             Owner.BringToTopOfDesktop();
+
         }
     }
 

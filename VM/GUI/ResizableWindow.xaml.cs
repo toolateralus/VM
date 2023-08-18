@@ -8,25 +8,9 @@ namespace VM.GUI
 {
     public partial class ResizableWindow : Frame
     {
-        private const int ResizeMargin = 30;
         private bool isDragging = false;
         private bool isResizing = false;
         private Point dragOffset;
-        private double originalWidth;
-        private double originalHeight;
-        private enum ResizeDirection
-        {
-            None,
-            Left,
-            Right,
-            Top,
-            Bottom,
-            TopLeft,
-            TopRight,
-            BottomLeft,
-            BottomRight
-        }
-        private ResizeDirection resizeDirection;
         public Action OnClosed { get; internal set; }
         ComputerWindow Owner;
         public float ResizeSpeed => Owner?.Computer?.Config.Value<float?>("WINDOW_RESIZE_SPEED") ?? 4f;
@@ -47,6 +31,7 @@ namespace VM.GUI
         {
             isDragging = false;
             isResizing = false;
+            dragOffset = new();
         }
         protected void OnMouseDown(object sender, MouseButtonEventArgs e)
         {
@@ -68,39 +53,59 @@ namespace VM.GUI
         }
         protected void OnMouseMove(object sender, MouseEventArgs e)
         {
+            var pos = e.GetPosition(App.Current.MainWindow as Runtime);
             var altDown = Keyboard.IsKeyDown(Key.LeftAlt) || Keyboard.IsKeyDown(Key.RightAlt);
+
             if (altDown && e.RightButton == MouseButtonState.Pressed)
             {
-                var pos = e.GetPosition(App.Current.MainWindow as Runtime);
                 var delta = pos - dragOffset;
-
                 double maxDelta = ResizeSpeed;
-                if (Math.Abs(delta.X) > Math.Abs(delta.Y))
-                {
-                    delta.X = Math.Clamp(delta.X, -maxDelta, maxDelta);
-                    delta.Y = 0;
-                }
-                else
-                {
-                    delta.Y = Math.Clamp(delta.Y, -maxDelta, maxDelta);
-                    delta.X = 0;
-                }
+                delta = NormalizeMouseDelta(delta, maxDelta);
+                PerformResize(delta);
 
-                if (ActualWidth + delta.X >= MinWidth && ActualWidth + delta.X <= MaxWidth)
-                    Width += delta.X;
-
-                if (ActualHeight + delta.Y >= MinHeight && ActualHeight + delta.Y <= MaxHeight)
-                    Height += delta.Y;
             }
             else if (altDown && isDragging)
             {
-                Point newPosition = e.GetPosition(App.Current.MainWindow as Runtime);
-                double left = newPosition.X - dragOffset.X;
-                double top = newPosition.Y - dragOffset.Y;
+                double left = pos.X - dragOffset.X;
+                double top = pos.Y - dragOffset.Y;
                 Canvas.SetLeft(this, left);
                 Canvas.SetTop(this, top);
             }
         }
+
+        private void PerformResize(Vector delta)
+        {
+            if (ActualWidth + delta.X >= MinWidth && ActualWidth + delta.X <= MaxWidth)
+                Width += delta.X;
+            else if (ActualWidth + delta.X < MinWidth)
+                Width = MinWidth;
+            else if (ActualWidth + delta.X > MaxWidth)
+                Width = MaxWidth;
+
+            if (ActualHeight + delta.Y >= MinHeight && ActualHeight + delta.Y <= MaxHeight)
+                Height += delta.Y;
+            else if (ActualHeight + delta.Y < MinHeight)
+                Height = MinHeight;
+            else if (ActualHeight + delta.Y > MaxHeight)
+                Height = MaxHeight;
+        }
+
+        private static Vector NormalizeMouseDelta(Vector delta, double maxDelta)
+        {
+            if (Math.Abs(delta.X) > Math.Abs(delta.Y))
+            {
+                delta.X = Math.Clamp(delta.X, -maxDelta, maxDelta);
+                delta.Y = 0;
+            }
+            else
+            {
+                delta.Y = Math.Clamp(delta.Y, -maxDelta, maxDelta);
+                delta.X = 0;
+            }
+
+            return delta;
+        }
+
         protected void OnMouseUp(object sender, MouseButtonEventArgs e)
         {
             if (isDragging || isResizing)

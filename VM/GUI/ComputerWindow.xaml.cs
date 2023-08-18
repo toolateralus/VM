@@ -26,9 +26,7 @@ namespace VM.GUI
         public Computer Computer;
         public readonly List<string> LoadedInstalledApplications = new();
         public readonly Dictionary<string, UserWindow> USER_WINDOW_INSTANCES = new();
-
         public int TopMostZIndex { get; internal set; } = 0;
-
         public ComputerWindow(Computer pc)
         {
             InitializeComponent();
@@ -75,7 +73,6 @@ namespace VM.GUI
                     break;
             }
         }
-
         private static void InvokeKeyEvent(object sender, KeyEventArgs e, JSEventHandler eventHandler)
         {
             if (eventHandler.Event == XAML_EVENTS.KEY_DOWN)
@@ -87,7 +84,6 @@ namespace VM.GUI
                 eventHandler.OnKeyUp?.Invoke(sender, e);
             }
         }
-
         private void ShutdownClick(object sender, RoutedEventArgs e)
         {
             App.Current.Shutdown();
@@ -227,6 +223,7 @@ namespace VM.GUI
         {
             if (Computer.Disposing)
                 return;
+
             // basically app count, a way for us to force to top.
             TopMostZIndex++;
 
