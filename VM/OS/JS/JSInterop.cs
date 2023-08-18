@@ -210,7 +210,7 @@ namespace VM.JS
             Notifications.Now("Incorrect path for uninstall");
 
         }
-        public JObject GetConfig() => computer.OS.Config;
+        public JObject GetConfig() => Computer.Config;
         public async void install(string dir)
         {
             ComputerWindow window = Computer.Window;
@@ -221,11 +221,11 @@ namespace VM.JS
                 return;
             }
 
-            if (computer.OS.Config["INSTALLED_APPS"] is not JArray)
+            if (Computer.Config["INSTALLED_APPS"] is not JArray)
             {
-                computer.OS.Config["INSTALLED_APPS"] = new JArray();
+                Computer.Config["INSTALLED_APPS"] = new JArray();
             }
-            if (computer.OS.Config["INSTALLED_APPS"] is JArray arr && !arr.JContains(dir))
+            if (Computer.Config["INSTALLED_APPS"] is JArray arr && !arr.JContains(dir))
             {
                 arr.Add(dir);
             }
