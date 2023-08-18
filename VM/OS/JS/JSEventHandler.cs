@@ -85,15 +85,17 @@ namespace VM.JS
                 /// the lower the delay, the faster the calls back to js, however this can have
                 /// a counterintuitive effect when too short or too many running, since
                 /// a low delay introduces large cpu overhead.
+                /// also, DELAY_BETWEEN_WORK_ITERATIONS + 1 == like 3ms,
+                /// so we use much smaller values to get a more appropriate speed.
                 case XAML_EVENTS.RENDER:
                     // going for 60+ fps
-                    DELAY_BETWEEN_WORK_ITERATIONS = 14;
+                    DELAY_BETWEEN_WORK_ITERATIONS = 16 / 3;
                     thread = new(HeavyWorkerLoop);
                     thread.Start();
                     break;
                 case XAML_EVENTS.PHYSICS:
                     // going for ~40-50fps
-                    DELAY_BETWEEN_WORK_ITERATIONS = 24;
+                    DELAY_BETWEEN_WORK_ITERATIONS = 24 / 3;
                     thread = new(HeavyWorkerLoop);
                     thread.Start();
                     break;

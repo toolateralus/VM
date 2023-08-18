@@ -35,7 +35,6 @@ namespace VM.JS
             EventActions.TryAdd("draw_image", DrawImageEvent);
             EventActions.TryAdd("set_content", SetContent);
             EventActions.TryAdd("get_content", GetContent);
-                       
         }
         
         public object getentries(string path)
@@ -569,7 +568,7 @@ namespace VM.JS
         }
         public object? DrawPixelsEvent(string id, string target_control, object? value)
         {
-            if (value is null)
+            if (value is null || value.ToString().Contains("undefined"))
                 return null;
 
 
