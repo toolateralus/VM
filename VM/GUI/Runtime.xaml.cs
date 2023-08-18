@@ -10,13 +10,14 @@ using KeyEventArgs = System.Windows.Input.KeyEventArgs;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using System.Threading;
-using VM.OS;
+using VM;
 using static System.Net.Mime.MediaTypeNames;
 using System.Xml.Linq;
 using System.Linq;
 using System.Windows.Controls;
 using System.Collections.Concurrent;
 using System.Runtime.CompilerServices;
+using VM;
 
 namespace VM.GUI
 {
@@ -81,7 +82,7 @@ namespace VM.GUI
         public static Action<WindowState>? onWindowStateChanged;
         public static void Restart(uint id)
         {
-            var pc = Computers.Where(C => C.Key.ID() == id).FirstOrDefault();
+            var pc = Computers.Where(C => C.Key.ID == id).FirstOrDefault();
 
             if (pc.Key != null && pc.Value != null)
             {
@@ -172,15 +173,16 @@ namespace VM.GUI
         }
         private static void InstantiateComputer(uint cpu_id)
         {
-            OS.Computer pc = new(cpu_id);
+            Computer pc = new(cpu_id);
             ComputerWindow wnd = new(pc);
+            pc.Window = wnd;
             Computers[pc] = wnd;
             pc.FinishInit(wnd);
             onWindowStateChanged?.Invoke(WindowState.Minimized);
         }
 
         public static Dictionary<int, Queue<(object? val, int replyCh)>> NetworkEvents = new();
-        public static async Task<(object? value, int reply)> PullEvent(int channel, Computer computer, int timeout = 50000, [CallerMemberName] string callerName = "unknown")
+        public static async Task<(object? value, int reply)> PullEventAsync(int channel, Computer computer, int timeout = 50000, [CallerMemberName] string callerName = "unknown")
         {
             Queue<(object? val, int replyCh)> stack;
             var timeoutTask = Task.Delay(timeout);
@@ -199,6 +201,29 @@ namespace VM.GUI
             var val = stack?.Dequeue();
 
             if (stack?.Count == 0)
+                NetworkEvents.Remove(channel);
+
+            return val ?? default;
+        }
+        public static (object? value, int reply) PullEvent(int channel, Computer computer)
+        {
+            Queue<(object? val, int replyCh)>? queue;
+
+            const int timeout = int.MaxValue;
+            int it = 0;
+
+            while ((!NetworkEvents.TryGetValue(channel, out  queue) || queue is null || queue.Count == 0) && !computer.Disposing)
+            {
+                if (it < timeout)
+                    it++;
+                else break;
+
+                Thread.Sleep(1);
+            }
+
+            var val = queue?.Dequeue();
+
+            if (queue?.Count == 0)
                 NetworkEvents.Remove(channel);
 
             return val ?? default;

@@ -1,7 +1,7 @@
 ﻿using System.Windows;
 using System.Windows.Media;
 
-namespace VM.OS
+namespace VM
 {
     /// <summary>
     /// The default initialization for a parameterless construction of this object represents a fully implemented default theme, and

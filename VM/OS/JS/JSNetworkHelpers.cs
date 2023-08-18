@@ -9,10 +9,13 @@ using System.Threading.Tasks;
 using System.Windows.Controls;
 using System.Windows.Markup;
 using VM.GUI;
-using VM.OS.Network;
-using VM.OS.Network.Server;
+using VM.Network;
+using VM.Network.Server;
+using VM;
+using System.Windows.Forms.Design;
+using System.Windows.Forms;
 
-namespace VM.OS.JS
+namespace VM.JS
 {
     public delegate void TransmissionStream(byte[] data, TransmissionType type, int outCh, int replyCh, bool isDir);
     public class JSNetworkHelpers
@@ -39,14 +42,14 @@ namespace VM.OS.JS
             {
                 ConnectToIP(targetIP, IPString);
             }
-            else if (Computer.OS.Config?.Value<string>("DEFAULT_SERVER_IP") is string defaultIP && IPAddress.TryParse(defaultIP, out targetIP))
+            else if (Computer.Config?.Value<string>("DEFAULT_SERVER_IP") is string defaultIP && IPAddress.TryParse(defaultIP, out targetIP))
             {
                 ConnectToIP(targetIP, defaultIP);
             }
         }
         private void ConnectToIP(IPAddress targetIP, string ipString)
         {
-            Computer.OS.JavaScriptEngine.InteropModule.print($"Trying to connect to: {ipString}");
+            Computer.JavaScriptEngine.InteropModule.print($"Trying to connect to: {ipString}");
 
             Computer.Network.StopClient();
 
@@ -56,16 +59,16 @@ namespace VM.OS.JS
 
                 if (Computer.Network.IsConnected())
                 {
-                    Computer.OS.JavaScriptEngine.InteropModule.print($"Successfully connected to {ipString}.");
+                    Computer.JavaScriptEngine.InteropModule.print($"Successfully connected to {ipString}.");
                 }
                 else
                 {
-                    Computer.OS.JavaScriptEngine.InteropModule.print($"Failed to connect to {ipString} :: Not found.");
+                    Computer.JavaScriptEngine.InteropModule.print($"Failed to connect to {ipString} :: Not found.");
                 }
             }
             catch (Exception e)
             {
-                Computer.OS.JavaScriptEngine.InteropModule.print($"Failed to connect to {ipString} :: {e.Message}");
+                Computer.JavaScriptEngine.InteropModule.print($"Failed to connect to {ipString} :: {e.Message}");
             }
         }
         public async void upload(string path)
@@ -127,7 +130,7 @@ namespace VM.OS.JS
         public async void check_for_downloadable_content()
         {
             OnTransmit?.Invoke(Encoding.UTF8.GetBytes("GET_DOWNLOADS"), TransmissionType.Request, -1, Server.REQUEST_REPLY_CHANNEL, false);
-            var response = await Runtime.PullEvent(Server.REQUEST_REPLY_CHANNEL, Computer);
+            var response = await Runtime.PullEventAsync(Server.REQUEST_REPLY_CHANNEL, Computer);
             var stringResponse = Encoding.UTF8.GetString(response.value as byte[] ?? Encoding.UTF8.GetBytes("No data found"));
             Notifications.Now(stringResponse);
             return;
@@ -143,7 +146,7 @@ namespace VM.OS.JS
 
             Notifications.Now($"Downloading {path}..");
 
-            var root = Computer.OS.FS_ROOT + "\\downloads";
+            var root = Computer.FS_ROOT + "\\downloads";
 
             if (!Directory.Exists(root))
             {
@@ -154,7 +157,7 @@ namespace VM.OS.JS
 
             while (Computer.Network.IsConnected())
             {
-                (object? value, int reply) = await Runtime.PullEvent(Server.DOWNLOAD_REPLY_CHANNEL, Computer);
+                (object? value, int reply) = await Runtime.PullEventAsync(Server.DOWNLOAD_REPLY_CHANNEL, Computer);
                 string pathString = null;
 
                 if (value is not JObject metadata)
@@ -227,34 +230,38 @@ namespace VM.OS.JS
                     inCh = 0;  // Specify the reply channel
 
                     OnTransmit?.Invoke(outgoingData, TransmissionType.Message, outCh, inCh,  false);
-                    Runtime.Broadcast(outCh, inCh, Encoding.UTF8.GetString(outgoingData)); 
+                    Runtime.Broadcast(outCh, inCh, outgoingData); 
                 }
             }
         }
         public object? recieve(params object?[]? parameters)
         {
-            if (parameters != null && parameters.Length > 0 && parameters[0] is int ch) 
+            (object? value, int reply) @event = default;
+
+            byte[] result = Array.Empty<byte>();
+
+            if (parameters is null || parameters.Length == 0)
             {
-                var TaskOutcome = Task.Run<(object? value, int reply)>(async () => await Runtime.PullEvent(ch, Computer));
-                
-                var val = TaskOutcome.Result.value;
-
-                if (val is byte[] message)
-                {
-                    byte[] InChannel = BitConverter.GetBytes(ch);
-                    byte[] ReplyChannel = BitConverter.GetBytes(TaskOutcome.Result.reply);
-
-                    byte[] combinedBytes = new byte[message.Length + sizeof(int) + sizeof(int)];
-
-                    Array.Copy(message, 0, combinedBytes, 0, message.Length);
-                    Array.Copy(InChannel, 0, combinedBytes, message.Length, sizeof(int));
-                    Array.Copy(InChannel, 0, combinedBytes, message.Length + sizeof(int), sizeof(int));
-
-                }
-                return val;
+                Notifications.Now("Insufficient parameters for a network connection");
+                return null;
             }
-            Notifications.Now("Insufficient arguments for a network connection");
-            return null;
+
+            int ch = 0;
+
+            if (parameters[0] is not string p1 || !int.TryParse(p1, out ch) && ch.GetType() != typeof(int))
+            {
+                Notifications.Now($"Invalid parameter for reiceve {parameters[0]}");
+                return null;
+            }
+
+            @event = Runtime.PullEvent(ch, Computer);
+
+            if (@event.value is byte[] message)
+            {
+                // process incoming messages?
+            }
+
+            return Encoding.UTF8.GetString(result); 
         }
     }
 }

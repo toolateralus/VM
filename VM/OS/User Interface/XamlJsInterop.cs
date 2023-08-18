@@ -5,9 +5,10 @@ using System.Collections.Generic;
 using System.Reflection;
 using System.Windows.Controls;
 using System.Windows.Markup;
-using VM.OS.JS;
+using VM.JS;
+using VM;
 
-namespace VM.OS.UserInterface
+namespace VM.UserInterface
 {
     public class XamlJsInterop
     {

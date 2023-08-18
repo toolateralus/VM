@@ -1,11 +1,4 @@
 ﻿using System;   
-using System.Collections.Generic;
-using System.Linq;
-using System.Runtime.CompilerServices;
-using System.Threading;
-using System.Threading.Tasks;
-using System.Windows;
-using System.Windows.Threading;
 using VM.GUI;
 
 namespace VM
@@ -27,6 +20,11 @@ namespace VM
 
                 });
             }
+        }
+
+        internal static void Exception(Exception e)
+        {
+            Now(e.Message + "\n" + e.InnerException + "\n" + e.Source + "\n" + e.StackTrace);  
         }
     }
 }

@@ -4,7 +4,7 @@ using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
 using Microsoft.Web.WebView2.Core;
-using VM.OS;
+using VM;
 
 namespace VM.GUI
 {

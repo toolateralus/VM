@@ -14,11 +14,11 @@ using System.Threading.Tasks;
 using System.Windows.Documents;
 using System.Windows.Forms.VisualStyles;
 using VM.GUI;
-using VM.OS;
-using VM.OS.Network;
-using VM.OS.Network.Server;
+using VM;
+using VM.Network;
+using VM.Network.Server;
 
-namespace VM.OS.FS
+namespace VM.FS
 {
 
     public struct Command
@@ -66,7 +66,7 @@ namespace VM.OS.FS
                 new("config" ,Config, "config <set or get> <property name> (set only) <new value>"),
                 new("ip", getIP, "fetches the local ip address of wifi/ethernet"),
                 new("move", Move, "moves a file/changes its name"),
-                new("restart", (_) => Runtime.Restart(computer.ID()), "restarts this computer"),
+                new("restart", (_) => Runtime.Restart(computer.ID), "restarts this computer"),
                 new("lp", LP, "lists all the running proccesses"),
                 new("host", Host, "hosts a server on the provided <port>, none provided it will default to 8080"),
                 new("unhost", (_) => Computer.Network.StopHosting(_), "if a server is currently running on this machine this halts any active connections and closes the sever.")
@@ -92,12 +92,12 @@ namespace VM.OS.FS
         {
             string? a = obj[0] as string;
             string? b = obj[1] as string;
-            Computer.OS.FS.Move(a, b);
+            Computer.FS.Move(a, b);
             Notifications.Now($"Moved {a}->{b}");
         }
         private void LP(object[]? obj)
         {
-            foreach (var item in Runtime.GetWindow(Computer).USER_WINDOW_INSTANCES)
+            foreach (var item in Computer.Window.USER_WINDOW_INSTANCES)
             {
                 Notifications.Now($"\n{item.Key}");
             }
@@ -113,7 +113,7 @@ namespace VM.OS.FS
         {
             if (obj != null && obj.Length > 0 && obj[0] is string target)
             {
-                Computer.OS.FS.Delete(target);
+                Computer.FS.Delete(target);
             }
             else
             {
@@ -133,7 +133,7 @@ namespace VM.OS.FS
                         var str = File.Create(AbsPath);
                         str.Close();
                     }
-                    var wnd = Runtime.GetWindow(Computer);
+                    var wnd = Computer.Window;
                     var tEdit = new TextEditor(Computer, AbsPath);
                     wnd.OpenApp(tEdit);
                 } 
@@ -165,7 +165,7 @@ namespace VM.OS.FS
                             return;
                         }
 
-                        if (!Computer.OS.Config.TryGetValue(propname, out var propValue))
+                        if (!Computer.Config.TryGetValue(propname, out var propValue))
                         {
                             Notifications.Now($"Property '{propname}' not found in configuration.");
                             return;
@@ -206,10 +206,10 @@ namespace VM.OS.FS
 
                             var jObject =JObject.FromObject(objectArgs);
 
-                            Computer.OS.Config[propname] = jObject;
+                            Computer.Config[propname] = jObject;
                         }
 
-                        Computer.OS.Config[propname] = arg;
+                        Computer.Config[propname] = arg;
                     }
                 }
                 else if (toLower == "all")
@@ -222,7 +222,7 @@ namespace VM.OS.FS
                         return;
                     }
                     StringBuilder sb = new();
-                    foreach (var kvp in Computer.OS.Config)
+                    foreach (var kvp in Computer.Config)
                     {
                         sb.Append($"\n {{{kvp.Key} : {kvp.Value}}}");
                     }
@@ -289,11 +289,11 @@ namespace VM.OS.FS
                 return;
             }
 
-            var list = Computer.OS.FS.DirectoryListing();
+            var list = Computer.FS.DirectoryListing();
 
             var textList = string.Join("\n\t", list);
 
-            var text = $"\n##Current Directory: {Computer.OS.FS.CurrentDirectory}###\n";
+            var text = $"\n##Current Directory: {Computer.FS.CurrentDirectory}###\n";
             commandPrompt.output.AppendText(text + "\t");
             commandPrompt.output.AppendText(textList);
         }
@@ -301,12 +301,12 @@ namespace VM.OS.FS
         {
             if (obj != null && obj.Length > 0 && obj[0] is string Path)
             {
-                Computer.OS.FS.ChangeDirectory(Path);
+                Computer.FS.ChangeDirectory(Path);
             }
         }
         private void Clear(object[]? obj)
         {
-            Runtime.GetWindow(Computer)?.Dispatcher?.Invoke(() => { Runtime.SearchForOpenWindowType<CommandPrompt>(Computer)?.output?.Clear(); });
+            Computer.Window?.Dispatcher?.Invoke(() => { Runtime.SearchForOpenWindowType<CommandPrompt>(Computer)?.output?.Clear(); });
         }
         private void Copy(object[]? obj)
         {
@@ -321,7 +321,7 @@ namespace VM.OS.FS
                         Notifications.Now($"Invalid path {Destination} in Copy");
                         continue;
                     }
-                    Computer.OS.FS.Copy(Path, Destination);
+                    Computer.FS.Copy(Path, Destination);
                     Notifications.Now($"Copied from {Path}->{Destination}");
                 }
             }
@@ -330,7 +330,7 @@ namespace VM.OS.FS
         {
             if (obj != null && obj.Length > 0 && obj[0] is string Path)
             {
-                Computer.OS.FS.NewFile(Path); 
+                Computer.FS.NewFile(Path); 
                 Notifications.Now($"Created directory {Path}");
             }
         }
@@ -345,7 +345,7 @@ namespace VM.OS.FS
 
             if (commandPrompt == default)
             {
-                //Runtime.GetWindow(Computer).Open();
+                //Computer.Window.Open();
             }
 
             StringBuilder cmdbuilder = new();
@@ -379,7 +379,7 @@ namespace VM.OS.FS
         {
             if (obj.Length > 0 && obj[0] is string path && Runtime.GetResourcePath(path + ".js") is string AbsPath &&  File.Exists(AbsPath))
             {
-                await Computer.OS.JavaScriptEngine.Execute(File.ReadAllText(AbsPath));
+                await Computer.JavaScriptEngine.Execute(File.ReadAllText(AbsPath));
                 Notifications.Now($"running {AbsPath}...");
             }
         }
@@ -415,7 +415,7 @@ namespace VM.OS.FS
                     jsCode = jsCode.Replace(args, newArgs);
                 }
 
-                Task.Run(async delegate { await Computer.OS.JavaScriptEngine.Execute(jsCode); });
+                Task.Run(async delegate { await Computer.JavaScriptEngine.Execute(jsCode); });
                 return true;
             }
 
@@ -440,7 +440,7 @@ namespace VM.OS.FS
         }
         internal void RootCmd(object[]? args)
         {
-            Computer.OS.FS.ChangeDirectory(Computer.OS.FS_ROOT);
+            Computer.FS.ChangeDirectory(Computer.FS_ROOT);
         }
     }
 }

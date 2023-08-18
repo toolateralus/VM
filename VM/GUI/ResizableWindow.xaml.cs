@@ -28,18 +28,18 @@ namespace VM.GUI
         }
         private ResizeDirection resizeDirection;
         public Action OnClosed { get; internal set; }
-
-        public ResizableWindow()
+        ComputerWindow Owner;
+        public ResizableWindow(ComputerWindow owner)
         {
-            MouseDown += OnMouseDown;
-            MouseMove += OnMouseMove;
-            MouseUp += OnMouseUp;
-            MouseLeave += onMouseLeave;
-            MinWidth = 50;
-            MinHeight = 50;
-            MaxWidth = 1920;
-            // taskbar margin
-            MaxHeight = 1080 - 25;
+           Owner = owner;
+           MouseDown += OnMouseDown;
+           MouseMove += OnMouseMove;
+           MouseUp += OnMouseUp;
+           MouseLeave += onMouseLeave;
+           MinWidth = 50;
+           MinHeight = 50;
+           MaxWidth = 1920;
+           MaxHeight = 1080 - 25;
         }
         private void onMouseLeave(object sender, MouseEventArgs e)
         {
@@ -71,10 +71,11 @@ namespace VM.GUI
         }
         public void BringToTopOfDesktop()
         {
-            if (Parent is Grid grid && grid.Children.Contains(this))
+            if (Parent is Canvas grid && grid.Children.Contains(this))
             {
                 grid.Children.Remove(this);
                 grid.Children.Add(this);
+                Canvas.SetZIndex(this, Owner.TopMostZIndex);
             }
         }
         protected void OnMouseMove(object sender, MouseEventArgs e)

@@ -16,7 +16,7 @@ using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
 using System.Windows.Shapes;
-using VM.OS;
+using VM;
 
 namespace VM.GUI
 {
@@ -63,7 +63,7 @@ namespace VM.GUI
             if (e.Key == Key.Escape)
             {
                 Keyboard.ClearFocus();
-                SearchBar.Text = computer.OS.FS.CurrentDirectory;
+                SearchBar.Text = computer.FS.CurrentDirectory;
                 UpdateView();
             }
             if (e.Key == Key.Enter)
@@ -82,7 +82,7 @@ namespace VM.GUI
                 return;
             
             FileViewerData.Clear();
-            var fileNames = computer.OS.FS.DirectoryListing();
+            var fileNames = computer.FS.DirectoryListing();
             const string FolderIcon = "📁 ";
             const string FileIcon = "📄 ";
 
@@ -103,39 +103,39 @@ namespace VM.GUI
         
         private void AddFile_Click(object sender, RoutedEventArgs e)
         {
-            computer.OS.FS.NewFile(SearchBar.Text);
+            computer.FS.NewFile(SearchBar.Text);
             UpdateView();
 
         }
 
         private void AddDirectory_Click(object sender, RoutedEventArgs e)
         {
-            computer.OS.FS.NewFile(SearchBar.Text, true);
+            computer.FS.NewFile(SearchBar.Text, true);
             UpdateView();
 
         }
 
         private void Delete_Click(object sender, RoutedEventArgs e)
         {
-            computer.OS.FS.Delete(SearchBar.Text);
+            computer.FS.Delete(SearchBar.Text);
             UpdateView();
 
         }
 
         private void Properties_Click(object sender, RoutedEventArgs e)
         {
-            Notifications.Now(computer.OS.FS.CurrentDirectory);
+            Notifications.Now(computer.FS.CurrentDirectory);
         }
 
         private void BackPressed(object sender, RoutedEventArgs e)
         {
 
-            if (computer.OS.FS.History.Count == 0)
+            if (computer.FS.History.Count == 0)
             {
                 Notifications.Now("No file or directory to go back to.");
             }
 
-            computer.OS.FS.ChangeDirectory(computer.OS.FS.History.Pop());
+            computer.FS.ChangeDirectory(computer.FS.History.Pop());
 
             UpdateView();
         }
@@ -152,30 +152,30 @@ namespace VM.GUI
 
             // this is a very hacky solution to the way they were originally designed as static, todo fix the entire command system, 
             // and make a common fs
-            if (computer.OS.CommandLine.TryCommand(path))
+            if (computer.CommandLine.TryCommand(path))
             {
                 return;
             }
 
-            var exists = computer.OS.FS.FileExists(path) || computer.OS.FS.DirectoryExists(path);
+            var exists = computer.FS.FileExists(path) || computer.FS.DirectoryExists(path);
 
             if (exists)
             {
-                if (computer.OS.FS.FileExists(path))
+                if (computer.FS.FileExists(path))
                 {
-                    Runtime.GetWindow(computer)?.OpenApp(new TextEditor(computer, path));
+                    computer.Window?.OpenApp(new TextEditor(computer, path));
                     OnNavigated?.Invoke(path);
                 }
 
 
-                computer.OS.FS.ChangeDirectory(path);
+                computer.FS.ChangeDirectory(path);
             }
 
         }
 
         private void UpPressed(object sender, RoutedEventArgs e)
         {
-            computer.OS.FS.ChangeDirectory("..");
+            computer.FS.ChangeDirectory("..");
             UpdateView();
         }
 

@@ -1,48 +1,37 @@
 ﻿using System;
-using System.Collections;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.ComponentModel;
-using System.ComponentModel.Design;
 using System.IO;
 using System.Linq;
-using System.Reflection;
-using System.Reflection.Metadata.Ecma335;
-using System.Security.AccessControl;
-using System.Security.Cryptography.X509Certificates;
-using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
-using System.Windows.Controls;
-using System.Windows.Media;
 using JavaScriptEngineSwitcher.Core;
 using JavaScriptEngineSwitcher.V8;
-using Microsoft.VisualBasic.Devices;
 using VM.GUI;
-using static VM.OS.JS.JSInterop;
+using VM;
 
-namespace VM.OS.JS
+namespace VM.JS
 {
-    public class JavaScriptEngine
+    public class JavaScriptEngine : IDisposable
     {
-        IJsEngine engine;
+        internal IJsEngine ENGINE_JS;
         IJsEngineSwitcher engineSwitcher;
 
         public Dictionary<string, object?> modules = new();
         public JSNetworkHelpers NetworkModule { get; }
         public JSInterop InteropModule { get; }
         public bool Disposing { get; private set; }
-        Computer computer;
         private readonly ConcurrentDictionary<int, (string code, Action<object?> output)> CodeDictionary = new();
-        private readonly BackgroundWorker executionThread;
         public Dictionary<string, object> EmbeddedObjects = new();
         public List<JSEventHandler> EventHandlers = new();
-        readonly Thread renderThread;
+        private Computer Computer;
+        private readonly Thread executionThread;
 
         public JavaScriptEngine(Computer computer)
         {
-            this.computer = computer;
+            Computer = computer;
 
             engineSwitcher = JsEngineSwitcher.Current;
 
@@ -50,7 +39,7 @@ namespace VM.OS.JS
 
             engineSwitcher.DefaultEngineName = V8JsEngine.EngineName;
 
-            engine = engineSwitcher.CreateDefaultEngine();
+            ENGINE_JS = engineSwitcher.CreateDefaultEngine();
 
             NetworkModule = new JSNetworkHelpers(computer, computer.Network.OnSendMessage);
 
@@ -62,68 +51,70 @@ namespace VM.OS.JS
 
             EmbedAllObjects();
 
-            executionThread = new BackgroundWorker();
-            executionThread.DoWork += ExecuteAsync;
-            executionThread.RunWorkerAsync();
-
-            renderThread = new Thread(Render);
-            renderThread.Start();
+            executionThread = new Thread(ExecuteAsync);
+            executionThread.Start();
 
             string jsDirectory = Computer.SearchForParentRecursive("VM");
 
             LoadModules(jsDirectory + "\\OS-JS");
 
-            _ = Execute($"os.id = {computer.ID()}");
+            _ = Execute($"os.id = {computer.ID}");
 
             InteropModule.OnComputerExit += computer.Exit;
         }
-
         public void EmbedObject(string name, object? obj)
         {
-            engine.EmbedHostObject(name, obj);
+            ENGINE_JS.EmbedHostObject(name, obj);
         }
         public void EmbedType(string name, Type obj)
         {
-            engine.EmbedHostType(name, obj);
+            ENGINE_JS.EmbedHostType(name, obj);
         }
         public void EmbedAllObjects()
         {
             foreach (var item in EmbeddedObjects)
-                engine.EmbedHostObject(item.Key, item.Value);
+                ENGINE_JS.EmbedHostObject(item.Key, item.Value);
 
         }
-        private void Render()
+        // Resource intensive loops
+        private async void ExecuteAsync()
         {
-            while (true)
+            while (!Disposing)
             {
-                if (Disposing)
-                    return;
-
-                var collection = EventHandlers.Where(e => e.Event == XAML_EVENTS.RENDER);
-                for (int i = 0; i < collection.Count(); ++i)
+                if (!CodeDictionary.IsEmpty)
                 {
-                    var item = collection.ElementAt(i);
-                    if (!item.Disposed)
+                    var pair = CodeDictionary.Last();
+                    CodeDictionary.Remove(pair.Key, out _);
+
+                    try
                     {
-                        item?.InvokeGeneric(null, null);
+                        var result = ENGINE_JS.Evaluate(pair.Value.code);
+                        pair.Value.output?.Invoke(result);
                     }
-                    else
+                    catch (Exception e)
                     {
-                        EventHandlers.Remove(item);
+                        Notifications.Exception(e);
+                        Computer.JavaScriptEngine.InteropModule.print(e.Message);
                     }
+                   
+                    continue;
                 }
-                Thread.Sleep(16);
+                await Task.Delay(1);
+            }
+            if (!Disposing)
+            {
+                throw new JsEngineException("Something happened");
             }
         }
         public object? GetVariable(string name)
         {
-            return engine.GetVariableValue(name);
+            return ENGINE_JS.GetVariableValue(name);
         }
         private object? ImportModule(string arg)
         {
             if (Runtime.GetResourcePath(arg) is string AbsPath && !string.IsNullOrEmpty(AbsPath))
             {
-                engine.ExecuteFile(AbsPath);
+                ENGINE_JS.ExecuteFile(AbsPath);
             }
             return null;
         }
@@ -142,11 +133,11 @@ namespace VM.OS.JS
 
                     try
                     {
-                        engine.Execute(File.ReadAllText(file));
+                        ENGINE_JS.Execute(File.ReadAllText(file));
                     }
                     catch (Exception e)
                     {
-                        Notifications.Now(e.Message);
+                        Notifications.Exception(e);
                     }
                 }
 
@@ -157,38 +148,6 @@ namespace VM.OS.JS
             }
 
             RecursiveLoad(sourceDir);
-        }
-        private async void ExecuteAsync(object? sender, DoWorkEventArgs args)
-        {
-            while (!Disposing)
-            {
-                if (!CodeDictionary.IsEmpty)
-                {
-                    var pair = CodeDictionary.Last();
-                    CodeDictionary.Remove(pair.Key, out _);
-
-                    await Task.Run(() =>
-                    {
-                        try
-                        {
-                            var result = engine.Evaluate(pair.Value.code);
-                            pair.Value.output?.Invoke(result);
-                        }
-                        catch (Exception e)
-                        {
-                            Notifications.Now(e.Message);
-                            computer.OS.JavaScriptEngine.InteropModule.print(e.Message);
-                        }
-                    });
-                   
-                    continue;
-                }
-                await Task.Delay(1); // Avoid busy-waiting
-            }
-            if (!Disposing)
-            {
-                throw new JsEngineException("Something happened");
-            }
         }
         public async Task<object?> Execute(string jsCode)
         {
@@ -217,16 +176,24 @@ namespace VM.OS.JS
         public void Dispose()
         {
             Disposing = true;
-            engine?.Dispose();
-            engine = null;
             
-            Task.Run(() => executionThread.Dispose());
-            Task.Run(() => renderThread.Join());
+            ENGINE_JS?.Dispose();
+            ENGINE_JS = null!;
+            
+            Task.Run(() => executionThread.Join());
+            Task.Run(() =>
+            {
+                for (int i = 0; i < EventHandlers.Count; i++)
+                {
+                    JSEventHandler? eventHandler = EventHandlers[i];
+                    eventHandler?.Dispose();
+                }
+            });
         }
         internal void ExecuteScript(string absPath)
         {
             if (File.Exists(absPath))
-                Task.Run(()=> { try { engine.Execute(File.ReadAllText(absPath)); } catch { } });
+                Task.Run(()=> { try { ENGINE_JS.Execute(File.ReadAllText(absPath)); } catch { } });
         }
         /// <summary>
         /// this method is used for executing js events
@@ -238,16 +205,16 @@ namespace VM.OS.JS
                 return;
             try
             {
-                engine.Execute(code);
+                ENGINE_JS.Execute(code);
             }
             catch(Exception e)
             {
-                Notifications.Now(e.Message);
+                Notifications.Exception(e);
             }
         }
         internal async Task CreateEventHandler(string identifier, string targetControl, string methodName, int type)
         {
-            var wnd = Runtime.GetWindow(computer);
+            var wnd = Computer.Window;
 
             var result = await Execute($"{identifier} != null");
 
@@ -264,7 +231,7 @@ namespace VM.OS.JS
             }
             wnd.Dispatcher.Invoke(() =>
             {
-                var content = JSApp.GetUserContent(identifier, computer);
+                var content = JSInterop.GetUserContent(identifier, Computer);
 
                 if (content == null)
                 {
@@ -280,7 +247,7 @@ namespace VM.OS.JS
                 }
                 else
                 {
-                    element = JSApp.FindControl(content, targetControl);
+                    element = JSInterop.FindControl(content, targetControl);
                 }
 
 
