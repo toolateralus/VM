@@ -57,7 +57,7 @@ namespace VM.GUI
         }
 
         public double lastW = 0, lastH = 0;
-        public Thickness lastMargin = new();
+        public Point lastPos = new();
         public bool Maximized = false;
         public void ToggleMaximize(object sender, RoutedEventArgs e)
         {
@@ -67,12 +67,12 @@ namespace VM.GUI
                 Maximized = true;
                 lastW = Owner.Width;
                 lastH = Owner.Height;
-                lastMargin = Owner.Margin;
+                lastPos = new (Canvas.GetLeft(Owner), Canvas.GetTop(Owner));
 
-                Owner.Height = 1080;
+                Canvas.SetTop(Owner, 0);
+                Canvas.SetLeft(Owner, 0);
                 Owner.Width = 1920;
-                Owner.Margin = new(0, 0, 0, 0);
-
+                Owner.Height = 1080;
                 return;
             }
 
@@ -80,7 +80,8 @@ namespace VM.GUI
 
             Owner.Height = lastH;
             Owner.Width = lastW;
-            Owner.Margin = lastMargin;
+            Canvas.SetLeft(Owner, lastPos.X);
+            Canvas.SetTop(Owner, lastPos.Y);
             Owner.BringToTopOfDesktop();
         }
     }

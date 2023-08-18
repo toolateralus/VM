@@ -47,7 +47,7 @@ namespace VM
             NativeCSharpApps[exePath] = type;
             Notifications.Now($"{exePath} installed!");
             ComputerWindow window = Window;
-            window.InstallCSharpWPFApp(exePath, type);
+            window.InstallCSWPF(exePath, type);
         }
         public void InitializeEngine(Computer computer)
         {

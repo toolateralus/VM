@@ -66,7 +66,7 @@ namespace VM.JS
 
             Computer.Window?.Dispatcher?.Invoke(() => { 
 
-                var history = CommandPrompt.LastUploaded;
+                var history = CommandPrompt.LastSentInput;
 
                 if (cmd is null)
                 {
@@ -242,7 +242,7 @@ namespace VM.JS
             // wpf app
             if (dir.Contains(".app"))
             {
-                window.InstallWPF(dir);
+                window.InstallJSWPF(dir);
             }
         }
 
@@ -697,7 +697,29 @@ namespace VM.JS
             if (window.USER_WINDOW_INSTANCES.TryGetValue(identifier, out var app))
                 app.JavaScriptEngine?.CreateEventHandler(identifier, targetControl, methodName, type);
         }
+        public void loadApps(object? path)
+        {
+            string directory = Computer.FS_ROOT;
+            if (path is string dir && !string.IsNullOrEmpty(dir))
+            {
+                directory = dir;
+            }
+            if (Runtime.GetResourcePath(directory) is string AbsPath && Directory.Exists(AbsPath))
+            {
+                Action<string, string> procDir = (root, file) => { 
+                    if (Path.GetExtension(file) is string ext && ext == ".app")
+                    {
+                        Computer.Window.InstallJSWPF(Path.GetFileName(file));
+                    }
+                    if (Path.GetExtension(file) is string _ext && _ext == ".web")
+                    {
+                        Computer.Window.InstallJSHTML(Path.GetFileName(file));
+                    }
+                };
 
+                FileSystem.ProcessDirectoriesAndFilesRecursively(AbsPath, procDir , /* proc file */ (_,_) => { });
+            }
+        }
 
     }
 }

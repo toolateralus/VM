@@ -449,9 +449,7 @@ namespace VM.FS
                 return true;
             }
 
-            TryInvoke(cmdName, str_args);
-           
-            return false;
+            return TryInvoke(cmdName, str_args);
         }
         public Command Find(string name)
         {
@@ -461,12 +459,14 @@ namespace VM.FS
             }
             return default;
         }
-        public void TryInvoke(string name, string[] args)
+        public bool TryInvoke(string name, string[] args)
         {
             if (Find(name) is Command command && command.id != null && command.id != "NULL" && command.Method != null)
             {
                 command.Method.Invoke(args);
+                return true;
             }
+            return false;
         }
         public void RootCmd(object[]? args)
         {

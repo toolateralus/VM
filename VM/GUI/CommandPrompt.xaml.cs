@@ -22,8 +22,8 @@ namespace VM.GUI
         public static string? DesktopIcon => Runtime.GetResourcePath("commandprompt.png");
 
         public Action<string> OnSend { get; internal set; }
-        public static string? LastUploaded;
-        string uploaded_buffer = "";
+        public static string? LastSentInput;
+        string LastSentBuffer = "";
         public CommandPrompt()
         {
             InitializeComponent();
@@ -113,16 +113,23 @@ namespace VM.GUI
         {
             OnSend?.Invoke(input.Text);
 
-            await ExecuteJavaScript(input.Text, computer.Config.Value<int?>("CMD_LINE_TMOUT") ?? 10_000);
-            
+            // this goes before the execution so when it hangs up it doesnt 
+            // enter a space
+
             if (e != null && e.RoutedEvent != null)
                 e.Handled = true;
 
+            const string ExecutingString = "\nExecuting...";
+
+            output.AppendText(ExecutingString);
+            await ExecuteJavaScript(code : input.Text, timeout : computer.Config.Value<int?>("CMD_LINE_TMOUT") ?? 5_000);
+            output.AppendText("\nDone executing.");
+
+
             input.Clear();
 
-
-            LastUploaded = uploaded_buffer;
-            uploaded_buffer = output.Text;
+            LastSentInput = LastSentBuffer;
+            LastSentBuffer = output.Text;
         }
 
         private void ManageCommandHistoryKeys(KeyEventArgs e)
@@ -167,7 +174,7 @@ namespace VM.GUI
                 return;
             }
 
-            if (commandHistory.Count > 50)
+            if (commandHistory.Count > 100)
             {
                 commandHistory.RemoveAt(0);
             }
@@ -180,8 +187,12 @@ namespace VM.GUI
             {
                 using (var cts = new CancellationTokenSource())
                 {
-                    var executionTask = Engine.Execute(code, cts.Token);
+                    var executionTask = Engine?.Execute(code, cts.Token);
+                   
                     var timeoutTask = Task.Delay(timeout);
+
+                    if (executionTask == null)
+                        throw new NullReferenceException("No execution task was found, the engine probably was disposed while in use.");
 
                     var completedTask = await Task.WhenAny(executionTask, timeoutTask);
 

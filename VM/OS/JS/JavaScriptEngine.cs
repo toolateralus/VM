@@ -164,6 +164,7 @@ namespace VM.JS
 
             if (token.IsCancellationRequested)
             {
+                // cancel execution
                 CodeDictionary.TryRemove(handle, out _);
                 return null;
             }

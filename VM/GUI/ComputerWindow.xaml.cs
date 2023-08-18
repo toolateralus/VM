@@ -225,7 +225,8 @@ namespace VM.GUI
         }
         public void OpenApp(UserControl control, string title = "window", Brush? background = null, Brush? foreground = null, JavaScriptEngine engine = null)
         {
-
+            if (Computer.Disposing)
+                return;
             // basically app count, a way for us to force to top.
             TopMostZIndex++;
 
@@ -241,11 +242,11 @@ namespace VM.GUI
             var frame = new ResizableWindow(this)
             {
                 Content = window,
-                Width = 800,
-                Height = 600,
-                Margin = new(),
-                Background = background,
-                Foreground = foreground,
+                Width = Math.Max(window.MinWidth, window.Width),
+                Height = Math.Max(window.MinHeight, window.Height),
+                Margin = window.Margin,
+                Background = window.Background,
+                Foreground = window.Foreground,
             };
 
             window.InitializeUserContent(frame, control, engine);
@@ -254,6 +255,7 @@ namespace VM.GUI
 
             Desktop.Children.Add(frame);
 
+            window.ToggleMaximize(null, null);
             Button btn = GetTaskbarButton(title, window.ToggleVisibility);
 
             TaskbarStackPanel.Children.Add(btn);
@@ -264,8 +266,10 @@ namespace VM.GUI
                 RemoveTaskbarButton(title);
             };
         }
-        public void InstallWPF(string type)
+        public void InstallJSWPF(string type)
         {
+            if (Computer.Disposing)
+                return;
             Dispatcher.Invoke(() => { 
                 LoadedInstalledApplications.Add(type);
 
@@ -285,6 +289,9 @@ namespace VM.GUI
         }
         public void InstallJSHTML(string type)
         {
+            if (Computer.Disposing)
+                return;
+
             Dispatcher.Invoke(() =>
             {
                 LoadedInstalledApplications.Add(type);
@@ -307,7 +314,7 @@ namespace VM.GUI
             });
 
         }
-        public void InstallCSharpWPFApp(string exePath, Type type)
+        public void InstallCSWPF(string exePath, Type type)
         {
             var name = exePath.Split('.')[0];
 

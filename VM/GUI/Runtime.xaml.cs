@@ -104,15 +104,14 @@ namespace VM.GUI
             {
                 var computer = pc.Key;
                 Computers.Remove(computer);
-                Thread.Sleep(250);
 
                 computer.Exit(0);
                 var window = pc.Value;
 
-                Thread.Sleep(250);
                 window.Close();
 
-                Thread.Sleep(250);
+                Thread.Sleep(2500);
+
                 InstantiateComputer(id);
             }
         }
@@ -259,7 +258,12 @@ namespace VM.GUI
 
             VerifyOrCreateAppdataDir(path);
 
-            if (Directory.Exists(path) || File.Exists(path))
+            if (Directory.Exists(name) || File.Exists(name))
+            {
+                return name;
+            }
+                
+            if (Directory.Exists(path))
             {
                 string[] entries = Directory.GetFileSystemEntries(path, name, SearchOption.AllDirectories);
 
@@ -305,6 +309,30 @@ namespace VM.GUI
             var wnd = GetWindow(Computer);
 
             foreach (var window in wnd.USER_WINDOW_INSTANCES)
+            {
+                if (window.Value.Dispatcher.Thread != Thread.CurrentThread)
+                {
+                    T result = default;
+                    window.Value.Dispatcher.Invoke(() => { 
+
+                        if (window.Value is UserWindow userWindow && userWindow.Content is Grid g)
+                        {
+                            foreach (var item in g.Children)
+                            {
+                                if (item is Frame frame)
+                                {
+                                    if (frame.Content is T ActualApplication)
+                                    {
+                                        result = ActualApplication;
+                                    }
+                                }
+                            }
+
+                        }
+                    });
+                    return result!;
+                }
+
                 if (window.Value is UserWindow userWindow && userWindow.Content is Grid g)
                 {
                     foreach (var item in g.Children)
@@ -319,6 +347,7 @@ namespace VM.GUI
                     }
 
                 }
+            }
             return default;
 
         }
