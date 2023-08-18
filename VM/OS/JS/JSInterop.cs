@@ -1,5 +1,6 @@
 ﻿using Microsoft.ClearScript;
 using Microsoft.ClearScript.JavaScript;
+using Newtonsoft.Json.Linq;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -16,6 +17,7 @@ using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using VM.GUI;
 using VM.OS.Network;
+using VM.Types;
 using static System.Windows.Forms.VisualStyles.VisualStyleElement.TrayNotify;
 
 
@@ -218,6 +220,7 @@ namespace VM.OS.JS
             Notifications.Now("Incorrect path for uninstall");
 
         }
+        public JObject GetConfig() => computer.OS.Config;
         public async void install(string dir)
         {
             ComputerWindow window = Runtime.GetWindow(computer);
@@ -228,6 +231,14 @@ namespace VM.OS.JS
                 return;
             }
 
+            if (computer.OS.Config["INSTALLED_APPS"] is not JArray)
+            {
+                computer.OS.Config["INSTALLED_APPS"] = new JArray();
+            }
+            if (computer.OS.Config["INSTALLED_APPS"] is JArray arr && !arr.JContains(dir))
+            {
+                arr.Add(dir);
+            }
 
             // js/html app
             if (dir.Contains(".web"))
@@ -242,6 +253,7 @@ namespace VM.OS.JS
                 window.InstallWPF(dir);
             }
         }
+
         public void alias(string alias, string path)
         {
 
