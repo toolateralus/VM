@@ -236,9 +236,6 @@ namespace VM.JS
         public object? recieve(params object?[]? parameters)
         {
             (object? value, int reply) @event = default;
-
-            byte[] result = Array.Empty<byte>();
-
             if (parameters is null || parameters.Length == 0)
             {
                 Notifications.Now("Insufficient parameters for a network connection");
@@ -257,13 +254,7 @@ namespace VM.JS
                 Notifications.Now($"Invalid parameter for receive {parameters[0]}");
                 return null;
             }
-
-            if (@event.value is byte[] message)
-            {
-                // Process incoming messages?
-            }
-
-            return Encoding.UTF8.GetString(result);
+            return @event.value;
         }
         public void eventHandler(string identifier, string methodName)
         {

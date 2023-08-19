@@ -250,8 +250,8 @@ namespace VM.GUI
             {
                 NetworkEvents.Add(outCh, new());
             }
-
             NetworkEvents[outCh].Enqueue((msg, inCh));
+
             foreach(var computer in Computers)
             {
                 foreach (var userWindow in computer.Value.USER_WINDOW_INSTANCES)
