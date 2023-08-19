@@ -331,6 +331,12 @@ namespace VM.JS
             if (!Path.IsPathFullyQualified(path))
                 path = Path.Combine(Computer.FS_ROOT, path);
 
+            string? dir = Path.GetDirectoryName(path);
+            if (dir != null && !Directory.Exists(dir))
+            {
+                Directory.CreateDirectory(dir);
+            }
+
             File.WriteAllText(path, data?.ToString() ?? "");
         }
         public bool file_exists(string path)
