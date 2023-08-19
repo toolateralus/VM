@@ -6,6 +6,7 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Shapes;
 using VM;
+using ICSharpCode.AvalonEdit.Search;
 
 namespace VM.GUI
 {
@@ -62,6 +63,7 @@ namespace VM.GUI
         public TextEditor()
         {
             InitializeComponent();
+            SearchPanel.Install(input);
         }
 
         private void LoadButton_Click(object sender, RoutedEventArgs e)
