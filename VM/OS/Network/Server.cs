@@ -201,7 +201,7 @@ namespace VM.Network.Server
                 while (true)
                 {
                     Packet packet = RecieveMessage(stream, client, true);
-                    await TryHandleMessages(packet, connectedClients);
+                    _ = Task.Run(async () => await TryHandleMessages(packet, connectedClients));
                 }
             }
             catch (Exception ex)

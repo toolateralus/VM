@@ -21,7 +21,6 @@ using VM.JS;
 
 namespace VM.FS
 {
-
     public struct Command
     {
         public string id = "NULL";
@@ -39,20 +38,16 @@ namespace VM.FS
 
         }
     }
-
-    // the "command line" for the file explorer, very basic operations with completely unique syntax.
     public class CommandLine
     {
         public Computer Computer;
         public List<Command> Commands = new();
         public Dictionary<string, string> Aliases = new();
-
         public CommandLine(Computer computer)
         {
             Computer = computer;
             RegisterNativeCommands(computer);
         }
-
         private void RegisterNativeCommands(Computer computer)
         {
             Commands = new()
@@ -113,7 +108,6 @@ namespace VM.FS
                 Notifications.Now($"Failed to begin hosting on {LANIPFetcher.GetLocalIPAddress().MapToIPv4()}:{port}");
             });
         }
-
         private void Move(object[]? obj)
         {
             string? a = obj[0] as string;
@@ -134,7 +128,6 @@ namespace VM.FS
             var IP = LANIPFetcher.GetLocalIPAddress().MapToIPv4();
             Notifications.Now(IP.ToString());
         }
-
         private void Delete(object[]? obj)
         {
             if (obj != null && obj.Length > 0 && obj[0] is string target)
@@ -146,7 +139,6 @@ namespace VM.FS
                 Notifications.Now("Invalid input parameters.");
             }
         }
-
         private void Edit(object[]? obj)
         {
             if (obj != null && obj.Length > 0 && obj[0] is string fileName)
@@ -169,8 +161,6 @@ namespace VM.FS
                 Notifications.Now("Invalid input parameters.");
             }
         }
-
-      
         private void Config(object[]? obj)
         {
             if (obj != null && obj.Length > 0 && obj[0] is string getset)
@@ -391,7 +381,6 @@ namespace VM.FS
             commandPrompt?.output.AppendText(aliasbuilder.ToString());
 
         }
-
         private void GetSpecificHelp(params object[] parameters)
         {
             var name = parameters[0] as string;
@@ -404,7 +393,6 @@ namespace VM.FS
                 }
             }
         }
-
         private async void RunJs(object[]? obj)
         {
             if (obj.Length > 0 && obj[0] is string path && Runtime.GetResourcePath(path + ".js") is string AbsPath &&  File.Exists(AbsPath))
@@ -472,9 +460,6 @@ namespace VM.FS
         {
             Computer.FS.ChangeDirectory(Computer.FS_ROOT);
         }
-
-     
-
     }
 }
 
