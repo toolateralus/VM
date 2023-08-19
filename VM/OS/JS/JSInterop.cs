@@ -335,7 +335,7 @@ namespace VM.JS
         }
         public bool file_exists(string path)
         {
-            return File.Exists(path);
+            return Runtime.GetResourcePath(path) is string AbsPath && !string.IsNullOrEmpty(AbsPath) ? File.Exists(AbsPath) : false;
         }
 
         public void setAliasDirectory(string path, string regex = "")
