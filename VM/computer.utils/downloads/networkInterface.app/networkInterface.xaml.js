@@ -38,7 +38,7 @@ class Connection{
         while(true && !this.timedOut && !this.cancelled){
             network.send(this.CHANNEL, this.REPLY, this.DEFAULT);
             let response = "";
-            response = await recieve(this.REPLY)
+            response = await receive(this.REPLY)
         }
     }
 

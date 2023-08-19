@@ -168,14 +168,14 @@ class PaintNet {
         if (!network.IsConnected){
             print('You must connect to a network to use online multiplayer... attempting local {this machine}.')
         } 
-        // Network recieve seems to not be waiting properly, and if it does, it freezes every app.
+        // Network receive seems to not be waiting properly, and if it does, it freezes every app.
         if (isHost === true){
 
             print(`Attempting to host on ${ch}::${reply}..`);
 
             network.send(ch, reply, 'REQUEST_GAME_START')
 
-            const msg = network.recieve(ch)
+            const msg = network.receive(ch)
     
             if (msg === 'ACCEPT_GAME_START'){
                 
@@ -195,11 +195,11 @@ class PaintNet {
 
             network.send(ch, reply, 'ACCEPT_GAME_START')
 
-            const msg = network.recieve(ch)
+            const msg = network.receive(ch)
     
             if (msg === 'HOST_TURN'){
                 // show waiting for player to go text.
-                const move = network.recieve(reply)
+                const move = network.receive(reply)
             }
             else{
                 print('Failed to connect with another player.')
