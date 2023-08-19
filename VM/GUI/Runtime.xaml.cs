@@ -13,6 +13,7 @@ using System.Linq;
 using System.Windows.Controls;
 using System.Runtime.CompilerServices;
 using VM.JS;
+using Newtonsoft.Json.Linq;
 
 namespace VM.GUI
 {
@@ -218,6 +219,7 @@ namespace VM.GUI
 
             if (queue?.Count == 0)
                 NetworkEvents.Remove(channel);
+
 
             return val ?? default;
         }

@@ -89,7 +89,6 @@ namespace VM.Network
                     int messageLength = packet.Metadata.Value<int>("size");
                     int sender_ch = packet.Metadata.Value<int>("ch");
                     int reciever_ch = packet.Metadata.Value<int>("reply");
-
                     var path = packet.Metadata.Value<string>("path");
                     if (path is null)
                     {
