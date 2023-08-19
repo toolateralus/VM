@@ -223,15 +223,6 @@ namespace VM.JS
                 return;
             }
 
-            if (Computer.Config["INSTALLED_APPS"] is not JArray)
-            {
-                Computer.Config["INSTALLED_APPS"] = new JArray();
-            }
-            if (Computer.Config["INSTALLED_APPS"] is JArray arr && !arr.JContains(dir))
-            {
-                arr.Add(dir);
-            }
-
             // js/html app
             if (dir.Contains(".web"))
             {
