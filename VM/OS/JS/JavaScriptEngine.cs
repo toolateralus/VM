@@ -25,7 +25,7 @@ namespace VM.JS
         public bool Disposing { get; private set; }
         private readonly ConcurrentDictionary<int, (string code, Action<object?> output)> CodeDictionary = new();
         public Dictionary<string, object> EmbeddedObjects = new();
-        public List<JSEventHandler> EventHandlers = new();
+        public List<XAMLJSEventHandler> EventHandlers = new();
         private Computer Computer;
         private readonly Thread executionThread;
 
@@ -192,7 +192,7 @@ namespace VM.JS
             {
                 for (int i = 0; i < EventHandlers.Count; i++)
                 {
-                    JSEventHandler? eventHandler = EventHandlers[i];
+                    XAMLJSEventHandler? eventHandler = EventHandlers[i];
                     eventHandler?.Dispose();
                 }
             });
@@ -264,7 +264,7 @@ namespace VM.JS
                     return;
                 }
 
-                var eh = new JSEventHandler(element, (XAML_EVENTS)type, this, identifier, methodName);
+                var eh = new XAMLJSEventHandler(element, (XAML_EVENTS)type, this, identifier, methodName);
 
                 if (wnd.USER_WINDOW_INSTANCES.TryGetValue(identifier, out var app))
                 {

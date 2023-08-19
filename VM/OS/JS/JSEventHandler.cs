@@ -10,22 +10,17 @@ using System.Threading;
 
 namespace VM.JS
 {
-    public class JSEventHandler : IDisposable
+    public class XAMLJSEventHandler : JSEventHandler, IDisposable
     {
-        internal JavaScriptEngine jsEngine;
         public XAML_EVENTS Event = XAML_EVENTS.RENDER;
-        public Action OnUnhook;
         FrameworkElement element;
-        public Thread? thread = null;
-        internal readonly string methodHandle;
-        internal readonly string FUNCTION_HANDLE;
 
-        public JSEventHandler(FrameworkElement control, XAML_EVENTS @event, JavaScriptEngine js, string id, string method)
+        public XAMLJSEventHandler(FrameworkElement control, XAML_EVENTS @event, JavaScriptEngine js, string id, string method)
         {
             Event = @event;
             this.jsEngine = js;
             element = control;
-            FUNCTION_HANDLE = CreateFunction(id, method);
+            base.FUNCTION_HANDLE = CreateFunction(id, method);
             CreateHook(control, @event);
         }
 
@@ -103,33 +98,22 @@ namespace VM.JS
                     break;
             }
         }
-        public void HeavyWorkerLoop()
-        {
-            while (!Disposing && !jsEngine.Disposing)
-            {
-                InvokeEventUnsafe(null, null);
-                Thread.Sleep(DELAY_BETWEEN_WORK_ITERATIONS);
-            }
-            Dispose();
-        }
-        public string CreateFunction(string identifier, string methodName)
-        {
-            var event_call = $"{ identifier }.{ methodName}{ARGS_STRING}";
-            var id = $"{ identifier }{ methodName}";
-            string func = $"function {id} {ARGS_STRING} {{ {event_call}; }}";
-            Task.Run(() => jsEngine?.Execute(func));
-            return id;
-        }
-
-        const string ARGS_STRING = "(arg1, arg2)";
-
-        public bool Disposing { get; internal set; }
-        public int DELAY_BETWEEN_WORK_ITERATIONS { get; private set; }
 
         public Action<object?, KeyEventArgs> OnKeyUp;
 
-        public Action<object?, KeyEventArgs> OnKeyDown; 
-
+        public Action<object?, KeyEventArgs> OnKeyDown;
+        public override void InvokeGeneric(object? sender, object? arguments)
+        {
+            if (arguments is RoutedEventArgs args)
+            {
+                var mouseArgs = new object[] { Mouse.LeftButton is MouseButtonState.Pressed, Mouse.RightButton is MouseButtonState.Pressed };
+                InvokeMouse(sender?.GetType()?.GetProperty("Name")?.GetValue(sender) ?? "unknown", mouseArgs);
+            }
+            else
+            {
+                InvokeEvent();
+            }
+        }
         public void InvokeMouse(object? sender, object? e)
         {
             if (e is MouseEventArgs mvA && mvA.GetPosition(sender as IInputElement ?? element) is Point pos)
@@ -143,53 +127,10 @@ namespace VM.JS
             }
 
         }
-        private void InvokeEventUnsafe(object? arg1 = null, object? arg2 = null)
-        {
-            try
-            {
-                jsEngine.ENGINE_JS.CallFunction(FUNCTION_HANDLE, arg1, arg2);
-            }
-            catch (Exception e)
-            {
-                Notifications.Exception(e);
-            }
-        }
-        private void InvokeEvent(object? arg1 = null, object? arg2 = null)
-        {
-            Task.Run(() => {
-                try
-                {
-                    jsEngine.ENGINE_JS.CallFunction(FUNCTION_HANDLE, arg1, arg2);
-                }
-                catch (Exception e)
-                {
-                    Notifications.Exception(e);
-                }
-            });
-        }
 
         public void InvokeKeyboard(object? sender, System.Windows.Input.KeyEventArgs e)
         {
             InvokeEvent(e.Key.ToString(), e.IsDown);
-        }
-        public void InvokeGeneric(object? sender, object? arguments)
-        {
-            if (arguments is RoutedEventArgs args)
-            {
-                var mouseArgs = new object[] { Mouse.LeftButton is MouseButtonState.Pressed, Mouse.RightButton is MouseButtonState.Pressed };
-                InvokeMouse(sender?.GetType()?.GetProperty("Name")?.GetValue(sender) ?? "unknown", mouseArgs);
-            }
-            else
-            {
-                InvokeEvent();
-            }
-        }
-        public void Dispose()
-        {
-            if (!Disposing)
-                thread?.Join(10_000);
-
-            Disposing = true;
         }
     }
 }

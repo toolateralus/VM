@@ -74,7 +74,7 @@ namespace VM.GUI
                     break;
             }
         }
-        private static void InvokeKeyEvent(object sender, KeyEventArgs e, JSEventHandler eventHandler)
+        private static void InvokeKeyEvent(object sender, KeyEventArgs e, XAMLJSEventHandler eventHandler)
         {
             if (eventHandler.Event == XAML_EVENTS.KEY_DOWN)
             {
