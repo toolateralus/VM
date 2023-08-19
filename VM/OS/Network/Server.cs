@@ -191,7 +191,7 @@ namespace VM.Network.Server
             TcpClient client = await server.AcceptTcpClientAsync();
             connectedClients.Add(client);
             Notifications.Now($"SERVER:Client {client.GetHashCode()} connected ");
-            _ = HandleClientCommunicationAsync(client, connectedClients);
+            Task.Run(() => HandleClientCommunicationAsync(client, connectedClients));
         }
         private async Task HandleClientCommunicationAsync(TcpClient client, List<TcpClient> connectedClients)
         {
@@ -201,7 +201,7 @@ namespace VM.Network.Server
                 while (true)
                 {
                     Packet packet = RecieveMessage(stream, client, true);
-                    _ = Task.Run(async () => await TryHandleMessages(packet, connectedClients));
+                    await TryHandleMessages(packet, connectedClients);
                 }
             }
             catch (Exception ex)
@@ -217,7 +217,7 @@ namespace VM.Network.Server
         }
         private async Task TryHandleMessages(Packet packet, List<TcpClient> clients)
         {
-            if (packet.Metadata.Value<string>("type") is string tTypeStr)
+            if (packet?.Metadata?.Value<string>("type") is string tTypeStr)
             {
                 var transmissionType = Enum.Parse<TransmissionType>(tTypeStr);
 

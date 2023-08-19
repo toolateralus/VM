@@ -93,7 +93,7 @@ namespace VM.Network
                     var path = packet.Metadata.Value<string>("path");
                     if (path is null)
                     {
-                        Runtime.Broadcast(sender_ch, reciever_ch, packet.Data);
+                        Runtime.Broadcast(sender_ch, reciever_ch, Encoding.UTF8.GetString(packet.Data));
                     }
                     else
                     {
