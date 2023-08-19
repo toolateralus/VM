@@ -32,6 +32,7 @@ namespace VM.GUI
         }
         internal void Close()
         {
+            JavaScriptEngine?.Dispose();
             if (Owner is not null && Owner.Parent is Canvas canvas)
             {
                 Owner.OnClosed?.Invoke();
