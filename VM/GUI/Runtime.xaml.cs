@@ -51,6 +51,12 @@ namespace VM.GUI
         {
             var path = GetResourcePath("javascript_syntax_highlighting.xhsd");
 
+            if (string.IsNullOrEmpty(path))
+            {
+                Notifications.Now("An error was encountered while parsing the JavaScript syntax highlighting file, which should be called javascript_syntax_highlighting.xhsd");
+                return;
+            }
+
             StreamReader sReader = new(path);
 
             using (XmlReader reader = XmlReader.Create(sReader))
@@ -245,7 +251,7 @@ namespace VM.GUI
         }
         internal static void Broadcast(int outCh, int inCh, object? msg)
         {
-            if (!NetworkEvents.TryGetValue(outCh, out var e))
+            if (!NetworkEvents.TryGetValue(outCh, out _))
             {
                 NetworkEvents.Add(outCh, new());
             }
@@ -262,7 +268,7 @@ namespace VM.GUI
             {
                 return name;
             }
-                
+
             if (Directory.Exists(path))
             {
                 string[] entries = Directory.GetFileSystemEntries(path, name, SearchOption.AllDirectories);

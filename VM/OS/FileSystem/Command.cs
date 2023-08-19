@@ -152,7 +152,7 @@ namespace VM.FS
             if (obj != null && obj.Length > 0 && obj[0] is string fileName)
             {
 
-                if (Runtime.GetResourcePath(fileName) is string AbsPath && AbsPath != null)
+                if (Runtime.GetResourcePath(fileName) is string AbsPath && !string.IsNullOrEmpty(AbsPath))
                 {
                     if (!File.Exists(AbsPath))
                     {

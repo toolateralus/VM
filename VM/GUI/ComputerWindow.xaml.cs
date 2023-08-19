@@ -254,6 +254,7 @@ namespace VM.GUI
             Desktop.Children.Add(frame);
 
             window.ToggleMaximize(null, null);
+            window.ToggleMaximize(null, null);
             Button btn = GetTaskbarButton(title, window.ToggleVisibility);
 
             TaskbarStackPanel.Children.Add(btn);
@@ -356,7 +357,6 @@ namespace VM.GUI
         }
 
         public object taskManager = null;
-
         private void TaskManagerClick(object sender, RoutedEventArgs e)
         {
             if (taskManager != null)
@@ -367,7 +367,7 @@ namespace VM.GUI
                 Background = Brushes.MediumAquamarine,
                 MinWidth = 150,
                 MaxWidth = 300,
-                MinHeight = 600,
+                MinHeight = 300,
                 MaxHeight = 800,
                 Margin = new(5, 5, 5, 5),
                 HorizontalAlignment = HorizontalAlignment.Center,
