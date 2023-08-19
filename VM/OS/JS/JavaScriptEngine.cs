@@ -25,7 +25,7 @@ namespace VM.JS
         public bool Disposing { get; private set; }
         private readonly ConcurrentDictionary<int, (string code, Action<object?> output)> CodeDictionary = new();
         public Dictionary<string, object> EmbeddedObjects = new();
-        public List<XAMLJSEventHandler> EventHandlers = new();
+        public List<JSEventHandler> EventHandlers = new();
         private Computer Computer;
         private readonly Thread executionThread;
 
@@ -192,7 +192,7 @@ namespace VM.JS
             {
                 for (int i = 0; i < EventHandlers.Count; i++)
                 {
-                    XAMLJSEventHandler? eventHandler = EventHandlers[i];
+                    JSEventHandler? eventHandler = EventHandlers[i];
                     eventHandler?.Dispose();
                 }
             });
@@ -279,6 +279,39 @@ namespace VM.JS
 
                 EventHandlers.Add(eh);
             });
+        }
+        internal async Task CreateNetworkEventHandler(string identifier, string methodName)
+        {
+            var wnd = Computer.Window;
+
+            var result = await Execute($"{identifier} != null");
+
+            if (result is not bool ID_EXISTS || !ID_EXISTS)
+            {
+                return;
+            }
+
+            result = await Execute($"{identifier}.{methodName} != null");
+
+            if (result is not bool METHOD_EXISTS || !METHOD_EXISTS)
+            {
+                return;
+            }
+
+            var eh = new NetworkEventHandler(this, identifier, methodName);
+
+            if (wnd.USER_WINDOW_INSTANCES.TryGetValue(identifier, out var app))
+            {
+                app.OnClosed += () =>
+                {
+                    if (EventHandlers.Contains(eh))
+                        EventHandlers.Remove(eh);
+
+                    eh.OnUnhook?.Invoke();
+                };
+            }
+
+            EventHandlers.Add(eh);
         }
     }
 }

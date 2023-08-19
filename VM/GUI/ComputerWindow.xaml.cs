@@ -56,7 +56,7 @@ namespace VM.GUI
                 if (userWindow.Value?.JavaScriptEngine?.EventHandlers == null)
                     continue;
 
-                foreach (var eventHandler in userWindow.Value.JavaScriptEngine.EventHandlers)
+                foreach (XAMLJSEventHandler eventHandler in userWindow.Value.JavaScriptEngine.EventHandlers.Where((e) => e is XAMLJSEventHandler))
                 {
                     InvokeKeyEvent(sender, e, eventHandler);
                 }
