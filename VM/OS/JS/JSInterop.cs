@@ -717,6 +717,5 @@ namespace VM.JS
                 FileSystem.ProcessDirectoriesAndFilesRecursively(AbsPath, procDir , /* proc file */ (_,_) => { });
             }
         }
-
     }
 }

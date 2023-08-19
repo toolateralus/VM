@@ -221,6 +221,7 @@ namespace VM.JS
         }
         internal async Task CreateEventHandler(string identifier, string targetControl, string methodName, int type)
         {
+            
             var wnd = Computer.Window;
 
             var result = await Execute($"{identifier} != null");
