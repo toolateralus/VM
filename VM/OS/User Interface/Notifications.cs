@@ -24,7 +24,7 @@ namespace VM
 
         internal static void Exception(Exception e)
         {
-            Now(e.Message + "\n" + e.InnerException + "\n" + e.Source + "\n" + e.StackTrace);  
+            Now(e.Message + "\n" + e.InnerException + "\n" + e.Source);  
         }
     }
 }
