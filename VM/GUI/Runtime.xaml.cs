@@ -7,17 +7,12 @@ using System.Windows;
 using System.Windows.Media;
 using System.Xml;
 using KeyEventArgs = System.Windows.Input.KeyEventArgs;
-using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using System.Threading;
-using VM;
-using static System.Net.Mime.MediaTypeNames;
-using System.Xml.Linq;
 using System.Linq;
 using System.Windows.Controls;
-using System.Collections.Concurrent;
 using System.Runtime.CompilerServices;
-using VM;
+using VM.JS;
 
 namespace VM.GUI
 {
@@ -256,7 +251,20 @@ namespace VM.GUI
                 NetworkEvents.Add(outCh, new());
             }
 
-            NetworkEvents[outCh].Enqueue((msg, inCh)); 
+            NetworkEvents[outCh].Enqueue((msg, inCh));
+            foreach(var computer in Computers)
+            {
+                foreach (var userWindow in computer.Value.USER_WINDOW_INSTANCES)
+                {
+                    if (userWindow.Value?.JavaScriptEngine?.EventHandlers == null)
+                        continue;
+                    foreach (var eventHandler in userWindow.Value.JavaScriptEngine.EventHandlers)
+                    {
+                        if (eventHandler is NetworkEventHandler networkEventHandler)
+                            networkEventHandler.InvokeEvent(outCh, inCh, msg);
+                    }
+                }
+            }
         }
         internal static string GetResourcePath(string name)
         {

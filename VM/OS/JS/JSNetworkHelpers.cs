@@ -1,19 +1,13 @@
-﻿using Newtonsoft.Json;
-using Newtonsoft.Json.Linq;
+﻿using Newtonsoft.Json.Linq;
 using System;
 using System.IO;
 using System.Linq;
 using System.Net;
 using System.Text;
 using System.Threading.Tasks;
-using System.Windows.Controls;
-using System.Windows.Markup;
 using VM.GUI;
 using VM.Network;
 using VM.Network.Server;
-using VM;
-using System.Windows.Forms.Design;
-using System.Windows.Forms;
 
 namespace VM.JS
 {
@@ -222,25 +216,26 @@ namespace VM.JS
         public bool IsConnected => Computer.Network.IsConnected();
         public void send(params object?[]? parameters)
         {
-            int outCh, inCh;
-            object? msg;
-            byte[] outgoingData = null;
-
-            if (parameters is not null && parameters.Length > 2)
+            if (parameters is null || parameters.Length <= 2)
             {
-                msg = parameters[2];
+                return;
+            }
+            if (parameters[0] is int channel &&
+                parameters[1] is int replyChannel &&
+                parameters[2] is string message)
+            {
+                Runtime.Broadcast(channel, replyChannel, message);
+            }
 
-                // Process and convert the message to byte array if necessary
+            // Process and convert the message to byte array if necessary
+            byte[] outgoingData = null;
+            if (outgoingData != null)
+            {
+                // Specify the appropriate channel and reply values
+                replyChannel = 0; // Specify the outgoing channel
+                channel = 0;  // Specify the reply channel
 
-                if (outgoingData != null)
-                {
-                    // Specify the appropriate channel and reply values
-                    outCh = 0; // Specify the outgoing channel
-                    inCh = 0;  // Specify the reply channel
-
-                    OnTransmit?.Invoke(outgoingData, TransmissionType.Message, outCh, inCh,  false);
-                    Runtime.Broadcast(outCh, inCh, outgoingData); 
-                }
+                OnTransmit?.Invoke(outgoingData, TransmissionType.Message, replyChannel, channel, false);
             }
         }
         public object? recieve(params object?[]? parameters)
@@ -254,7 +249,6 @@ namespace VM.JS
                 Notifications.Now("Insufficient parameters for a network connection");
                 return null;
             }
-
             if (parameters[0] is string p1 && int.TryParse(p1, out int ch))
             {
                 @event = Runtime.PullEvent(ch, Computer);
@@ -276,6 +270,12 @@ namespace VM.JS
 
             return Encoding.UTF8.GetString(result);
         }
+        public void eventHandler(string identifier, string methodName)
+        {
+            var window = Computer.Window;
 
+            if (window.USER_WINDOW_INSTANCES.TryGetValue(identifier, out var app))
+                app.JavaScriptEngine?.CreateNetworkEventHandler(identifier, methodName);
+        }
     }
 }

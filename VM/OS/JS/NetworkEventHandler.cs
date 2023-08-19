@@ -21,11 +21,11 @@ namespace VM.JS
             return id;
         }
         private new void InvokeEvent(object? arg1 = null, object? arg2 = null) { }
-        public void InvokeEvent(object? arg1 = null, object? arg2 = null, object? arg3 = null)
+        public void InvokeEvent(object? channel = null, object? replyChannel = null, object? data = null)
         {
             try
             {
-                jsEngine.ENGINE_JS.CallFunction(FUNCTION_HANDLE, arg1, arg2, arg3);
+                jsEngine.ENGINE_JS.CallFunction(FUNCTION_HANDLE, channel, replyChannel, data);
             }
             catch (Exception e)
             {
