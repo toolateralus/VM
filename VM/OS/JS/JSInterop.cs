@@ -142,6 +142,9 @@ namespace VM.JS
             }
             return default;
         }
+
+
+
         public object toBytes(string background)
         {
             return Convert.FromBase64String(background);
