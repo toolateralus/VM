@@ -134,8 +134,12 @@ namespace VM.JS
         {
             OnTransmit?.Invoke(Encoding.UTF8.GetBytes("GET_DOWNLOADS"), TransmissionType.Request, -1, Server.REQUEST_REPLY_CHANNEL, false);
             var response = await Runtime.PullEventAsync(Server.REQUEST_REPLY_CHANNEL, Computer);
-            var stringResponse = Encoding.UTF8.GetString(response.value as byte[] ?? Encoding.UTF8.GetBytes("No data found"));
-            Notifications.Now(stringResponse);
+            if (response.value is string rVal &&
+                JObject.Parse(rVal).Value<string>("data") is string data)
+            {
+                string msg = Encoding.UTF8.GetString(Convert.FromBase64String(data));
+                Notifications.Now(msg);
+            }
             return;
         }
         public async void download(string path)
@@ -233,7 +237,7 @@ namespace VM.JS
                 Runtime.Broadcast(channel, replyChannel, message);
             }
         }
-        public object? recieve(params object?[]? parameters)
+        public object? receive(params object?[]? parameters)
         {
             (object? value, int reply) @event = default;
             if (parameters is null || parameters.Length == 0)
