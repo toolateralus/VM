@@ -1,5 +1,6 @@
 ﻿using Microsoft.ClearScript.V8;
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Linq;
@@ -352,6 +353,80 @@ namespace VM.GUI
                     }
                 }
             });
+        }
+
+        public object taskManager = null;
+
+        private void TaskManagerClick(object sender, RoutedEventArgs e)
+        {
+            if (taskManager != null)
+                return;
+
+            var grid = new Grid
+            {
+                Background = Brushes.MediumAquamarine,
+                MinWidth = 150,
+                MaxWidth = 300,
+                MinHeight = 600,
+                MaxHeight = 800,
+                Margin = new(5, 5, 5, 5),
+                HorizontalAlignment = HorizontalAlignment.Center,
+                VerticalAlignment = VerticalAlignment.Center,
+            };
+
+            var stack = new StackPanel
+            {
+                Orientation = Orientation.Vertical,
+                Margin = new(5, 5, 5, 5),
+                HorizontalAlignment = HorizontalAlignment.Left,
+                VerticalAlignment = VerticalAlignment.Top,
+            };
+
+            grid.Children.Add(stack);
+
+            HashSet<object> existing = new();
+
+            EventHandler UpdateTaskManager = new(async (_,_) =>
+            {
+                var apps = Computer.Window.USER_WINDOW_INSTANCES;
+                foreach (var item in apps)
+                {
+                    if (!existing.Contains(item))
+                    {
+                        existing.Add(item);
+                        var _btn = GetTaskbarButton(item.Key, (_, _) => {
+                            if (Keyboard.IsKeyDown(Key.LeftCtrl))
+                                item.Value.Close();
+                            else item.Value.ToggleMaximize(sender, e);
+                        });
+                        _btn.MinWidth = 100;
+                        _btn.MinHeight = 50;
+                        _btn.Margin = new(15, 15, 15, 15);
+                        stack.Children.Add(_btn);
+                    }
+                }
+            });
+
+            Action onClose = new(delegate {
+                Desktop?.Children?.Remove(grid);
+                taskManager = null;
+                CompositionTarget.Rendering -= UpdateTaskManager;
+            });
+
+            var btn = GetTaskbarButton("close", (_, _) =>
+            {
+                onClose();
+            });
+
+            stack.Children.Add(btn);
+
+            taskManager = new();
+
+            Desktop.Children.Add(grid);
+
+            Canvas.SetZIndex(grid, TopMostZIndex);
+
+            CompositionTarget.Rendering += UpdateTaskManager;
         }
     }
 }
