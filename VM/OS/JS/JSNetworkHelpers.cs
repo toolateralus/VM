@@ -224,18 +224,13 @@ namespace VM.JS
                 parameters[1] is int replyChannel &&
                 parameters[2] is string message)
             {
+                byte[] outgoingData = Encoding.UTF8.GetBytes(message);
+                if (outgoingData != null)
+                {
+                    OnTransmit?.Invoke(outgoingData, TransmissionType.Message, replyChannel, channel, false);
+                }
+
                 Runtime.Broadcast(channel, replyChannel, message);
-            }
-
-            // Process and convert the message to byte array if necessary
-            byte[] outgoingData = null;
-            if (outgoingData != null)
-            {
-                // Specify the appropriate channel and reply values
-                replyChannel = 0; // Specify the outgoing channel
-                channel = 0;  // Specify the reply channel
-
-                OnTransmit?.Invoke(outgoingData, TransmissionType.Message, replyChannel, channel, false);
             }
         }
         public object? recieve(params object?[]? parameters)
