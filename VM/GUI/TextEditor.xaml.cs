@@ -7,6 +7,7 @@ using System.Windows.Controls;
 using System.Windows.Shapes;
 using VM;
 using ICSharpCode.AvalonEdit.Search;
+using System;
 
 namespace VM.GUI
 {
@@ -80,7 +81,10 @@ namespace VM.GUI
         }
         private void RenderMD_Click(object sender, RoutedEventArgs e)
         {
-            mdViewer?.RenderMarkdown(Contents ?? "## no markdown found");
+            var wnd = computer.Window;
+            mdViewer = new MarkdownViewer();
+            mdViewer.RenderMarkdown(Contents);
+            wnd?.OpenApp(mdViewer, "Markdown Renderer");
         }
         private void SaveButton_Click(object sender, RoutedEventArgs e)
         {
