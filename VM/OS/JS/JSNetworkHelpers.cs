@@ -137,8 +137,7 @@ namespace VM.JS
             if (response.value is string rVal &&
                 JObject.Parse(rVal).Value<string>("data") is string data)
             {
-                string msg = Encoding.UTF8.GetString(Convert.FromBase64String(data));
-                Notifications.Now(msg);
+                Notifications.Now(data);
             }
             return;
         }
