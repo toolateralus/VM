@@ -13,7 +13,6 @@ using System.Linq;
 using System.Windows.Controls;
 using System.Runtime.CompilerServices;
 using VM.JS;
-using Newtonsoft.Json.Linq;
 
 namespace VM.GUI
 {
@@ -310,7 +309,9 @@ namespace VM.GUI
 
                 if (File.Exists(xamlFile) && File.Exists(jsFile))
                 {
-                    return (File.ReadAllText(xamlFile), File.ReadAllText(jsFile));
+                    var xaml = File.ReadAllText(xamlFile);
+                    var js = File.ReadAllText(jsFile);
+                    return (xaml, js);
                 }
                 else
                 {

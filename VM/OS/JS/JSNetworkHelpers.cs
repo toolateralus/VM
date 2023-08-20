@@ -231,9 +231,9 @@ namespace VM.JS
                 if (outgoingData != null)
                 {
                     OnTransmit?.Invoke(outgoingData, TransmissionType.Message, replyChannel, channel, false);
+                    var json = Server.ToJson(outgoingData.Length, outgoingData, TransmissionType.Message, replyChannel, channel, false);
+                    Runtime.Broadcast(channel, replyChannel, json);
                 }
-
-                Runtime.Broadcast(channel, replyChannel, message);
             }
         }
         public object? receive(params object?[]? parameters)
