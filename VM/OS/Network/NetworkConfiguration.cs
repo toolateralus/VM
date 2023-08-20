@@ -90,11 +90,11 @@ namespace VM.Network
                     int sender_ch = packet.Metadata.Value<int>("ch");
                     int reciever_ch = packet.Metadata.Value<int>("reply");
                     var path = packet.Metadata.Value<string>("path");
+                    var data = packet.Metadata.Value<string>("data") ?? "";
+                    packet.Metadata["data"] = Encoding.UTF8.GetString(Convert.FromBase64String(data));
 
                     if (path is null)
                     {
-                        var data = packet.Metadata.Value<string>("data") ?? "";
-                        packet.Metadata["data"] = Encoding.UTF8.GetString(Convert.FromBase64String(data));
                         Runtime.Broadcast(sender_ch, reciever_ch, packet.Metadata.ToString());
                     }
                     else

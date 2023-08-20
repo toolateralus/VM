@@ -185,7 +185,7 @@ namespace VM.JS
                     return;
                 }
 
-                if (metadata.Value<string>("data") is not string dataString || Convert.FromBase64String(dataString) is not byte[] dataBytes)
+                if (metadata.Value<string>("data") is not string dataString || Encoding.UTF8.GetBytes(dataString) is not byte[] dataBytes)
                 {
                     Notifications.Now($"Invalid data for {path}");
                     return;
