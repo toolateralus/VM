@@ -293,7 +293,7 @@ namespace VM.Network.Server
         private static async Task HandleMessageTransmission(Packet packet, List<TcpClient> clients)
         {
             var bytes = Convert.FromBase64String(packet.Metadata.Value<string>("data"));
-            var responseMetadata = JObject.Parse(ToJson(bytes.Length, bytes, TransmissionType.Message, packet.Metadata.Value<int>("ch"), packet.Metadata.Value<int>("reply"), false));
+            var responseMetadata = JObject.Parse(ToJson(bytes.Length, bytes, TransmissionType.Message, packet.Metadata.Value<int>("reply"), packet.Metadata.Value<int>("ch"), false));
             await BroadcastMessage(clients, packet.Client, responseMetadata);
         }
         private void HandleIncomingDataTransmission(Packet packet)
