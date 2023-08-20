@@ -168,7 +168,7 @@ namespace VM.JS
 
                 if (value is not JObject metadata)
                 {
-                    if (value is byte[] bytes && Encoding.UTF8.GetString(bytes) is string dataStr)
+                    if (value is string s && JObject.Parse(s).Value<string>("data") is string dataStr)
                     {
                         switch (dataStr)
                         {
