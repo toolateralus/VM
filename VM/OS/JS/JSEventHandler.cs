@@ -18,7 +18,7 @@ namespace VM.JS
         public XAMLJSEventHandler(FrameworkElement control, XAML_EVENTS @event, JavaScriptEngine js, string id, string method)
         {
             Event = @event;
-            this.jsEngine = js;
+            this.JavaScriptEngine = js;
             element = control;
             base.FUNCTION_HANDLE = CreateFunction(id, method);
             CreateHook(control, @event);
@@ -33,47 +33,47 @@ namespace VM.JS
                         if (control is Button button)
                         {
                             button.Click += InvokeGeneric;
-                            OnUnhook += () => button.Click -= InvokeGeneric;
+                            OnDispose += () => button.Click -= InvokeGeneric;
                             break;
                         }
                         control.MouseDown += InvokeGeneric;
-                        OnUnhook += () => control.MouseDown -= InvokeGeneric;
+                        OnDispose += () => control.MouseDown -= InvokeGeneric;
                     }
                     break;
                 case XAML_EVENTS.MOUSE_UP:
                     {
                         control.MouseUp += InvokeGeneric;
-                        OnUnhook += () => control.MouseUp -= InvokeGeneric;
+                        OnDispose += () => control.MouseUp -= InvokeGeneric;
                     }
                     break;
                 case XAML_EVENTS.MOUSE_MOVE:
                     {
                         control.MouseMove += InvokeMouse;
-                        OnUnhook += () => control.MouseMove -= InvokeMouse;
+                        OnDispose += () => control.MouseMove -= InvokeMouse;
                     }
                     break;
                 case XAML_EVENTS.KEY_DOWN:
                     {
                         OnKeyDown += InvokeKeyboard;
-                        OnUnhook += () => OnKeyDown -= InvokeKeyboard;
+                        OnDispose += () => OnKeyDown -= InvokeKeyboard;
                     }
                     break;
                 case XAML_EVENTS.KEY_UP:
                     {
                         OnKeyUp += InvokeKeyboard;
-                        OnUnhook += () => OnKeyUp -= InvokeKeyboard;
+                        OnDispose += () => OnKeyUp -= InvokeKeyboard;
                     }
                     break;
                 case XAML_EVENTS.LOADED:
                     {
                         control.Loaded += InvokeGeneric;
-                        OnUnhook += () => control.Loaded -= InvokeGeneric;
+                        OnDispose += () => control.Loaded -= InvokeGeneric;
                     }
                     break;
                 case XAML_EVENTS.WINDOW_CLOSE:
                     {
                         control.Unloaded += InvokeGeneric;
-                        OnUnhook += () => control.Unloaded -= InvokeGeneric;
+                        OnDispose += () => control.Unloaded -= InvokeGeneric;
                     }
                     break;
 
@@ -84,15 +84,15 @@ namespace VM.JS
                 /// so we use much smaller values to get a more appropriate speed.
                 case XAML_EVENTS.RENDER:
                     // going for 60+ fps
-                    DELAY_BETWEEN_WORK_ITERATIONS = 16 / 3;
-                    thread = new(HeavyWorkerLoop);
-                    thread.Start();
+                    IterationDelay = 16 / 3;
+                    ExecutionThread = new(HeavyWorkerLoop);
+                    ExecutionThread.Start();
                     break;
                 case XAML_EVENTS.PHYSICS:
                     // going for ~40-50fps
-                    DELAY_BETWEEN_WORK_ITERATIONS = 24 / 3;
-                    thread = new(HeavyWorkerLoop);
-                    thread.Start();
+                    IterationDelay = 24 / 3;
+                    ExecutionThread = new(HeavyWorkerLoop);
+                    ExecutionThread.Start();
                     break;
                 default:
                     break;

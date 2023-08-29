@@ -35,7 +35,6 @@
 
             <StackPanel x:Name="TaskbarStackPanel" Orientation="Horizontal" Width="Auto" Height="25" Background="#2f5c47">
                 <Button x:Name="ShutdownBtn" Click="ShutdownClick" Background="#2f5c47" Width="66" FontFamily="Consolas" FontSize="10" Foreground="White" Content="Shut down"/>
-                <Button x:Name="TaskManagerBtn" Click="TaskManagerClick" Background="#2f5c47" Width="66" FontFamily="Consolas" FontSize="10" Foreground="White" Content="Tasks"/>
             </StackPanel>
 
             <StackPanel FlowDirection="RightToLeft" Grid.Row="1" Grid.Column="2" x:Name="RightSideTaskbarPanel" Orientation="Horizontal" HorizontalAlignment="Right"  Width="400" Height="25" Background="#2f5c47">

@@ -7,11 +7,8 @@ using VM.Types;
 
 namespace VM.FS
 {
-    public class FileSystem
+    public class FileSystem : IDisposable
     {
-        private string currentDirectory;
-        public Computer Computer;
-
         class Installer
         {
             const string PATH = "computer.utils";
@@ -45,24 +42,6 @@ namespace VM.FS
                 }
             }
         }
-        public static void ProcessDirectoriesAndFilesRecursively(string directory, Action<string, string> processDirAction, Action<string, string> processFileAction)
-        {
-            // Process files in the current directory
-            foreach (string file in Directory.EnumerateFiles(directory))
-            {
-                processFileAction(directory, file);
-            }
-
-            // Process subdirectories in the current directory
-            foreach (string subDir in Directory.EnumerateDirectories(directory))
-            {
-                processDirAction(directory, subDir);
-
-                // Recursively process subdirectories
-                ProcessDirectoriesAndFilesRecursively(subDir, processDirAction, processFileAction);
-            }
-        }
-
         public FileSystem(string root, Computer computer)
         {
             Computer = computer;
@@ -80,6 +59,9 @@ namespace VM.FS
             currentDirectory = root;
 
         }
+
+        public Computer Computer;
+        private string currentDirectory;
         public string CurrentDirectory
         {
             get { return currentDirectory; }
@@ -95,8 +77,52 @@ namespace VM.FS
                 }
             }
         }
-
         public Deque<string> History = new();
+        private bool Disposing;
+        internal static string GetResourcePath(string name)
+        {
+            var path = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData) + "\\VM";
+
+            FileSystem.VerifyOrCreateAppdataDir(path);
+
+            if (Directory.Exists(name) || File.Exists(name))
+            {
+                return name;
+            }
+
+            if (Directory.Exists(path))
+            {
+                string[] entries = Directory.GetFileSystemEntries(path, name, SearchOption.AllDirectories);
+
+                return entries.FirstOrDefault();
+            }
+
+            return "";
+        }
+        internal static void VerifyOrCreateAppdataDir(string path)
+        {
+            if (!Directory.Exists(path))
+            {
+                Directory.CreateDirectory(path);
+            }
+        }
+        public static void ProcessDirectoriesAndFilesRecursively(string directory, Action<string, string> processDirAction, Action<string, string> processFileAction)
+        {
+            // Process files in the current directory
+            foreach (string file in Directory.EnumerateFiles(directory))
+            {
+                processFileAction(directory, file);
+            }
+
+            // Process subdirectories in the current directory
+            foreach (string subDir in Directory.EnumerateDirectories(directory))
+            {
+                processDirAction(directory, subDir);
+
+                // Recursively process subdirectories
+                ProcessDirectoriesAndFilesRecursively(subDir, processDirAction, processFileAction);
+            }
+        }
         public void ChangeDirectory(string path)
         {
             if (path == "..")
@@ -280,6 +306,22 @@ namespace VM.FS
                     }
                 }
             }
+        }
+        protected virtual void Dispose(bool disposing)
+        {
+            if (!Disposing)
+            {
+                if (disposing)
+                {
+                    Computer = null!;
+                }
+                Disposing = true;
+            }
+        }
+        public void Dispose()
+        {
+            Dispose(disposing: true);
+            GC.SuppressFinalize(this);
         }
     }
 }

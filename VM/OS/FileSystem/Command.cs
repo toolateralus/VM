@@ -38,11 +38,13 @@ namespace VM.FS
 
         }
     }
-    public class CommandLine
+    public class CommandLine : IDisposable
     {
         public Computer Computer;
         public List<Command> Commands = new();
         public Dictionary<string, string> Aliases = new();
+        private bool Disposing;
+
         public CommandLine(Computer computer)
         {
             Computer = computer;
@@ -67,7 +69,7 @@ namespace VM.FS
                 new("config" ,Config, "config <set or get> <property name> (set only) <new value>"),
                 new("ip", getIP, "fetches the local ip address of wifi/ethernet"),
                 new("move", Move, "moves a file/changes its name"),
-                new("restart", (_) => Runtime.Restart(computer.ID), "restarts this computer"),
+                new("restart", (_) => Computer.Restart(computer.ID), "restarts this computer"),
                 new("lp", LP, "lists all the running proccesses"),
                 new("host", Host, "hosts a server on the provided <port>, none provided it will default to 8080"),
                 new("unhost", (_) => Computer.Network.StopHosting(_), "if a server is currently running on this machine this halts any active connections and closes the sever."),
@@ -117,7 +119,7 @@ namespace VM.FS
         }
         private void LP(object[]? obj)
         {
-            foreach (var item in Computer.Window.USER_WINDOW_INSTANCES)
+            foreach (var item in Computer.USER_WINDOW_INSTANCES)
             {
                 Notifications.Now($"\n{item.Key}");
             }
@@ -144,7 +146,7 @@ namespace VM.FS
             if (obj != null && obj.Length > 0 && obj[0] is string fileName)
             {
 
-                if (Runtime.GetResourcePath(fileName) is string AbsPath && !string.IsNullOrEmpty(AbsPath))
+                if (FileSystem.GetResourcePath(fileName) is string AbsPath && !string.IsNullOrEmpty(AbsPath))
                 {
                     if (!File.Exists(AbsPath))
                     {
@@ -153,7 +155,7 @@ namespace VM.FS
                     }
                     var wnd = Computer.Window;
                     var tEdit = new TextEditor(Computer, AbsPath);
-                    wnd.OpenApp(tEdit);
+                    Computer.OpenApp(tEdit);
                 } 
             }
             else
@@ -173,7 +175,7 @@ namespace VM.FS
 
                     if (toLower == "get")
                     {
-                        var commandPrompt = Runtime.SearchForOpenWindowType<CommandPrompt>(Computer);
+                        var commandPrompt = Computer.SearchForOpenWindowType<CommandPrompt>(Computer);
 
                         if (commandPrompt == default)
                         {
@@ -230,7 +232,7 @@ namespace VM.FS
                 }
                 else if (toLower == "all")
                 {
-                    var commandPrompt = Runtime.SearchForOpenWindowType<CommandPrompt>(Computer);
+                    var commandPrompt = Computer.SearchForOpenWindowType<CommandPrompt>(Computer);
 
                     if (commandPrompt == default)
                     {
@@ -256,7 +258,7 @@ namespace VM.FS
         }
         private void SetFont(object[]? obj)
         {
-            var commandPrompt = Runtime.SearchForOpenWindowType<CommandPrompt>(Computer);
+            var commandPrompt = Computer.SearchForOpenWindowType<CommandPrompt>(Computer);
 
             if (commandPrompt == default)
             {
@@ -297,7 +299,7 @@ namespace VM.FS
         }
         private void ListDir(object[]? obj)
         {
-            var commandPrompt = Runtime.SearchForOpenWindowType<CommandPrompt>(Computer);
+            var commandPrompt = Computer.SearchForOpenWindowType<CommandPrompt>(Computer);
 
             if (commandPrompt == default)
             {
@@ -322,7 +324,7 @@ namespace VM.FS
         }
         private void Clear(object[]? obj)
         {
-            Computer.Window?.Dispatcher?.Invoke(() => { Runtime.SearchForOpenWindowType<CommandPrompt>(Computer)?.output?.Clear(); });
+            Computer.SearchForOpenWindowType<CommandPrompt>(Computer)?.output?.Clear();
         }
         private void Copy(object[]? obj)
         {
@@ -357,7 +359,7 @@ namespace VM.FS
                 GetSpecificHelp(obj);
             }
 
-            var commandPrompt = Runtime.SearchForOpenWindowType<CommandPrompt>(Computer);
+            var commandPrompt = Computer.SearchForOpenWindowType<CommandPrompt>(Computer);
 
             if (commandPrompt == default)
             {
@@ -395,7 +397,7 @@ namespace VM.FS
         }
         private async void RunJs(object[]? obj)
         {
-            if (obj.Length > 0 && obj[0] is string path && Runtime.GetResourcePath(path + ".js") is string AbsPath &&  File.Exists(AbsPath))
+            if (obj.Length > 0 && obj[0] is string path && FileSystem.GetResourcePath(path + ".js") is string AbsPath &&  File.Exists(AbsPath))
             {
                 await Computer.JavaScriptEngine.Execute(File.ReadAllText(AbsPath));
                 Notifications.Now($"running {AbsPath}...");
@@ -459,6 +461,26 @@ namespace VM.FS
         public void RootCmd(object[]? args)
         {
             Computer.FS.ChangeDirectory(Computer.FS_ROOT);
+        }
+
+        protected virtual void Dispose(bool disposing)
+        {
+            if (!Disposing)
+            {
+                if (disposing)
+                {
+                    Computer = null!;
+                    Commands.Clear();
+                    Aliases.Clear();
+                }
+                Disposing = true;
+            }
+        }
+
+        public void Dispose()
+        {
+            Dispose(disposing: true);
+            GC.SuppressFinalize(this);
         }
     }
 }

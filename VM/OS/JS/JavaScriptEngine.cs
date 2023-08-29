@@ -11,6 +11,7 @@ using JavaScriptEngineSwitcher.Core;
 using JavaScriptEngineSwitcher.V8;
 using VM.GUI;
 using VM;
+using VM.FS;
 
 namespace VM.JS
 {
@@ -18,16 +19,16 @@ namespace VM.JS
     {
         internal IJsEngine ENGINE_JS;
         IJsEngineSwitcher engineSwitcher;
-
-        public Dictionary<string, object?> modules = new();
-        public JSNetworkHelpers NetworkModule { get; }
-        public JSInterop InteropModule { get; }
-        public bool Disposing { get; private set; }
+        public readonly Dictionary<string, object?> Modules_UNUSED = new();
+        public readonly JSNetworkHelpers NetworkModule;
+        public readonly JSInterop InteropModule;
         private readonly ConcurrentDictionary<int, (string code, Action<object?> output)> CodeDictionary = new();
-        public Dictionary<string, object> EmbeddedObjects = new();
-        public List<JSEventHandler> EventHandlers = new();
-        private Computer Computer;
+        public readonly Dictionary<string, object> EmbeddedObjects = new();
+        public readonly List<JSEventHandler> EventHandlers = new();
+
+        private Computer Computer { get; set; }
         private readonly Thread executionThread;
+        public bool Disposing { get; private set; }
 
         public JavaScriptEngine(Computer computer)
         {
@@ -112,7 +113,7 @@ namespace VM.JS
         }
         private object? ImportModule(string arg)
         {
-            if (Runtime.GetResourcePath(arg) is string AbsPath && !string.IsNullOrEmpty(AbsPath))
+            if (FileSystem.GetResourcePath(arg) is string AbsPath && !string.IsNullOrEmpty(AbsPath))
             {
                 ENGINE_JS.ExecuteFile(AbsPath);
             }
@@ -126,7 +127,7 @@ namespace VM.JS
                 {
                     void AddModule(object? obj, string path)
                     {
-                        modules[path] = obj;
+                        Modules_UNUSED[path] = obj;
                     }
 
                     InteropModule.OnModuleExported += (path, o) => AddModule(o, path);
@@ -180,23 +181,7 @@ namespace VM.JS
 
             return handle;
         }
-        public void Dispose()
-        {
-            Disposing = true;
-            
-            ENGINE_JS?.Dispose();
-            ENGINE_JS = null!;
-            
-            Task.Run(() => executionThread.Join());
-            Task.Run(() =>
-            {
-                for (int i = 0; i < EventHandlers.Count; i++)
-                {
-                    JSEventHandler? eventHandler = EventHandlers[i];
-                    eventHandler?.Dispose();
-                }
-            });
-        }
+       
         internal void ExecuteScript(string absPath)
         {
             if (File.Exists(absPath))
@@ -267,14 +252,14 @@ namespace VM.JS
 
                 var eh = new XAMLJSEventHandler(element, (XAML_EVENTS)type, this, identifier, methodName);
 
-                if (wnd.USER_WINDOW_INSTANCES.TryGetValue(identifier, out var app))
+                if (Computer.USER_WINDOW_INSTANCES.TryGetValue(identifier, out var app))
                 {
                     app.OnClosed += () =>
                     {
                         if (EventHandlers.Contains(eh))
                             EventHandlers.Remove(eh);
 
-                        eh.OnUnhook?.Invoke();
+                        eh.OnDispose?.Invoke();
                     };
                 }
 
@@ -301,18 +286,50 @@ namespace VM.JS
 
             var eh = new NetworkEventHandler(this, identifier, methodName);
 
-            if (wnd.USER_WINDOW_INSTANCES.TryGetValue(identifier, out var app))
+            if (Computer.USER_WINDOW_INSTANCES.TryGetValue(identifier, out var app))
             {
                 app.OnClosed += () =>
                 {
                     if (EventHandlers.Contains(eh))
                         EventHandlers.Remove(eh);
 
-                    eh.OnUnhook?.Invoke();
+                    eh.OnDispose?.Invoke();
                 };
             }
 
             EventHandlers.Add(eh);
+        }
+
+        protected virtual void Dispose(bool disposing)
+        {
+            if (!Disposing)
+            {
+                if (disposing)
+                {
+                    ENGINE_JS?.Dispose();
+
+                    Task.Run(() => executionThread.Join());
+                    Task.Run(() =>
+                    {
+                        for (int i = 0; i < EventHandlers.Count; i++)
+                        {
+                            JSEventHandler? eventHandler = EventHandlers[i];
+                            eventHandler?.Dispose();
+                        }
+                    });
+                }
+
+                ENGINE_JS = null!;
+                Computer = null!;
+                Disposing = true;
+            }
+        }
+
+        public void Dispose()
+        {
+            // Do not change this code. Put cleanup code in 'Dispose(bool disposing)' method
+            Dispose(disposing: true);
+            GC.SuppressFinalize(this);
         }
     }
 }

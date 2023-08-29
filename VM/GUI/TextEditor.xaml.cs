@@ -8,6 +8,7 @@ using System.Windows.Shapes;
 using VM;
 using ICSharpCode.AvalonEdit.Search;
 using System;
+using VM.FS;
 
 namespace VM.GUI
 {
@@ -16,17 +17,17 @@ namespace VM.GUI
     /// </summary>
     public partial class TextEditor : UserControl
     {
-        Computer computer;
+        Computer Computer;
         public string LoadedFile;
         public string Contents;
-        public static string? DesktopIcon => Runtime.GetResourcePath("texteditor.png");
+        public static string? DesktopIcon => FileSystem.GetResourcePath("texteditor.png");
 
         public MarkdownViewer? mdViewer;
 
         public TextEditor(Computer pc, string path)
         {
             InitializeComponent();
-            computer = pc;
+            Computer = pc;
             LoadedFile = path;
 
             LoadFile(path);
@@ -49,16 +50,16 @@ namespace VM.GUI
 
         private void RunMarkdownViewer(string path)
         {
-            var wnd = computer.Window;
+            var wnd = Computer.Window;
             mdViewer = new MarkdownViewer();
             Contents = File.ReadAllText(path);
             mdViewer.RenderMarkdown(Contents);
-            wnd?.OpenApp(mdViewer, "Markdown Renderer");
+            Computer?.OpenApp(mdViewer, "Markdown Renderer");
         }
 
         public void LateInit(Computer pc)
         {
-            computer = pc;
+            Computer = pc;
         }
 
         public TextEditor()
@@ -70,9 +71,9 @@ namespace VM.GUI
         private void LoadButton_Click(object sender, RoutedEventArgs e)
         {
             FileExplorer fileExplorer = new FileExplorer();
-            fileExplorer.LateInit(computer);
+            fileExplorer.LateInit(Computer);
 
-            computer.Window?.OpenApp(fileExplorer);
+            Computer.OpenApp(fileExplorer);
 
             fileExplorer.OnNavigated += (file) =>
             {
@@ -81,17 +82,17 @@ namespace VM.GUI
         }
         private void RenderMD_Click(object sender, RoutedEventArgs e)
         {
-            var wnd = computer.Window;
+            var wnd = Computer.Window;
             mdViewer = new MarkdownViewer();
             mdViewer.RenderMarkdown(Contents);
-            wnd?.OpenApp(mdViewer, "Markdown Renderer");
+            Computer.OpenApp(mdViewer, "Markdown Renderer");
         }
         private void SaveButton_Click(object sender, RoutedEventArgs e)
         {
             if (!File.Exists(LoadedFile))
             {
                 var dialog = new SaveFileDialog();
-                dialog.InitialDirectory = computer.FS_ROOT;
+                dialog.InitialDirectory = Computer.FS_ROOT;
 
                 dialog.FileName = "New";
                 dialog.DefaultExt = ".js";
@@ -113,7 +114,7 @@ namespace VM.GUI
         }
         private async void RunButton_Click(object sender, RoutedEventArgs e)
         {
-            await computer.JavaScriptEngine.Execute(input.Text);
+            await Computer.JavaScriptEngine.Execute(input.Text);
         }
     }
 }

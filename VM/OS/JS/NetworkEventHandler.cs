@@ -8,7 +8,7 @@ namespace VM.JS
         public const string ARGS_STRING = "(channel, replyChannel, data)";
         public NetworkEventHandler(JavaScriptEngine javaScriptEngine, string identifier, string methodName)
         {
-            jsEngine = javaScriptEngine;
+            JavaScriptEngine = javaScriptEngine;
             FUNCTION_HANDLE = CreateFunction(identifier, methodName);
         }
 
@@ -17,7 +17,7 @@ namespace VM.JS
             var event_call = $"{identifier}.{methodName}{ARGS_STRING}";
             var id = $"Network{identifier}{methodName}";
             string func = $"function {id} {ARGS_STRING} {{ {event_call}; }}";
-            Task.Run(() => jsEngine?.Execute(func));
+            Task.Run(() => JavaScriptEngine?.Execute(func));
             return id;
         }
         private new void InvokeEvent(object? arg1 = null, object? arg2 = null) { }
@@ -25,7 +25,7 @@ namespace VM.JS
         {
             try
             {
-                jsEngine.ENGINE_JS.CallFunction(FUNCTION_HANDLE, channel, replyChannel, data);
+                JavaScriptEngine.ENGINE_JS.CallFunction(FUNCTION_HANDLE, channel, replyChannel, data);
             }
             catch (Exception e)
             {

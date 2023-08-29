@@ -3,6 +3,7 @@ using System.Windows;
 using System.Windows.Controls;
 using VM;
 using VM.JS;
+using static System.Windows.Forms.VisualStyles.VisualStyleElement;
 
 namespace VM.GUI
 {
@@ -29,6 +30,9 @@ namespace VM.GUI
             
             if (engine != null) 
                 OnClosed += engine.Dispose;
+
+            
+
         }
         internal void Close()
         {

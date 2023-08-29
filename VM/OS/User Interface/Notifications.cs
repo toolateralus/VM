@@ -7,11 +7,11 @@ namespace VM
     {
         public static void Now(string message)
         {
-            foreach (var cw in Runtime.Computers)
+            foreach (var cw in Computer.Computers)
             {
                 cw.Value.Dispatcher.Invoke(() =>
                 {
-                    var cmd = Runtime.SearchForOpenWindowType<CommandPrompt>(cw.Key);
+                    var cmd = Computer.SearchForOpenWindowType<CommandPrompt>(cw.Key);
                     cmd?.Dispatcher?.Invoke(() => { cmd?.output?.AppendText("\n" + message); });
 
                     var notif = new NotificationControl() { Message = message };

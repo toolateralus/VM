@@ -1,48 +1,41 @@
 ﻿using System.Net.Sockets;
 using System.Text;
 using System.Threading;
+using Microsoft.VisualBasic.Devices;
+using Newtonsoft.Json.Linq;
+using System;
+using System.Collections.Generic;
+using System.Net;
+using System.Runtime.CompilerServices;
+using System.Threading.Tasks;
+using VM.JS;
+using static VM.Network.Server.Server;
+using VM.Network;
+using VM.GUI;
+using VM.Network.Server;
 
 namespace VM.Network
 {
-    using CefNet.WinApi;
-    using Microsoft.ClearScript.JavaScript;
-    using Newtonsoft.Json;
-    using Newtonsoft.Json.Linq;
-    using System;
-    using System.Buffers.Text;
-    using System.IO;
-    using System.Net;
-    using System.Net.Security;
-    using System.Threading.Tasks;
-    using System.Windows;
-    using System.Windows.Markup;
-    using System.Windows.Shapes;
-    using VM.GUI;
-    using VM.Network.Server;
-    using static Server.Server;
-    public class NetworkConfiguration
+    public class NetworkConfiguration : IDisposable
     {
-        private TcpClient client;
-        private NetworkStream stream;
-        public const int DEFAULT_PORT = 8080;
-        public static string LAST_KNOWN_SERVER_IP => "192.168.0.138";
-
-        public void StopHosting(object?[] args)
-        {
-            host?.Dispose();
-        }
-
-        public static IPAddress SERVER_IP => IPAddress.Parse(LAST_KNOWN_SERVER_IP);
-
-        public static int LAST_KNOWN_SERVER_PORT { get; internal set; }
-
-        public Action<byte[]>? OnMessageRecieved;
-        public Thread receiveThread;
         private Host? host = null;
+        
+        private TcpClient? client;
+        
+        public Thread? receiveThread;
+        
+        private NetworkStream? stream;
+
+        public const int DEFAULT_PORT = 8080;
+        
+        public Action<byte[]>? OnMessageRecieved;
+
+        public static string LAST_KNOWN_SERVER_IP => "192.168.0.138";
+        public static IPAddress SERVER_IP => IPAddress.Parse(LAST_KNOWN_SERVER_IP);
+        public static int LAST_KNOWN_SERVER_PORT { get; internal set; }
 
         public NetworkConfiguration(Computer computer)
         {
-            computer.OnShutdown += StopClient;
             if (computer?.Config?.Value<bool>("ALWAYS_CONNECT") is bool connect && connect)
             {
                 if (computer?.Config?.Value<string>("DEFAULT_SERVER_IP") is string _IP && IPAddress.Parse(_IP) is IPAddress ip)
@@ -55,6 +48,7 @@ namespace VM.Network
                 }
             }
         }
+        
         public async Task StartClient(IPAddress ip)
         {
             await Task.Run(() =>
@@ -78,6 +72,118 @@ namespace VM.Network
                 }
             });
         }
+        internal async Task<bool> StartHosting(int port)
+        {
+            if (host != null && host.Running)
+            {
+                return false;
+            }
+
+            host ??= new();
+
+            await host.Open(port);
+
+            return host.Running;
+        }
+        public static Dictionary<int, Queue<(object? val, int replyCh)>> NetworkEvents = new();
+        internal static void Broadcast(int outCh, int inCh, object? msg)
+        {
+            if (!NetworkEvents.TryGetValue(outCh, out _))
+            {
+                NetworkEvents.Add(outCh, new());
+            }
+            NetworkEvents[outCh].Enqueue((msg, inCh));
+
+            foreach (var computer in Computer.Computers)
+            {
+                foreach (var userWindow in computer.Key.USER_WINDOW_INSTANCES)
+                {
+                    if (userWindow.Value.JavaScriptEngine.EventHandlers == null)
+                        continue;
+
+                    foreach (var eventHandler in userWindow.Value.JavaScriptEngine.EventHandlers)
+                    {
+                        if (eventHandler is NetworkEventHandler networkEventHandler)
+                            networkEventHandler.InvokeEvent(outCh, inCh, msg);
+                    }
+                }
+            }
+        }
+        public static (object? value, int reply) PullEvent(int channel, Computer computer)
+        {
+            Queue<(object? val, int replyCh)>? queue;
+
+            const int timeout = int.MaxValue;
+            int it = 0;
+
+            while ((!NetworkEvents.TryGetValue(channel, out queue) || queue is null || queue.Count == 0) && !computer.Disposing)
+            {
+                if (it < timeout)
+                    it++;
+                else break;
+
+                Thread.Sleep(1);
+            }
+
+            var val = queue?.Dequeue();
+
+            if (queue?.Count == 0)
+                NetworkEvents.Remove(channel);
+
+            return val ?? default;
+        }
+        public static async Task<(object? value, int reply)> PullEventAsync(int channel, VM.Computer computer, int timeout = 20_000, [CallerMemberName] string callerName = "unknown")
+        {
+            Queue<(object? val, int replyCh)> queue;
+            var timeoutTask = Task.Delay(timeout);
+
+            while (!NetworkEvents.TryGetValue(channel, out queue) || queue is null || queue.Count == 0 && !computer.Disposing && computer.Network.IsConnected())
+            {
+                var completedTask = await Task.WhenAny(Task.Delay(1), timeoutTask);
+
+                if (completedTask == timeoutTask)
+                {
+                    Notifications.Now($"timed out fetching from {callerName} event on channel {channel}");
+                    return (null, -1);
+                }
+            }
+
+            var val = queue?.Dequeue();
+
+            if (queue?.Count == 0)
+                NetworkEvents.Remove(channel);
+
+
+            return val ?? default;
+        }
+
+        internal void StopClient()
+        {
+            Dispose();
+        }
+
+        public void Dispose()
+        {
+            client?.Close();
+            stream?.Close();
+            Task.Run(() => receiveThread?.Join());
+            Notifications.Now($"Disconnected from {LAST_KNOWN_SERVER_IP}::{LAST_KNOWN_SERVER_PORT}");
+        }
+
+        public void StopHosting(object?[] args)
+        {
+            host?.Dispose();
+        }
+
+        internal bool IsConnected()
+        {
+            return stream != null && client != null && client.Connected;
+        }
+        internal object GetIPPortString()
+        {
+            return $"{LANIPFetcher.GetLocalIPAddress().MapToIPv4()}:{host?.OPEN_PORT}";
+        }
+
         public void ReceiveMessages()
         {
             try
@@ -95,12 +201,12 @@ namespace VM.Network
 
                     if (path is null)
                     {
-                        Runtime.Broadcast(sender_ch, reciever_ch, packet.Metadata.ToString());
+                        NetworkConfiguration.Broadcast(sender_ch, reciever_ch, packet.Metadata.ToString());
                     }
                     else
                     {
                         // DOWNLOADS // FILE TRANSFER
-                        Runtime.Broadcast(sender_ch, reciever_ch, packet.Metadata);
+                        NetworkConfiguration.Broadcast(sender_ch, reciever_ch, packet.Metadata);
                     }
                 }
             }
@@ -115,8 +221,6 @@ namespace VM.Network
                 client?.Close();
             }
         }
-        
-      
         internal void OnSendMessage(byte[] dataBytes, TransmissionType type, int ch, int reply, bool isDir = false)
         {
             var metadata = Server.Server.ToJson(dataBytes.Length, dataBytes, type, ch, reply, isDir);
@@ -131,35 +235,6 @@ namespace VM.Network
                 // metadata for file transfer, contains the data for the transfer as well.
                 stream.Write(metadataBytes, 0, metadataBytes.Length);
             }
-        }
-        internal void StopClient()
-        {
-            client?.Close();
-            stream?.Close();
-            Task.Run(()=>receiveThread?.Join());
-        }
-        internal bool IsConnected()
-        {
-            return client?.Connected ?? false;
-        }
-
-        internal async Task<bool> StartHosting(int port)
-        {
-            if (host != null && host.Running)
-            {
-                return false;
-            }
-
-            host ??= new();
-
-            await host.Open(port);
-
-            return host.Running;
-        }
-
-        internal object GetIPPortString()
-        {
-            return $"{LANIPFetcher.GetLocalIPAddress().MapToIPv4()}:{host?.OPEN_PORT}";
         }
     }
 }

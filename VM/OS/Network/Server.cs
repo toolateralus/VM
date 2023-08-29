@@ -20,7 +20,6 @@ namespace VM.Network.Server
     class Host
     {
         public int OPEN_PORT { get; internal set; } = 8080;
-
         public static IPAddress GetLocalIPAddress()
         {
             IPAddress localIP = null;
@@ -54,9 +53,8 @@ namespace VM.Network.Server
 
             return localIP;
         }
-
         internal bool Running;
-        TcpListener SERVER;
+        TcpListener? SERVER;
         public async Task Open(int port)
         {
             this.OPEN_PORT = port;
@@ -78,7 +76,6 @@ namespace VM.Network.Server
                 await networkConfig.ConnectClientAsync(SERVER, CLIENTS);
             }
         }
-
         internal void Dispose()
         {
             SERVER?.Stop();

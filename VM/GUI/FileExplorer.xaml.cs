@@ -17,6 +17,7 @@ using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
 using System.Windows.Shapes;
 using VM;
+using VM.FS;
 
 namespace VM.GUI
 {
@@ -25,7 +26,7 @@ namespace VM.GUI
     /// </summary>
     public partial class FileExplorer : UserControl
     {
-        public static string? DesktopIcon => Runtime.GetResourcePath("fileexplorer.png");
+        public static string? DesktopIcon => FileSystem.GetResourcePath("fileexplorer.png");
         public Action<string>? OnNavigated { get; internal set; }
         ObservableCollection<string> FileViewerData = new();
         Dictionary<string, string> OriginalPaths = new();
@@ -163,7 +164,7 @@ namespace VM.GUI
             {
                 if (computer.FS.FileExists(path))
                 {
-                    computer.Window?.OpenApp(new TextEditor(computer, path));
+                    computer.OpenApp(new TextEditor(computer, path));
                     OnNavigated?.Invoke(path);
                 }
 

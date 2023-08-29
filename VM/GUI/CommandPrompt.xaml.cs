@@ -3,7 +3,6 @@ using System.Windows.Controls;
 using System.Threading.Tasks;
 using System.Collections.Generic;
 using VM.JS;
-using VM;
 using System.Windows;
 using System.Linq;
 using System.Windows.Input;
@@ -11,6 +10,8 @@ using System.Threading;
 
 namespace VM.GUI
 {
+    using VM.FS;
+    using VM;
     
     public partial class CommandPrompt : UserControl
     {
@@ -19,7 +20,7 @@ namespace VM.GUI
         private int historyIndex = -1; 
         private string tempInput = ""; 
         public Computer computer;
-        public static string? DesktopIcon => Runtime.GetResourcePath("commandprompt.png");
+        public static string? DesktopIcon => FileSystem.GetResourcePath("commandprompt.png");
 
         public Action<string> OnSend { get; internal set; }
         public static string? LastSentInput;
@@ -122,7 +123,7 @@ namespace VM.GUI
             const string ExecutingString = "\nExecuting...";
 
             output.AppendText(ExecutingString);
-            await ExecuteJavaScript(code : input.Text, timeout : computer.Config.Value<int?>("CMD_LINE_TMOUT") ?? 5_000);
+            await ExecuteJavaScript(code : input.Text, timeout : computer.Config.Value<int?>("CMD_LINE_TIMEOUT") ?? 50_000);
             output.AppendText("\nDone executing.");
 
 

@@ -5,6 +5,7 @@ using System.Linq;
 using System.Net;
 using System.Text;
 using System.Threading.Tasks;
+using VM.FS;
 using VM.GUI;
 using VM.Network;
 using VM.Network.Server;
@@ -78,7 +79,7 @@ namespace VM.JS
         {
             var isDir = false;
 
-            if (Runtime.GetResourcePath(path) is not string AbsPath)
+            if (FileSystem.GetResourcePath(path) is not string AbsPath)
             {
                 // non existent file.
                 return;
@@ -133,7 +134,7 @@ namespace VM.JS
         public async void check_for_downloadable_content()
         {
             OnTransmit?.Invoke(Encoding.UTF8.GetBytes("GET_DOWNLOADS"), TransmissionType.Request, -1, Server.REQUEST_REPLY_CHANNEL, false);
-            var response = await Runtime.PullEventAsync(Server.REQUEST_REPLY_CHANNEL, Computer);
+            var response = await NetworkConfiguration.PullEventAsync(Server.REQUEST_REPLY_CHANNEL, Computer);
             if (response.value is string rVal &&
                 JObject.Parse(rVal).Value<string>("data") is string data)
             {
@@ -163,7 +164,7 @@ namespace VM.JS
 
             while (Computer.Network.IsConnected())
             {
-                (object? value, int reply) = await Runtime.PullEventAsync(Server.DOWNLOAD_REPLY_CHANNEL, Computer);
+                (object? value, int reply) = await NetworkConfiguration.PullEventAsync(Server.DOWNLOAD_REPLY_CHANNEL, Computer);
                 string pathString = null;
 
                 if (value is not JObject metadata)
@@ -232,7 +233,7 @@ namespace VM.JS
                 {
                     OnTransmit?.Invoke(outgoingData, TransmissionType.Message, replyChannel, channel, false);
                     var json = Server.ToJson(outgoingData.Length, outgoingData, TransmissionType.Message, replyChannel, channel, false);
-                    Runtime.Broadcast(channel, replyChannel, json);
+                    NetworkConfiguration.Broadcast(channel, replyChannel, json);
                 }
             }
         }
@@ -246,11 +247,11 @@ namespace VM.JS
             }
             if (parameters[0] is string p1 && int.TryParse(p1, out int ch))
             {
-                @event = Runtime.PullEvent(ch, Computer);
+                @event = NetworkConfiguration.PullEvent(ch, Computer);
             }
             else if (parameters[0] is int chInt)
             {
-                @event = Runtime.PullEvent(chInt, Computer);
+                @event = NetworkConfiguration.PullEvent(chInt, Computer);
             }
             else
             {
@@ -261,9 +262,7 @@ namespace VM.JS
         }
         public void eventHandler(string identifier, string methodName)
         {
-            var window = Computer.Window;
-
-            if (window.USER_WINDOW_INSTANCES.TryGetValue(identifier, out var app))
+            if (Computer.USER_WINDOW_INSTANCES.TryGetValue(identifier, out var app))
                 app.JavaScriptEngine?.CreateNetworkEventHandler(identifier, methodName);
         }
     }

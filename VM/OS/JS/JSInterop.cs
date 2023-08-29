@@ -56,13 +56,12 @@ namespace VM.JS
         public void disconnect()
         {
             Computer.Network.StopClient();
-            Notifications.Now($"Disconnected from {NetworkConfiguration.LAST_KNOWN_SERVER_IP}::{NetworkConfiguration.LAST_KNOWN_SERVER_PORT}");
         }
         public void reawaken_console()
         {
             CommandPrompt cmd = null;
 
-            cmd = Runtime.SearchForOpenWindowType<CommandPrompt>(Computer);
+            cmd = Computer.SearchForOpenWindowType<CommandPrompt>(Computer);
 
             Computer.Window?.Dispatcher?.Invoke(() => { 
 
@@ -83,7 +82,7 @@ namespace VM.JS
         public string? read()
         {
             CommandPrompt cmd = null;
-            cmd = Runtime.SearchForOpenWindowType<CommandPrompt>(Computer);
+            cmd = Computer.SearchForOpenWindowType<CommandPrompt>(Computer);
             var waiting = true;
             string result = "";
             if (cmd is null)
@@ -91,23 +90,23 @@ namespace VM.JS
                 Notifications.Now("No console was open, so reading is impossible");
                 return null;
             }
-            cmd.Dispatcher.Invoke(() => {
+            cmd.OnSend += end;
 
-                cmd.OnSend += end;
-                void end(string output)
-                {
-                    result = output;
-                    waiting = false;
-                }
-                while (waiting)
-                {
-                    Thread.Sleep(1);
-                }
-            });
+            void end(string obj)
+            {
+                result = obj;
+            }
+
+            while (result == "")
+            {
+                Thread.Sleep(5);
+            }
+
             return result;
-
-           
         }
+
+      
+
         public double random(double max)
         {
             return System.Random.Shared.NextDouble() * max;
@@ -201,14 +200,14 @@ namespace VM.JS
             // js/html app
             if (dir.Contains(".web"))
             {
-                window.Uninstall(dir); 
+                Computer.Uninstall(dir); 
                 return;
             }
 
             // wpf app
             if (dir.Contains(".app"))
             {
-                window.Uninstall(dir);
+                Computer.Uninstall(dir);
                 return;
             }
 
@@ -216,27 +215,17 @@ namespace VM.JS
 
         }
         public JObject GetConfig() => Computer.Config;
-        public async void install(string dir)
+        public void install(string dir)
         {
-            ComputerWindow window = Computer.Window;
-
-            if (window == null)
-            {
-                Notifications.Now("Window was null during install, something's gone wrong.");
-                return;
-            }
-
-            // js/html app
             if (dir.Contains(".web"))
             {
-                window.InstallJSHTML(dir);
+                Computer.InstallJSHTML(dir);
                 return;
             }
 
-            // wpf app
             if (dir.Contains(".app"))
             {
-                window.InstallJSWPF(dir);
+                Computer.InstallJSWPF(dir);
             }
         }
 
@@ -261,7 +250,7 @@ namespace VM.JS
                 }
             }
 
-            Computer.CommandLine.Aliases[alias] = Runtime.GetResourcePath(path) ?? "not found";
+            Computer.CommandLine.Aliases[alias] = FileSystem.GetResourcePath(path) ?? "not found";
         }
         /// <summary>
         /// this returns the callback, no need for extra listening
@@ -282,7 +271,7 @@ namespace VM.JS
         {
             if (!File.Exists(path))
             {
-                if (Runtime.GetResourcePath(path) is string AbsPath && !string.IsNullOrEmpty(AbsPath))
+                if (FileSystem.GetResourcePath(path) is string AbsPath && !string.IsNullOrEmpty(AbsPath))
                 {
                     return File.ReadAllText(AbsPath);
                 }
@@ -297,7 +286,7 @@ namespace VM.JS
 
             if (!File.Exists(path))
             {
-                if (Runtime.GetResourcePath(path) is string absPath && !string.IsNullOrEmpty(absPath))
+                if (FileSystem.GetResourcePath(path) is string absPath && !string.IsNullOrEmpty(absPath))
                 {
                     imageData = File.ReadAllBytes(absPath);
                 }
@@ -335,12 +324,12 @@ namespace VM.JS
         }
         public bool file_exists(string path)
         {
-            return Runtime.GetResourcePath(path) is string AbsPath && !string.IsNullOrEmpty(AbsPath) ? File.Exists(AbsPath) : false;
+            return FileSystem.GetResourcePath(path) is string AbsPath && !string.IsNullOrEmpty(AbsPath) ? File.Exists(AbsPath) : false;
         }
 
         public void setAliasDirectory(string path, string regex = "")
         {
-            if (Runtime.GetResourcePath(path) is string AbsPath && !string.IsNullOrEmpty(AbsPath))
+            if (FileSystem.GetResourcePath(path) is string AbsPath && !string.IsNullOrEmpty(AbsPath))
             {
                 // validated path.
                 path = AbsPath;
@@ -474,7 +463,7 @@ namespace VM.JS
         public static UserControl? GetUserContent(string javascript_controL_class_instance_id, Computer computer)
         {
             var window = computer.Window;
-            var resizableWins = window?.USER_WINDOW_INSTANCES?.Where(W => W.Key == javascript_controL_class_instance_id);
+            var resizableWins = computer.USER_WINDOW_INSTANCES?.Where(W => W.Key == javascript_controL_class_instance_id);
             UserControl userContent = null;
 
             if (resizableWins != null && resizableWins.Any())
@@ -692,9 +681,7 @@ namespace VM.JS
         }
         public void eventHandler(string identifier, string targetControl, string methodName, int type)
         {
-            var window = Computer.Window;
-
-            if (window.USER_WINDOW_INSTANCES.TryGetValue(identifier, out var app))
+            if (Computer.USER_WINDOW_INSTANCES.TryGetValue(identifier, out var app))
                 app.JavaScriptEngine?.CreateEventHandler(identifier, targetControl, methodName, type);
         }
         public void loadApps(object? path)
@@ -704,16 +691,16 @@ namespace VM.JS
             {
                 directory = dir;
             }
-            if (Runtime.GetResourcePath(directory) is string AbsPath && Directory.Exists(AbsPath))
+            if (FileSystem.GetResourcePath(directory) is string AbsPath && Directory.Exists(AbsPath))
             {
                 Action<string, string> procDir = (root, file) => { 
                     if (Path.GetExtension(file) is string ext && ext == ".app")
                     {
-                        Computer.Window.InstallJSWPF(Path.GetFileName(file));
+                        Computer.InstallJSWPF(Path.GetFileName(file));
                     }
                     if (Path.GetExtension(file) is string _ext && _ext == ".web")
                     {
-                        Computer.Window.InstallJSHTML(Path.GetFileName(file));
+                        Computer.InstallJSHTML(Path.GetFileName(file));
                     }
                 };
 

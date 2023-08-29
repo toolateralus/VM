@@ -5,6 +5,7 @@ using System.Windows;
 using System.Windows.Controls;
 using Microsoft.Web.WebView2.Core;
 using VM;
+using VM.FS;
 
 namespace VM.GUI
 {
@@ -41,7 +42,7 @@ namespace VM.GUI
         {
             if (webViewInitialized)
             {
-                var html = Runtime.GetResourcePath(appName + ".index.html");
+                var html = FileSystem.GetResourcePath(appName + ".index.html");
                 
                 if (File.Exists(html)) 
                     chromiumBrowser.NavigateToString(File.ReadAllText(html));

@@ -13,6 +13,7 @@ using System.Linq;
 using System.Windows.Controls;
 using System.Runtime.CompilerServices;
 using VM.JS;
+using VM.FS;
 
 namespace VM.GUI
 {
@@ -20,7 +21,6 @@ namespace VM.GUI
     public partial class Runtime : Window
     {
 
-        public static Dictionary<Computer, ComputerWindow> Computers = new();
 
         public Runtime()
         {
@@ -36,15 +36,14 @@ namespace VM.GUI
 
             StartPerpetualColorAnimation();
 
-
-            TryStartPC();
+            TryBootComputer();
             Close();
 
         }
 
         private static void LoadCustomSyntaxHighlighting()
         {
-            var path = GetResourcePath("javascript_syntax_highlighting.xhsd");
+            var path = FileSystem.GetResourcePath("javascript_syntax_highlighting.xhsd");
 
             if (string.IsNullOrEmpty(path))
             {
@@ -71,9 +70,9 @@ namespace VM.GUI
         public const string COMPUTER = "computer";
         public const string FAST_BOOT_FILENAME = "this.ins";
 
-        private static void TryStartPC()
+        private static void TryBootComputer()
         {
-            if (GetResourcePath(FAST_BOOT_FILENAME) is string path && path.Contains(COMPUTER))
+            if (FileSystem.GetResourcePath(FAST_BOOT_FILENAME) is string path && path.Contains(COMPUTER))
             {
                 int startIndex = path.IndexOf(COMPUTER) + COMPUTER.Length;
 
@@ -90,32 +89,14 @@ namespace VM.GUI
 
                     if (uint.TryParse(computerNumber, out uint number))
                     {
-                        InstantiateComputer(number);
+                        Computer.Boot(number);
                     }
                 }
             }
         }
 
         public static Action<WindowState>? onWindowStateChanged;
-        public static void Restart(uint id)
-        {
-            var pc = Computers.Where(C => C.Key.ID == id).FirstOrDefault();
-
-            if (pc.Key != null && pc.Value != null)
-            {
-                var computer = pc.Key;
-                Computers.Remove(computer);
-
-                computer.Exit(0);
-                var window = pc.Value;
-
-                window.Close();
-
-                Thread.Sleep(2500);
-
-                InstantiateComputer(id);
-            }
-        }
+       
 
         #region Color Animation
         private readonly Color StartColor = Colors.MediumBlue;
@@ -153,11 +134,6 @@ namespace VM.GUI
         {
             
         }
-        public static ComputerWindow? GetWindow(Computer pc)
-        {
-            Computers.TryGetValue(pc, out var val);
-            return val!;
-        }
         private void NewComputerButton(object sender, RoutedEventArgs e)
         {
             var id = IDBox.Text;
@@ -184,122 +160,17 @@ namespace VM.GUI
                     return;
                 }
 
-                InstantiateComputer(cpu_id);
+                Computer.Boot(cpu_id);
             }
         }
-        private static void InstantiateComputer(uint cpu_id)
-        {
-            Computer pc = new(cpu_id);
-            ComputerWindow wnd = new(pc);
-            pc.Window = wnd;
-            Computers[pc] = wnd;
-            pc.FinishInit(wnd);
-            onWindowStateChanged?.Invoke(WindowState.Minimized);
-        }
-
-        public static Dictionary<int, Queue<(object? val, int replyCh)>> NetworkEvents = new();
-        public static async Task<(object? value, int reply)> PullEventAsync(int channel, Computer computer, int timeout = 20_000, [CallerMemberName] string callerName = "unknown")
-        {
-            Queue<(object? val, int replyCh)> queue;
-            var timeoutTask = Task.Delay(timeout);
-
-            while (!NetworkEvents.TryGetValue(channel, out queue) || queue is null || queue.Count == 0 && !computer.Disposing && computer.Network.IsConnected())
-            {
-                var completedTask = await Task.WhenAny(Task.Delay(1), timeoutTask);
-
-                if (completedTask == timeoutTask)
-                {
-                    Notifications.Now($"timed out fetching from {callerName} event on channel {channel}");
-                    return (null, -1); 
-                }
-            }
-
-            var val = queue?.Dequeue();
-
-            if (queue?.Count == 0)
-                NetworkEvents.Remove(channel);
-
-
-            return val ?? default;
-        }
-        public static (object? value, int reply) PullEvent(int channel, Computer computer)
-        {
-            Queue<(object? val, int replyCh)>? queue;
-
-            const int timeout = int.MaxValue;
-            int it = 0;
-
-            while ((!NetworkEvents.TryGetValue(channel, out  queue) || queue is null || queue.Count == 0) && !computer.Disposing)
-            {
-                if (it < timeout)
-                    it++;
-                else break;
-
-                Thread.Sleep(1);
-            }
-
-            var val = queue?.Dequeue();
-
-            if (queue?.Count == 0)
-                NetworkEvents.Remove(channel);
-
-            return val ?? default;
-        }
-        internal static void Broadcast(int outCh, int inCh, object? msg)
-        {
-            if (!NetworkEvents.TryGetValue(outCh, out _))
-            {
-                NetworkEvents.Add(outCh, new());
-            }
-            NetworkEvents[outCh].Enqueue((msg, inCh));
-
-            foreach(var computer in Computers)
-            {
-                foreach (var userWindow in computer.Value.USER_WINDOW_INSTANCES)
-                {
-                    if (userWindow.Value?.JavaScriptEngine?.EventHandlers == null)
-                        continue;
-                    foreach (var eventHandler in userWindow.Value.JavaScriptEngine.EventHandlers)
-                    {
-                        if (eventHandler is NetworkEventHandler networkEventHandler)
-                            networkEventHandler.InvokeEvent(outCh, inCh, msg);
-                    }
-                }
-            }
-        }
-        internal static string GetResourcePath(string name)
-        {
-            var path = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData) + "\\VM";
-
-            VerifyOrCreateAppdataDir(path);
-
-            if (Directory.Exists(name) || File.Exists(name))
-            {
-                return name;
-            }
-
-            if (Directory.Exists(path))
-            {
-                string[] entries = Directory.GetFileSystemEntries(path, name, SearchOption.AllDirectories);
-
-                return entries.FirstOrDefault();
-            }
-
-            return "";
-        }
-        internal static void VerifyOrCreateAppdataDir(string path)
-        {
-            if (!Directory.Exists(path))
-            {
-                Directory.CreateDirectory(path);
-            }
-        }
-        internal static (string XAML, string JS) GetAppDefinition(Computer pc, string dir)
+       
+       
+        internal static (string XAML, string JS) GetAppDefinition(string dir)
         {
             const string xamlExt = ".xaml";
             const string xamlJsExt = ".xaml.js";
 
-            var absPath = GetResourcePath(dir);
+            var absPath = FileSystem.GetResourcePath(dir);
 
             if (Directory.Exists(absPath))
             {
@@ -320,53 +191,6 @@ namespace VM.GUI
             }
 
             return ("Not found!", "Not Found!");
-        }
-        public static T SearchForOpenWindowType<T>(Computer Computer)
-        {
-            var wnd = GetWindow(Computer);
-
-            foreach (var window in wnd.USER_WINDOW_INSTANCES)
-            {
-                if (window.Value.Dispatcher.Thread != Thread.CurrentThread)
-                {
-                    T result = default;
-                    window.Value.Dispatcher.Invoke(() => { 
-
-                        if (window.Value is UserWindow userWindow && userWindow.Content is Grid g)
-                        {
-                            foreach (var item in g.Children)
-                            {
-                                if (item is Frame frame)
-                                {
-                                    if (frame.Content is T ActualApplication)
-                                    {
-                                        result = ActualApplication;
-                                    }
-                                }
-                            }
-
-                        }
-                    });
-                    return result!;
-                }
-
-                if (window.Value is UserWindow userWindow && userWindow.Content is Grid g)
-                {
-                    foreach (var item in g.Children)
-                    {
-                        if (item is Frame frame)
-                        {
-                            if (frame.Content is T ActualApplication)
-                            {
-                                return ActualApplication;
-                            }
-                        }
-                    }
-
-                }
-            }
-            return default;
-
         }
 
     }
