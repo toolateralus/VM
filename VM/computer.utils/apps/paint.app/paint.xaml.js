@@ -53,7 +53,7 @@ class paint {
     _render() {
         
         if (this.resizing) {
-            this.clean(/*black*/ this.palette[15]);
+            this.clean(this.palette[Color.BLACK]);
             this.resizing = false;
         }
         if (this.isDirty === true)
@@ -77,21 +77,35 @@ class paint {
             this.brushColorIndex= 0;
         }
 
-        const color = this.palette[this.brushColorIndex];
-        const colors = [];
-
-        for(let i = 0; i < 12 * 12; ++i){
-            colors[i] = color;
-        }
-
         this.displayColorName();
 
+    }
+    onNetworkEvent(ch,reply,data){
+    	const json = JSON.parse(data);
+        
+        if (json === null || json === undefined){
+            print('network packet was null');
+            print(data);
+            return;
+        }
+
+        if (json.data === null || json.data === undefined){
+            print('network packet data was null');
+            print(data);
+        }
+
+    	const index = json.data.colorIndex;
+    	const X = json.data.X;
+		const Y = json.data.Y;
+		
+    	if (index != undefined && index > 0 && X != undefined && Y != undefined){
+    		this.writePixel(X,Y,this.palette[index]);
+    	}
     }
     displayColorName() {
         const colorName = Object.keys(Color).find(key => Color[key] == this.brushColorIndex);
         app.setProperty(this.__ID, 'colorNameLabel', 'Content', colorName);
     }
-
     onMouseMoved(X, Y){
 
         this.mouseState.x = X;
@@ -105,19 +119,32 @@ class paint {
             const X = Math.floor(this.mouseState.x / width * this.width);
             const Y = Math.floor(this.mouseState.y / height * this.width);
             const color = this.palette[this.brushColorIndex]
+            if (network?.IsConnected === true){
+                const colorIndex = this.brushColorIndex;
+                
+                const packet = {
+                    X : X,
+                    Y : Y,
+                    colorIndex :colorIndex,
+                };
+                const json = JSON.stringify(packet);
+                const ch = app.getProperty(this.__ID, 'chTxt', 'Content');
+                const reply = app.getProperty(this.__ID, 'replyTxt', 'Content');
+            	network.send(ch, reply, json);
+                print(`sending color data to ${ch} ${reply} ${json}`)
+            }
             this.writePixel(X, Y, color)
-            app.pushEvent(this.__ID, 'renderTarget', 'draw_pixels', this.frameData);
+            this.isDirty = true;
         }
     }
     onMouseDown(left, right){
         this.mouseState.right = right;
         this.mouseState.left = left;
     }
-    
     setupUIEvents() {
         app.eventHandler(this.__ID, 'this', '_render', XAML_EVENTS.RENDER);
         app.eventHandler(this.__ID, 'this', '_physics', XAML_EVENTS.RENDER);
-        
+        network.eventHandler(this.__ID, 'onNetworkEvent');
         // brush color button click
         app.eventHandler(this.__ID, 'changeColorBtn', 'changeBrush', XAML_EVENTS.MOUSE_DOWN);
         app.eventHandler(this.__ID, 'saveBtn', 'onConnect', XAML_EVENTS.MOUSE_DOWN);
@@ -133,7 +160,6 @@ class paint {
         // image mouse move
         app.eventHandler(this.__ID, 'this', 'onMouseMoved', XAML_EVENTS.MOUSE_MOVE);
     }
-
     getIndexedColorData(){
         const data = [0,0,0,0,0,0,0];
         for (let i = 0; i < this.frameData.length; i += 4) {
@@ -177,9 +203,9 @@ class paint {
             result[i + 2] = this.palette[input[i + 2]]
             result[i + 3] = this.palette[input[i + 3]]
         }
+        print(result.length);
         return result;
     }
-
     onSave(){
 
         const path = app.getProperty(this.__ID, 'nameBox', 'Text')
@@ -213,9 +239,10 @@ class paint {
             return;
         }
 
+        this.setWidth(Math.sqrt(data.length));
         this.frameData = data;
+        this.isDirty = true;
     }
-
     //#endregion
     constructor(id) {
         // for the engine.

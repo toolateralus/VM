@@ -36,8 +36,6 @@
                     MinHeight="30" 
                     MaxHeight="30"
                     VerticalAlignment="Bottom">
-                       
-
                          <Button FontSize="12" 
                               x:Name="changeColorBtn" 
                               FontFamily="Consolas MS Bold" 
@@ -72,6 +70,10 @@
                               Background="Black" MinWidth="60" 
                               MaxWidth="250" 
                               Content="save"/>
+                              
+                          <TextBox x:Name="chTxt" MinWidth="10" MaxWidth="50" MinHeight="30"/>
+                          <TextBox x:Name="replyTxt" MinWidth="10" MaxWidth="50" MinHeight="30"/>
+
                </StackPanel>
 
     </Grid>

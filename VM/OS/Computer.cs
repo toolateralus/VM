@@ -264,7 +264,8 @@ namespace VM
         public static T SearchForOpenWindowType<T>(Computer Computer)
         {
             var wnd = GetWindow(Computer);
-            
+            T content = default!;
+
             if (wnd is null)
             {
                 Notifications.Exception(new NullReferenceException("Window not found."));
@@ -273,22 +274,26 @@ namespace VM
 
             foreach (var window in wnd.Computer.USER_WINDOW_INSTANCES)
             {
-                if (window.Value is UserWindow userWindow && userWindow.Content is Grid g)
-                {
-                    foreach (var item in g.Children)
+                window.Value.Dispatcher.Invoke(() => { 
+                
+                    if (window.Value is UserWindow userWindow && userWindow.Content is Grid g)
                     {
-                        if (item is Frame frame)
+                        foreach (var item in g.Children)
                         {
-                            if (frame.Content is T ActualApplication)
+                            if (item is Frame frame)
                             {
-                                return ActualApplication;
+                                if (frame.Content is T ActualApplication)
+                                {
+                                    content =  ActualApplication;
+                                    break;
+                                }
                             }
                         }
-                    }
 
-                }
+                    }
+                });
             }
-            return default!;
+            return content!;
 
         }
         private static async Task<(string id, string code)> InstantiateWindowClass(string type, (string XAML, string JS) data, JavaScriptEngine engine)

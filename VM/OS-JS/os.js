@@ -11,17 +11,23 @@ function random(max = 1) {
     return interop.random(max);
 }
 function sleep(ms) {
-    return interop.sleep();
+    return interop.sleep(ms);
+}
+function start(app) {
+    interop.start(app)
 }
 
-function start(app) { interop.start(app) }
+// Todo: add a way to directly access the WPF Window's 'Resoure' Dictionary.'
+// Would allow us to bypass the need to implement config readers/getters everywhere, at least for the UI.
 
+function read() {
+    return interop.read();
+}
+function install(directory) {
+    interop.install(directory)
+}
 class OS {
     id = 0;
-
-    constructor() {
-        this.app_classes = [];
-    }
 
     exit(code) {
         interop.exit(code);
@@ -44,10 +50,6 @@ const XAML_EVENTS = {
     PHYSICS: 8,
 };
 
-function install(directory) {
-    interop.install(directory)
-}
-
 class App {
     install(directory) {
         interop.install(directory)
@@ -65,6 +67,6 @@ class App {
         interop.setProperty(id, control, propertyName, value);
     }
 }
-let app = new App();
 
+let app = new App();
 let os = new OS()

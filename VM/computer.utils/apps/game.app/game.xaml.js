@@ -9,30 +9,30 @@ class renderer {
         this.isDirty = true;
         // 24 color, 4bpp (a,r,g,b) color palette.
         this.palette = [
-            [255, 255, 0, 0],       // Red
-            [255, 255, 128, 0],     // Orange
-            [255, 255, 255, 0],     // Yellow
-            [255, 128, 255, 0],     // Lime Green
-            [255, 0, 255, 0],       // Green
-            [255, 0, 255, 128],     // Spring Green
-            [255, 0, 255, 255],     // Cyan
-            [255, 0, 128, 255],     // Sky Blue
-            [255, 0, 0, 255],       // Blue
-            [255, 128, 0, 255],     // Purple
-            [255, 255, 0, 255],     // Magenta
-            [255, 255, 0, 128],     // Pink
-            [255, 192, 192, 192],   // Light Gray
-            [255, 128, 128, 128],   // Medium Gray
-            [255, 64, 64, 64],      // Dark Gray
-            [255, 0, 0, 0],         // Black
-            [255, 255, 255, 255],   // White
-            [255, 255, 69, 0],      // Red-Orange
-            [255, 255, 215, 0],     // Gold
-            [255, 0, 128, 0],       // Dark Green
-            [255, 0, 128, 128],     // Teal
-            [255, 0, 0, 128],       // Navy
-            [255, 255, 20, 147],    // Deep Pink
-            [255, 0, 250, 154]      // Medium Spring Green
+            [255, 255, 0, 0],       // Red 0
+            [255, 255, 128, 0],     // Orange 1
+            [255, 255, 255, 0],     // Yellow 2
+            [255, 128, 255, 0],     // Lime Green 3
+            [255, 0, 255, 0],       // Green 4
+            [255, 0, 255, 128],     // Spring Green 5
+            [255, 0, 255, 255],     // Cyan 6
+            [255, 0, 128, 255],     // Sky Blue 7 
+            [255, 0, 0, 255],       // Blue 8
+            [255, 128, 0, 255],     // Purple 9 
+            [255, 255, 0, 255],     // Magenta 10
+            [255, 255, 0, 128],     // Pink 11
+            [255, 192, 192, 192],   // Light Gray 12
+            [255, 128, 128, 128],   // Medium Gray 13
+            [255, 64, 64, 64],      // Dark Gray 14
+            [255, 0, 0, 0],         // Black 15
+            [255, 255, 255, 255],   // White 16
+            [255, 255, 69, 0],      // Red-Orange 17
+            [255, 255, 215, 0],     // Gold 18
+            [255, 0, 128, 0],       // Dark Green 19
+            [255, 0, 128, 128],     // Teal 20
+            [255, 0, 0, 128],       // Navy 21
+            [255, 255, 20, 147],    // Deep Pink 22
+            [255, 0, 250, 154]      // Medium Spring Green 23
         ];
     }
     getRender(){
@@ -54,10 +54,12 @@ class renderer {
             }
         }
     }
+
     setWidth(width) {
         this.newWidth = width;
         this.resizing = true;
     }
+
     lerpColors(a, b, t) {
         const result = new Uint8Array(4);
         for (let i = 0; i < 4; i++) {
@@ -65,6 +67,7 @@ class renderer {
         }
         return result;
     }
+
     writePixel(x, y, color) {
         let index = (y * this.width + x) * this.bytesPerPixel;
         color.forEach(byte => {
@@ -73,63 +76,44 @@ class renderer {
         });
         this.isDirty = true;
     }
+    
     _drawScene(scene) {
         
         if (this.resizing) {
-            this.clean(/*black background*/ this.palette[15]);
+            this.clean(this.palette[15]);
             this.resizing = false;
             return true;
         }
         if (this.isDirty)
         {
-
+            this.clean(this.palette[15]);
             const gameObjects = scene.gameObjects();
 
-            // iterate through gameObjects
+            // all objects in scene
             for (let z = 0; z < gameObjects.length; ++z)
             {
                 const gameObject = gameObjects[z];
-                const pos = gameObject.pos;
-                const size = new point()
-                // draw sprite
-                for (let _y = 0; _y < gameObject.size.x; _y++) 
-                {
-                    for (let _x = 0; _x < gameObject.size.h; _x++) 
-                    {
-                        
+
+                const min_x = Math.floor(gameObject.pos.x - (gameObject.scale.x / 2));
+                const min_y = Math.floor(gameObject.pos.y - (gameObject.scale.y / 2));
+                const max_x = Math.floor(gameObject.pos.x + (gameObject.scale.x / 2));
+                const max_y = Math.floor(gameObject.pos.y + (gameObject.scale.y / 2));
+
+                for (let y = min_y; y < max_y; y++) {
+                    for (let x = min_x; x < max_x; x++) {
+                        // wrap y axis.
+                        const wrappedY = (y + this.width) % this.width; 
+                        this.writePixel(x, wrappedY, this.palette[16]);
                     }
                 }
             }
-           
-            if (poly.collides(x, y) === true) 
-            {
-                const points = poly.getClosestPoints(x, y);
-
-                /* -- end user -- 
-                    to easily manipulate polygon drawing, you can make a custom 'shader' 
-                    by making a new function to pass in here, and modifying the polygon 
-                    blend function to take in more parameters, such as screen space coords, 
-                    texture coords, gameObject position, more colors, noise inputs, masks/maps , etc.
-                */
-                
-                const blended = poly.getBlendedColor(points, this.lerpColors);
-                this.writePixel(x, y, blended);
-            } 
-            else 
-            {
-                // draw background here
-                const color = this.palette[14];
-                this.writePixel(x, y, color);
-            }
-
-          
-            
             this.isDirty = false;
             return true;
         }
         return false;
     }
 }
+
 class game {
     
     setupUIEvents() {
@@ -151,23 +135,22 @@ class game {
             this.player.velocity.x = this.moveSpeed;
     
         this.renderer.isDirty = true
-        this.player.move()
-        print(`velocity :: ${JSON.stringify(this.player.velocity)}`)
     }
-    // simply uncomment this to get a physics loop
+    // uncomment this to get a physics loop
     //_physics(){}
     _render() {
         // returns a bool indicating whether anything was actually drawn or not
         if (this.renderer._drawScene(this.scene) === true){
             app.pushEvent(this.__ID, 'renderTarget', 'draw_pixels', this.renderer.getRender());
-
         }
+        this.player.update_physics()
+        this.player.confine_to_screen_space(this.width);
     }
     _getSquare(size){
         const v1 = new point(0, 0, this.renderer.palette[0])
         const v2 = new point(0, size, this.renderer.palette[1])
-        const v3 = new point(size, size, this.renderer.palette[3])
-        const v4 = new point(size, 0, this.renderer.palette[2])
+        const v3 = new point(size, 0, this.renderer.palette[3])
+        const v4 = new point(size, size, this.renderer.palette[4])
         const verts = [v1, v2, v3, v4];
         return verts;
     }
@@ -178,13 +161,12 @@ class game {
         this.renderer = new renderer(36);
         
         // initialize the drawing surface
-        this.renderer.clean(this.renderer.palette[13/*black*/]);
+        this.renderer.clean(this.renderer.palette[15]);
 
-        
-        this.moveSpeed = 0.01;
+        this.moveSpeed = .12;
         
         // make a player object
-        const verts = this._getSquare(16);
+        const verts = this._getSquare(3);
         const scale = new point(1, 1);
         const pos = new point(24, 24);
         this.player = new gameObject(verts, scale, pos);
@@ -234,11 +216,6 @@ class point {
     getColor() {
         return this.color;
     }
-    add(otherPoint) {
-        this.x += otherPoint.x;
-        this.y += otherPoint.y;
-        return this;
-    }
     add(x, y) {
         this.x += x;
         this.y += y;
@@ -249,35 +226,15 @@ class point {
         this.y -= otherPoint.y;
         return this;
     }
-    subtract(x, y) {
-        this.x -= x;
-        this.y -= y;
-        return this;
-    }
     mult(scalar) {
         this.x *= scalar;
         this.y *= scalar;
-        return this;
-    }
-    mult(x, y) {
-        this.x *= x;
-        this.y *= y;
         return this;
     }
     divide(scalar) {
         this.x /= scalar;
         this.y /= scalar;
         return this;
-    }
-    divide(x, y) {
-        this.x /= x;
-        this.y /= y;
-        return this;
-    }
-    distance(other) {
-        const dx = other.x - this.x;
-        const dy = other.y - this.y;
-        return Math.sqrt(dx * dx + dy * dy);
     }
     distance(x, y) {
         const dx = x - this.x;
@@ -302,21 +259,23 @@ class point {
         this.x = x;
         this.y = y;
     }
-    set(point){
-        this.x = point.x;
-        this.y = point.y;
-    }
     
 }
 
 class gameObject {
-    constructor(points, size, pos) {
-        this.size = size
+
+    constructor(points, scale, pos) {
+        this.scale = scale ??  new point(1,1);
         this.pos = pos ?? new point(0,0);
-        this.points = this.applyScale(points, scale);
+        this.points = points ?? [];
         this.edges = this.createEdges(this.points);
-        this._cachedRatio = undefined;
-        this.velocity = new point(0,0)
+        this.velocity = new point(0,0);
+        this._cachedColorRatio = undefined;
+    }
+    confine_to_screen_space(width){
+        const min_x = 1, min_y = 1, max_x = width - 1, max_y = width -1;
+        //this.pos.x = Math.min(Math.max(this.pos.x, min_x), max_x);
+        //this.pos.y = Math.min(Math.max(this.pos.y, min_y), max_y);
     }
     distanceToPoint(x1, y1, x2, y2) {
         const dx = x2 - x1;
@@ -342,15 +301,15 @@ class gameObject {
         // get ratio
         const distanceClosestToQuery = closest.distance(new point(x, y));
         const distanceClosestToOther = closest.distance(other);
-        this._cachedRatio = distanceClosestToQuery / (distanceClosestToQuery + distanceClosestToOther);
+        this._cachedColorRatio = distanceClosestToQuery / (distanceClosestToQuery + distanceClosestToOther);
     
         return [closest, other];
     }
     getBlendedColor(points, lerpFunction){
         const A = points[0];
         const B = points[1];
-        const blended = lerpFunction(A, B, this._cachedRatio);
-        this._cachedRatio = 0;
+        const blended = lerpFunction(A, B, this._cachedColorRatio);
+        this._cachedColorRatio = 0;
         return blended;
     }
     collides(x, y) {
@@ -374,6 +333,7 @@ class gameObject {
     }
     createEdges(points) {
         const edges = [];
+
         for (let i = 0; i < points.length; ++i) {
             const pt1 = points[i];
             const pt2 = points[(i + 1) % points.length];
@@ -381,28 +341,13 @@ class gameObject {
         }
         return edges;
     }
-    applyScale(points) {
-        for (let i = 0; i < points.length; ++i) {
-            const pt = points[i];
-            points[i].x = pt.x * this.size.x;
-            points[i].y = pt.y * this.size.y;
-        }
-        return points;
-    }
-    move() {
+    update_physics() {
 
         this.pos.x += this.velocity.x;
         this.pos.y += this.velocity.y;
-    
-        for (const point of this.points) {
-            point.x += this.velocity.x;
-            point.y += this.velocity.y;
-    
-            point.x = Math.floor(point.x);
-            point.y = Math.floor(point.y);
-        }
 
-        this.edges = this.createEdges(this.points)
+        this.velocity.x *= 0.85;
+        this.velocity.y *= 0.85;
     }
     rotate(angle) {
         const cosAngle = Math.cos(angle);

@@ -1,7 +1,6 @@
 <?xml version="1.0"?>
             <!-- syntax definition for JavaScript 2.0 by Svante Lidman -->
             <!-- converted to AvalonEdit format by Siegfried Pammer in 2010 -->
-            <!-- forked by me in 2023, not for commercial use -->
 
             <SyntaxDefinition name="JavaScriptCustom" extensions=".js" xmlns="http://icsharpcode.net/sharpdevelop/syntaxdefinition/2008">
                 <Color name="Digits" foreground="#6D9C66" exampleText="3.14" />

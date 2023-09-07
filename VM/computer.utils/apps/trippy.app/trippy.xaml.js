@@ -79,6 +79,51 @@ class trippy {
         });
         return result;
     }
+ 
+    onKeyEvent(key, isDown){
+        let dir = 0;
+
+        if (key === 'Q'){
+            const json = JSON.stringify(this.colors);
+            file.write('computer0\\downloads\\trippy.app\\data\\colors.json', json)
+            print('File written');
+            return;
+        }
+        if (key === 'L'){
+            const json = JSON.parse(file.read('computer0\\downloads\\trippy.app\\data\\colors.json'));;
+            if (json !== undefined && json !== null){
+                this.colors = json;
+                print('Colors read');
+                return;
+            }
+            print('Failed to read color')
+        }
+
+        if (key === 'W') 
+            dir = 1;
+        else if (key === 'S')
+            dir = -1;
+          
+    
+
+        for (let x = 0; x < this.width; ++x){
+            for (let y = 0; y < this.width; ++y){
+              
+                let index = y * this.width + x;
+                let color = this.colors[index];
+                if (color !== null && color !== undefined){
+                    color[0] = this.clamp(0, 255, color[0] + dir);
+                    color[1] = this.clamp(0, 255, color[1] + dir);
+                    color[2] = this.clamp(0, 255, color[2] + dir);
+                    color[3] = this.clamp(0, 255, color[3] + dir);
+                }
+            }
+        }       
+    }
+
+    clamp(min,max,value){
+        return Math.min(max, Math.max(min, value))
+    }
     constructor(id) {
 
         /* DO NOT EDIT*/ this.__ID = id;  /* END DO NOT EDIT*/
@@ -103,6 +148,7 @@ class trippy {
             [255, 0, 250, 154]      // Medium Spring Green
         ];
         app.eventHandler(this.__ID, 'this', 'draw', XAML_EVENTS.RENDER);
+        app.eventHandler(this.__ID, 'this', 'onKeyEvent', XAML_EVENTS.KEY_DOWN);
         this.update();
     }
 }

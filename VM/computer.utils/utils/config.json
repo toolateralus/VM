@@ -1,19 +1,12 @@
 {
+  // This is the only mandatory setting.
   "BACKGROUND": "Background.png",
-  "NAME": "Your Computer",
+
   "FONT": "Consolas MS",
-  "DEFAULT_SERVER_IP": "192.168.0.138",
-  "OPEN_PORTS": [
-    "8080"
-  ],
-  "ALWAYS_CONNECT": true,
-  "ALIAS_PATH": "C:\\Users\\Josh\\AppData\\Roaming\\VM\\computer0\\commands",
+  "NAME": "Your Computer",
+  //"ALWAYS_CONNECT": true,
+  //"ALIAS_PATH": "...AppData\\Roaming\\VM\\computer0\\commands",
+  //"DEFAULT_SERVER_IP": "localhost",
   "INSTALLED_APPS": [
-    "imageviewer.app",
-    "webConsole.web",
-    "graphicTest.app",
-    "paint.app",
-    "PaintNet.app",
-    "game.app"
   ]
 }

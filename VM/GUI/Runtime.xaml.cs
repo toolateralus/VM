@@ -27,7 +27,7 @@ namespace VM.GUI
             InitializeComponent();
             IDBox.KeyDown += IDBox_KeyDown;
 
-            onWindowStateChanged += (ws) => WindowState = ws;
+            OnWindowStateChanged += (ws) => WindowState = ws;
 
             LoadCustomSyntaxHighlighting();
 
@@ -95,41 +95,7 @@ namespace VM.GUI
             }
         }
 
-        public static Action<WindowState>? onWindowStateChanged;
-       
-
-        #region Color Animation
-        private readonly Color StartColor = Colors.MediumBlue;
-        private readonly Color EndColor = Colors.MediumSlateBlue;
-        private readonly TimeSpan AnimationDuration = TimeSpan.FromSeconds(5);
-        private async void StartPerpetualColorAnimation()
-        {
-            while (true)
-            {
-                await AnimateBackgroundColor(StartColor, EndColor, AnimationDuration);
-                await AnimateBackgroundColor(EndColor, StartColor, AnimationDuration);
-            }
-        }
-        private async Task AnimateBackgroundColor(Color fromColor, Color toColor, TimeSpan duration)
-        {
-            const int steps = 1000;
-
-            for (int step = 0; step <= steps; step++)
-            {
-                Color currentColor = Lerp(fromColor, toColor, step / (double)steps);
-                Background = new SolidColorBrush(currentColor);
-                await Task.Delay((int)duration.TotalMilliseconds / steps);
-            }
-        }
-        private Color Lerp(Color from, Color to, double progress)
-        {
-            byte r = (byte)(from.R + (to.R - from.R) * progress);
-            byte g = (byte)(from.G + (to.G - from.G) * progress);
-            byte b = (byte)(from.B + (to.B - from.B) * progress);
-            return Color.FromRgb(r, g, b);
-        }
-        #endregion
-
+        public static Action<WindowState>? OnWindowStateChanged;
         private void IDBox_KeyDown(object sender, KeyEventArgs e)
         {
             
@@ -163,8 +129,6 @@ namespace VM.GUI
                 Computer.Boot(cpu_id);
             }
         }
-       
-       
         internal static (string XAML, string JS) GetAppDefinition(string dir)
         {
             const string xamlExt = ".xaml";
@@ -192,6 +156,37 @@ namespace VM.GUI
 
             return ("Not found!", "Not Found!");
         }
+       
+        #region Color Animation
+        private readonly Color StartColor = Colors.MediumBlue;
+        private readonly Color EndColor = Colors.MediumSlateBlue;
+        private readonly TimeSpan AnimationDuration = TimeSpan.FromSeconds(5);
+        private async void StartPerpetualColorAnimation()
+        {
+            while (true)
+            {
+                await AnimateBackgroundColor(StartColor, EndColor, AnimationDuration);
+                await AnimateBackgroundColor(EndColor, StartColor, AnimationDuration);
+            }
+        }
+        private async Task AnimateBackgroundColor(Color fromColor, Color toColor, TimeSpan duration)
+        {
+            const int steps = 1000;
 
+            for (int step = 0; step <= steps; step++)
+            {
+                Color currentColor = Lerp(fromColor, toColor, step / (double)steps);
+                Background = new SolidColorBrush(currentColor);
+                await Task.Delay((int)duration.TotalMilliseconds / steps);
+            }
+        }
+        private Color Lerp(Color from, Color to, double progress)
+        {
+            byte r = (byte)(from.R + (to.R - from.R) * progress);
+            byte g = (byte)(from.G + (to.G - from.G) * progress);
+            byte b = (byte)(from.B + (to.B - from.B) * progress);
+            return Color.FromRgb(r, g, b);
+        }
+        #endregion
     }
 }
