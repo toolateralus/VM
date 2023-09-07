@@ -228,10 +228,11 @@ namespace VM.GUI
             };
 
             window.InitializeUserContent(frame, control, engine);
+
             Desktop.Children.Add(frame);
-            window.ToggleMaximize(null, null);
-            window.ToggleMaximize(null, null);
+
             Button btn = GetTaskbarButton(title, window.ToggleVisibility);
+
             TaskbarStackPanel.Children.Add(btn);
 
             window.OnClosed += () =>

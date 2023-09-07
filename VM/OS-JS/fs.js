@@ -27,6 +27,7 @@ class Image {
         return interop.fromFile(path);
     }
 
+    // These don't really seem to function right now. todo : fix these two functions.'
     toBytes(string) {
         return interop.toBytes(string);
     }

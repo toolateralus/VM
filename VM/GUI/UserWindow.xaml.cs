@@ -30,9 +30,6 @@ namespace VM.GUI
             
             if (engine != null) 
                 OnClosed += engine.Dispose;
-
-            
-
         }
         internal void Close()
         {
@@ -53,6 +50,8 @@ namespace VM.GUI
         {
             Close();
         }
+
+        // Todo : Fix this strange problem where resizing is inconsistent when min/maximized
         public void ToggleVisibility(object sender, RoutedEventArgs e)
         {
             Visibility ^= Visibility.Collapsed;
@@ -62,6 +61,7 @@ namespace VM.GUI
                 Owner.BringToTopOfDesktop();
 
         }
+        // Todo : Fix this strange problem where resizing is inconsistent when min/maximized
         public void ToggleMaximize(object sender, RoutedEventArgs e)
         {
             Visibility = Visibility.Visible;

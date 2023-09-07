@@ -22,11 +22,13 @@ namespace VM.GUI
            MouseMove += OnMouseMove;
            MouseUp += OnMouseUp;
            MouseLeave += onMouseLeave;
-           MinWidth = 50;
-           MinHeight = 50;
-           MaxWidth = 1920;
-           MaxHeight = 1080 - 25;
 
+            // Todo: remove magic numbers, replace with config file read or something like that.
+
+           MinWidth = Owner?.Computer?.Config.Value<float?>("MIN_WIN_WIDTH") ?? 50;
+           MinHeight = Owner?.Computer?.Config.Value<float?>("MIN_WIN_HEIGHT") ?? 50;
+           MaxWidth = Owner?.Computer?.Config.Value<float?>("MAX_WIN_WIDTH") ?? 1920;
+           MaxHeight = Owner?.Computer?.Config.Value<float?>("MAX_WIN_HEIGHT") ?? 1080 - 25;
         }
         private void onMouseLeave(object sender, MouseEventArgs e)
         {
@@ -56,6 +58,9 @@ namespace VM.GUI
         {
             var pos = e.GetPosition(App.Current.MainWindow as Runtime);
             var altDown = Keyboard.IsKeyDown(Key.LeftAlt) || Keyboard.IsKeyDown(Key.RightAlt);
+            
+            // Todo: refactor this entire drag/move/resize system. It's been nothing but trouble, and surprisingly
+            // This is the best state it has ever been in.
 
             if (altDown && e.RightButton == MouseButtonState.Pressed)
             {

@@ -26,7 +26,6 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Folder Include="computer.utils\NewFolder\" />
     <Folder Include="computer.utils\scripts\" />
   </ItemGroup>
 
