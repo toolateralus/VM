@@ -35,12 +35,7 @@ Then, to have the command loaded up every time we start our computer, we can add
 
 ```javascript 
 //'startup.js'
-
-{
-	print('hello world command:');
-	print(`server connected : ${network.IsConnected}`)
-}
-
+alias('helloWorld', 'helloWorld')
 ```
 
 
@@ -52,7 +47,7 @@ Then, to have the command loaded up every time we start our computer, we can add
 ---
 
 #### Getting Command Line Arguments
-You can declare an array in js to receive any command line arguments for your script. so, 
+You can declare an array in js to recieve any command line arguments for your script. so, 
 if you declare an appropriate array as such : 
 
 ``` javascript

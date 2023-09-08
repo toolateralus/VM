@@ -26,7 +26,18 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Folder Include="computer.utils\scripts\" />
+    <None Include="computer.utils\downloads\.git\COMMIT_EDITMSG" />
+    <None Include="computer.utils\downloads\.git\config" />
+    <None Include="computer.utils\downloads\.git\description" />
+    <None Include="downloads\.git\COMMIT_EDITMSG" />
+    <None Include="downloads\.git\config" />
+    <None Include="downloads\.git\description" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Page Update="computer.utils\utils\template_app\template_app.xaml">
+      <SubType>Designer</SubType>
+    </Page>
   </ItemGroup>
 
 </Project>

@@ -76,7 +76,7 @@ class renderer {
         });
         this.isDirty = true;
     }
-    
+
     _drawScene(scene) {
         
         if (this.resizing) {
@@ -121,6 +121,7 @@ class game {
         app.eventHandler(this.__ID, 'this', '_physics', XAML_EVENTS.PHYSICS);
         app.eventHandler(this.__ID, 'this', 'onKey', XAML_EVENTS.KEY_DOWN);
     }
+    
     onKey(key, isDown) {
         if (key === 'W')
             this.player.velocity.y = -this.moveSpeed;
@@ -136,8 +137,7 @@ class game {
     
         this.renderer.isDirty = true
     }
-    // uncomment this to get a physics loop
-    //_physics(){}
+
     _render() {
         // returns a bool indicating whether anything was actually drawn or not
         if (this.renderer._drawScene(this.scene) === true){
@@ -146,6 +146,7 @@ class game {
         this.player.update_physics()
         this.player.confine_to_screen_space(this.width);
     }
+
     _getSquare(size){
         const v1 = new point(0, 0, this.renderer.palette[0])
         const v2 = new point(0, size, this.renderer.palette[1])
@@ -154,34 +155,39 @@ class game {
         const verts = [v1, v2, v3, v4];
         return verts;
     }
+    
     constructor(id) {
         // for the engine.
         this.__ID = id;
         
-        this.renderer = new renderer(36);
+        // 64x64 render surface.
+        this.renderer = new renderer(64);
         
         // initialize the drawing surface
         this.renderer.clean(this.renderer.palette[15]);
 
-        this.moveSpeed = .12;
+        // pixels per frame. .12 is pretty fast since we run at 30-100 fps, ~1-3 px/s 
+        this.moveSpeed = .32;
         
-        // make a player object
-        const verts = this._getSquare(3);
+        // player init 
+        // 4x4 (pixel) square sprite
+        const verts = this._getSquare(4);
+
+        // obj scale.
         const scale = new point(1, 1);
+
+        // start position
         const pos = new point(24, 24);
+
+        // make a player object
         this.player = new gameObject(verts, scale, pos);
-        
-        // make our scene
         this.scene = new scene([this.player]);
-        
 
         // setup events (including render/physics loops)
         this.setupUIEvents();
 
-        // start drawing
+        // start drawing, the renderer only draws when it's marked as dirty.
         this.renderer.isDirty = true;
-        this.sized = false;
-
     }
 }
 
@@ -346,8 +352,8 @@ class gameObject {
         this.pos.x += this.velocity.x;
         this.pos.y += this.velocity.y;
 
-        this.velocity.x *= 0.85;
-        this.velocity.y *= 0.85;
+        this.velocity.x *= 0.95;
+        this.velocity.y *= 0.95;
     }
     rotate(angle) {
         const cosAngle = Math.cos(angle);

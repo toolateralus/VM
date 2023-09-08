@@ -10,7 +10,7 @@
 			network.connect(null);
 			
 			if (!network.IsConnected){
-				print('failed to connect, use the connect command to establish a connection to the server before you upload.');
+				print('failed to connect, use the connect command to establish a connection to the server before you download.');
 			};
 		}
 		network.download(fileName);

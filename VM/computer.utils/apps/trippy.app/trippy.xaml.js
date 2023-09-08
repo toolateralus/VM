@@ -2,11 +2,12 @@
 class trippy {
     frameCt = 0;
     speed = 10;
-    width = 32;
+    width = 64;
     bytesPerPixel = 4;
     data = [];
     newWidth = this.width;
     needsUpdating = false;
+    colorScale = 0;
 
     update() {
         this.width = this.newWidth;
@@ -29,7 +30,7 @@ class trippy {
         {
             const endTime = new Date().getTime();
             const ms = endTime - this.startTime;
-            app.pushEvent(this.__ID, 'framerateLabel', 'set_content', `${ms} ms  fps : ${1 / ms * 1000}`);
+            app.pushEvent(this.__ID, 'framerateLabel', 'set_content', `▲ (w) ̷  ▼ (s) {color shift value : ${this.colorScale}} res:${this.width}x${this.width} :${ms} ms  fps:${1 / ms * 1000}`);
             this.startTime = 0;
         }
     }
@@ -104,18 +105,20 @@ class trippy {
         else if (key === 'S')
             dir = -1;
           
-    
+        this.colorScale += dir;
 
         for (let x = 0; x < this.width; ++x){
             for (let y = 0; y < this.width; ++y){
-              
                 let index = y * this.width + x;
+
                 let color = this.colors[index];
+                let original = this.colors_readonly[index];
+
                 if (color !== null && color !== undefined){
-                    color[0] = this.clamp(0, 255, color[0] + dir);
-                    color[1] = this.clamp(0, 255, color[1] + dir);
-                    color[2] = this.clamp(0, 255, color[2] + dir);
-                    color[3] = this.clamp(0, 255, color[3] + dir);
+                    color[0] = this.clamp(0, 255, original[0] + this.colorScale);
+                    color[1] = this.clamp(0, 255, original[1] + this.colorScale);
+                    color[2] = this.clamp(0, 255, original[2] + this.colorScale);
+                    color[3] = this.clamp(0, 255, original[3] + this.colorScale);
                 }
             }
         }       
@@ -128,6 +131,26 @@ class trippy {
 
         /* DO NOT EDIT*/ this.__ID = id;  /* END DO NOT EDIT*/
         this.colors = [
+            [255, 255, 0, 0],       // Red
+            [255, 255, 128, 0],     // Orange
+            [255, 255, 255, 0],     // Yellow
+            [255, 128, 255, 0],     // Lime Green
+            [255, 0, 255, 0],       // Green
+            [255, 0, 255, 128],     // Spring Green
+            [255, 0, 255, 255],     // Cyan
+            [255, 0, 128, 255],     // Sky Blue
+            [255, 0, 0, 255],       // Blue
+            [255, 128, 0, 255],     // Purple
+            [255, 255, 0, 255],     // Magenta
+            [255, 255, 0, 128],     // Pink
+            [255, 255, 69, 0],      // Red-Orange
+            [255, 0, 128, 0],       // Dark Green
+            [255, 0, 128, 128],     // Teal
+            [255, 0, 0, 128],       // Navy
+            [255, 255, 20, 147],    // Deep Pink
+            [255, 0, 250, 154]      // Medium Spring Green
+        ];
+        this.colors_readonly = [
             [255, 255, 0, 0],       // Red
             [255, 255, 128, 0],     // Orange
             [255, 255, 255, 0],     // Yellow
