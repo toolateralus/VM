@@ -167,7 +167,7 @@ namespace VM.Network
             Notifications.Now($"Disconnected from {LAST_KNOWN_SERVER_IP}::{LAST_KNOWN_SERVER_PORT}");
         }
 
-        public void StopHosting(object?[] args)
+        public void StopHosting(object[]? args)
         {
             host?.Dispose();
         }

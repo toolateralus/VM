@@ -17,9 +17,6 @@ function start(app) {
     interop.start(app)
 }
 
-// Todo: add a way to directly access the WPF Window's 'Resoure' Dictionary.'
-// Would allow us to bypass the need to implement config readers/getters everywhere, at least for the UI.
-
 function read() {
     return interop.read();
 }

@@ -11,6 +11,8 @@ using System.Threading.Tasks;
 using VM.FS;
 using System.Text.RegularExpressions;
 using Microsoft.ClearScript.JavaScript;
+using System.Net;
+using System.Net.WebSockets;
 
 namespace VM.JS
 {
@@ -44,6 +46,7 @@ namespace VM.JS
 
             return Directory.GetFileSystemEntries(path);
         }
+        
         public void disconnect()
         {
             Computer.Network.StopClient();
@@ -51,11 +54,8 @@ namespace VM.JS
       
         public string? read()
         {
-            // TODO : read from kernel 
-            return "";
+            return Console.ReadLine();;
         }
-
-      
 
         public double random(double max)
         {
@@ -121,14 +121,7 @@ namespace VM.JS
         }
         public void print(object message)
         {
-            try
-            {
-              
-            }
-            catch(Exception e)
-            {
-                Notifications.Exception(e);
-            }
+            System.Console.WriteLine(message);
         }
         public void export(string id, object? obj)
         {
@@ -141,7 +134,7 @@ namespace VM.JS
         public void uninstall(string dir)
         {
             //ComputerWindow window = Computer.Window;
-            // TODO: Replace with kernel stuff
+            // TODO: Replace with kernel stuff, once we have actually installed apps
             // js/html app
             if (dir.Contains(".web"))
             {

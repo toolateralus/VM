@@ -2,8 +2,6 @@
 using VM;
 using VM.FS;
 
-
-
 while(true)
 {
 
@@ -11,8 +9,10 @@ while(true)
 
     if(!uint.TryParse(Console.ReadLine()?.Trim(), out uint id))
     {
-        Console.WriteLine("Invalid ID. Try again, it must be an integer ie 1 , or 2, not 0xF or 1.1");
-        break;
+        Console.WriteLine("Invalid ID. it must be an integer ie 1 , or 2, not 0xF or 1.1. press any key to continue");
+        Console.ReadLine();
+        Console.Clear();
+        continue;
     }
 
     var computer = new Computer();
@@ -25,6 +25,9 @@ while(true)
     while (true)
     {
         var input = Console.ReadLine()!;
-        computer.CommandLine.TryCommand(input);
+        
+        if (!computer.CommandLine.TryCommand(input)){
+            await computer.JavaScriptEngine.Execute(input);
+        }
     }
 }

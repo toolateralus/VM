@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using VM.Types;
@@ -43,6 +44,21 @@ namespace VM.FS
         public FileSystem(string root, Computer computer)
         {
             Computer = computer;
+
+            var filesystem_commands = new Command[] 
+            {
+                new Command("clear", Clear, "makes directory at provided path if permitted"),
+                new Command("root", RootCmd, "navigates the open file explorer to the root directory of the computer."),
+                new Command("ls", ListDir, "lists all dirs in current directory"),
+                new Command("cd", ChangeDir, "navigates to provided path if permitted"),
+                new Command("mkdir", MkDir, "makes directory at provided path if permitted"),
+                new Command("delete", Delete, "deletes a file or directory"),
+                new Command("copy", Copy, "copy arg1 to any number of provided paths,\'\n\t\' example: { copy source destination1 destination2 destination3... }"),
+                new Command("move", Move, "moves a file/changes its name"),
+            };
+
+            Computer.CommandLine.LoadCommandSet(filesystem_commands);
+
             if (string.IsNullOrEmpty(root))
             {
                 throw new ArgumentException("Invalid root directory path.");
@@ -57,6 +73,90 @@ namespace VM.FS
             currentDirectory = root;
 
         }
+
+        #region FILE_SYSTEM_COMMANDS
+            private void Delete(object[]? obj)
+            {
+                if (obj != null && obj.Length > 0 && obj[0] is string target)
+                {
+                    Delete(target);
+                }
+                else
+                {
+                    Notifications.Now("Invalid input parameters.");
+                }
+            }
+            private void ListDir(object[]? obj)
+            {
+                // cache dir in case the user passes a path in to list that's not their working dir
+                var origin_dir = CurrentDirectory;
+
+                if (obj != null && obj.Length > 0 && obj[0] is string path){
+                    ChangeDir(obj);
+                }
+
+                var list = DirectoryListing();
+
+                var textList = string.Join(",\n", list);
+
+                var text = $"LISTING : {CurrentDirectory}";
+                
+                System.Console.WriteLine(text);
+                System.Console.WriteLine();
+                System.Console.WriteLine(textList);
+                
+                ChangeDir(new[]{origin_dir});
+            }
+            private void ChangeDir(object[]? obj)
+            {
+                if (obj != null && obj.Length > 0 && obj[0] is string Path)
+                {
+                    ChangeDirectory(Path);
+                }
+            }
+            private void Clear(object[]? obj)
+            {
+                Console.Clear();
+            }
+            private void Copy(object[]? obj)
+            {
+                if (obj != null && obj.Length > 1 && obj[0] is string Path)
+                {
+                    for (int i = 1; i < obj.Length; i++)
+                    {
+                        string Destination = obj[i] as string;
+                        
+                        if (Destination is null || string.IsNullOrEmpty(Destination))
+                        {
+                            Notifications.Now($"Invalid path {Destination} in Copy");
+                            continue;
+                        }
+                        Copy(Path, Destination);
+                        Notifications.Now($"Copied from {Path}->{Destination}");
+                    }
+                }
+            }
+            private void MkDir(object[]? obj)
+            {
+                if (obj != null && obj.Length > 0 && obj[0] is string Path)
+                {
+                    NewFile(Path); 
+                    Notifications.Now($"Created directory {Path}");
+                }
+            }
+            private void Move(object[]? obj)
+            {
+                string? a = obj[0] as string;
+                string? b = obj[1] as string;
+                Move(a, b);
+                Notifications.Now($"Moved {a}->{b}");
+            }
+            public void RootCmd(object[]? args)
+        {
+            ChangeDirectory(Computer.FS_ROOT);
+        }
+
+        #endregion
 
         public Computer Computer;
         private string currentDirectory;
@@ -125,7 +225,7 @@ namespace VM.FS
         {
             if (path == "..")
             {
-                string currentDirectory = Computer.FS.CurrentDirectory;
+                string currentDirectory = CurrentDirectory;
 
                 string[] components = currentDirectory.Split('/');
 
@@ -135,7 +235,7 @@ namespace VM.FS
 
                     string parentDirectory = string.Join("/", parentComponents);
 
-                    Computer.FS.ChangeDirectory(parentDirectory);
+                    ChangeDirectory(parentDirectory);
                 }
                 return;
             }
@@ -154,24 +254,14 @@ namespace VM.FS
                 Notifications.Now($"Directory '{path}' not found in current path.");
             }
         }
-        public void NewFile(string fileName, bool isDirectory = false)
+       
+        public void NewFile(string fileName)
         {
             string path = GetRelativeOrAbsolute(fileName);
 
-            if (isDirectory && !File.Exists(path) && !Directory.Exists(path))
+            if (!File.Exists(path) && !Directory.Exists(path))
             {
                 Directory.CreateDirectory(path);
-            }
-            else
-            {
-                if (!File.Exists(path) && !Directory.Exists(path))
-                {
-                    File.Create(path).Close();
-                }
-                else
-                {
-                    Notifications.Now($"File '{fileName}' already exists.");
-                }
             }
         }
         public void Delete(string fileName, bool isDirectory = false)

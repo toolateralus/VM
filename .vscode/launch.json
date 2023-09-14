@@ -12,7 +12,7 @@
             "program": "${workspaceFolder}/VM-kernel/bin/Debug/net6.0/VM-kernel.dll",
             "args": [],
             "cwd": "${workspaceFolder}/VM-kernel",
-            "console": "integratedTerminal",
+            "console": "externalTerminal",
             "stopAtEntry": false
         },
         {
