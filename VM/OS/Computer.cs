@@ -24,26 +24,14 @@ namespace VM
         public JavaScriptEngine JavaScriptEngine;
         public CommandLine CommandLine;
         public JObject Config;
+
         public readonly Dictionary<string, object> USER_WINDOW_INSTANCES = new();
-        public readonly List<string> InstalledJSApps = new();
-        public Dictionary<string, Type> Installed_CSharp_Apps { get; private set; } = new();
 
         public uint ID { get; private set; }
-        public string FS_ROOT { get; private set; }
-        public string WORKING_DIR { get; private set; }
+        public string FS_ROOT { get; set; } = "";
+        public string WORKING_DIR { get; set; } = "";
         public bool Disposing { get; set; }
 
-        public void InstallApplication(string exePath, Type type)
-        {
-            // do we need this collection? it helps us identify already existing apps but it's almost unneccesary,
-            // we may be relying on our UI scripts to do too much behavior.
-            if (Installed_CSharp_Apps.TryGetValue(exePath, out _))
-            {
-                Notifications.Now("Tried to install an app that already exists on the computer, try renaming it if this was intended");
-                return;
-            }
-            Notifications.Now($"{exePath} installed!");
-        }
         public void InitializeEngine(Computer computer)
         {
             JavaScriptEngine = new(computer);
@@ -70,7 +58,6 @@ namespace VM
 
             return Path.Combine(currentDirectory, targetDirectory);
         }
-       
         public static JObject LoadConfig()
         {
             if (FileSystem.GetResourcePath("config.json") is string AbsPath)
@@ -120,12 +107,6 @@ namespace VM
             }
             Dispose();
         }
-        public void Print(object? obj)
-        {
-            JavaScriptEngine?.InteropModule?.print(obj ?? "null");
-        }
-
-        #region Application
         public void Boot(uint id)
         {
             if (id > Computers.Length){
@@ -167,9 +148,6 @@ namespace VM
 
             return (instance_name, instantiation_code);
         }
-
-        #endregion
-
         protected virtual void Dispose(bool disposing)
         {
             if (!Disposing)
