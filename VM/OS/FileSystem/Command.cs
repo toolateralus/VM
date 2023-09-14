@@ -53,7 +53,9 @@ namespace VM.FS
                 new("unhost", (args) => Computer.Network.StopHosting(args), "if a server is currently running on this machine this halts any active connections and closes the sever.")
             );
         }
-        
+        #region  DEFAULT COMMANDS
+        // These should get moved to their respective locations, it's unneccesary to make all the commands statically in this class when it presents complexity,
+        // you should be making commands in their context. it's much simpler anyway.
         private void HostServer(object[]? obj)
         {
             Task.Run(async () =>
@@ -202,6 +204,7 @@ namespace VM.FS
                 Notifications.Now($"running {AbsPath}...");
             }
         }
+        #endregion
         public bool TryCommand(string input)
         {
             if (Find(input) is Command _cmd && _cmd.id != null && _cmd.id != "NULL" && _cmd.Method != null)
