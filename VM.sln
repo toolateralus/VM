@@ -15,7 +15,9 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution 
 		icon.ico = icon.ico
 	EndProjectSection
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "VM-kernel", "VM-kernel\VM-kernel.csproj", "{A0E508BD-73F4-4D25-93FA-381BADA38725}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "VM-terminal", "VM-terminal\VM-terminal.csproj", "{91164CD0-8798-4FF9-A18A-41B6FD4C5AE9}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "VM-hardware", "VM-hardware\VM-hardware.csproj", "{FB42E164-20D2-46A8-ADBA-634013B06BAD}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -27,10 +29,14 @@ Global
 		{94CDC113-3FF2-4ADD-B41C-D50905C5614C}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{94CDC113-3FF2-4ADD-B41C-D50905C5614C}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{94CDC113-3FF2-4ADD-B41C-D50905C5614C}.Release|Any CPU.Build.0 = Release|Any CPU
-		{A0E508BD-73F4-4D25-93FA-381BADA38725}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{A0E508BD-73F4-4D25-93FA-381BADA38725}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{A0E508BD-73F4-4D25-93FA-381BADA38725}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{A0E508BD-73F4-4D25-93FA-381BADA38725}.Release|Any CPU.Build.0 = Release|Any CPU
+		{91164CD0-8798-4FF9-A18A-41B6FD4C5AE9}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{91164CD0-8798-4FF9-A18A-41B6FD4C5AE9}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{91164CD0-8798-4FF9-A18A-41B6FD4C5AE9}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{91164CD0-8798-4FF9-A18A-41B6FD4C5AE9}.Release|Any CPU.Build.0 = Release|Any CPU
+		{FB42E164-20D2-46A8-ADBA-634013B06BAD}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{FB42E164-20D2-46A8-ADBA-634013B06BAD}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{FB42E164-20D2-46A8-ADBA-634013B06BAD}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{FB42E164-20D2-46A8-ADBA-634013B06BAD}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

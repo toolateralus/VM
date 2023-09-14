@@ -9,10 +9,10 @@
             "type": "coreclr",
             "request": "launch",
             "preLaunchTask": "build",
-            "program": "${workspaceFolder}/VM-kernel/bin/Debug/net6.0/VM-kernel.dll",
+            "program": "${workspaceFolder}/VM-terminal/bin/Debug/net6.0/VM-terminal.dll",
             "args": [],
-            "cwd": "${workspaceFolder}/VM-kernel",
-            "console": "externalTerminal",
+            "cwd": "${workspaceFolder}/VM-terminal",
+            "console": "integratedTerminal",
             "stopAtEntry": false
         },
         {
