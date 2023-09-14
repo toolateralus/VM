@@ -51,7 +51,7 @@ namespace VM.JS
             executionThread = new Thread(ExecuteAsync);
             executionThread.Start();
 
-            string jsDirectory = Computer.SearchForParentRecursive("VM");
+            string jsDirectory = FileSystem.SearchForParentRecursive("VM");
 
             LoadModules(jsDirectory + "/OS-JS");
 

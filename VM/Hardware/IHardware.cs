@@ -36,24 +36,44 @@ namespace VM.Hardware{
         /// </summary>
         FullAccess     
     }
+    
+    public interface IPowerSource 
+    {
+
+
+    }
     public interface IHardware 
     {
-        public abstract Dictionary<string, object> PhysicalProperties { get; set;}
-        public abstract int ID {get;set;}
+        public abstract Dictionary<string, object> Specifications {get;set;}
+        public abstract void Cycle(object[] parameters);
+        public abstract long GetPowerConsumptionStats();
+        public abstract long GetTemperatureStats();
+
         /// <summary>
-        /// We will use this as a way to pass some crucial resources to our emulated drivers
+        /// this is the interface for drivers
         /// </summary>
-        public abstract Dictionary<object, object> DriverInfo {get;set;}
-        /// <summary>
-        /// We'll use this just as a descrption for the specific piece of hardware, like serial no, manufacturer, name, architecture, whatever it may be.
-        /// </summary>
-        public abstract Dictionary<string, string> HardwareSpecs {get;set;}
+        /// <param name="parameters"></param>
+        /// <returns></returns>
         public abstract int[] Initialize(params object[] parameters);
+        /// <summary>
+        /// this is the exit interface for drivers
+        /// </summary>
+        /// <param name="parameters"></param>
+        /// <returns></returns>
         public abstract int[] Finalize(params object[] parameters);
     }
     public interface IMemoryDevice : IHardware
     {
-    
+        public abstract byte[][] Memory {get;set;}
+        public abstract long OccupiedMemory_Bytes {get;set;}
+        public abstract long WordSize {get; set;}
+        /// <summary>
+        /// This resets a region of memory at specified address
+        /// </summary>
+        /// <param name="address"></param>
+        /// <returns></returns>
+        public abstract bool Free(int address);
+        public abstract long Capacity {get; set;}
         /// <summary>
         /// Reads the memory from the specified address.
         /// </summary>
