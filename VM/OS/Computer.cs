@@ -41,23 +41,6 @@ namespace VM
                 JavaScriptEngine.ExecuteScript(AbsPath);
             }
         }
-        public static string SearchForParentRecursive(string targetDirectory)
-        {
-            string assemblyLocation = Assembly.GetExecutingAssembly().Location;
-            string currentDirectory = Path.GetDirectoryName(assemblyLocation);
-
-            while (!Directory.Exists(Path.Combine(currentDirectory, targetDirectory)))
-            {
-                currentDirectory = Directory.GetParent(currentDirectory)?.FullName;
-                if (currentDirectory == null)
-                {
-                    // Reached the root directory without finding the target
-                    return null;
-                }
-            }
-
-            return Path.Combine(currentDirectory, targetDirectory);
-        }
         public static JObject LoadConfig()
         {
             if (FileSystem.GetResourcePath("config.json") is string AbsPath)

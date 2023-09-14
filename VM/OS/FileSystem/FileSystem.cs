@@ -2,19 +2,37 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Reflection;
 using VM.Types;
 
 namespace VM.FS
 {
     public class FileSystem : IDisposable
     {
+        public static string SearchForParentRecursive(string targetDirectory)
+        {
+            string assemblyLocation = Assembly.GetExecutingAssembly().Location;
+            string currentDirectory = Path.GetDirectoryName(assemblyLocation);
+
+            while (!Directory.Exists(Path.Combine(currentDirectory, targetDirectory)))
+            {
+                currentDirectory = Directory.GetParent(currentDirectory)?.FullName;
+                if (currentDirectory == null)
+                {
+                    // Reached the root directory without finding the target
+                    return null;
+                }
+            }
+
+            return Path.Combine(currentDirectory, targetDirectory);
+        }
         class Installer
         {
             const string PATH = "computer.utils";
 
             public Installer(string root)
             {
-                var dir = Computer.SearchForParentRecursive("VM");
+                var dir = FileSystem.SearchForParentRecursive("VM");
                 string fullPath = Path.Combine(dir, PATH);
 
                 if (Directory.Exists(fullPath))
