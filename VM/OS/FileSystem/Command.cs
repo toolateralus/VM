@@ -9,6 +9,7 @@ using System.Threading.Tasks;
 using VM.Network;
 using VM.JS;
 using System.Net;
+using System.Runtime.InteropServices;
 
 namespace VM.FS
 {
@@ -182,6 +183,16 @@ namespace VM.FS
                 string alias = item.Value.Split('/').Last();
                 string paddedAlias = item.Key.PadRight(maxTagWidth);
                 Console.WriteLine($"{paddedAlias} -> {alias}");
+            }
+
+            System.Console.WriteLine();
+            System.Console.WriteLine("### JAVASCRIPT GLOBAL FUNCTIONS ####");
+            System.Console.WriteLine();
+
+            // we use any function starting with a lowercase letter, since it's against C# typical syntactical norms
+            foreach(var item in typeof(JSInterop).GetMethods().Where(M=>M.Name.StartsWith(M.Name.ToLower()[0])))
+            {
+                Computer.JavaScriptEngine.InteropModule.print(item.Name + $"()");
             }
         }
         private void GetSpecificHelp(params object[] parameters)
