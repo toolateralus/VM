@@ -1,8 +1,6 @@
 ﻿using System.Net.Sockets;
 using System.Text;
 using System.Threading;
-using Microsoft.VisualBasic.Devices;
-using Newtonsoft.Json.Linq;
 using System;
 using System.Collections.Generic;
 using System.Net;
@@ -11,7 +9,6 @@ using System.Threading.Tasks;
 using VM.JS;
 using static VM.Network.Server.Server;
 using VM.Network;
-using VM.GUI;
 using VM.Network.Server;
 
 namespace VM.Network
@@ -94,20 +91,20 @@ namespace VM.Network
             }
             NetworkEvents[outCh].Enqueue((msg, inCh));
 
-            foreach (var computer in Computer.Computers)
-            {
-                foreach (var userWindow in computer.Key.USER_WINDOW_INSTANCES)
-                {
-                    if (userWindow.Value.JavaScriptEngine.EventHandlers == null)
-                        continue;
+            // foreach (var computer in Computer.Computers)
+            // {
+            //     foreach (var userWindow in computer.Key.USER_WINDOW_INSTANCES)
+            //     {
+            //         if (userWindow.Value.JavaScriptEngine.EventHandlers == null)
+            //             continue;
 
-                    foreach (var eventHandler in userWindow.Value.JavaScriptEngine.EventHandlers)
-                    {
-                        if (eventHandler is NetworkEventHandler networkEventHandler)
-                            networkEventHandler.InvokeEvent(outCh, inCh, msg);
-                    }
-                }
-            }
+            //         foreach (var eventHandler in userWindow.Value.JavaScriptEngine.EventHandlers)
+            //         {
+            //             if (eventHandler is NetworkEventHandler networkEventHandler)
+            //                 networkEventHandler.InvokeEvent(outCh, inCh, msg);
+            //         }
+            //     }
+            // }
         }
         public static (object? value, int reply) PullEvent(int channel, Computer computer)
         {

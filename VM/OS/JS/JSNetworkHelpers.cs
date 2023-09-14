@@ -6,7 +6,6 @@ using System.Net;
 using System.Text;
 using System.Threading.Tasks;
 using VM.FS;
-using VM.GUI;
 using VM.Network;
 using VM.Network.Server;
 
@@ -89,7 +88,7 @@ namespace VM.JS
 
             if (isDir)
             {
-                string root_dir = AbsPath.Split('\\').Last();
+                string root_dir = AbsPath.Split('/').Last();
                 byte[] bytePath = Encoding.UTF8.GetBytes(root_dir);
 
                 OnTransmit?.Invoke(bytePath, TransmissionType.Path, -1, -1, true);
@@ -153,7 +152,7 @@ namespace VM.JS
 
             Notifications.Now($"Downloading {path}..");
 
-            var root = Computer.FS_ROOT + "\\downloads";
+            var root = Computer.FS_ROOT + "/downloads";
 
             if (!Directory.Exists(root))
             {
@@ -174,7 +173,7 @@ namespace VM.JS
                         switch (dataStr)
                         {
                             case "END_DOWNLOAD":
-                                Notifications.Now($"{{{Server.FormatBytes(size)}}} downloads\\{path} downloaded.. run  the <install '{path}' to install it.");
+                                Notifications.Now($"{{{Server.FormatBytes(size)}}} downloads/{path} downloaded.. run  the <install '{path}' to install it.");
                                 return;
                             case "FAILED_DOWNLOAD":
                                 Notifications.Now($"Download failed for {path}");
@@ -263,7 +262,7 @@ namespace VM.JS
         public void eventHandler(string identifier, string methodName)
         {
             if (Computer.USER_WINDOW_INSTANCES.TryGetValue(identifier, out var app))
-                app.JavaScriptEngine?.CreateNetworkEventHandler(identifier, methodName);
+                Computer.JavaScriptEngine?.CreateNetworkEventHandler(identifier, methodName);
         }
     }
 }

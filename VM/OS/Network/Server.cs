@@ -1,16 +1,11 @@
 ﻿using System;
-using System.Buffers.Text;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Net;
 using System.Net.NetworkInformation;
 using System.Net.Sockets;
-using System.Runtime.InteropServices;
-using System.Runtime.Serialization;
 using System.Text;
-using System.Text.Json;
-using System.Text.Json.Serialization;
 using System.Threading.Tasks;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
@@ -112,7 +107,7 @@ namespace VM.Network.Server
         public const int REQUEST_REPLY_CHANNEL = 6996;
         public const int DOWNLOAD_REPLY_CHANNEL = 6997;
         private Dictionary<byte[], Func<Packet, Task<Packet>>> ServerTasks = new();
-        private string UPLOAD_DIR = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData) + "\\VM_SERVER_DATA";
+        private string UPLOAD_DIR = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData) + "/VM_SERVER_DATA";
         private Dictionary<string, TcpClient> IncomingFileTransfersPending = new();
         private List<string> AvailableForDownload = new();
 
@@ -123,7 +118,7 @@ namespace VM.Network.Server
 
             foreach (var item in Directory.EnumerateFileSystemEntries(UPLOAD_DIR))
             {
-                AvailableForDownload.Add(item.Split('\\').Last());
+                AvailableForDownload.Add(item.Split('/').Last());
             }
 
         }
@@ -252,9 +247,9 @@ namespace VM.Network.Server
                 string path = file;
                 
                 if (!file.Contains(UPLOAD_DIR))
-                    path = UPLOAD_DIR + "\\" + file;
+                    path = UPLOAD_DIR + "/" + file;
 
-                file = file.Replace(UPLOAD_DIR + "\\", "");
+                file = file.Replace(UPLOAD_DIR + "/", "");
 
                 if (File.Exists(path))
                 {
@@ -302,16 +297,16 @@ namespace VM.Network.Server
                 {
                     if (packet.Metadata.Value<bool>("isDir"))
                     {
-                        Directory.CreateDirectory(UPLOAD_DIR + "\\" + Encoding.UTF8.GetString(packet.Data));
+                        Directory.CreateDirectory(UPLOAD_DIR + "/" + Encoding.UTF8.GetString(packet.Data));
                     }
                     else
                     {
                         string path = "";
 
-                        if (item.Key.StartsWith('\\'))
+                        if (item.Key.StartsWith('/'))
                             path = item.Key.Remove(0, 1);
 
-                        path = UPLOAD_DIR + "\\" + item.Key;
+                        path = UPLOAD_DIR + "/" + item.Key;
 
                         File.WriteAllBytes(path, packet.Data);
                     }
@@ -330,7 +325,7 @@ namespace VM.Network.Server
                 // write the dir, or we wait for file data.
                 if (packet.Metadata.Value<bool>("isDir"))
                 {
-                    Directory.CreateDirectory(UPLOAD_DIR + "\\" + Path);
+                    Directory.CreateDirectory(UPLOAD_DIR + "/" + Path);
                 }
                 else
                 {

@@ -1,8 +1,6 @@
 ﻿using System;
 using System.IO;
 using System.Linq;
-using System.Security.Cryptography.X509Certificates;
-using VM;
 using VM.Types;
 
 namespace VM.FS
@@ -81,7 +79,7 @@ namespace VM.FS
         private bool Disposing;
         internal static string GetResourcePath(string name)
         {
-            var path = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData) + "\\VM";
+            var path = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData) + "/VM";
 
             FileSystem.VerifyOrCreateAppdataDir(path);
 
@@ -129,13 +127,13 @@ namespace VM.FS
             {
                 string currentDirectory = Computer.FS.CurrentDirectory;
 
-                string[] components = currentDirectory.Split('\\');
+                string[] components = currentDirectory.Split('/');
 
                 if (components.Length > 1)
                 {
                     string[] parentComponents = components.Take(components.Length - 1).ToArray();
 
-                    string parentDirectory = string.Join("\\", parentComponents);
+                    string parentDirectory = string.Join("/", parentComponents);
 
                     Computer.FS.ChangeDirectory(parentDirectory);
                 }

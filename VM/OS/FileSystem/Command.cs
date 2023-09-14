@@ -2,21 +2,11 @@
 using System;
 using System.Collections.Generic;
 using System.Data;
-using System.Drawing;
 using System.IO;
 using System.Linq;
-using System.Runtime.CompilerServices;
-using System.Runtime.InteropServices;
-using System.Security.Cryptography.X509Certificates;
 using System.Text;
-using System.Text.RegularExpressions;
 using System.Threading.Tasks;
-using System.Windows.Documents;
-using System.Windows.Forms.VisualStyles;
-using VM.GUI;
-using VM;
 using VM.Network;
-using VM.Network.Server;
 using VM.JS;
 
 namespace VM.FS
@@ -56,7 +46,7 @@ namespace VM.FS
             {
                 // we need Delete, Edit (open text editor/create new file)
                 new("root", RootCmd, "navigates the open file explorer to the root directory of the computer."),
-                new("edit", Edit, "opens the editor for file, or creates a new one if not found."),
+                // new("edit", Edit, "opens the editor for file, or creates a new one if not found."),
                 new("delete", Delete, "deletes a file or directory"),
                 new("js", RunJs, "runs a js file of name provided, such as myCodeFile to run myCodeFile.js in any directory under ../Appdata/VM"),
                 new("help", Help, "shows a list of all available commands and aliases to the currently open command prompt."),
@@ -65,11 +55,9 @@ namespace VM.FS
                 new("mkdir", MkDir, "makes directory at provided path if permitted"),
                 new("copy", Copy, "copy arg1 to any number of provided paths,\'\n\t\' example: { copy source destination1 destination2 destination3... }"),
                 new("clear", Clear, "makes directory at provided path if permitted"),
-                new("font", SetFont, "sets the command prompts font for this session. call this from a startup to set as default"),
                 new("config" ,Config, "config <set or get> <property name> (set only) <new value>"),
                 new("ip", getIP, "fetches the local ip address of wifi/ethernet"),
                 new("move", Move, "moves a file/changes its name"),
-                new("restart", (_) => Computer.Restart(computer.ID), "restarts this computer"),
                 new("lp", LP, "lists all the running proccesses"),
                 new("host", Host, "hosts a server on the provided <port>, none provided it will default to 8080"),
                 new("unhost", (_) => Computer.Network.StopHosting(_), "if a server is currently running on this machine this halts any active connections and closes the sever."),
@@ -141,28 +129,6 @@ namespace VM.FS
                 Notifications.Now("Invalid input parameters.");
             }
         }
-        private void Edit(object[]? obj)
-        {
-            if (obj != null && obj.Length > 0 && obj[0] is string fileName)
-            {
-
-                if (FileSystem.GetResourcePath(fileName) is string AbsPath && !string.IsNullOrEmpty(AbsPath))
-                {
-                    if (!File.Exists(AbsPath))
-                    {
-                        var str = File.Create(AbsPath);
-                        str.Close();
-                    }
-                    var wnd = Computer.Window;
-                    var tEdit = new TextEditor(Computer, AbsPath);
-                    Computer.OpenApp(tEdit);
-                } 
-            }
-            else
-            {
-                Notifications.Now("Invalid input parameters.");
-            }
-        }
         private void Config(object[]? obj)
         {
             if (obj != null && obj.Length > 0 && obj[0] is string getset)
@@ -175,21 +141,12 @@ namespace VM.FS
 
                     if (toLower == "get")
                     {
-                        var commandPrompt = Computer.SearchForOpenWindowType<CommandPrompt>(Computer);
-
-                        if (commandPrompt == default)
-                        {
-                            Notifications.Now("You must have a cmd prompt open to display 'help' command results.");
-                            return;
-                        }
-
                         if (!Computer.Config.TryGetValue(propname, out var propValue))
                         {
                             Notifications.Now($"Property '{propname}' not found in configuration.");
                             return;
                         }
-
-                        commandPrompt.output.AppendText($"\n {{{propname} : {propValue}}}");
+                        // TODO: Add output stream call here, or just print.
                     }
                     else if (toLower == "set" && obj.Length > 2)
                     {
@@ -232,19 +189,13 @@ namespace VM.FS
                 }
                 else if (toLower == "all")
                 {
-                    var commandPrompt = Computer.SearchForOpenWindowType<CommandPrompt>(Computer);
-
-                    if (commandPrompt == default)
-                    {
-                        Notifications.Now("You must have a cmd prompt open to display 'help' command results.");
-                        return;
-                    }
+                 
                     StringBuilder sb = new();
                     foreach (var kvp in Computer.Config)
                     {
                         sb.Append($"\n {{{kvp.Key} : {kvp.Value}}}");
                     }
-                    commandPrompt.output.AppendText(sb.ToString());
+                    // TODO: add output stream / print
                 }
                 else
                 {
@@ -256,64 +207,17 @@ namespace VM.FS
                 Notifications.Now("Invalid input parameters.");
             }
         }
-        private void SetFont(object[]? obj)
-        {
-            var commandPrompt = Computer.SearchForOpenWindowType<CommandPrompt>(Computer);
-
-            if (commandPrompt == default)
-            {
-                Notifications.Now("You must have a cmd prompt open to display 'help' command results.");
-                return;
-            }
-
-            if (obj != null)
-            {
-                // args are seperated by white space so we reconstruct input.
-                string FontName = "";
-                foreach (var fontNameWord in obj)
-                {
-                    if (fontNameWord != null && fontNameWord is string fontName)
-                    FontName += $" {fontName}";
-                }
-
-
-                System.Windows.Media.FontFamily font = null;
-                try
-                {
-                    font = new System.Windows.Media.FontFamily(FontName);
-                }
-                catch (Exception ex)
-                {
-                    Notifications.Now($"Font '{FontName}' not found: {ex.Message}");
-                    return;
-                }
-
-                commandPrompt.output.FontFamily = font;
-                commandPrompt.input.FontFamily = font;
-                Notifications.Now($"Font '{FontName}' set successfully.");
-            }
-            else
-            {
-                Notifications.Now("Font name not provided.");
-            }
-        }
+       
         private void ListDir(object[]? obj)
         {
-            var commandPrompt = Computer.SearchForOpenWindowType<CommandPrompt>(Computer);
-
-            if (commandPrompt == default)
-            {
-                Notifications.Now("You must have a cmd prompt open to display 'help' command results.");
-                return;
-            }
-
+           
             var list = Computer.FS.DirectoryListing();
 
             var textList = string.Join("\n\t", list);
 
             var text = $"\n##Current Directory: {Computer.FS.CurrentDirectory}###\n";
-            commandPrompt.output.AppendText(text + "\t");
-            commandPrompt.output.AppendText(textList);
+            
+            // TODO: add output stream / print / clear
         }
         private void ChangeDir(object[]? obj)
         {
@@ -324,7 +228,7 @@ namespace VM.FS
         }
         private void Clear(object[]? obj)
         {
-            Computer.SearchForOpenWindowType<CommandPrompt>(Computer)?.output?.Clear();
+           // TODO: add output stream / print / clear
         }
         private void Copy(object[]? obj)
         {
@@ -359,29 +263,13 @@ namespace VM.FS
                 GetSpecificHelp(obj);
             }
 
-            var commandPrompt = Computer.SearchForOpenWindowType<CommandPrompt>(Computer);
-
-            if (commandPrompt == default)
-            {
-                //Computer.Window.Open();
-            }
-
-            StringBuilder cmdbuilder = new();
-            StringBuilder aliasbuilder = new();
-            commandPrompt?.DrawTextBox(" ### Native Commands ### ");
+            Console.WriteLine(" ### Native Commands ### ");
 
             foreach (var item in Commands)
-                cmdbuilder?.Append($"\n{{{item.id}}} \t\n\'{string.Join(",", item.infos)}\'");
-
-            commandPrompt?.DrawTextBox(" ### Command Aliases ### ");
-
+                Console.WriteLine($"\n{{{item.id}}} \t\n\'{string.Join(",", item.infos)}\'");
 
             foreach (var item in Aliases)
-                aliasbuilder.Append($"\n{item.Key} -> {item.Value.Split('\\').Last()}");
-
-            commandPrompt?.output.AppendText(cmdbuilder.ToString());
-            commandPrompt?.output.AppendText(aliasbuilder.ToString());
-
+                Console.WriteLine($"\n{item.Key} -> {item.Value.Split('\\').Last()}");
         }
         private void GetSpecificHelp(params object[] parameters)
         {
@@ -449,7 +337,7 @@ namespace VM.FS
             }
             return default;
         }
-        public bool TryInvoke(string name, string[] args)
+        internal bool TryInvoke(string name, string[] args)
         {
             if (Find(name) is Command command && command.id != null && command.id != "NULL" && command.Method != null)
             {

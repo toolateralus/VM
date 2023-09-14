@@ -1,16 +1,12 @@
 ﻿using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
-using System.ComponentModel;
 using System.IO;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
-using System.Windows;
 using JavaScriptEngineSwitcher.Core;
 using JavaScriptEngineSwitcher.V8;
-using VM.GUI;
-using VM;
 using VM.FS;
 
 namespace VM.JS
@@ -57,7 +53,7 @@ namespace VM.JS
 
             string jsDirectory = Computer.SearchForParentRecursive("VM");
 
-            LoadModules(jsDirectory + "\\OS-JS");
+            LoadModules(jsDirectory + "/OS-JS");
 
             _ = Execute($"os.id = {computer.ID}");
 
@@ -207,8 +203,6 @@ namespace VM.JS
         internal async Task CreateEventHandler(string identifier, string targetControl, string methodName, int type)
         {
             
-            var wnd = Computer.Window;
-
             var result = await Execute($"{identifier} != null");
 
             if (result is not bool ID_EXISTS || !ID_EXISTS)
@@ -222,53 +216,52 @@ namespace VM.JS
             {
                 return;
             }
-            wnd.Dispatcher.Invoke(() =>
-            {
-                var content = JSInterop.GetUserContent(identifier, Computer);
+            // wnd.Dispatcher.Invoke(() =>
+            // {
+            //     var content = JSInterop.GetUserContent(identifier, Computer);
 
-                if (content == null)
-                {
-                    Notifications.Now($"control {identifier} not found!");
-                    return;
-                }
-
-
-                FrameworkElement element = null;
-                if (targetControl.ToLower().Trim() == "this")
-                {
-                    element = content;
-                }
-                else
-                {
-                    element = JSInterop.FindControl(content, targetControl);
-                }
+            //     if (content == null)
+            //     {
+            //         Notifications.Now($"control {identifier} not found!");
+            //         return;
+            //     }
 
 
-                if (element == null)
-                {
-                    Notifications.Now($"control {targetControl} of {content.Name} not found.");
-                    return;
-                }
+            //     FrameworkElement element = null;
+            //     if (targetControl.ToLower().Trim() == "this")
+            //     {
+            //         element = content;
+            //     }
+            //     else
+            //     {
+            //         element = JSInterop.FindControl(content, targetControl);
+            //     }
 
-                var eh = new XAMLJSEventHandler(element, (XAML_EVENTS)type, this, identifier, methodName);
 
-                if (Computer.USER_WINDOW_INSTANCES.TryGetValue(identifier, out var app))
-                {
-                    app.OnClosed += () =>
-                    {
-                        if (EventHandlers.Contains(eh))
-                            EventHandlers.Remove(eh);
+            //     if (element == null)
+            //     {
+            //         Notifications.Now($"control {targetControl} of {content.Name} not found.");
+            //         return;
+            //     }
 
-                        eh.OnDispose?.Invoke();
-                    };
-                }
+            //     var eh = new XAMLJSEventHandler(element, (XAML_EVENTS)type, this, identifier, methodName);
 
-                EventHandlers.Add(eh);
-            });
+            //     if (Computer.USER_WINDOW_INSTANCES.TryGetValue(identifier, out var app))
+            //     {
+            //         app.OnClosed += () =>
+            //         {
+            //             if (EventHandlers.Contains(eh))
+            //                 EventHandlers.Remove(eh);
+
+            //             eh.OnDispose?.Invoke();
+            //         };
+            //     }
+
+            //     EventHandlers.Add(eh);
+            // });
         }
         internal async Task CreateNetworkEventHandler(string identifier, string methodName)
         {
-            var wnd = Computer.Window;
 
             var result = await Execute($"{identifier} != null");
 
@@ -288,13 +281,7 @@ namespace VM.JS
 
             if (Computer.USER_WINDOW_INSTANCES.TryGetValue(identifier, out var app))
             {
-                app.OnClosed += () =>
-                {
-                    if (EventHandlers.Contains(eh))
-                        EventHandlers.Remove(eh);
-
-                    eh.OnDispose?.Invoke();
-                };
+               
             }
 
             EventHandlers.Add(eh);

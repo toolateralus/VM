@@ -4,7 +4,7 @@ class xaml_js_project_generator{
 		for(var i = 0; i < files.length; ++i) {
 			
 			const file = files[i];
-			const path = root + '\\' + paths[i];
+			const path = root + '/' + paths[i];
 			
 			if (file !== null && file !== '' && path !== null && path !== ''){
 				file.write(path, file)
@@ -17,10 +17,10 @@ class xaml_js_project_generator{
 	{
 		var path = "";
 		if (dir !== '') {
-			path = dir + '\\' + name + '.' + ext;
+			path = dir + '/' + name + '.' + ext;
 		}
 		else { 
-			path = 'apps' + '\\' + name + '.' + ext;
+			path = 'apps' + '/' + name + '.' + ext;
 		}
 
 		call(`mkdir ${path}`);

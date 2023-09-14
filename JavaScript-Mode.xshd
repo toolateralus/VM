@@ -117,14 +117,14 @@
 			<Begin>"</Begin>
 			<End>"</End>
 			<RuleSet>
-				<Span begin="\\" end="." />
+				<Span begin="/" end="." />
 			</RuleSet>
 		</Span>
 		<Span color="Character">
 			<Begin>'</Begin>
 			<End>'</End>
 			<RuleSet>
-				<Span begin="\\" end="." />
+				<Span begin="/" end="." />
 			</RuleSet>
 		</Span>
 		<Rule color="Digits">\b0[xX][0-9a-fA-F]+|(\b\d+(\.[0-9]+)?|\.[0-9]+)([eE][+-]?[0-9]+)?</Rule>

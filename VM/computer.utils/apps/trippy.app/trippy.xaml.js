@@ -86,12 +86,12 @@ class trippy {
 
         if (key === 'Q'){
             const json = JSON.stringify(this.colors);
-            file.write('computer0\\downloads\\trippy.app\\data\\colors.json', json)
+            file.write('computer0/downloads/trippy.app/data/colors.json', json)
             print('File written');
             return;
         }
         if (key === 'L'){
-            const json = JSON.parse(file.read('computer0\\downloads\\trippy.app\\data\\colors.json'));;
+            const json = JSON.parse(file.read('computer0/downloads/trippy.app/data/colors.json'));;
             if (json !== undefined && json !== null){
                 this.colors = json;
                 print('Colors read');
