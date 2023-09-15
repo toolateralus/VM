@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Reflection.Metadata;
 using System.Threading.Tasks;
 using Newtonsoft;
 
@@ -21,14 +22,24 @@ namespace VM.Hardware
     public class MemoryManager
     {
         // we'll load these from a file or some kind of configuration when done
-        public Dictionary<IMemoryDevice, List<IHardwareDriver>> Devices = new();
+        public Dictionary<byte[], IMemoryDevice> Devices = new();
+        public Dictionary<byte[], List<IHardwareDriver>> Drivers = new();
         public Dictionary<byte[], List<MemoryRegion>> Memory = new();
-        public long TotalRAM, WordSize =4;
+        public long TotalRAM, WordSize=4;
+        public IMemoryDevice? GetDevice()
+        {
+            if (Devices.Count > 0)
+                return Devices.First().Value;
+            return null;
+        }
         public int Allocate(long address, long length, byte[] deviceID)
         {
-            var device = Devices.Where(device => device.Key.Specifications["ID"] as byte[] == deviceID).First().Key;
-            
-            for (int i =0; i < length; i += (int)device.WordSize)
+            var found = Devices.TryGetValue(deviceID, out var device);
+
+            if (!found || device == null)
+                return 1;
+
+            for (long i = address; i < length; i += (int)device.WordSize)
             {
                 device.Write(i, new byte[device.WordSize]);
             }
@@ -37,22 +48,26 @@ namespace VM.Hardware
         }
         public MemoryManager()
         {
+            // TODO: for now we just initialize the relevant hardware here.
+            var RAM_A = new RamEmulator() as IMemoryDevice;
+            var RAM_A_ID = RAM_A.Specifications["ID"] as byte[];
+
             Devices = new()
             {
-                {new RamEmulator(), new()}
+                {RAM_A_ID, RAM_A}
             };
 
             foreach(var device in Devices)
             {
-                var handle = device.Key.Specifications["ID"] as byte[];
+                var handle = device.Value.Specifications["ID"] as byte[];
 
                 if (handle is null){
                     System.Console.WriteLine($"Memory device {device.GetType()} did not contain an appropriate byte[] handle, and was not initialized.");
                     return;
                 }
 
-                var size = device.Key.Capacity;
-                var wordSize = device.Key.WordSize;
+                var size = device.Value.Capacity;
+                var wordSize = device.Value.WordSize;
 
                 TotalRAM += size;
 
@@ -153,7 +168,7 @@ namespace VM.Hardware
         /// <param name="address"></param>
         /// <param name="memory"></param>
         /// <returns></returns>
-        public abstract bool Write(int address, byte[] memory);
+        public abstract bool Write(long address, byte[] memory);
         /// <summary>
         /// Returns an action that will be used to fully factory reset the memory device.
         /// </summary>

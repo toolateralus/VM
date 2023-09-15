@@ -17,7 +17,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution 
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "VM-terminal", "VM-terminal\VM-terminal.csproj", "{91164CD0-8798-4FF9-A18A-41B6FD4C5AE9}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "VM-hardware", "VM-hardware\VM-hardware.csproj", "{FB42E164-20D2-46A8-ADBA-634013B06BAD}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "VM-Hardware", "VM-Hardware\VM-Hardware.csproj", "{FB42E164-20D2-46A8-ADBA-634013B06BAD}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "VM-Avalonia", "VM-Avalonia\VM-Avalonia.csproj", "{AA6B542C-A150-47F4-BD6F-AC704D391A42}"
 EndProject
