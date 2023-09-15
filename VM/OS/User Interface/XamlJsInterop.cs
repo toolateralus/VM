@@ -57,12 +57,12 @@ namespace VM.UserInterface
     //                 }
     //                 else
     //                 {
-    //                     Notifications.Now("The provided XAML does not represent a UserControl.");
+    //                     IO.OSTREAM("The provided XAML does not represent a UserControl.");
     //                 }
     //             }
     //             catch (XamlParseException ex)
     //             {
-    //                 Notifications.Now($"XAML parsing error: {ex.Message}");
+    //                 IO.OSTREAM($"XAML parsing error: {ex.Message}");
     //             }
     //         });
 

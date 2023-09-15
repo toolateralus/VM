@@ -101,7 +101,7 @@ namespace VM.FS
                 }
                 else
                 {
-                    Notifications.Now("Invalid input parameters.");
+                    IO.OSTREAM("Invalid input parameters.");
                 }
             }
             private void ListDir(object[]? obj)
@@ -146,11 +146,11 @@ namespace VM.FS
                         
                         if (Destination is null || string.IsNullOrEmpty(Destination))
                         {
-                            Notifications.Now($"Invalid path {Destination} in Copy");
+                            IO.OSTREAM($"Invalid path {Destination} in Copy");
                             continue;
                         }
                         Copy(Path, Destination);
-                        Notifications.Now($"Copied from {Path}->{Destination}");
+                        IO.OSTREAM($"Copied from {Path}->{Destination}");
                     }
                 }
             }
@@ -159,7 +159,7 @@ namespace VM.FS
                 if (obj != null && obj.Length > 0 && obj[0] is string Path)
                 {
                     NewFile(Path); 
-                    Notifications.Now($"Created directory {Path}");
+                    IO.OSTREAM($"Created directory {Path}");
                 }
             }
             private void Move(object[]? obj)
@@ -167,7 +167,7 @@ namespace VM.FS
                 string? a = obj[0] as string;
                 string? b = obj[1] as string;
                 Move(a, b);
-                Notifications.Now($"Moved {a}->{b}");
+                IO.OSTREAM($"Moved {a}->{b}");
             }
             public void RootCmd(object[]? args)
         {
@@ -269,7 +269,7 @@ namespace VM.FS
             }
             else if (!File.Exists(path))
             {
-                Notifications.Now($"Directory '{path}' not found in current path.");
+                IO.OSTREAM($"Directory '{path}' not found in current path.");
             }
         }
        
@@ -298,7 +298,7 @@ namespace VM.FS
                 }
                 else
                 {
-                    Notifications.Now($"File '{fileName}' not found in current path.");
+                    IO.OSTREAM($"File '{fileName}' not found in current path.");
                 }
             }
         }
@@ -327,7 +327,7 @@ namespace VM.FS
             }
             else
             {
-                Notifications.Now($"File '{fileName}' not found in current path.");
+                IO.OSTREAM($"File '{fileName}' not found in current path.");
                 return "";
             }
         }
@@ -378,7 +378,7 @@ namespace VM.FS
             }
             else
             {
-                Notifications.Now("Source file or directory not found.. \n" + sourcePath);
+                IO.OSTREAM("Source file or directory not found.. \n" + sourcePath);
             }
         }
         internal void Move(string? path, string? dest)

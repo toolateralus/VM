@@ -64,24 +64,24 @@ namespace VM.FS
                 int? port = obj?[0] as int?;
                 if (await Computer.Network.StartHosting(port ?? NetworkConfiguration.DEFAULT_PORT))
                 {
-                    Notifications.Now($"Hosting on {Computer.Network.GetIPPortString()}");
+                    IO.OSTREAM($"Hosting on {Computer.Network.GetIPPortString()}");
                     return;
                 }
-                Notifications.Now($"Failed to begin hosting on {LANIPFetcher.GetLocalIPAddress().MapToIPv4()}:{port}");
+                IO.OSTREAM($"Failed to begin hosting on {LANIPFetcher.GetLocalIPAddress().MapToIPv4()}:{port}");
             });
         }
         private void ListProcesses(object[]? obj)
         {
             foreach (var item in Computer.USER_WINDOW_INSTANCES)
             {
-                Notifications.Now($"\n{item.Key}");
+                IO.OSTREAM($"\n{item.Key}");
             }
 
         }
         private void FetchIP(object[]? obj)
         {
             var IP = LANIPFetcher.GetLocalIPAddress().MapToIPv4();
-            Notifications.Now(IP.ToString());
+            IO.OSTREAM(IP.ToString());
         }
         private void Config(object[]? obj)
         {
@@ -97,7 +97,7 @@ namespace VM.FS
                     {
                         if (!Computer.Config.TryGetValue(propname, out var propValue))
                         {
-                            Notifications.Now($"Property '{propname}' not found in configuration.");
+                            IO.OSTREAM($"Property '{propname}' not found in configuration.");
                             return;
                         }
                         IO.OSTREAM($"propname : {propValue}");
@@ -150,12 +150,12 @@ namespace VM.FS
                 }
                 else
                 {
-                    Notifications.Now("Invalid operation specified.");
+                    IO.OSTREAM("Invalid operation specified.");
                 }
             }
             else
             {
-                Notifications.Now("Invalid input parameters.");
+                IO.OSTREAM("Invalid input parameters.");
             }
         }
         private void Help(params object[]? obj)
@@ -212,7 +212,7 @@ namespace VM.FS
             if (obj.Length > 0 && obj[0] is string path && FileSystem.GetResourcePath(path + ".js") is string AbsPath &&  File.Exists(AbsPath))
             {
                 await Computer.JavaScriptEngine.Execute(File.ReadAllText(AbsPath));
-                Notifications.Now($"running {AbsPath}...");
+                IO.OSTREAM($"running {AbsPath}...");
             }
         }
         #endregion

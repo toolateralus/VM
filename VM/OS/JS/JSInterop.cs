@@ -147,7 +147,7 @@ namespace VM.JS
                 return;
             }
 
-            Notifications.Now("Incorrect path for uninstall");
+            IO.OSTREAM("Incorrect path for uninstall");
 
         }
         public JObject GetConfig() => Computer.Config;
@@ -173,7 +173,7 @@ namespace VM.JS
                 {
                     if (arr[1] != "js")
                     {
-                        Notifications.Now("invalid file extension for alias");
+                        IO.OSTREAM("invalid file extension for alias");
                         return;
                     }
                     // valid .js extension
@@ -272,12 +272,12 @@ namespace VM.JS
             }
             else
             {
-                Notifications.Now("Attempted to set command directory to an emtpy or null string");
+                IO.OSTREAM("Attempted to set command directory to an emtpy or null string");
                 return;
             } 
             if (File.Exists(path) && !Directory.Exists(path))
             {
-                Notifications.Now("Attempted to set command directory to an existing file or a nonexistent directory");
+                IO.OSTREAM("Attempted to set command directory to an existing file or a nonexistent directory");
                 return;
             }
             Action<string, string> procFile = (rootDir, file) =>

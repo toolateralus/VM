@@ -4,26 +4,13 @@ namespace VM
 {
     public static class Notifications
     {
-        public static void Now(string message)
-        {
-            // foreach (var cw in Computer.Computers)
-            // {
-            //     cw.Value.Dispatcher.Invoke(() =>
-            //     {
-            //         var cmd = Computer.SearchForOpenWindowType<CommandPrompt>(cw.Key);
-            //         cmd?.Dispatcher?.Invoke(() => { cmd?.output?.AppendText("\n" + message); });
-
-            //         var notif = new NotificationControl() { Message = message };
-            //         cw.Value.NotificationStackPanel.Children.Add(notif);
-            //         notif.Start();
-
-            //     });
-            // }
-        }
-
+        /// <summary>
+        /// TODO: Remove this, and put it somewhere better. we abandoned this, it was coupled tightly with the UI.
+        /// </summary>
+        /// <param name="e"></param>
         internal static void Exception(Exception e)
         {
-            Now(e.Message + "\n" + e.InnerException + "\n" + e.Source);  
+            IO.OSTREAM(e.Message + "\n" + e.InnerException + "\n" + e.Source);  
         }
     }
 }

@@ -222,7 +222,7 @@ namespace VM.JS
 
             //     if (content == null)
             //     {
-            //         Notifications.Now($"control {identifier} not found!");
+            //         IO.OSTREAM($"control {identifier} not found!");
             //         return;
             //     }
 
@@ -240,7 +240,7 @@ namespace VM.JS
 
             //     if (element == null)
             //     {
-            //         Notifications.Now($"control {targetControl} of {content.Name} not found.");
+            //         IO.OSTREAM($"control {targetControl} of {content.Name} not found.");
             //         return;
             //     }
 

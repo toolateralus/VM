@@ -58,7 +58,7 @@ namespace VM.Network.Server
 
             List<TcpClient> CLIENTS = new();
 
-            Notifications.Now($"SERVER : Starting on :: {{'ip':{GetLocalIPAddress().MapToIPv4()}, port':{OPEN_PORT}}}. Waiting for connections...");
+            IO.OSTREAM($"SERVER : Starting on :: {{'ip':{GetLocalIPAddress().MapToIPv4()}, port':{OPEN_PORT}}}. Waiting for connections...");
 
             SERVER = new TcpListener(IPAddress.Any, OPEN_PORT);
 
@@ -162,7 +162,7 @@ namespace VM.Network.Server
             // sizeof data.
             var bytesLength = dataBytes.Length;
             
-            Notifications.Now($"{ID()} Received {FormatBytes(bytesLength)} from {client.GetHashCode()}: CH {{{sender_ch}}} -->> CH{{{reciever_ch}}}");
+            IO.OSTREAM($"{ID()} Received {FormatBytes(bytesLength)} from {client.GetHashCode()}: CH {{{sender_ch}}} -->> CH{{{reciever_ch}}}");
 
             return new(metadata, dataBytes, client, stream);
         }
@@ -182,7 +182,7 @@ namespace VM.Network.Server
         {
             TcpClient client = await server.AcceptTcpClientAsync();
             connectedClients.Add(client);
-            Notifications.Now($"SERVER:Client {client.GetHashCode()} connected ");
+            IO.OSTREAM($"SERVER:Client {client.GetHashCode()} connected ");
             Task.Run(() => HandleClientCommunicationAsync(client, connectedClients));
         }
         private async Task HandleClientCommunicationAsync(TcpClient client, List<TcpClient> connectedClients)
@@ -198,13 +198,13 @@ namespace VM.Network.Server
             }
             catch (Exception ex)
             {
-                Notifications.Now($"SERVER:Client {client.GetHashCode()} errored:: \n{ex.Message}\n{ex.InnerException}\n{ex}");
+                IO.OSTREAM($"SERVER:Client {client.GetHashCode()} errored:: \n{ex.Message}\n{ex.InnerException}\n{ex}");
             }
             finally
             {
                 client.Close();
                 connectedClients.Remove(client);
-                Notifications.Now($"SERVER:Client {client.GetHashCode()} disconnected");
+                IO.OSTREAM($"SERVER:Client {client.GetHashCode()} disconnected");
             }
         }
         private async Task TryHandleMessages(Packet packet, List<TcpClient> clients)
@@ -351,7 +351,7 @@ namespace VM.Network.Server
         }
         private async void HandleRequest(string requestType, Packet packet)
         {
-            Notifications.Now($"SERVER:Client {packet.Client.GetHashCode()} has made a {requestType} request.");
+            IO.OSTREAM($"SERVER:Client {packet.Client.GetHashCode()} has made a {requestType} request.");
             switch (requestType)
             {
                 case "GET_DOWNLOADS":
@@ -362,10 +362,10 @@ namespace VM.Network.Server
                     JObject metadata = JObject.Parse(ToJson(bytes.Length, bytes, TransmissionType.Request, REQUEST_REPLY_CHANNEL, -1, false));
                     await SendJsonToClient(packet.Client, metadata);
 
-                    Notifications.Now($"SERVER:Responding with {names}");
+                    IO.OSTREAM($"SERVER:Responding with {names}");
                     break;
                 default:
-                    Notifications.Now($"SERVER:Client made unrecognized request for : {requestType}");
+                    IO.OSTREAM($"SERVER:Client made unrecognized request for : {requestType}");
                     break;
             }
 

@@ -140,7 +140,7 @@ namespace VM.Network
 
                 if (completedTask == timeoutTask)
                 {
-                    Notifications.Now($"timed out fetching from {callerName} event on channel {channel}");
+                    IO.OSTREAM($"timed out fetching from {callerName} event on channel {channel}");
                     return (null, -1);
                 }
             }
@@ -164,7 +164,7 @@ namespace VM.Network
             client?.Close();
             stream?.Close();
             Task.Run(() => receiveThread?.Join());
-            Notifications.Now($"Disconnected from {LAST_KNOWN_SERVER_IP}::{LAST_KNOWN_SERVER_PORT}");
+            IO.OSTREAM($"Disconnected from {LAST_KNOWN_SERVER_IP}::{LAST_KNOWN_SERVER_PORT}");
         }
 
         public void StopHosting(object[]? args)

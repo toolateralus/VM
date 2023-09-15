@@ -58,12 +58,12 @@ namespace VM
                     }
                     catch (Exception ex)
                     {
-                        Notifications.Now($"Error loading JSON: {ex.Message}");
+                        IO.OSTREAM($"Error loading JSON: {ex.Message}");
                     }
                 }
                 else
                 {
-                    Notifications.Now("JSON file not found.");
+                    IO.OSTREAM("JSON file not found.");
                 }
             }
 
@@ -81,7 +81,7 @@ namespace VM
                 }
                 catch (Exception ex)
                 {
-                    Notifications.Now($"Error saving JSON config: {ex.Message}");
+                    IO.OSTREAM($"Error saving JSON config: {ex.Message}");
                 }
             }
         }
@@ -89,7 +89,7 @@ namespace VM
         {
             if (exitCode != 0)
             {
-                Notifications.Now($"Computer {ID} has exited, most likely due to an error. code:{exitCode}");
+                IO.OSTREAM($"Computer {ID} has exited, most likely due to an error. code:{exitCode}");
             }
             Dispose();
         }
