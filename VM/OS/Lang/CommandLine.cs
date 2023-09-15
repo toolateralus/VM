@@ -4,36 +4,17 @@ using System.Collections.Generic;
 using System.Data;
 using System.IO;
 using System.Linq;
-using System.Text;
 using System.Threading.Tasks;
 using VM.Network;
 using VM.JS;
-using System.Net;
-using System.Runtime.InteropServices;
+using VM.FS;
 
-namespace VM.FS
+namespace VM.Lang
 {
-    public struct Command
-    {
-        public string id = "NULL";
-        public Action<object[]?> Method;
-        public string[] infos = Array.Empty<string>();
-        public Command(string id, Action<object[]?> method, params string[]? infos)
-        {
-            this.id = id;
-            this.Method = method;
-
-            if (infos != null)
-            {
-                this.infos = this.infos.Concat(infos).ToArray();
-            }
-
-        }
-    }
     public class CommandLine : IDisposable
     {
         public Computer Computer;
-        public List<Command> Commands = new();
+        public Dictionary<string, List<Command>> Commands = new();
         public Dictionary<string, string> Aliases = new();
         private bool Disposing;
 
@@ -44,45 +25,17 @@ namespace VM.FS
         }
         private void RegisterNativeCommands()
         {
-            LoadCommandSet(
+            LoadCommandSet("generic commands",
                 new("help", Help, "shows a list of all available commands and aliases to the currently open command prompt."),
                 new("config" ,Config, "config .. {<set or get>} ..  {<property name>} .. {(new value is for set only) <new value>}"),
-                new("ip", FetchIP, "fetches the local ip address of wifi/ethernet"),
-                new("lp", ListProcesses, "lists all the running proccesses"),
-                new("js", RunJavaScriptSourceFile, "runs a js file of name provided, such as myCodeFile to run myCodeFile.js in any directory under ../Appdata/VM"),
-                new("host", HostServer, "hosts a server on the provided <port>, none provided it will default to 8080"),
-                new("unhost", (args) => Computer.Network.StopHosting(args), "if a server is currently running on this machine this halts any active connections and closes the sever.")
+                new("js", RunJavaScriptSourceFile, "runs a js file of name provided, such as myCodeFile to run myCodeFile.js in any directory under ../Appdata/VM")
             );
         }
         #region  DEFAULT COMMANDS
         // These should get moved to their respective locations, it's unneccesary to make all the commands statically in this class when it presents complexity,
         // you should be making commands in their context. it's much simpler anyway.
-        private void HostServer(object[]? obj)
-        {
-            Task.Run(async () =>
-            {
-                int? port = obj?[0] as int?;
-                if (await Computer.Network.StartHosting(port ?? NetworkConfiguration.DEFAULT_PORT))
-                {
-                    IO.Out($"Hosting on {Computer.Network.GetIPPortString()}");
-                    return;
-                }
-                IO.Out($"Failed to begin hosting on {LANIPFetcher.GetLocalIPAddress().MapToIPv4()}:{port}");
-            });
-        }
-        private void ListProcesses(object[]? obj)
-        {
-            foreach (var item in Computer.USER_WINDOW_INSTANCES)
-            {
-                IO.Out($"\n{item.Key}");
-            }
-
-        }
-        private void FetchIP(object[]? obj)
-        {
-            var IP = LANIPFetcher.GetLocalIPAddress().MapToIPv4();
-            IO.Out(IP.ToString());
-        }
+        
+        
         private void Config(object[]? obj)
         {
             if (obj != null && obj.Length > 0 && obj[0] is string getset)
@@ -168,13 +121,16 @@ namespace VM.FS
 
             IO.Out(" ### Native Commands ### ");
             IO.Out("");
-            // Determine the maximum width of the tags
-            int maxTagWidth = Commands.Max(item => item.id.Length);
+            // Determine the maximum width of item.Max(
+            int maxTagWidth = Commands.Max(item => item.Value.Max(item => item.id.Length));
 
-            foreach (var item in Commands)
+            foreach (var dir in Commands)
             {
-                string paddedTag = item.id.PadRight(maxTagWidth);
-                IO.Out($"{paddedTag} '{string.Join(",", item.infos).ToUpper()}'");
+                foreach(var item in dir.Value)
+                {
+                    string paddedTag = item.id.PadRight(maxTagWidth);
+                    IO.Out($"{paddedTag} '{string.Join(",", item.infos).ToUpper()}'");
+                }
             }
 
             foreach (var item in Aliases)
@@ -256,12 +212,16 @@ namespace VM.FS
         }
         public Command Find(string name)
         {
-            if (Commands.Where(c => c.id == name).FirstOrDefault((Command)default) is Command cmd)
+            if (Commands.TryGetValue(name, out List<Command>? commandList) && commandList != null)
             {
+                Command cmd = commandList.FirstOrDefault(command => command.id == name);
                 return cmd;
             }
+
+            // If the key (name) is not found, return default
             return default;
         }
+
         internal bool TryInvoke(string name, string[] args)
         {
             if (Find(name) is Command command && command.id != null && command.id != "NULL" && command.Method != null)
@@ -289,10 +249,21 @@ namespace VM.FS
             Dispose(disposing: true);
             GC.SuppressFinalize(this);
         }
-        public void LoadCommandSet(params Command[] filesystem_commands)
+        
+        /// <summary>
+        /// Some of the pre existing directories : "generic commands", "network commands", "file system commands",
+        /// </summary>
+        /// <param name="Directory"></param>
+        /// <param name="commands"></param>
+        public void LoadCommandSet(string Directory = "generic commands", params Command[] commands)
         {
             Commands ??= new();
-            Commands.AddRange(filesystem_commands);
+
+            if (!Commands.TryGetValue(Directory, out var cmds) || cmds == null)
+                Commands[Directory] = new();
+
+                
+            Commands[Directory].AddRange(commands);
         }
     }
 }

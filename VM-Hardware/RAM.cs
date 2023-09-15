@@ -33,7 +33,7 @@ namespace VM.Hardware
         PERIPHERAL,
     }
 
-    public class RamEmulator : IMemoryDevice
+    public class RamEmulator :  IMemoryDevice
     {
 
         public Dictionary<string, object> Specifications { get; set; } = new() 
@@ -130,16 +130,16 @@ namespace VM.Hardware
             return (long)Math.Floor(0.01 * OccupiedMemory_Bytes);
         }
 
-        public byte[] Read(int address)
+        public byte[] Read(long address)
         {
             return Memory[address];
         }
-        public bool Write(int address, byte[] data)
+        public bool Write(long address, byte[] data)
         {
             Memory[address] = data;
             return true;
         }
-        public bool Free(int address)
+        public bool Free(long address)
         {
             Memory[address] = null!;
             return true;

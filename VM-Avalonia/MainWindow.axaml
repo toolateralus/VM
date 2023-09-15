@@ -3,10 +3,13 @@
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:ae="clr-namespace:AvaloniaEdit;assembly=AvaloniaEdit"
+        xmlns:local="clr-namespace:VM.Avalonia"
         mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
         x:Class="VM.Avalonia.MainWindow"
         Title="Virtual Desktop (Linux / Windows / Mac)">
     <Grid >
+
+
         <Grid.ColumnDefinitions>
             <ColumnDefinition Width="*"/>
             <ColumnDefinition Width="200"/>
@@ -16,7 +19,9 @@
             <RowDefinition Height="25"/>
         </Grid.RowDefinitions>
 
+
         <Canvas x:Name="Desktop" Grid.Row="0" Grid.Column="0" Grid.ColumnSpan="2">
+            <local:CommandPrompt Grid.ColumnSpan="2" Grid.RowSpan="2"/>
             <Image Stretch="Fill" x:Name="desktopBackground" HorizontalAlignment="Stretch" VerticalAlignment="Stretch"  />
             <WrapPanel x:Name="DesktopIconPanel" Orientation="Horizontal" HorizontalAlignment="Left" VerticalAlignment="Top" />
         </Canvas>

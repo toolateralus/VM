@@ -12,6 +12,7 @@ using System.Threading;
 using System.Linq;
 using System.Runtime.InteropServices;
 using System.Security.Cryptography.X509Certificates;
+using VM.Lang;
 
 namespace VM
 {
@@ -27,6 +28,33 @@ namespace VM
         public JavaScriptEngine JavaScriptEngine;
         public CommandLine CommandLine;
         public JObject Config;
+
+        private void HostServer(object[]? obj)
+        {
+            Task.Run(async () =>
+            {
+                int? port = obj?[0] as int?;
+                if (await Network.StartHosting(port ?? NetworkConfiguration.DEFAULT_PORT))
+                {
+                    IO.Out($"Hosting on {Network.GetIPPortString()}");
+                    return;
+                }
+                IO.Out($"Failed to begin hosting on {LANIPFetcher.GetLocalIPAddress().MapToIPv4()}:{port}");
+            });
+        }
+        private void ListProcesses(object[]? obj)
+        {
+            foreach (var item in USER_WINDOW_INSTANCES)
+            {
+                IO.Out($"\n{item.Key}");
+            }
+
+        }
+        private void FetchIP(object[]? obj)
+        {
+            var IP = LANIPFetcher.GetLocalIPAddress().MapToIPv4();
+            IO.Out(IP.ToString());
+        }
 
         public readonly Dictionary<string, object> USER_WINDOW_INSTANCES = new();
 
@@ -118,6 +146,14 @@ namespace VM
             Network = new(this);
 
             InitializeEngine(this);
+
+            CommandLine.LoadCommandSet( 
+                "network commands",
+                new("ip", FetchIP, "fetches the local ip address of wifi/ethernet"),
+                new("lp", ListProcesses, "lists all the running proccesses"),
+                new("host", HostServer, "hosts a server on the provided <port>, none provided it will default to 8080"),
+                new("unhost", (args) => Network.StopHosting(args), "if a server is currently running on this machine this halts any active connections and closes the sever.")
+            );
 
             Computers[id] = this;
         }

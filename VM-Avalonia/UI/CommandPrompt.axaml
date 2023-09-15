@@ -1,4 +1,4 @@
-﻿<ContentControl x:Class="VM.Avalonia.CommandPrompt"
+﻿<UserControl x:Class="VM.Avalonia.CommandPrompt"
              xmlns="https://github.com/avaloniaui"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
@@ -12,4 +12,4 @@
         <!-- <avalonEdit:TextEditor IsReadOnly="true" BorderBrush="White" BorderThickness="1" Grid.Row="0" Background="Black" Foreground="White" SyntaxHighlighting="JavaScriptCustom" FontSize="16" x:Name="output"  FontFamily="MS Gothic Bold"   HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Auto" WordWrap="True" />
         <avalonEdit:TextEditor BorderBrush="White" BorderThickness="1" Grid.Row="1" Background="Black" Foreground="White" SyntaxHighlighting="JavaScriptCustom" FontSize="16" x:Name="input" IsReadOnly="false"  FontFamily="MS Gothic Bold"   HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Auto" WordWrap="True"/> -->
     </Grid>
-</ContentControl>
+</UserControl>

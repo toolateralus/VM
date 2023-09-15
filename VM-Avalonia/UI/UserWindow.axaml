@@ -1,4 +1,4 @@
-﻿<ContentControl x:Class="VM.Avalonia.UserWindow"
+﻿<UserControl x:Class="VM.Avalonia.UserWindow"
       xmlns="https://github.com/avaloniaui"
       xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
       xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
@@ -37,4 +37,4 @@
         </ContentControl>
         
     </Grid>
-</ContentControl>
+</UserControl>

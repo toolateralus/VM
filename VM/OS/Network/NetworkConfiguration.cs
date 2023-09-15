@@ -31,6 +31,9 @@ namespace VM.Network
         public static IPAddress SERVER_IP => IPAddress.Parse(LAST_KNOWN_SERVER_IP);
         public static int LAST_KNOWN_SERVER_PORT { get; internal set; }
 
+
+        
+        
         public NetworkConfiguration(Computer computer)
         {
             if (computer?.Config?.Value<bool>("ALWAYS_CONNECT") is bool connect && connect)

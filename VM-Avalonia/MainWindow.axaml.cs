@@ -1,3 +1,4 @@
+using System;
 using Avalonia.Controls;
 using Avalonia.Input;
 using Avalonia.Interactivity;
@@ -28,9 +29,23 @@ public partial class MainWindow : Window
         // command prompt shortcut, temporary. todo: remove this
         if (e.KeyModifiers.HasFlag(KeyModifiers.Control) && e.KeyModifiers.HasFlag(KeyModifiers.Shift) && e.Key == Key.OemTilde)
         {
-            var cmd = new CommandPrompt();
-            cmd.BringIntoView();
-            Desktop.Children.Add(cmd);
+            var window = new UserWindow();
+
+            var frame = new ResizableWindow(this)
+            {
+                Content=window,
+                Width = Math.Max(window.MinWidth, window.Width),
+                Height = Math.Max(window.MinHeight, window.Height),
+                Margin = window.Margin,
+                Background = window.Background,
+                Foreground = window.Foreground,
+            };
+            
+            // the window holds the reference to the engine so that it's sensibly accessible to the OS.
+            window.InitializeUserContent(frame, new CommandPrompt(), window.JavaScriptEngine);
+
+            Desktop.Children.Add(frame);
+
             System.Console.WriteLine("Added terminal");
         }
     }
@@ -38,7 +53,5 @@ public partial class MainWindow : Window
     public void OnShutdownClicked(object? sender, RoutedEventArgs args)
     {
 
-        
-        
     }
 }

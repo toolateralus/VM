@@ -14,7 +14,7 @@ using Avalonia.Diagnostics;
 
 namespace VM.Avalonia
 {
-    public partial class CommandPrompt : ContentControl
+    public partial class CommandPrompt : UserControl
     {
         private JavaScriptEngine? Engine;
         private List<string> commandHistory = new List<string>();
@@ -118,7 +118,7 @@ namespace VM.Avalonia
 
         private async Task Send(RoutedEventArgs? e)
         {
-            OnSend?.Invoke(input.Text);
+            OnSend?.Invoke(input.Text ?? "");
 
             // this goes before the execution so when it hangs up it doesnt 
             // enter a space
@@ -129,7 +129,8 @@ namespace VM.Avalonia
             const string ExecutingString = "\nExecuting...";
 
             output.Text += (ExecutingString);
-            await ExecuteJavaScript(code : input.Text, timeout : computer.Config.Value<int?>("CMD_LINE_TIMEOUT") ?? 50_000);
+
+            await ExecuteJavaScript(code : input.Text ?? "", timeout : computer.Config.Value<int?>("CMD_LINE_TIMEOUT") ?? 50_000);
             output.Text += ("\nDone executing.");
 
 

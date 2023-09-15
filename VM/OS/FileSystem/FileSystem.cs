@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Reflection;
+using VM.Lang;
 using VM.Types;
 
 namespace VM.FS
@@ -75,7 +76,7 @@ namespace VM.FS
                 new Command("move", Move, "moves a file/changes its name"),
             };
 
-            Computer.CommandLine.LoadCommandSet(filesystem_commands);
+            Computer.CommandLine.LoadCommandSet("file system commands", filesystem_commands);
 
             if (string.IsNullOrEmpty(root))
             {

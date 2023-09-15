@@ -154,14 +154,14 @@ namespace VM.Hardware
         /// </summary>
         /// <param name="address"></param>
         /// <returns></returns>
-        public abstract bool Free(int address);
+        public abstract bool Free(long address);
         public abstract long Capacity { get; set; }
         /// <summary>
         /// Reads the memory from the specified address.
         /// </summary>
         /// <param name="address"></param>
         /// <returns></returns>
-        public abstract byte[] Read(int address);
+        public abstract byte[] Read(long address);
         /// <summary>
         /// Writes to the device at address with data.
         /// </summary>

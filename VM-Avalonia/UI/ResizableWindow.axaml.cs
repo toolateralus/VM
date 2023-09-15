@@ -9,7 +9,7 @@ using Avalonia.Remote.Protocol.Input;
 
 namespace VM.Avalonia
 {
-    public partial class ResizableWindow : ContentControl
+    public partial class ResizableWindow : UserControl
     {
         private bool isDragging = false;
         private bool isResizing = false;

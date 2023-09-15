@@ -21,13 +21,12 @@ namespace VM.Avalonia
         public JavaScriptEngine JavaScriptEngine;
         public UserWindow()
         {
-            //TODO: Initlaize component
-            //InitializeComponent();
+            InitializeComponent();
         }
         public void InitializeUserContent(ResizableWindow frame, UserControl actualUserContent, JavaScriptEngine engine)
         {
             Owner = frame;
-            //ContentsContentControl.Content = actualUserContent;
+            ContentsContentControl.Content = actualUserContent;
             this.JavaScriptEngine = engine;
             
             if (engine != null) 
