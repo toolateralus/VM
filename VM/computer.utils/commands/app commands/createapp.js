@@ -23,7 +23,7 @@ class xaml_js_project_generator{
 			path = 'apps' + '/' + name + '.' + ext;
 		}
 
-		call(`mkdir ${path}`);
+		call(`mkdir '${path}'`);
 		return path;
 	}
 }

@@ -9,10 +9,10 @@
             "type": "coreclr",
             "request": "launch",
             "preLaunchTask": "build",
-            "program": "${workspaceFolder}/VM-terminal/bin/Debug/net6.0/VM-terminal.dll",
+            "program": "${workspaceFolder}/VM-Avalonia/bin/Debug/net6.0/VM-Avalonia.dll",
             "args": [],
-            "cwd": "${workspaceFolder}/VM-terminal",
-            "console": "integratedTerminal",
+            "cwd": "${workspaceFolder}/VM-Avalonia",
+            "console": "internalConsole",
             "stopAtEntry": false
         },
         {

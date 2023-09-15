@@ -10,10 +10,13 @@ using VM.FS;
 using VM.JS;
 using System.Threading;
 using System.Linq;
+using System.Runtime.InteropServices;
+using System.Security.Cryptography.X509Certificates;
 
 namespace VM
 {
     public class Computer : IDisposable
+
     {
         /// <summary>
         /// I can't imagine why you'd need more than two computers, so I multiply that by six. xD
@@ -92,7 +95,8 @@ namespace VM
         }
         public void Boot(uint id)
         {
-            if (id > Computers.Length){
+            if (id > Computers.Length)
+            {
                 System.Console.WriteLine($"Invalid index. {id}");
                 System.Console.WriteLine("Boot aborted");
                 return;
@@ -103,7 +107,7 @@ namespace VM
             var WORKING_DIR = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData) + "/VM";
 
             this.WORKING_DIR = Path.GetFullPath(WORKING_DIR);
-            
+
             // prepare the root dir for the FileSystem, since we add a dir to contain that itself.
             FS_ROOT = $"{this.WORKING_DIR}/computer{id}";
 
@@ -142,7 +146,7 @@ namespace VM
                     FS?.Dispose();
                     CommandLine?.Dispose();
                 }
-                
+
                 JavaScriptEngine = null!;
                 Network = null!;
                 FS = null!;
@@ -157,4 +161,9 @@ namespace VM
             GC.SuppressFinalize(this);
         }
     }
+
+    
 }
+
+
+

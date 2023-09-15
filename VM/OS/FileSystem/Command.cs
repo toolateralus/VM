@@ -289,7 +289,7 @@ namespace VM.FS
             Dispose(disposing: true);
             GC.SuppressFinalize(this);
         }
-        internal void LoadCommandSet(params Command[] filesystem_commands)
+        public void LoadCommandSet(params Command[] filesystem_commands)
         {
             Commands ??= new();
             Commands.AddRange(filesystem_commands);

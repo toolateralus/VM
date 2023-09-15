@@ -21,13 +21,20 @@ while(true)
 
     System.Console.WriteLine($"Computer booted on id {id}");
     System.Console.WriteLine("Welcome to the command line. type help for info.");
+    
 
     while (true)
     {
         var input = Console.ReadLine()!;
         
+        if (input.Trim().ToLower() == "restart"){
+            break;
+        }
+
         if (!computer.CommandLine.TryCommand(input)){
             await computer.JavaScriptEngine.Execute(input);
         }
     }
+
+    
 }

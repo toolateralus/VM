@@ -19,6 +19,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "VM-terminal", "VM-terminal\
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "VM-hardware", "VM-hardware\VM-hardware.csproj", "{FB42E164-20D2-46A8-ADBA-634013B06BAD}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "VM-Avalonia", "VM-Avalonia\VM-Avalonia.csproj", "{AA6B542C-A150-47F4-BD6F-AC704D391A42}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -37,6 +39,10 @@ Global
 		{FB42E164-20D2-46A8-ADBA-634013B06BAD}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{FB42E164-20D2-46A8-ADBA-634013B06BAD}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{FB42E164-20D2-46A8-ADBA-634013B06BAD}.Release|Any CPU.Build.0 = Release|Any CPU
+		{AA6B542C-A150-47F4-BD6F-AC704D391A42}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{AA6B542C-A150-47F4-BD6F-AC704D391A42}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{AA6B542C-A150-47F4-BD6F-AC704D391A42}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{AA6B542C-A150-47F4-BD6F-AC704D391A42}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

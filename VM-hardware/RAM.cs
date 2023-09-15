@@ -6,132 +6,144 @@ using System.Text.RegularExpressions;
 using Microsoft.VisualBasic;
 using VM.Hardware;
 
-public class RamEmulator : IMemoryDevice
+namespace VM.Hardware
 {
 
-    public Dictionary<string, object> Specifications { get; set; } = new() {
-
-        {"NAME", "Default Ram 1GB"}
-
-    };
-    /// <summary>
-    /// <code>
-    /// Note : This is measured in bytes
-    /// 
-    /// ((capacity 1_073_741_824 B / regions 1_048_576) bytes) 2024 MB / 2 GB DEFAULT CAPACITY))
-    /// 
-    /// </code>
-    /// </summary>
-    public long Capacity {get; set;} = 1_073_741_824 ; 
-    /// <summary>
-    /// <code>
-    /// 32 bit 
-    /// 
-    /// This is measured in bytes, and has a default of 4.
-    /// </code>
-    /// </summary>
-    public long WordSize {get; set;} = 4; 
-    public byte[][] Memory { get; set; } = new byte[0][];
-    public long OccupiedMemory_Bytes { get; set; }
-    
-
-    public void Attach()
+    public enum DevicePrimitiveTypes
     {
-        var cells = Capacity / WordSize;
+        RAM,
+        DISK,
+        ROM,
+        CPU,
+        GPU,
+        POWER,
+        /// <summary>
+        /// Network
+        /// </summary>
+        NIC,
+        /// <summary>
+        /// Audio
+        /// </summary>
+        PCM,
+        /// <summary>
+        /// Aux/Unforseen?
+        /// </summary>
+        CIRCUIT,
+        BATTERY,
+        PERIPHERAL,
+    }
 
-        Memory = new byte[cells][];
+    public class RamEmulator : IMemoryDevice
+    {
 
-        for (int i = 0; i < Memory.Length; i++)
+        public Dictionary<string, object> Specifications { get; set; } = new() 
         {
-            Memory[i] = new byte[WordSize];
-        }
-    }
+            {"NAME", "default ram"},
+            {"CAPACITY", "1 GB"},
+            {"ID", Guid.NewGuid().ToByteArray()},
+        };
+        /// <summary>
+        /// <code>
+        /// Note : This is measured in bytes
+        /// 
+        /// ((capacity 1_073_741_824 B / regions 1_048_576) bytes) 1024 MB / 1 GB DEFAULT CAPACITY))
+        /// 
+        /// </code>
+        /// </summary>
+        public long Capacity { get; set; } = 1_073_741_824;
+        /// <summary>
+        /// <code>
+        /// 32 bit 
+        /// 
+        /// This is measured in bytes, and has a default of 4.
+        /// </code>
+        /// </summary>
+        public long WordSize { get; set; } = 4;
+        public byte[][] Memory { get; set; } = new byte[0][];
+        public long OccupiedMemory_Bytes { get; set; }
 
-    public void Cycle(object[] parameters)
-    {
-       // we do nothing in the case of ram as of rn, i guess we could mess with some like latency and randomness here
-    }
-
-    public void Detach()
-    {
-        GetDeviceResetAction().Invoke();
-    }
-
-    public int[] Finalize(params object[] parameters)
-    {
-        return FlattenAndCloneMemory();
-    }
-
-    public int[] FlattenAndCloneMemory()
-    {
-        int totalIntegers = 0;
-        for (int i = 0; i < Memory.Length; i++)
+        public void Cycle(object[] parameters)
         {
-            if (Memory[i] != null)
-            {
-                totalIntegers += Memory[i].Length / sizeof(int);
-            }
+            // we do nothing in the case of ram as of rn, i guess we could mess with some like latency and randomness here
         }
 
-        int[] data = new int[totalIntegers];
-        int dataIndex = 0;
-
-        for (int i = 0; i < Memory.Length; i++)
+        public int[] Initialize(params object[] parameters)
         {
-            byte[] block = Memory[i];
+            return new[] { 0 };
+        }
 
-            if (block != null)
+        public int[] Finalize(params object[] parameters)
+        {
+            return new[] { 0 }; //FlattenAndCloneMemory();
+        }
+
+        public int[] FlattenAndCloneMemory()
+        {
+            int totalIntegers = 0;
+            for (int i = 0; i < Memory.Length; i++)
             {
-                for (int j = 0; j < block.Length; j += sizeof(int))
+                if (Memory[i] != null)
                 {
-                    int intValue = 0;
-                    for (int k = 0; k < sizeof(int); k++)
-                    {
-                        if (j + k < block.Length)
-                        {
-                            intValue |= (block[j + k] << (8 * k));
-                        }
-                    }
-                    data[dataIndex++] = intValue;
+                    totalIntegers += Memory[i].Length / sizeof(int);
                 }
             }
+
+            int[] data = new int[totalIntegers];
+            int dataIndex = 0;
+
+            for (int i = 0; i < Memory.Length; i++)
+            {
+                byte[] block = Memory[i];
+
+                if (block != null)
+                {
+                    for (int j = 0; j < block.Length; j += sizeof(int))
+                    {
+                        int intValue = 0;
+                        for (int k = 0; k < sizeof(int); k++)
+                        {
+                            if (j + k < block.Length)
+                            {
+                                intValue |= (block[j + k] << (8 * k));
+                            }
+                        }
+                        data[dataIndex++] = intValue;
+                    }
+                }
+            }
+
+            return data;
         }
 
-        return data;
+        public Action GetDeviceResetAction()
+        {
+            return () => { Memory = new byte[0][]; };
+        }
+
+        public long GetPowerConsumptionStats()
+        {
+            return (long)Math.Floor(0.1 * OccupiedMemory_Bytes);
+        }
+
+        public long GetTemperatureStats()
+        {
+            return (long)Math.Floor(0.01 * OccupiedMemory_Bytes);
+        }
+
+        public byte[] Read(int address)
+        {
+            return Memory[address];
+        }
+        public bool Write(int address, byte[] data)
+        {
+            Memory[address] = data;
+            return true;
+        }
+        public bool Free(int address)
+        {
+            Memory[address] = null!;
+            return true;
+        }
     }
 
-    public Action GetDeviceResetAction()
-    {
-        return () => { Memory = new byte[0][]; };
-    }
-
-    public long GetPowerConsumptionStats()
-    {
-        return (long)Math.Floor(0.1 * OccupiedMemory_Bytes);
-    }
-
-    public long GetTemperatureStats()
-    {
-        return (long)Math.Floor(0.01 * OccupiedMemory_Bytes);
-    }
-
-    public int[] Initialize(params object[] parameters)
-    {
-        return new[]{0,0,0,0};
-    }
-
-    public byte[] Read(int address)
-    {
-        return Memory[address];
-    }
-    public bool Write(int address, byte[] data)
-    {
-        Memory[address] = data;
-        return true;
-    }
-    public bool Free(int address)
-    {
-        Memory[address] = new byte[WordSize];
-        return true;
-    }
 }

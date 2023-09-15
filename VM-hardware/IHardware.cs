@@ -3,8 +3,81 @@ using System.Collections.Generic;
 using System.Threading.Tasks;
 using Newtonsoft;
 
-namespace VM.Hardware{
+namespace VM.Hardware
+{
 
+
+// we can implement some kind of hardware configuration file so we don't have to manually code the stuff, 
+    // but during development that's fine.
+    public class OS
+    {
+        public MemoryManager MemoryManager = new();
+       
+    }
+
+    public interface IHardwareDriver{
+
+    }
+    public class MemoryManager
+    {
+        // we'll load these from a file or some kind of configuration when done
+        public Dictionary<IMemoryDevice, List<IHardwareDriver>> Devices = new();
+        public Dictionary<byte[], List<MemoryRegion>> Memory = new();
+        public long TotalRAM, WordSize =4;
+        public int Allocate(long address, long length, byte[] deviceID)
+        {
+            var device = Devices.Where(device => device.Key.Specifications["ID"] as byte[] == deviceID).First().Key;
+            
+            for (int i =0; i < length; i += (int)device.WordSize)
+            {
+                device.Write(i, new byte[device.WordSize]);
+            }
+
+            return 0;
+        }
+        public MemoryManager()
+        {
+            Devices = new()
+            {
+                {new RamEmulator(), new()}
+            };
+
+            foreach(var device in Devices)
+            {
+                var handle = device.Key.Specifications["ID"] as byte[];
+
+                if (handle is null){
+                    System.Console.WriteLine($"Memory device {device.GetType()} did not contain an appropriate byte[] handle, and was not initialized.");
+                    return;
+                }
+
+                var size = device.Key.Capacity;
+                var wordSize = device.Key.WordSize;
+
+                TotalRAM += size;
+
+                if (this.WordSize != wordSize) {
+                    Console.WriteLine($"Device {device} : Incorrect word size for the operating system. this is a {WordSize * 8}-bit OS, and the device is {wordSize*8}-bit");
+                }
+
+                Memory.Add(handle, new());
+            }
+        }
+    }
+    /// <summary>
+    /// for now, we're just gonna implement contiguous regions of memory, with no fragmentation supported
+    /// </summary>
+    public struct MemoryRegion
+    {
+        public readonly int Address, Length;
+        public byte[] DeviceID;
+        public MemoryRegion(byte[] id, int address, int length)
+        {
+            this.DeviceID = id;
+            this.Address = address;
+            this.Length = length;
+        }
+    }
     /// <summary>
     /// This enum controls the level of access a particular IHardware device emulator grants to the user.
     /// </summary>
@@ -13,7 +86,7 @@ namespace VM.Hardware{
         /// <summary>
         /// No access to the hardware resource
         /// </summary>
-        None,          
+        None,
         /// <summary>
         /// Read-only access
         /// </summary>
@@ -21,11 +94,11 @@ namespace VM.Hardware{
         /// <summary>
         ///  Write-only access
         /// </summary>
-        Write,         
+        Write,
         /// <summary>
         /// Read and write access
         /// </summary>
-        ReadWrite,    
+        ReadWrite,
         /// <summary>
         /// Control or manage the hardware resource
         /// </summary>
@@ -33,17 +106,12 @@ namespace VM.Hardware{
         /// <summary>
         /// Full access to the hardware resource (including configuration)
         /// </summary>
-        FullAccess     
+        FullAccess
     }
-    
-    public interface IPowerSource 
-    {
 
-
-    }
-    public interface IHardware 
+        public interface IHardware
     {
-        public abstract Dictionary<string, object> Specifications {get;set;}
+        public abstract Dictionary<string, object> Specifications { get; set; }
         public abstract void Cycle(object[] parameters);
         public abstract long GetPowerConsumptionStats();
         public abstract long GetTemperatureStats();
@@ -63,16 +131,16 @@ namespace VM.Hardware{
     }
     public interface IMemoryDevice : IHardware
     {
-        public abstract byte[][] Memory {get;set;}
-        public abstract long OccupiedMemory_Bytes {get;set;}
-        public abstract long WordSize {get; set;}
+        public abstract byte[][] Memory { get; set; }
+        public abstract long OccupiedMemory_Bytes { get; set; }
+        public abstract long WordSize { get; set; }
         /// <summary>
         /// This resets a region of memory at specified address
         /// </summary>
         /// <param name="address"></param>
         /// <returns></returns>
         public abstract bool Free(int address);
-        public abstract long Capacity {get; set;}
+        public abstract long Capacity { get; set; }
         /// <summary>
         /// Reads the memory from the specified address.
         /// </summary>
