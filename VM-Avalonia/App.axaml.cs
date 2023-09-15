@@ -17,6 +17,7 @@ namespace VM.Avalonia
             if (ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop)
             {
                 desktop.MainWindow = new MainWindow();
+                DevToolsExtensions.AttachDevTools(desktop.MainWindow);
             }
 
             base.OnFrameworkInitializationCompleted();

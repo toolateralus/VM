@@ -10,10 +10,10 @@ using System.Threading;
 using Avalonia.Interactivity;
 using Avalonia.Controls;
 using Avalonia.Input;
+using Avalonia.Diagnostics;
 
 namespace VM.Avalonia
 {
-    
     public partial class CommandPrompt : ContentControl
     {
         private JavaScriptEngine? Engine;
@@ -29,7 +29,7 @@ namespace VM.Avalonia
 
         public CommandPrompt()
         {
-            InitializeComponent();
+            InitializeComponent(true);
             
             DrawTextBox("type 'help' for commands, \nor enter any valid single-line java script to interact with the environment. \nby default, results of expressions get printed to this console.");
             
