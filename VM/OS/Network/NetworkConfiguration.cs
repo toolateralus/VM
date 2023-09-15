@@ -65,7 +65,7 @@ namespace VM.Network
                 }
                 catch (Exception e)
                 {
-                    Console.WriteLine("Error connecting to the server: " + e.Message + Environment.NewLine + e.InnerException);
+                    IO.OSTREAM("Error connecting to the server: " + e.Message + Environment.NewLine + e.InnerException);
                 }
             });
         }

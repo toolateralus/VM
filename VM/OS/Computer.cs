@@ -97,8 +97,8 @@ namespace VM
         {
             if (id > Computers.Length)
             {
-                System.Console.WriteLine($"Invalid index. {id}");
-                System.Console.WriteLine("Boot aborted");
+                IO.OSTREAM($"Invalid index. {id}");
+                IO.OSTREAM("Boot aborted");
                 return;
             }
 
@@ -159,6 +159,20 @@ namespace VM
         {
             Dispose(disposing: true);
             GC.SuppressFinalize(this);
+        }
+    }
+
+    public class IO 
+    {
+        public static Func<string?> ISTREAM { get; private set; }= Console.ReadLine;
+        public static Action<object?> OSTREAM { get; private set; } = IO.OSTREAM;
+        public static void RedirectOutput(Action<object?> out_stream)
+        {
+            OSTREAM = out_stream;
+        }
+        public static void RedirectInput(Func<string?> in_stream)
+        {
+            ISTREAM = in_stream;
         }
     }
 

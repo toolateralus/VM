@@ -57,7 +57,7 @@ namespace VM.Hardware
                 TotalRAM += size;
 
                 if (this.WordSize != wordSize) {
-                    Console.WriteLine($"Device {device} : Incorrect word size for the operating system. this is a {WordSize * 8}-bit OS, and the device is {wordSize*8}-bit");
+                    System.Console.WriteLine($"Device {device} : Incorrect word size for the operating system. this is a {WordSize * 8}-bit OS, and the device is {wordSize*8}-bit");
                 }
 
                 Memory.Add(handle, new());

@@ -121,7 +121,7 @@ namespace VM.JS
         }
         public void print(object message)
         {
-            System.Console.WriteLine(message);
+            IO.OSTREAM(message);
         }
         public void export(string id, object? obj)
         {
@@ -518,7 +518,7 @@ namespace VM.JS
         //     catch (Exception ex)
         //     {
         //         // Handle any exceptions that may occur during conversion
-        //         Console.WriteLine("Exception during base64 to BitmapImage conversion: " + ex.Message);
+        //         IO.OSTREAM("Exception during base64 to BitmapImage conversion: " + ex.Message);
         //         return null;
         //     }
         // }

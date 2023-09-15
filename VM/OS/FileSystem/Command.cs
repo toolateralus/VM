@@ -100,7 +100,7 @@ namespace VM.FS
                             Notifications.Now($"Property '{propname}' not found in configuration.");
                             return;
                         }
-                        System.Console.WriteLine($"propname : {propValue}");
+                        IO.OSTREAM($"propname : {propValue}");
                     }
                     else if (toLower == "set" && obj.Length > 2)
                     {
@@ -145,7 +145,7 @@ namespace VM.FS
                 {
                     foreach (var kvp in Computer.Config)
                     {
-                        Console.WriteLine($"\n {{{kvp.Key} : {kvp.Value}}}");
+                        IO.OSTREAM($"\n {{{kvp.Key} : {kvp.Value}}}");
                     }
                 }
                 else
@@ -166,15 +166,15 @@ namespace VM.FS
                 return;
             }
 
-            Console.WriteLine(" ### Native Commands ### ");
-            Console.WriteLine();
+            IO.OSTREAM(" ### Native Commands ### ");
+            IO.OSTREAM("");
             // Determine the maximum width of the tags
             int maxTagWidth = Commands.Max(item => item.id.Length);
 
             foreach (var item in Commands)
             {
                 string paddedTag = item.id.PadRight(maxTagWidth);
-                Console.WriteLine($"{paddedTag} '{string.Join(",", item.infos).ToUpper()}'");
+                IO.OSTREAM($"{paddedTag} '{string.Join(",", item.infos).ToUpper()}'");
             }
 
             foreach (var item in Aliases)
@@ -182,12 +182,12 @@ namespace VM.FS
                 // Split the alias to get the last part for padding
                 string alias = item.Value.Split('/').Last();
                 string paddedAlias = item.Key.PadRight(maxTagWidth);
-                Console.WriteLine($"{paddedAlias} -> {alias}");
+                IO.OSTREAM($"{paddedAlias} -> {alias}");
             }
 
-            System.Console.WriteLine();
-            System.Console.WriteLine("### JAVASCRIPT GLOBAL FUNCTIONS ####");
-            System.Console.WriteLine();
+            IO.OSTREAM("");
+            IO.OSTREAM("### JAVASCRIPT GLOBAL FUNCTIONS ####");
+            IO.OSTREAM("");
 
             // we use any function starting with a lowercase letter, since it's against C# typical syntactical norms
             foreach(var item in typeof(JSInterop).GetMethods().Where(M=>M.Name.StartsWith(M.Name.ToLower()[0])))

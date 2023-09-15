@@ -119,9 +119,9 @@ namespace VM.FS
 
                 var text = $"LISTING : {CurrentDirectory}";
                 
-                System.Console.WriteLine(text);
-                System.Console.WriteLine();
-                System.Console.WriteLine(textList);
+                IO.OSTREAM(text);
+                IO.OSTREAM("");
+                IO.OSTREAM(textList);
                 
                 ChangeDir(new[]{origin_dir});
             }

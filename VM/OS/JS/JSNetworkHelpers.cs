@@ -115,7 +115,7 @@ namespace VM.JS
                     }
                     catch (Exception ex) when (ex is not UnauthorizedAccessException)
                     {
-                        Console.WriteLine($"Caught exception: {ex.Message}");
+                        IO.OSTREAM($"Caught exception: {ex.Message}");
                     }
                 }
             }
