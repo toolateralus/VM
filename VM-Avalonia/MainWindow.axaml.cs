@@ -44,7 +44,7 @@ public partial class MainWindow : Window
             };
             
             // the window holds the reference to the engine so that it's sensibly accessible to the OS.
-            window.InitializeUserContent(frame, new CommandPrompt(), window.JavaScriptEngine);
+            window.InitializeUserContent(Computer, frame, new CommandPrompt(), window.JavaScriptEngine);
 
             Desktop.Children.Add(frame);
 

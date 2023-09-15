@@ -5,6 +5,8 @@ using Avalonia.Controls;
 using Avalonia;
 using Avalonia.Input;
 using Avalonia.Interactivity;
+using System.Reflection;
+using System.Linq;
 
 namespace VM.Avalonia
 {
@@ -23,9 +25,23 @@ namespace VM.Avalonia
         {
             InitializeComponent();
         }
-        public void InitializeUserContent(ResizableWindow frame, UserControl actualUserContent, JavaScriptEngine engine)
+        public void InitializeUserContent(Computer computer, ResizableWindow frame, UserControl actualUserContent, JavaScriptEngine engine)
         {
             Owner = frame;
+
+            Type userControlType = actualUserContent.GetType();
+            MethodInfo[] methods = userControlType.GetMethods();
+
+            MethodInfo? lateInitMethod = methods.FirstOrDefault(method =>
+                method.Name == "LateInit" &&
+                method.GetParameters().Length == 1 &&
+                method.GetParameters()[0].ParameterType == typeof(Computer)
+            )!;
+
+
+            lateInitMethod?.Invoke(actualUserContent, new object[] { computer });
+
+
             ContentsContentControl.Content = actualUserContent;
             this.JavaScriptEngine = engine;
             

@@ -11,6 +11,7 @@ using Avalonia.Interactivity;
 using Avalonia.Controls;
 using Avalonia.Input;
 using Avalonia.Diagnostics;
+using VM.Lang;
 
 namespace VM.Avalonia
 {
@@ -20,13 +21,12 @@ namespace VM.Avalonia
         private List<string> commandHistory = new List<string>();
         private int historyIndex = -1; 
         private string tempInput = ""; 
-        public Computer computer;
+        public Computer Computer;
         public static string? DesktopIcon => FileSystem.GetResourcePath("commandprompt.png");
 
         public Action<string> OnSend { get; internal set; }
         public static string? LastSentInput;
         string LastSentBuffer = "";
-
         public CommandPrompt()
         {
             InitializeComponent(true);
@@ -101,7 +101,7 @@ namespace VM.Avalonia
 
         public void LateInit(Computer computer)
         {
-            this.computer = computer;
+            this.Computer = computer;
             Engine = computer.JavaScriptEngine;
 
             output.FontFamily = new(computer.Config.Value<string>("FONT") ?? "Consolas");
@@ -120,6 +120,10 @@ namespace VM.Avalonia
         {
             OnSend?.Invoke(input.Text ?? "");
 
+            var cmd_success = Computer.CommandLine.TryCommand(input.Text??"");
+
+            if (cmd_success)
+                return;
             // this goes before the execution so when it hangs up it doesnt 
             // enter a space
 
@@ -130,9 +134,9 @@ namespace VM.Avalonia
 
             output.Text += (ExecutingString);
 
-            await ExecuteJavaScript(code : input.Text ?? "", timeout : computer.Config.Value<int?>("CMD_LINE_TIMEOUT") ?? 50_000);
-            output.Text += ("\nDone executing.");
+            await ExecuteJavaScript(code : input.Text ?? "", timeout : Computer.Config.Value<int?>("CMD_LINE_TIMEOUT") ?? 50_000);
 
+            output.Text += ("\nDone executing.");
 
             input.Clear();
 
@@ -177,7 +181,7 @@ namespace VM.Avalonia
 
         private async Task ExecuteJavaScript(string code, int timeout = int.MaxValue)
         {
-            if (computer.CommandLine.TryCommand(code))
+            if (Computer.CommandLine.TryCommand(code))
             {
                 return;
             }
