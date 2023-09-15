@@ -64,24 +64,24 @@ namespace VM.FS
                 int? port = obj?[0] as int?;
                 if (await Computer.Network.StartHosting(port ?? NetworkConfiguration.DEFAULT_PORT))
                 {
-                    IO.OSTREAM($"Hosting on {Computer.Network.GetIPPortString()}");
+                    IO.Out($"Hosting on {Computer.Network.GetIPPortString()}");
                     return;
                 }
-                IO.OSTREAM($"Failed to begin hosting on {LANIPFetcher.GetLocalIPAddress().MapToIPv4()}:{port}");
+                IO.Out($"Failed to begin hosting on {LANIPFetcher.GetLocalIPAddress().MapToIPv4()}:{port}");
             });
         }
         private void ListProcesses(object[]? obj)
         {
             foreach (var item in Computer.USER_WINDOW_INSTANCES)
             {
-                IO.OSTREAM($"\n{item.Key}");
+                IO.Out($"\n{item.Key}");
             }
 
         }
         private void FetchIP(object[]? obj)
         {
             var IP = LANIPFetcher.GetLocalIPAddress().MapToIPv4();
-            IO.OSTREAM(IP.ToString());
+            IO.Out(IP.ToString());
         }
         private void Config(object[]? obj)
         {
@@ -97,10 +97,10 @@ namespace VM.FS
                     {
                         if (!Computer.Config.TryGetValue(propname, out var propValue))
                         {
-                            IO.OSTREAM($"Property '{propname}' not found in configuration.");
+                            IO.Out($"Property '{propname}' not found in configuration.");
                             return;
                         }
-                        IO.OSTREAM($"propname : {propValue}");
+                        IO.Out($"propname : {propValue}");
                     }
                     else if (toLower == "set" && obj.Length > 2)
                     {
@@ -145,17 +145,17 @@ namespace VM.FS
                 {
                     foreach (var kvp in Computer.Config)
                     {
-                        IO.OSTREAM($"\n {{{kvp.Key} : {kvp.Value}}}");
+                        IO.Out($"\n {{{kvp.Key} : {kvp.Value}}}");
                     }
                 }
                 else
                 {
-                    IO.OSTREAM("Invalid operation specified.");
+                    IO.Out("Invalid operation specified.");
                 }
             }
             else
             {
-                IO.OSTREAM("Invalid input parameters.");
+                IO.Out("Invalid input parameters.");
             }
         }
         private void Help(params object[]? obj)
@@ -166,15 +166,15 @@ namespace VM.FS
                 return;
             }
 
-            IO.OSTREAM(" ### Native Commands ### ");
-            IO.OSTREAM("");
+            IO.Out(" ### Native Commands ### ");
+            IO.Out("");
             // Determine the maximum width of the tags
             int maxTagWidth = Commands.Max(item => item.id.Length);
 
             foreach (var item in Commands)
             {
                 string paddedTag = item.id.PadRight(maxTagWidth);
-                IO.OSTREAM($"{paddedTag} '{string.Join(",", item.infos).ToUpper()}'");
+                IO.Out($"{paddedTag} '{string.Join(",", item.infos).ToUpper()}'");
             }
 
             foreach (var item in Aliases)
@@ -182,12 +182,12 @@ namespace VM.FS
                 // Split the alias to get the last part for padding
                 string alias = item.Value.Split('/').Last();
                 string paddedAlias = item.Key.PadRight(maxTagWidth);
-                IO.OSTREAM($"{paddedAlias} -> {alias}");
+                IO.Out($"{paddedAlias} -> {alias}");
             }
 
-            IO.OSTREAM("");
-            IO.OSTREAM("### JAVASCRIPT GLOBAL FUNCTIONS ####");
-            IO.OSTREAM("");
+            IO.Out("");
+            IO.Out("### JAVASCRIPT GLOBAL FUNCTIONS ####");
+            IO.Out("");
 
             // we use any function starting with a lowercase letter, since it's against C# typical syntactical norms
             foreach(var item in typeof(JSInterop).GetMethods().Where(M=>M.Name.StartsWith(M.Name.ToLower()[0])))
@@ -212,7 +212,7 @@ namespace VM.FS
             if (obj.Length > 0 && obj[0] is string path && FileSystem.GetResourcePath(path + ".js") is string AbsPath &&  File.Exists(AbsPath))
             {
                 await Computer.JavaScriptEngine.Execute(File.ReadAllText(AbsPath));
-                IO.OSTREAM($"running {AbsPath}...");
+                IO.Out($"running {AbsPath}...");
             }
         }
         #endregion

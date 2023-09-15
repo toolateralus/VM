@@ -47,7 +47,7 @@ namespace VM.JS
             }
             else
             {
-                IO.OSTREAM("DEFAULT_SERVER_IP not found in this computer's config, nor was an IP provided. please, enter an IP address to connect to.");
+                IO.Out("DEFAULT_SERVER_IP not found in this computer's config, nor was an IP provided. please, enter an IP address to connect to.");
             }
         }
         private async Task ConnectToIP(IPAddress targetIP, string ipString)
@@ -104,18 +104,18 @@ namespace VM.JS
                         if (Directory.Exists(item))
                         {
                             OnTransmit?.Invoke(bytePath, TransmissionType.Path, -1, -1, true);
-                            IO.OSTREAM($"Uploading directory item: from {strPath}::{item}");
+                            IO.Out($"Uploading directory item: from {strPath}::{item}");
                         }
                         else if (File.Exists(item))
                         {
                             OnTransmit?.Invoke(bytePath, TransmissionType.Path, -1, -1, false);
                             OnTransmit?.Invoke(fileBytes, TransmissionType.Data, -1, -1, false);
-                            IO.OSTREAM("Uploading path: " + item);
+                            IO.Out("Uploading path: " + item);
                         }
                     }
                     catch (Exception ex) when (ex is not UnauthorizedAccessException)
                     {
-                        IO.OSTREAM($"Caught exception: {ex.Message}");
+                        IO.Out($"Caught exception: {ex.Message}");
                     }
                 }
             }
@@ -127,7 +127,7 @@ namespace VM.JS
                 OnTransmit?.Invoke(pathBytes, TransmissionType.Path, -1, -1, false);
                 OnTransmit?.Invoke(fileBytes, TransmissionType.Data, -1, -1, false);
 
-                IO.OSTREAM("Uploading path: " + path);
+                IO.Out("Uploading path: " + path);
             }
         }
         public async void check_for_downloadable_content()
@@ -137,7 +137,7 @@ namespace VM.JS
             if (response.value is string rVal &&
                 JObject.Parse(rVal).Value<string>("data") is string data)
             {
-                IO.OSTREAM(data);
+                IO.Out(data);
             }
             return;
         }
@@ -146,11 +146,11 @@ namespace VM.JS
 
             if (!Computer.Network.IsConnected())
             {
-                IO.OSTREAM("Not connected to network");
+                IO.Out("Not connected to network");
                 return;
             }
 
-            IO.OSTREAM($"Downloading {path}..");
+            IO.Out($"Downloading {path}..");
 
             var root = Computer.FS_ROOT + "/downloads";
 
@@ -173,26 +173,26 @@ namespace VM.JS
                         switch (dataStr)
                         {
                             case "END_DOWNLOAD":
-                                IO.OSTREAM($"{{{Server.FormatBytes(size)}}} downloads/{path} downloaded.. run  the <install '{path}' to install it.");
+                                IO.Out($"{{{Server.FormatBytes(size)}}} downloads/{path} downloaded.. run  the <install '{path}' to install it.");
                                 return;
                             case "FAILED_DOWNLOAD":
-                                IO.OSTREAM($"Download failed for {path}");
+                                IO.Out($"Download failed for {path}");
                                 return;
                         }
                     }
-                    IO.OSTREAM($"Invalid data gotten from server for {path}");
+                    IO.Out($"Invalid data gotten from server for {path}");
                     return;
                 }
 
                 if (metadata.Value<string>("data") is not string dataString || Encoding.UTF8.GetBytes(dataString) is not byte[] dataBytes)
                 {
-                    IO.OSTREAM($"Invalid data for {path}");
+                    IO.Out($"Invalid data for {path}");
                     return;
                 }
 
                 if (Convert.FromBase64String(metadata.Value<string>("path")) is not byte[] pathBytes)
                 {
-                    IO.OSTREAM($"Invalid path for {path}");
+                    IO.Out($"Invalid path for {path}");
                     return;
                 }
 
@@ -213,7 +213,7 @@ namespace VM.JS
 
                 await Task.Delay(1);
             }
-            IO.OSTREAM("Not connected to network, or download failed");
+            IO.Out("Not connected to network, or download failed");
         }
       
         public bool IsConnected => Computer.Network.IsConnected();
@@ -241,7 +241,7 @@ namespace VM.JS
             (object? value, int reply) @event = default;
             if (parameters is null || parameters.Length == 0)
             {
-                IO.OSTREAM("Insufficient parameters for a network connection");
+                IO.Out("Insufficient parameters for a network connection");
                 return null;
             }
             if (parameters[0] is string p1 && int.TryParse(p1, out int ch))
@@ -254,7 +254,7 @@ namespace VM.JS
             }
             else
             {
-                IO.OSTREAM($"Invalid parameter for receive {parameters[0]}");
+                IO.Out($"Invalid parameter for receive {parameters[0]}");
                 return null;
             }
             return @event.value;

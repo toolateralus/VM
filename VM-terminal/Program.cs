@@ -7,11 +7,11 @@ using VM.FS;
 while(true)
 {
 
-    IO.OSTREAM("Enter a computer index, (probably just 0, unless you're multi-booting)");
+    IO.Out("Enter a computer index, (probably just 0, unless you're multi-booting)");
 
     if(!uint.TryParse(Console.ReadLine()?.Trim(), out uint id))
     {
-        IO.OSTREAM("Invalid ID. it must be an integer ie 1 , or 2, not 0xF or 1.1. press any key to continue");
+        IO.Out("Invalid ID. it must be an integer ie 1 , or 2, not 0xF or 1.1. press any key to continue");
         Console.ReadLine();
         Console.Clear();
         continue;
@@ -21,8 +21,8 @@ while(true)
 
     computer.Boot(id);
 
-    IO.OSTREAM($"Computer booted on id {id}");
-    IO.OSTREAM("Welcome to the command line. type help for info.");
+    IO.Out($"Computer booted on id {id}");
+    IO.Out("Welcome to the command line. type help for info.");
     
 
     while (true)

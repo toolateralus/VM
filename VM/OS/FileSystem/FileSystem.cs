@@ -101,7 +101,7 @@ namespace VM.FS
                 }
                 else
                 {
-                    IO.OSTREAM("Invalid input parameters.");
+                    IO.Out("Invalid input parameters.");
                 }
             }
             private void ListDir(object[]? obj)
@@ -119,9 +119,9 @@ namespace VM.FS
 
                 var text = $"LISTING : {CurrentDirectory}";
                 
-                IO.OSTREAM(text);
-                IO.OSTREAM("");
-                IO.OSTREAM(textList);
+                IO.Out(text);
+                IO.Out("");
+                IO.Out(textList);
                 
                 ChangeDir(new[]{origin_dir});
             }
@@ -146,11 +146,11 @@ namespace VM.FS
                         
                         if (Destination is null || string.IsNullOrEmpty(Destination))
                         {
-                            IO.OSTREAM($"Invalid path {Destination} in Copy");
+                            IO.Out($"Invalid path {Destination} in Copy");
                             continue;
                         }
                         Copy(Path, Destination);
-                        IO.OSTREAM($"Copied from {Path}->{Destination}");
+                        IO.Out($"Copied from {Path}->{Destination}");
                     }
                 }
             }
@@ -159,7 +159,7 @@ namespace VM.FS
                 if (obj != null && obj.Length > 0 && obj[0] is string Path)
                 {
                     NewFile(Path); 
-                    IO.OSTREAM($"Created directory {Path}");
+                    IO.Out($"Created directory {Path}");
                 }
             }
             private void Move(object[]? obj)
@@ -167,7 +167,7 @@ namespace VM.FS
                 string? a = obj[0] as string;
                 string? b = obj[1] as string;
                 Move(a, b);
-                IO.OSTREAM($"Moved {a}->{b}");
+                IO.Out($"Moved {a}->{b}");
             }
             public void RootCmd(object[]? args)
         {
@@ -195,7 +195,7 @@ namespace VM.FS
         }
         public Deque<string> History = new();
         private bool Disposing;
-        internal static string GetResourcePath(string name)
+        public static string GetResourcePath(string name)
         {
             var path = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData) + "/VM";
 
@@ -215,7 +215,7 @@ namespace VM.FS
 
             return "";
         }
-        internal static void VerifyOrCreateAppdataDir(string path)
+        public static void VerifyOrCreateAppdataDir(string path)
         {
             if (!Directory.Exists(path))
             {
@@ -269,7 +269,7 @@ namespace VM.FS
             }
             else if (!File.Exists(path))
             {
-                IO.OSTREAM($"Directory '{path}' not found in current path.");
+                IO.Out($"Directory '{path}' not found in current path.");
             }
         }
        
@@ -298,7 +298,7 @@ namespace VM.FS
                 }
                 else
                 {
-                    IO.OSTREAM($"File '{fileName}' not found in current path.");
+                    IO.Out($"File '{fileName}' not found in current path.");
                 }
             }
         }
@@ -327,7 +327,7 @@ namespace VM.FS
             }
             else
             {
-                IO.OSTREAM($"File '{fileName}' not found in current path.");
+                IO.Out($"File '{fileName}' not found in current path.");
                 return "";
             }
         }
@@ -346,7 +346,7 @@ namespace VM.FS
             string[] content = Directory.GetFileSystemEntries(currentDirectory);
             return content;
         }
-        internal void Copy(string sourcePath, string destinationPath)
+        public void Copy(string sourcePath, string destinationPath)
         {
             sourcePath = GetRelativeOrAbsolute(sourcePath);
             destinationPath = GetRelativeOrAbsolute(destinationPath);
@@ -378,10 +378,10 @@ namespace VM.FS
             }
             else
             {
-                IO.OSTREAM("Source file or directory not found.. \n" + sourcePath);
+                IO.Out("Source file or directory not found.. \n" + sourcePath);
             }
         }
-        internal void Move(string? path, string? dest)
+        public void Move(string? path, string? dest)
         {
             if (path != null && dest != null)
             {

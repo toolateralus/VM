@@ -12,9 +12,9 @@
 //     public class XAMLJSEventHandler : JSEventHandler, IDisposable
 //     {
 //         public XAML_EVENTS Event = XAML_EVENTS.RENDER;
-//         FrameworkElement element;
+//         ContentControlworkElement element;
 
-//         public XAMLJSEventHandler(FrameworkElement control, XAML_EVENTS @event, JavaScriptEngine js, string id, string method)
+//         public XAMLJSEventHandler(ContentControlworkElement control, XAML_EVENTS @event, JavaScriptEngine js, string id, string method)
 //         {
 //             Event = @event;
 //             this.JavaScriptEngine = js;
@@ -23,7 +23,7 @@
 //             CreateHook(control, @event);
 //         }
 
-//         private void CreateHook(FrameworkElement control, XAML_EVENTS @event)
+//         private void CreateHook(ContentControlworkElement control, XAML_EVENTS @event)
 //         {
 //             switch (@event)
 //             {
@@ -35,8 +35,8 @@
 //                             OnDispose += () => button.Click -= InvokeGeneric;
 //                             break;
 //                         }
-//                         control.MouseDown += InvokeGeneric;
-//                         OnDispose += () => control.MouseDown -= InvokeGeneric;
+//                         control.PointerPressed += InvokeGeneric;
+//                         OnDispose += () => control.PointerPressed -= InvokeGeneric;
 //                     }
 //                     break;
 //                 case XAML_EVENTS.MOUSE_UP:
@@ -47,8 +47,8 @@
 //                     break;
 //                 case XAML_EVENTS.MOUSE_MOVE:
 //                     {
-//                         control.MouseMove += InvokeMouse;
-//                         OnDispose += () => control.MouseMove -= InvokeMouse;
+//                         control.PointerMoved += InvokeMouse;
+//                         OnDispose += () => control.PointerMoved -= InvokeMouse;
 //                     }
 //                     break;
 //                 case XAML_EVENTS.KEY_DOWN:

@@ -222,12 +222,12 @@ namespace VM.JS
 
             //     if (content == null)
             //     {
-            //         IO.OSTREAM($"control {identifier} not found!");
+            //         IO.Out($"control {identifier} not found!");
             //         return;
             //     }
 
 
-            //     FrameworkElement element = null;
+            //     ContentControlworkElement element = null;
             //     if (targetControl.ToLower().Trim() == "this")
             //     {
             //         element = content;
@@ -240,7 +240,7 @@ namespace VM.JS
 
             //     if (element == null)
             //     {
-            //         IO.OSTREAM($"control {targetControl} of {content.Name} not found.");
+            //         IO.Out($"control {targetControl} of {content.Name} not found.");
             //         return;
             //     }
 

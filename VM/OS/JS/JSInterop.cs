@@ -121,7 +121,7 @@ namespace VM.JS
         }
         public void print(object message)
         {
-            IO.OSTREAM(message);
+            IO.Out(message);
         }
         public void export(string id, object? obj)
         {
@@ -147,7 +147,7 @@ namespace VM.JS
                 return;
             }
 
-            IO.OSTREAM("Incorrect path for uninstall");
+            IO.Out("Incorrect path for uninstall");
 
         }
         public JObject GetConfig() => Computer.Config;
@@ -173,7 +173,7 @@ namespace VM.JS
                 {
                     if (arr[1] != "js")
                     {
-                        IO.OSTREAM("invalid file extension for alias");
+                        IO.Out("invalid file extension for alias");
                         return;
                     }
                     // valid .js extension
@@ -272,12 +272,12 @@ namespace VM.JS
             }
             else
             {
-                IO.OSTREAM("Attempted to set command directory to an emtpy or null string");
+                IO.Out("Attempted to set command directory to an emtpy or null string");
                 return;
             } 
             if (File.Exists(path) && !Directory.Exists(path))
             {
-                IO.OSTREAM("Attempted to set command directory to an existing file or a nonexistent directory");
+                IO.Out("Attempted to set command directory to an existing file or a nonexistent directory");
                 return;
             }
             Action<string, string> procFile = (rootDir, file) =>
@@ -336,7 +336,7 @@ namespace VM.JS
 
         // }
         // CONVERT TO AVALONIA EDIT
-        // public T FindElementInUserControl<T>(UserControl userControl, string elementName) where T : FrameworkElement
+        // public T FindElementInUserControl<T>(UserControl userControl, string elementName) where T : ContentControlworkElement
         // {
         //     var elementType = typeof(T);
         //     var contentProperty = userControl.GetType().GetProperty("Content");
@@ -413,7 +413,7 @@ namespace VM.JS
 
         //             if (contentGrid != null)
         //             {
-        //                 var frame = contentGrid.Children.OfType<Frame>().FirstOrDefault();
+        //                 var frame = contentGrid.Children.OfType<ContentControl>().FirstOrDefault();
 
         //                 if (frame != null)
         //                 {
@@ -425,10 +425,10 @@ namespace VM.JS
 
         //     return userContent;
         // }
-        // public static FrameworkElement? FindControl(UserControl userControl, string controlName)
+        // public static ContentControlworkElement? FindControl(UserControl userControl, string controlName)
         // {
 
-        //     FrameworkElement element = null;
+        //     ContentControlworkElement element = null;
         //     var contentProperty = userControl?.GetType()?.GetProperty("Content");
 
         //     if (contentProperty != null)
@@ -437,7 +437,7 @@ namespace VM.JS
 
         //         if (content != null)
         //         {
-        //             if (content is FrameworkElement contentElement && contentElement.Name == controlName)
+        //             if (content is ContentControlworkElement contentElement && contentElement.Name == controlName)
         //             {
         //                 return contentElement;
         //             }
@@ -447,9 +447,9 @@ namespace VM.JS
         //     }
         //     return element;
         // }
-        // public static FrameworkElement? SearchVisualTree(object element, string controlName)
+        // public static ContentControlworkElement? SearchVisualTree(object element, string controlName)
         // {
-        //     if (element is FrameworkElement frameworkElement && frameworkElement.Name == controlName)
+        //     if (element is ContentControlworkElement frameworkElement && frameworkElement.Name == controlName)
         //     {
         //         return frameworkElement;
         //     }
@@ -518,7 +518,7 @@ namespace VM.JS
         //     catch (Exception ex)
         //     {
         //         // Handle any exceptions that may occur during conversion
-        //         IO.OSTREAM("Exception during base64 to BitmapImage conversion: " + ex.Message);
+        //         IO.Out("Exception during base64 to BitmapImage conversion: " + ex.Message);
         //         return null;
         //     }
         // }

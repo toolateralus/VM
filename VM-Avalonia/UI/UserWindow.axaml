@@ -1,0 +1,40 @@
+﻿<ContentControl x:Class="VM.Avalonia.UserWindow"
+      xmlns="https://github.com/avaloniaui"
+      xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+      xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+      xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+      xmlns:local="clr-namespace:VM"
+      mc:Ignorable="d" 
+      d:DesignHeight="450" d:DesignWidth="800">
+
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="15"/> 
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="*"/>
+        </Grid.RowDefinitions>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="*"/>
+            <ColumnDefinition Width="*"/>
+            <ColumnDefinition Width="*"/>
+            <ColumnDefinition Width="*"/>
+        </Grid.ColumnDefinitions>
+        
+        <StackPanel x:Name="Toolbar" Orientation="Horizontal" Grid.ColumnSpan="5">
+            <Grid x:Name="Taskbar" Grid.Row="1" Grid.Column="0">
+                <StackPanel Orientation="Horizontal"  Height="15" Background="Gray">
+                    <Button Click="CloseWindow" Background="LightGray" Width="35" FontFamily="Consolas" FontSize="10" Content="X"/>
+                    <Button Click="ToggleVisibility" Background="LightGray" Width="35" FontFamily="Consolas" FontSize="10" Content="MIN"/>
+                    <Button Click="ToggleMaximize" Background="LightGray"  Width="35" FontFamily="Consolas" FontSize="10" Content="MAX"/>
+                </StackPanel>
+            </Grid>
+        </StackPanel>
+
+        <ContentControl Grid.Row="1" Grid.ColumnSpan="4" Grid.RowSpan="4" x:Name="ContentsContentControl">
+            
+        </ContentControl>
+        
+    </Grid>
+</ContentControl>

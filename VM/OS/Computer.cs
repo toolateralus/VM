@@ -58,12 +58,12 @@ namespace VM
                     }
                     catch (Exception ex)
                     {
-                        IO.OSTREAM($"Error loading JSON: {ex.Message}");
+                        IO.Out($"Error loading JSON: {ex.Message}");
                     }
                 }
                 else
                 {
-                    IO.OSTREAM("JSON file not found.");
+                    IO.Out("JSON file not found.");
                 }
             }
 
@@ -81,7 +81,7 @@ namespace VM
                 }
                 catch (Exception ex)
                 {
-                    IO.OSTREAM($"Error saving JSON config: {ex.Message}");
+                    IO.Out($"Error saving JSON config: {ex.Message}");
                 }
             }
         }
@@ -89,7 +89,7 @@ namespace VM
         {
             if (exitCode != 0)
             {
-                IO.OSTREAM($"Computer {ID} has exited, most likely due to an error. code:{exitCode}");
+                IO.Out($"Computer {ID} has exited, most likely due to an error. code:{exitCode}");
             }
             Dispose();
         }
@@ -97,8 +97,8 @@ namespace VM
         {
             if (id > Computers.Length)
             {
-                IO.OSTREAM($"Invalid index. {id}");
-                IO.OSTREAM("Boot aborted");
+                IO.Out($"Invalid index. {id}");
+                IO.Out("Boot aborted");
                 return;
             }
 
@@ -164,8 +164,11 @@ namespace VM
 
     public class IO 
     {
+
+        public static void Out(object? o) => OSTREAM?.Invoke(o);
+        public static string? In() => ISTREAM?.Invoke();
         public static Func<string?> ISTREAM { get; private set; }= Console.ReadLine;
-        public static Action<object?> OSTREAM { get; private set; } = IO.OSTREAM;
+        public static Action<object?> OSTREAM { get; private set; } = Console.WriteLine;
         public static void RedirectOutput(Action<object?> out_stream)
         {
             OSTREAM = out_stream;
