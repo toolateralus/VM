@@ -54,7 +54,7 @@ namespace VM.JS
       
         public string? read()
         {
-            return Console.ReadLine();;
+            return IO.ReadLine();;
         }
 
         public double random(double max)
@@ -121,7 +121,7 @@ namespace VM.JS
         }
         public void print(object message)
         {
-            IO.Out(message);
+            IO.WriteLine(message);
         }
         public void export(string id, object? obj)
         {
@@ -147,7 +147,7 @@ namespace VM.JS
                 return;
             }
 
-            IO.Out("Incorrect path for uninstall");
+            IO.WriteLine("Incorrect path for uninstall");
 
         }
         public JObject GetConfig() => Computer.Config;
@@ -173,7 +173,7 @@ namespace VM.JS
                 {
                     if (arr[1] != "js")
                     {
-                        IO.Out("invalid file extension for alias");
+                        IO.WriteLine("invalid file extension for alias");
                         return;
                     }
                     // valid .js extension
@@ -272,12 +272,12 @@ namespace VM.JS
             }
             else
             {
-                IO.Out("Attempted to set command directory to an emtpy or null string");
+                IO.WriteLine("Attempted to set command directory to an emtpy or null string");
                 return;
             } 
             if (File.Exists(path) && !Directory.Exists(path))
             {
-                IO.Out("Attempted to set command directory to an existing file or a nonexistent directory");
+                IO.WriteLine("Attempted to set command directory to an existing file or a nonexistent directory");
                 return;
             }
             Action<string, string> procFile = (rootDir, file) =>

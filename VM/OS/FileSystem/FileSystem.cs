@@ -102,7 +102,7 @@ namespace VM.FS
                 }
                 else
                 {
-                    IO.Out("Invalid input parameters.");
+                    IO.WriteLine("Invalid input parameters.");
                 }
             }
             private void ListDir(object[]? obj)
@@ -120,9 +120,9 @@ namespace VM.FS
 
                 var text = $"LISTING : {CurrentDirectory}";
                 
-                IO.Out(text);
-                IO.Out("");
-                IO.Out(textList);
+                IO.WriteLine(text);
+                IO.WriteLine("");
+                IO.WriteLine(textList);
                 
                 ChangeDir(new[]{origin_dir});
             }
@@ -147,11 +147,11 @@ namespace VM.FS
                         
                         if (Destination is null || string.IsNullOrEmpty(Destination))
                         {
-                            IO.Out($"Invalid path {Destination} in Copy");
+                            IO.WriteLine($"Invalid path {Destination} in Copy");
                             continue;
                         }
                         Copy(Path, Destination);
-                        IO.Out($"Copied from {Path}->{Destination}");
+                        IO.WriteLine($"Copied from {Path}->{Destination}");
                     }
                 }
             }
@@ -160,7 +160,7 @@ namespace VM.FS
                 if (obj != null && obj.Length > 0 && obj[0] is string Path)
                 {
                     NewFile(Path); 
-                    IO.Out($"Created directory {Path}");
+                    IO.WriteLine($"Created directory {Path}");
                 }
             }
             private void Move(object[]? obj)
@@ -168,7 +168,7 @@ namespace VM.FS
                 string? a = obj[0] as string;
                 string? b = obj[1] as string;
                 Move(a, b);
-                IO.Out($"Moved {a}->{b}");
+                IO.WriteLine($"Moved {a}->{b}");
             }
             public void RootCmd(object[]? args)
         {
@@ -270,7 +270,7 @@ namespace VM.FS
             }
             else if (!File.Exists(path))
             {
-                IO.Out($"Directory '{path}' not found in current path.");
+                IO.WriteLine($"Directory '{path}' not found in current path.");
             }
         }
        
@@ -299,7 +299,7 @@ namespace VM.FS
                 }
                 else
                 {
-                    IO.Out($"File '{fileName}' not found in current path.");
+                    IO.WriteLine($"File '{fileName}' not found in current path.");
                 }
             }
         }
@@ -328,7 +328,7 @@ namespace VM.FS
             }
             else
             {
-                IO.Out($"File '{fileName}' not found in current path.");
+                IO.WriteLine($"File '{fileName}' not found in current path.");
                 return "";
             }
         }
@@ -379,7 +379,7 @@ namespace VM.FS
             }
             else
             {
-                IO.Out("Source file or directory not found.. \n" + sourcePath);
+                IO.WriteLine("Source file or directory not found.. \n" + sourcePath);
             }
         }
         public void Move(string? path, string? dest)

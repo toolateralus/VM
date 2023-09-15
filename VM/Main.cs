@@ -9,5 +9,5 @@
 
 // while(true){
 //     System.Console.WriteLine("input :");
-//     pc.CommandLine.TryCommand(Console.ReadLine() ?? "");
+//     pc.CommandLine.TryCommand(IO.ReadLine() ?? "");
 // }

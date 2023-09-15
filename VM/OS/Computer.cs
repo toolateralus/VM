@@ -36,24 +36,24 @@ namespace VM
                 int? port = obj?[0] as int?;
                 if (await Network.StartHosting(port ?? NetworkConfiguration.DEFAULT_PORT))
                 {
-                    IO.Out($"Hosting on {Network.GetIPPortString()}");
+                    IO.WriteLine($"Hosting on {Network.GetIPPortString()}");
                     return;
                 }
-                IO.Out($"Failed to begin hosting on {LANIPFetcher.GetLocalIPAddress().MapToIPv4()}:{port}");
+                IO.WriteLine($"Failed to begin hosting on {LANIPFetcher.GetLocalIPAddress().MapToIPv4()}:{port}");
             });
         }
         private void ListProcesses(object[]? obj)
         {
             foreach (var item in USER_WINDOW_INSTANCES)
             {
-                IO.Out($"\n{item.Key}");
+                IO.WriteLine($"\n{item.Key}");
             }
 
         }
         private void FetchIP(object[]? obj)
         {
             var IP = LANIPFetcher.GetLocalIPAddress().MapToIPv4();
-            IO.Out(IP.ToString());
+            IO.WriteLine(IP.ToString());
         }
 
         public readonly Dictionary<string, object> USER_WINDOW_INSTANCES = new();
@@ -86,12 +86,12 @@ namespace VM
                     }
                     catch (Exception ex)
                     {
-                        IO.Out($"Error loading JSON: {ex.Message}");
+                        IO.WriteLine($"Error loading JSON: {ex.Message}");
                     }
                 }
                 else
                 {
-                    IO.Out("JSON file not found.");
+                    IO.WriteLine("JSON file not found.");
                 }
             }
 
@@ -109,7 +109,7 @@ namespace VM
                 }
                 catch (Exception ex)
                 {
-                    IO.Out($"Error saving JSON config: {ex.Message}");
+                    IO.WriteLine($"Error saving JSON config: {ex.Message}");
                 }
             }
         }
@@ -117,7 +117,7 @@ namespace VM
         {
             if (exitCode != 0)
             {
-                IO.Out($"Computer {ID} has exited, most likely due to an error. code:{exitCode}");
+                IO.WriteLine($"Computer {ID} has exited, most likely due to an error. code:{exitCode}");
             }
             Dispose();
         }
@@ -125,8 +125,8 @@ namespace VM
         {
             if (id > Computers.Length)
             {
-                IO.Out($"Invalid index. {id}");
-                IO.Out("Boot aborted");
+                IO.WriteLine($"Invalid index. {id}");
+                IO.WriteLine("Boot aborted");
                 return;
             }
 
@@ -201,8 +201,8 @@ namespace VM
     public class IO 
     {
 
-        public static void Out(object? o) => OSTREAM?.Invoke(o);
-        public static string? In() => ISTREAM?.Invoke();
+        public static void WriteLine(object? o) => OSTREAM?.Invoke(o);
+        public static string? ReadLine() => ISTREAM?.Invoke();
         public static Action? CSTREAM { get; private set; }
         public static Func<string?>? ISTREAM { get; private set; }= Console.ReadLine;
         public static Action<object?>? OSTREAM { get; private set; } = Console.WriteLine;

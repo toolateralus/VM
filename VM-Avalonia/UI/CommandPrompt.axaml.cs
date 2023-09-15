@@ -13,6 +13,7 @@ using Avalonia.Input;
 using Avalonia.Diagnostics;
 using VM.Lang;
 using Avalonia.Threading;
+using System.Text.RegularExpressions;
 
 namespace VM.Avalonia
 {
@@ -45,19 +46,49 @@ namespace VM.Avalonia
             // Note : as long as you don't 'RedirectOutput'
             // Console.WriteLine() will always print to the terminal,
             // as well as any of your sources.
-            // as well as Console.ReadLine().
+            // as well as IO.ReadLine().
 
-            io_handle_write = IO.AddOutput((o)=> {
-                var str = o?.ToString();
-                Dispatcher.UIThread.Invoke(()=>{
-                    output.Text += Environment.NewLine + str;
-                });
-            });
+            // Initialize a dictionary to store line counts
+            Dictionary<string, int> lineCounts = new Dictionary<string, int>();
 
-            io_handle_clear = IO.AddClearHandler(()=>{
-                output.Text = "";
-                DrawTextBox("type 'help' for commands, \nor enter any valid single-line java script to interact with the environment. \nby default, results of expressions get printed to this console.");
+            io_handle_write = IO.AddOutput((o) => {
+            var str = o?.ToString();
+            Dispatcher.UIThread.Invoke(() => {
+                if (!string.IsNullOrEmpty(str)) {
+                    string[] lines = output.Text.Split(new[] { Environment.NewLine }, StringSplitOptions.RemoveEmptyEntries);
+                    if (lines.Length > 0) {
+                        string lastLine = lines[lines.Length - 1];
+
+                        // Check if the last line starts with a number followed by "x "
+                        if (Regex.IsMatch(lastLine, @"^\d+x\s")) {
+                            // Extract the count from the last line
+                            Match match = Regex.Match(lastLine, @"(\d+)x");
+                            if (match.Success) {
+                                int count = int.Parse(match.Groups[1].Value);
+                                count++;
+                                str = $"{count}x {str}";
+                                output.Text = output.Text.Substring(0, output.Text.LastIndexOf(lastLine)) + str;
+                            }
+                        } else {
+                            // If the last line doesn't have a count, add "1x" to the new line
+                            str = $"1x {str}";
+                            output.Text += Environment.NewLine + str;
+                        }
+                    } else {
+                        // If there are no lines in the output, add "1x" to the new line
+                        str = $"1x {str}";
+                        output.Text += str;
+                    }
+                }
             });
+        });
+
+
+
+        io_handle_clear = IO.AddClearHandler(()=>{
+            output.Text = "";
+            DrawTextBox("type 'help' for commands, \nor enter any valid single-line java script to interact with the environment. \nby default, results of expressions get printed to this console.");
+        });
             
             IO.CSTREAM?.Invoke();
         }

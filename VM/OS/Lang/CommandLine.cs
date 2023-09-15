@@ -51,10 +51,10 @@ namespace VM.Lang
                     {
                         if (!Computer.Config.TryGetValue(propname, out var propValue))
                         {
-                            IO.Out($"Property '{propname}' not found in configuration.");
+                            IO.WriteLine($"Property '{propname}' not found in configuration.");
                             return;
                         }
-                        IO.Out($"propname : {propValue}");
+                        IO.WriteLine($"propname : {propValue}");
                     }
                     else if (toLower == "set" && obj.Length > 2)
                     {
@@ -99,17 +99,17 @@ namespace VM.Lang
                 {
                     foreach (var kvp in Computer.Config)
                     {
-                        IO.Out($"\n {{{kvp.Key} : {kvp.Value}}}");
+                        IO.WriteLine($"\n {{{kvp.Key} : {kvp.Value}}}");
                     }
                 }
                 else
                 {
-                    IO.Out("Invalid operation specified.");
+                    IO.WriteLine("Invalid operation specified.");
                 }
             }
             else
             {
-                IO.Out("Invalid input parameters.");
+                IO.WriteLine("Invalid input parameters.");
             }
         }
         private void Help(params object[]? obj)
@@ -120,8 +120,8 @@ namespace VM.Lang
                 return;
             }
 
-            IO.Out(" ### Native Commands ### ");
-            IO.Out("");
+            IO.WriteLine(" ### Native Commands ### ");
+            IO.WriteLine("");
             // Determine the maximum width of item.Max(
             int maxTagWidth = Commands.Max(item => item.Value.Max(item => item.id.Length));
 
@@ -130,7 +130,7 @@ namespace VM.Lang
                 foreach(var item in dir.Value)
                 {
                     string paddedTag = item.id.PadRight(maxTagWidth);
-                    IO.Out($"{paddedTag} '{string.Join(",", item.infos).ToUpper()}'");
+                    IO.WriteLine($"{paddedTag} '{string.Join(",", item.infos).ToUpper()}'");
                 }
             }
 
@@ -139,12 +139,12 @@ namespace VM.Lang
                 // Split the alias to get the last part for padding
                 string alias = item.Value.Split('/').Last();
                 string paddedAlias = item.Key.PadRight(maxTagWidth);
-                IO.Out($"{paddedAlias} -> {alias}");
+                IO.WriteLine($"{paddedAlias} -> {alias}");
             }
 
-            IO.Out("");
-            IO.Out("### JAVASCRIPT GLOBAL FUNCTIONS ####");
-            IO.Out("");
+            IO.WriteLine("");
+            IO.WriteLine("### JAVASCRIPT GLOBAL FUNCTIONS ####");
+            IO.WriteLine("");
 
             // we use any function starting with a lowercase letter, since it's against C# typical syntactical norms
             foreach(var item in typeof(JSInterop).GetMethods().Where(M=>M.Name.StartsWith(M.Name.ToLower()[0])))
@@ -169,7 +169,7 @@ namespace VM.Lang
             if (obj.Length > 0 && obj[0] is string path && FileSystem.GetResourcePath(path + ".js") is string AbsPath &&  File.Exists(AbsPath))
             {
                 await Computer.JavaScriptEngine.Execute(File.ReadAllText(AbsPath));
-                IO.Out($"running {AbsPath}...");
+                IO.WriteLine($"running {AbsPath}...");
             }
         }
         #endregion

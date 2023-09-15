@@ -68,7 +68,7 @@ namespace VM.Network
                 }
                 catch (Exception e)
                 {
-                    IO.Out("Error connecting to the server: " + e.Message + Environment.NewLine + e.InnerException);
+                    IO.WriteLine("Error connecting to the server: " + e.Message + Environment.NewLine + e.InnerException);
                 }
             });
         }
@@ -143,7 +143,7 @@ namespace VM.Network
 
                 if (completedTask == timeoutTask)
                 {
-                    IO.Out($"timed out fetching from {callerName} event on channel {channel}");
+                    IO.WriteLine($"timed out fetching from {callerName} event on channel {channel}");
                     return (null, -1);
                 }
             }
@@ -167,7 +167,7 @@ namespace VM.Network
             client?.Close();
             stream?.Close();
             Task.Run(() => receiveThread?.Join());
-            IO.Out($"Disconnected from {LAST_KNOWN_SERVER_IP}::{LAST_KNOWN_SERVER_PORT}");
+            IO.WriteLine($"Disconnected from {LAST_KNOWN_SERVER_IP}::{LAST_KNOWN_SERVER_PORT}");
         }
 
         public void StopHosting(object[]? args)
