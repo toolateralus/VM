@@ -14,7 +14,7 @@ namespace VM.Avalonia
         private bool isDragging = false;
         private bool isResizing = false;
         private Point dragOffset;
-        public Action OnClosed { get; internal set; }
+        public Action OnClosed { get; set; }
         MainWindow Owner {get;set;}
         
         public float ResizeSpeed => Owner?.Computer?.Config.Value<float?>("WINDOW_RESIZE_SPEED") ?? 4f;

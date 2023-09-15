@@ -30,14 +30,13 @@ namespace VM.Avalonia
             Owner = frame;
 
             Type userControlType = actualUserContent.GetType();
-            MethodInfo[] methods = userControlType.GetMethods();
+            MethodInfo[]? methods = userControlType?.GetMethods();
 
-            MethodInfo? lateInitMethod = methods.FirstOrDefault(method =>
+            MethodInfo? lateInitMethod = methods?.FirstOrDefault(method =>
                 method.Name == "LateInit" &&
                 method.GetParameters().Length == 1 &&
                 method.GetParameters()[0].ParameterType == typeof(Computer)
             )!;
-
 
             lateInitMethod?.Invoke(actualUserContent, new object[] { computer });
 
@@ -112,6 +111,11 @@ namespace VM.Avalonia
             Owner.Height = 1080;
             Owner.BringToTopOfDesktop();
 
+        }
+
+        internal void InitializeUserContent(Computer computer, ResizableWindow frame, object userControl, JavaScriptEngine javaScriptEngine)
+        {
+            throw new NotImplementedException();
         }
     }
 

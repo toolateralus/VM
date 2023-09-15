@@ -29,7 +29,7 @@ namespace VM.Network
 
         public static string LAST_KNOWN_SERVER_IP => "192.168.0.138";
         public static IPAddress SERVER_IP => IPAddress.Parse(LAST_KNOWN_SERVER_IP);
-        public static int LAST_KNOWN_SERVER_PORT { get; internal set; }
+        public static int LAST_KNOWN_SERVER_PORT { get; set; }
 
 
         
@@ -72,7 +72,7 @@ namespace VM.Network
                 }
             });
         }
-        internal async Task<bool> StartHosting(int port)
+        public async Task<bool> StartHosting(int port)
         {
             if (host != null && host.Running)
             {
@@ -86,7 +86,7 @@ namespace VM.Network
             return host.Running;
         }
         public static Dictionary<int, Queue<(object? val, int replyCh)>> NetworkEvents = new();
-        internal static void Broadcast(int outCh, int inCh, object? msg)
+        public static void Broadcast(int outCh, int inCh, object? msg)
         {
             if (!NetworkEvents.TryGetValue(outCh, out _))
             {
@@ -157,7 +157,7 @@ namespace VM.Network
             return val ?? default;
         }
 
-        internal void StopClient()
+        public void StopClient()
         {
             Dispose();
         }
@@ -175,11 +175,11 @@ namespace VM.Network
             host?.Dispose();
         }
 
-        internal bool IsConnected()
+        public bool IsConnected()
         {
             return stream != null && client != null && client.Connected;
         }
-        internal object GetIPPortString()
+        public object GetIPPortString()
         {
             return $"{LANIPFetcher.GetLocalIPAddress().MapToIPv4()}:{host?.OPEN_PORT}";
         }
@@ -221,7 +221,7 @@ namespace VM.Network
                 client?.Close();
             }
         }
-        internal void OnSendMessage(byte[] dataBytes, TransmissionType type, int ch, int reply, bool isDir = false)
+        public void OnSendMessage(byte[] dataBytes, TransmissionType type, int ch, int reply, bool isDir = false)
         {
             var metadata = Server.Server.ToJson(dataBytes.Length, dataBytes, type, ch, reply, isDir);
 

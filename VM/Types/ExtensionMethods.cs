@@ -3,7 +3,7 @@ using System.Linq;
 
 namespace VM.Types
 {
-    internal static class ExtensionMethods
+    public static class ExtensionMethods
     {
         public static bool JContains<T>(this JArray arr, T obj)
         {

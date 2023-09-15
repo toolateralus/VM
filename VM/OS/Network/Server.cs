@@ -14,7 +14,7 @@ namespace VM.Network.Server
 {
     class Host
     {
-        public int OPEN_PORT { get; internal set; } = 8080;
+        public int OPEN_PORT { get; set; } = 8080;
         public static IPAddress GetLocalIPAddress()
         {
             IPAddress localIP = null;
@@ -48,7 +48,7 @@ namespace VM.Network.Server
 
             return localIP;
         }
-        internal bool Running;
+        public bool Running;
         TcpListener? SERVER;
         public async Task Open(int port)
         {
@@ -71,7 +71,7 @@ namespace VM.Network.Server
                 await networkConfig.ConnectClientAsync(SERVER, CLIENTS);
             }
         }
-        internal void Dispose()
+        public void Dispose()
         {
             SERVER?.Stop();
             SERVER ??= null;

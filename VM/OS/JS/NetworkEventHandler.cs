@@ -3,7 +3,7 @@ using System.Threading.Tasks;
 
 namespace VM.JS
 {
-    internal class NetworkEventHandler : JSEventHandler
+    public class NetworkEventHandler : JSEventHandler
     {
         public const string ARGS_STRING = "(channel, replyChannel, data)";
         public NetworkEventHandler(JavaScriptEngine javaScriptEngine, string identifier, string methodName)

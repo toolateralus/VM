@@ -26,7 +26,7 @@ namespace VM.Avalonia
         public Computer Computer;
         public static string? DesktopIcon => FileSystem.GetResourcePath("commandprompt.png");
 
-        public Action<string> OnSend { get; internal set; }
+        public Action<string> OnSend { get; set; }
         public static string? LastSentInput;
         string LastSentBuffer = "";
         private long io_handle_write, io_handle_clear, io_handle_read;
@@ -51,47 +51,73 @@ namespace VM.Avalonia
             // Initialize a dictionary to store line counts
             Dictionary<string, int> lineCounts = new Dictionary<string, int>();
 
-            io_handle_write = IO.AddOutput((o) => {
-            var str = o?.ToString();
-            Dispatcher.UIThread.Invoke(() => {
-                if (!string.IsNullOrEmpty(str)) {
-                    string[] lines = output.Text.Split(new[] { Environment.NewLine }, StringSplitOptions.RemoveEmptyEntries);
-                    if (lines.Length > 0) {
-                        string lastLine = lines[lines.Length - 1];
+            io_handle_write = IO.AddOutput((o) => 
+            {
+                var str = o?.ToString();
+                Dispatcher.UIThread.Invoke(() =>
+                {
+                    
+                    // since we swapped to the avalon text box it's become super inefficient
+                    // we have the library for avaloniaEdit:TextEditor but it just doesnt show idk
+                    // so we'll just use a tiny character limit to each page
+                    if (output.Text?.Length > 800)
+                        IO.RequestClear();
 
-                        // Check if the last line starts with a number followed by "x "
-                        if (Regex.IsMatch(lastLine, @"^\d+x\s")) {
-                            // Extract the count from the last line
-                            Match match = Regex.Match(lastLine, @"(\d+)x");
-                            if (match.Success) {
-                                int count = int.Parse(match.Groups[1].Value);
-                                count++;
-                                str = $"{count}x {str}";
-                                output.Text = output.Text.Substring(0, output.Text.LastIndexOf(lastLine)) + str;
-                            }
-                        } else {
-                            // If the last line doesn't have a count, add "1x" to the new line
-                            str = $"1x {str}";
-                            output.Text += Environment.NewLine + str;
+                    output.Text += Environment.NewLine + str;
+                    // TODO: Fix/ refine the look of this solution
+                    //str = Print_NoDuplicates(str);
+                });
+            });
+
+            io_handle_clear = IO.AddClearHandler(()=>{
+                output.Text = "";
+                DrawTextBox("type 'help' for commands, \nor enter any valid single-line java script to interact with the environment. \nby default, results of expressions get printed to this console.");
+            });
+                
+            // clear the console
+            IO.RequestClear();
+        }
+
+        private string? Print_NoDuplicates(string? str)
+        {
+            if (!string.IsNullOrEmpty(str))
+            {
+                string[] lines = output.Text.Split(new[] { Environment.NewLine }, StringSplitOptions.RemoveEmptyEntries);
+                if (lines.Length > 0)
+                {
+                    string lastLine = lines[^1];
+
+                    // Check if the last line starts with a number followed by "x "
+                    if (Regex.IsMatch(lastLine, @"^\d+x\s"))
+                    {
+                        // Extract the count from the last line
+                        Match match = Regex.Match(lastLine, @"(\d+)x");
+                        if (match.Success)
+                        {
+                            int count = int.Parse(match.Groups[1].Value);
+                            count++;
+                            str = $"{count}x {str}";
+                            output.Text = string.Concat(output.Text.AsSpan(0, output.Text.LastIndexOf(lastLine)), str);
                         }
-                    } else {
-                        // If there are no lines in the output, add "1x" to the new line
+                    }
+                    else
+                    {
+                        // If the last line doesn't have a count, add "1x" to the new line
                         str = $"1x {str}";
-                        output.Text += str;
+                        output.Text += Environment.NewLine + str;
                     }
                 }
-            });
-        });
+                else
+                {
+                    // If there are no lines in the output, add "1x" to the new line
+                    str = $"1x {str}";
+                    output.Text += str;
+                }
+            }
 
-
-
-        io_handle_clear = IO.AddClearHandler(()=>{
-            output.Text = "";
-            DrawTextBox("type 'help' for commands, \nor enter any valid single-line java script to interact with the environment. \nby default, results of expressions get printed to this console.");
-        });
-            
-            IO.CSTREAM?.Invoke();
+            return str;
         }
+
         public void OnClosing() {
 
             IO.RemoveOutput(io_handle_write);
@@ -169,6 +195,7 @@ namespace VM.Avalonia
             if (e.Key == Key.Enter || e.Key == Key.F5)
             {
                 await Send(e);
+                e.Handled = true;
             }
             ManageCommandHistoryKeys(e);
         }

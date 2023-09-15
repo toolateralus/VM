@@ -234,7 +234,7 @@ namespace VM
             }
         }
         
-        internal static void RequestClear()
+        public static void RequestClear()
         {
             CSTREAM?.Invoke();
             Console.Clear();

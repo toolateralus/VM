@@ -13,7 +13,7 @@ namespace VM.JS
 {
     public class JavaScriptEngine : IDisposable
     {
-        internal IJsEngine ENGINE_JS;
+        public IJsEngine ENGINE_JS;
         IJsEngineSwitcher engineSwitcher;
         public readonly Dictionary<string, object?> Modules_UNUSED = new();
         public readonly JSNetworkHelpers NetworkModule;
@@ -178,7 +178,7 @@ namespace VM.JS
             return handle;
         }
        
-        internal void ExecuteScript(string absPath)
+        public void ExecuteScript(string absPath)
         {
             if (File.Exists(absPath))
                 Task.Run(()=> { try { ENGINE_JS.Execute(File.ReadAllText(absPath)); } catch { } });
@@ -187,7 +187,7 @@ namespace VM.JS
         /// this method is used for executing js events
         /// </summary>
         /// <param name="code"></param>
-        internal void DIRECT_EXECUTE(string code)
+        public void DIRECT_EXECUTE(string code)
         {
             if (Disposing)
                 return;
@@ -200,7 +200,7 @@ namespace VM.JS
                 Notifications.Exception(e);
             }
         }
-        internal async Task CreateEventHandler(string identifier, string targetControl, string methodName, int type)
+        public async Task CreateEventHandler(string identifier, string targetControl, string methodName, int type)
         {
             
             var result = await Execute($"{identifier} != null");
@@ -260,7 +260,7 @@ namespace VM.JS
             //     EventHandlers.Add(eh);
             // });
         }
-        internal async Task CreateNetworkEventHandler(string identifier, string methodName)
+        public async Task CreateNetworkEventHandler(string identifier, string methodName)
         {
 
             var result = await Execute($"{identifier} != null");

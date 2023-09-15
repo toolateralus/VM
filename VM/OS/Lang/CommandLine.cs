@@ -224,7 +224,7 @@ namespace VM.Lang
             return default;
         }
 
-        internal bool TryInvoke(string name, string[] args)
+        public bool TryInvoke(string name, string[] args)
         {
             if (Find(name) is Command command && command.id != null && command.id != "NULL" && command.Method != null)
             {
