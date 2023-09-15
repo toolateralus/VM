@@ -27,7 +27,9 @@ public partial class MainWindow : Window
     private void HandleKeys(object? sender, KeyEventArgs e)
     {
         // command prompt shortcut, temporary. todo: remove this
-        if (e.KeyModifiers.HasFlag(KeyModifiers.Control) && e.KeyModifiers.HasFlag(KeyModifiers.Shift) && e.Key == Key.OemTilde)
+        var hasModifiers = e.KeyModifiers.HasFlag(KeyModifiers.Control) && e.KeyModifiers.HasFlag(KeyModifiers.Shift);
+        
+        if (hasModifiers && e.Key == Key.OemTilde)
         {
             var window = new UserWindow();
 

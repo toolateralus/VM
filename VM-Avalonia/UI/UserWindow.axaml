@@ -32,9 +32,7 @@
             </Grid>
         </StackPanel>
 
-        <ContentControl Grid.Row="1" Grid.ColumnSpan="4" Grid.RowSpan="4" x:Name="ContentsContentControl">
-            
-        </ContentControl>
+        <ContentControl Grid.Row="1" Grid.ColumnSpan="4" Grid.RowSpan="4" x:Name="ContentsContentControl" Content="NewContentHere"/>
         
     </Grid>
 </UserControl>

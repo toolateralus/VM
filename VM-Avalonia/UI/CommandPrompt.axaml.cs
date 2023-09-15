@@ -221,7 +221,7 @@ namespace VM.Avalonia
             }
             catch (Exception ex)
             {
-                this.output.Text += ex.Message + Environment.NewLine;
+                this.output.Text += (ex.Message + Environment.NewLine);
             }
         }
 
