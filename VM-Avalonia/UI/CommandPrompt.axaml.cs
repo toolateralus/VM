@@ -12,6 +12,7 @@ using Avalonia.Controls;
 using Avalonia.Input;
 using Avalonia.Diagnostics;
 using VM.Lang;
+using Avalonia.Threading;
 
 namespace VM.Avalonia
 {
@@ -27,11 +28,11 @@ namespace VM.Avalonia
         public Action<string> OnSend { get; internal set; }
         public static string? LastSentInput;
         string LastSentBuffer = "";
+        private long io_handle_write, io_handle_clear, io_handle_read;
+
         public CommandPrompt()
         {
             InitializeComponent(true);
-            
-            DrawTextBox("type 'help' for commands, \nor enter any valid single-line java script to interact with the environment. \nby default, results of expressions get printed to this console.");
             
             KeyDown += CommandPrompt_PreviewKeyDown;
             
@@ -39,6 +40,31 @@ namespace VM.Avalonia
 
             output.TextChanged += Output_TextChanged;
             
+            // subscribe to the computers IO stream
+            // and setup our 'WriteLine' equivalent.
+            // Note : as long as you don't 'RedirectOutput'
+            // Console.WriteLine() will always print to the terminal,
+            // as well as any of your sources.
+            // as well as Console.ReadLine().
+
+            io_handle_write = IO.AddOutput((o)=> {
+                var str = o?.ToString();
+                Dispatcher.UIThread.Invoke(()=>{
+                    output.Text += Environment.NewLine + str;
+                });
+            });
+
+            io_handle_clear = IO.AddClearHandler(()=>{
+                output.Text = "";
+                DrawTextBox("type 'help' for commands, \nor enter any valid single-line java script to interact with the environment. \nby default, results of expressions get printed to this console.");
+            });
+            
+            IO.CSTREAM?.Invoke();
+        }
+        public void OnClosing() {
+
+            IO.RemoveOutput(io_handle_write);
+            IO.RemoveClearHandler(io_handle_clear);
         }
 
         private void Output_TextChanged(object? sender, EventArgs e)

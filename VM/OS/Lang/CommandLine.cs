@@ -8,6 +8,7 @@ using System.Threading.Tasks;
 using VM.Network;
 using VM.JS;
 using VM.FS;
+using Microsoft.ClearScript.JavaScript;
 
 namespace VM.Lang
 {
@@ -211,14 +212,15 @@ namespace VM.Lang
             return TryInvoke(cmdName, str_args);
         }
         public Command Find(string name)
-        {
-            if (Commands.TryGetValue(name, out List<Command>? commandList) && commandList != null)
+        {   
+            foreach(var dir in Commands)
             {
-                Command cmd = commandList.FirstOrDefault(command => command.id == name);
-                return cmd;
+                foreach(var cmd in dir.Value)
+                    if (cmd.id==name)
+                        return cmd;
+                
             }
 
-            // If the key (name) is not found, return default
             return default;
         }
 

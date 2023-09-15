@@ -1,7 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <OutputType>library</OutputType>
+    <OutputType>Library</OutputType>
     <!--
        We used to be stuck with .NET 6.0 because of our old
        ui frameworks, now, we should really reconsider targeting 8.0

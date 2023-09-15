@@ -135,7 +135,7 @@ namespace VM.FS
             }
             private void Clear(object[]? obj)
             {
-                Console.Clear();
+                IO.RequestClear();
             }
             private void Copy(object[]? obj)
             {

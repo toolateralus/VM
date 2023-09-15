@@ -12,9 +12,9 @@
             <RowDefinition Height="40" />
         </Grid.RowDefinitions>
         
-        <TextBox Grid.RowSpan="1" Grid.Row="0" x:Name="output"/>
-        <TextBox Grid.RowSpan="1" Grid.Row="1" x:Name="input"/>
-        
+        <TextBox TextWrapping="Wrap" Grid.RowSpan="1" Grid.Row="0" x:Name="output"/>
+        <TextBox TextWrapping="Wrap" Grid.RowSpan="1" Grid.Row="1" x:Name="input"/>
+
         <!-- <ae:TextEditor IsReadOnly="true" BorderBrush="White" BorderThickness="1" Grid.Row="0" FontSize="16" x:Name="output"  FontFamily="MS Gothic Bold" WordWrap="True" />
         <ae:TextEditor BorderBrush="White" BorderThickness="1" Grid.Row="1" FontSize="16" x:Name="input" WordWrap="True"/> -->
     </Grid>
