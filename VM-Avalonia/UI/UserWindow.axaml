@@ -25,9 +25,9 @@
         <StackPanel x:Name="Toolbar" Orientation="Horizontal" Grid.ColumnSpan="5">
             <Grid x:Name="Taskbar" Grid.Row="1" Grid.Column="0">
                 <StackPanel Orientation="Horizontal"  Height="15" Background="Gray">
-                    <Button Click="CloseWindow" Background="LightGray" Width="35" FontFamily="Consolas" FontSize="10" Content="X"/>
-                    <Button Click="ToggleVisibility" Background="LightGray" Width="35" FontFamily="Consolas" FontSize="10" Content="MIN"/>
-                    <Button Click="ToggleMaximize" Background="LightGray"  Width="35" FontFamily="Consolas" FontSize="10" Content="MAX"/>
+                    <Button Click="CloseWindow" Background="LightGray" Width="65" FontFamily="Consolas" FontSize="10" Content="X"/>
+                    <Button Click="ToggleVisibility" Background="LightGray" Width="65" FontFamily="Consolas" FontSize="10" Content="MIN"/>
+                    <Button Click="ToggleMaximize" Background="LightGray"  Width="65" FontFamily="Consolas" FontSize="10" Content="MAX"/>
                 </StackPanel>
             </Grid>
         </StackPanel>

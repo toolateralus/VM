@@ -8,6 +8,7 @@ public struct Command
     public string id = "NULL";
     public Action<object[]?> Method;
     public string[] infos = Array.Empty<string>();
+    
     public Command(string id, Action<object[]?> method, params string[]? infos)
     {
         this.id = id;
@@ -20,3 +21,5 @@ public struct Command
 
     }
 }
+
+

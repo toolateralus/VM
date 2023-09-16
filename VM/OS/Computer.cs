@@ -149,10 +149,10 @@ namespace VM
 
             CommandLine.LoadCommandSet( 
                 "network commands",
-                new("ip", FetchIP, "fetches the local ip address of wifi/ethernet"),
-                new("lp", ListProcesses, "lists all the running proccesses"),
-                new("host", HostServer, "hosts a server on the provided <port>, none provided it will default to 8080"),
-                new("unhost", (args) => Network.StopHosting(args), "if a server is currently running on this machine this halts any active connections and closes the sever.")
+                new Command("ip", FetchIP, "fetches the local ip address of wifi/ethernet"),
+                new Command("lp", ListProcesses, "lists all the running proccesses"),
+                new Command("host", HostServer, "hosts a server on the provided <port>, none provided it will default to 8080"),
+                new Command("unhost", (args) => Network.StopHosting(args), "if a server is currently running on this machine this halts any active connections and closes the sever.")
             );
 
             Computers[id] = this;
@@ -196,101 +196,6 @@ namespace VM
             Dispose(disposing: true);
             GC.SuppressFinalize(this);
         }
-    }
-
-    public class IO 
-    {
-
-        public static void WriteLine(object? o) => OSTREAM?.Invoke(o);
-        public static string? ReadLine() => ISTREAM?.Invoke();
-        public static Action? CSTREAM { get; private set; }
-        public static Func<string?>? ISTREAM { get; private set; }= Console.ReadLine;
-        public static Action<object?>? OSTREAM { get; private set; } = Console.WriteLine;
-        static Dictionary<long, Action> InputHandlerDisconnects = new();
-        static Dictionary<long, Action> ClearHandlerDisconnects = new();
-        static Dictionary<long, Action> OutputStreamDisconnects = new();
-        public static long AddOutput(Action<object> value)
-        {
-            var id = Random.Shared.NextInt64();
-            
-            // setup disconnecter to prevent memory leaks
-            // from closing / opening sources
-            OutputStreamDisconnects[id] = 
-            () =>
-            {
-                IO.OSTREAM -= value;
-            };
-                
-
-            IO.OSTREAM += value;
-
-            return id;
-        }
-        public static void RemoveOutput(long io_handle)
-        {
-            if (OutputStreamDisconnects.TryGetValue(io_handle, out var disconnect)){
-                disconnect?.Invoke();
-                OutputStreamDisconnects.Remove(io_handle);
-            }
-        }
-        
-        public static void RequestClear()
-        {
-            CSTREAM?.Invoke();
-            Console.Clear();
-        }
-        public static long AddClearHandler(Action value)
-        {
-
-            var id = Random.Shared.NextInt64();
-            
-            // setup disconnecter to prevent memory leaks
-            // from closing / opening sources
-            ClearHandlerDisconnects[id] = 
-            () =>
-            {
-                IO.CSTREAM -= value;
-            };
-                
-            CSTREAM += value;
-
-
-            return id;
-        }
-        public static void RemoveClearHandler(long io_handle_clear)
-        {
-           if (ClearHandlerDisconnects.TryGetValue(io_handle_clear, out var disconnect)){
-                disconnect?.Invoke();
-                ClearHandlerDisconnects.Remove(io_handle_clear);
-            }
-        }
-        
-        public static long AddInput(Func<string?> value)
-        {
-           var id = Random.Shared.NextInt64();
-            
-            // setup disconnecter to prevent memory leaks
-            // from closing / opening sources
-            InputHandlerDisconnects[id] = 
-            () =>
-            {
-                IO.ISTREAM -= value;
-            };
-                
-
-            IO.ISTREAM += value;
-
-            return id;
-
-        }
-        public static void UnhookInput(long handle)
-        {
-            if (InputHandlerDisconnects.TryGetValue(handle, out var disconnect)){
-                disconnect?.Invoke();
-                InputHandlerDisconnects.Remove(handle);
-            }
-        }
-
     }
 
     

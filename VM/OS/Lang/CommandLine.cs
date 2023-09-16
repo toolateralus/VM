@@ -19,15 +19,30 @@ namespace VM.Lang
         public Dictionary<string, string> Aliases = new();
         private bool Disposing;
 
+        public Dictionary<string, List<CommandNode>> CommandNodes { get; private set; }
+
+        public static bool PRINT_COMMAND (Computer comp, string word, string[]? remainder)
+        {
+            if (word.Trim().ToLower() != "print" || remainder == null || remainder?.Length <= 0)
+                return false;
+
+            foreach(var item in remainder!)
+                IO.WriteLine(item);
+            return true;
+        }
+
         public CommandLine(Computer computer)
         {
             Computer = computer;
+            
             RegisterNativeCommands();
         }
         private void RegisterNativeCommands()
         {
+            
+            LoadNodeCommands("command nodes", new CommandNode(PRINT_COMMAND));
             LoadCommandSet("generic commands",
-                new("help", Help, "shows a list of all available commands and aliases to the currently open command prompt."),
+                new Command("help", Help, "shows a list of all available commands and aliases to the currently open command prompt."),
                 new("config" ,Config, "config .. {<set or get>} ..  {<property name>} .. {(new value is for set only) <new value>}"),
                 new("js", RunJavaScriptSourceFile, "runs a js file of name provided, such as myCodeFile to run myCodeFile.js in any directory under ../Appdata/VM")
             );
@@ -231,6 +246,15 @@ namespace VM.Lang
                 command.Method.Invoke(args);
                 return true;
             }
+
+            // try invoke stack based commands
+            Stack<string> input = new(args);
+            input.Push(name);
+            foreach (var item in CommandNodes)
+                foreach (var cmd in item.Value)
+                    if (cmd.Try(Computer, input))
+                        return true;
+    
             return false;
         }
         protected virtual void Dispose(bool disposing)
@@ -266,6 +290,15 @@ namespace VM.Lang
 
                 
             Commands[Directory].AddRange(commands);
+        }
+        public void LoadNodeCommands(string Directory = "generic node commands", params CommandNode[] node_commands)
+        {
+            CommandNodes ??= new();
+
+            if (!CommandNodes.TryGetValue(Directory, out var cmds) || cmds == null)
+                CommandNodes[Directory] = new List<CommandNode>();
+
+            CommandNodes[Directory].AddRange(node_commands);
         }
     }
 }
