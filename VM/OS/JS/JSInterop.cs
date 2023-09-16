@@ -121,7 +121,7 @@ namespace VM.JS
         }
         public void print(object message)
         {
-            //IO.WriteLine(message);
+            IO.WriteLine(message);
         }
         public void export(string id, object? obj)
         {
