@@ -264,6 +264,7 @@ namespace VM.JS
 
         public void setAliasDirectory(string path, string regex = "")
         {
+
             if (FileSystem.GetResourcePath(path) is string AbsPath && !string.IsNullOrEmpty(AbsPath))
             {
                 // validated path.
@@ -289,13 +290,30 @@ namespace VM.JS
                 }
                 else
                 {
-                    name = Path.GetFileName(file).Replace(Path.GetExtension(file), "");
+                    if (string.IsNullOrEmpty(file))
+                        return;
+                    var fileName = Path.GetFileName(file);
+                    string ext = ParseMultiFileExtensions(file, fileName);
+
+                    var periodCount = ext.Count(c => c == '.');
+                    var multi_extenson = periodCount > 1;
+                    // ignore non js files
+
+                    if (string.IsNullOrEmpty(ext) || multi_extenson || ext != ".js")
+                        return;
+
+                    name = fileName.Replace(ext, "");
                 }
 
                 Computer.CommandLine.Aliases[name] = file;
             };
             Action<string, string> procDir = delegate { }; 
             FileSystem.ProcessDirectoriesAndFilesRecursively(path, /*UNUSED*/ procDir, procFile);
+        }
+
+        private static string ParseMultiFileExtensions(string file, string fileName)
+        {
+            return string.Join("", file.Split('/').Last().Replace(fileName.Split('.')[0], ""));
         }
 
         #region WPF AVALONIA /C# Methods
@@ -606,8 +624,8 @@ namespace VM.JS
 
         //     image.Source = bitmap;
         // }
-         #endregion
-        
+        #endregion
+
         public static Dictionary<string, Func<string, string, object?, object?>> EventActions = new();
 
         public object? pushEvent(string id, string targetControl, string eventType, object? data)

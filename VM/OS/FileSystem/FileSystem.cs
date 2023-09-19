@@ -208,7 +208,10 @@ namespace VM.FS
 
         public static string GetResourcePath(string name)
         {
-            var path = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData) + "/VM";
+            var path = Computer.Computers[0].FS_ROOT;
+
+            if (string.IsNullOrEmpty(name))
+                return path;
 
             FileSystem.VerifyOrCreateAppdataDir(path);
 

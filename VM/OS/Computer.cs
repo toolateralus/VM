@@ -129,6 +129,7 @@ namespace VM
                 IO.WriteLine("Boot aborted");
                 return;
             }
+            Computers[id] = this;
 
             CommandLine = new(this);
 
@@ -155,7 +156,6 @@ namespace VM
                 new Command("unhost", (args) => Network.StopHosting(args), "if a server is currently running on this machine this halts any active connections and closes the sever.")
             );
 
-            Computers[id] = this;
         }
         private static async Task<(string id, string code)> InstantiateWindowClass(string type, (string XAML, string JS) data, JavaScriptEngine engine)
         {
