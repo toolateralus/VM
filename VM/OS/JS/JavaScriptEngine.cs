@@ -51,9 +51,22 @@ namespace VM.JS
             executionThread = new Thread(ExecuteAsync);
             executionThread.Start();
 
-            string jsDirectory = FileSystem.SearchForParentRecursive("VM");
+            string jsDirectory = FileSystem.SearchForParentRecursive("VM/VM");
 
-            LoadModules(jsDirectory + "/OS-JS");
+            // ############### START BUG REPORT ################
+                // by tool_ateralus : 11:40:35AM tues sept 19
+                /*
+                    this is just a problem with how we're searching for the OS-JS source js files, we should really embed the entire JS-OS into the DLL so we don't have to rely on any external
+                    file structuring. the 'else' case fixes a bug where if you load the library from outside of the source project, it fails to find the source code.
+                    You MUST have the source code added as a reference to your other project to use this currently.
+                    It should be okay to rely on that, as in the future replacing it with a traditional DLL reference will be presumably seamless. 
+                */
+                /* 
+                    UPDATE: WE ARE WORKING TO REMOVE THAT IN THE SearchForParentRecursive.
+                */
+                LoadModules(jsDirectory + "/OS-JS");
+
+            //  ############### END BUG REPORT ############### 
 
             _ = Execute($"os.id = {computer.ID}");
 
@@ -119,7 +132,7 @@ namespace VM.JS
         {
             void RecursiveLoad(string directory)
             {
-                foreach (var file in Directory.GetFiles(directory, "*.js"))
+                foreach (var file in Directory.GetFileSystemEntries(directory, "*.js"))
                 {
                     void AddModule(object? obj, string path)
                     {

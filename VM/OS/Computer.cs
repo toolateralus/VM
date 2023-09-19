@@ -59,7 +59,7 @@ namespace VM
         public readonly Dictionary<string, object> USER_WINDOW_INSTANCES = new();
 
         public uint ID { get; private set; }
-        public string FS_ROOT { get; set; } = "";
+        public string FS_ROOT { get; set; } = null!;
         public string WORKING_DIR { get; set; } = "";
         public bool Disposing { get; set; }
 
@@ -137,7 +137,7 @@ namespace VM
             this.WORKING_DIR = Path.GetFullPath(WORKING_DIR);
 
             // prepare the root dir for the FileSystem, since we add a dir to contain that itself.
-            FS_ROOT = $"{this.WORKING_DIR}/computer{id}";
+            FS_ROOT ??= $"{this.WORKING_DIR}/computer{id}";
 
             FS = new(FS_ROOT, this);
 

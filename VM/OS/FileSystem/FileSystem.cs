@@ -25,7 +25,12 @@ namespace VM.FS
                 }
             }
 
-            return Path.Combine(currentDirectory, targetDirectory);
+            var path = Path.Combine(currentDirectory, targetDirectory);
+
+               if (!path.Contains("/VM/VM") && path.Contains("/VM"))
+                path = path.Replace("/VM", "/VM/VM");
+                
+            return path;
         }
         class Installer
         {
@@ -38,7 +43,10 @@ namespace VM.FS
 
                 if (Directory.Exists(fullPath))
                 {
-                    CopyDirectory(fullPath, root);
+                    IO.WriteLine($"Installing at {fullPath} :: {root}");
+                    IO.WriteLine("Are you sure? (y/n)");
+                    if (IO.ReadLine()?.Trim()?.ToLower() == "y")
+                        CopyDirectory(fullPath, root);
                 }
             }
 
@@ -86,7 +94,7 @@ namespace VM.FS
             if (!Directory.Exists(root))
             {
                 Directory.CreateDirectory(root);
-                Installer installer = new(root);
+                installer = new Installer(root);
             }
 
             currentDirectory = root;
@@ -196,6 +204,8 @@ namespace VM.FS
         }
         public Deque<string> History = new();
         private bool Disposing;
+        private Installer installer;
+
         public static string GetResourcePath(string name)
         {
             var path = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData) + "/VM";
@@ -263,7 +273,6 @@ namespace VM.FS
 
             if (Directory.Exists(path))
             {
-
                 History.Push(currentDirectory);
 
                 currentDirectory = path;
@@ -272,6 +281,7 @@ namespace VM.FS
             {
                 IO.WriteLine($"Directory '{path}' not found in current path.");
             }
+            else currentDirectory = Path.GetDirectoryName(path) ?? throw new FileNotFoundException();
         }
        
         public void NewFile(string fileName)
