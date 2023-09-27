@@ -10,7 +10,7 @@ namespace VM
         /// <param name="e"></param>
         public static void Exception(Exception e)
         {
-            IO.WriteLine(e.Message + "\n" + e.InnerException + "\n" + e.Source);  
+            IO.WriteLine(e.Message);  
         }
     }
 }

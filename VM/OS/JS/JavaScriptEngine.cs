@@ -62,7 +62,8 @@ namespace VM.JS
                     It should be okay to rely on that, as in the future replacing it with a traditional DLL reference will be presumably seamless. 
                 */
                 /* 
-                    UPDATE: WE ARE WORKING TO REMOVE THAT IN THE SearchForParentRecursive.
+                    This system still HEAVILY relies on the source code being on the computer but also in a specific location and completely intact, 
+                    when used from any other library. This needs to be fixed more than anything in the project.
                 */
                 LoadModules(jsDirectory + "/OS-JS");
 
@@ -103,8 +104,11 @@ namespace VM.JS
                     }
                     catch (Exception e)
                     {
-                        Notifications.Exception(e);
-                        Computer.JavaScriptEngine.InteropModule.print(e.Message);
+                        if (ENGINE_JS.HasVariable("DEBUG_OUTPUT") || Computer.Debug)
+                        {
+                            Notifications.Exception(e);
+                            Computer.JavaScriptEngine.InteropModule.print(e.Message);
+                        }
                     }
                    
                     continue;
@@ -113,7 +117,7 @@ namespace VM.JS
             }
             if (!Disposing)
             {
-                throw new JsEngineException("Something happened");
+                throw new JsEngineException("Something happened, and the javascript engine exited unexpectedly.");
             }
         }
         public object? GetVariable(string name)
@@ -190,7 +194,6 @@ namespace VM.JS
 
             return handle;
         }
-       
         public void ExecuteScript(string absPath)
         {
             if (File.Exists(absPath))

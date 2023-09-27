@@ -1,21 +1,47 @@
-﻿using VM;
+﻿using System.Runtime.Intrinsics.X86;
+using VM;
 using VM.Terminal;
 
+using VirtualEnvironment = VM.Computer;
+
 // This is a cli app.
-await Terminal.Run(true, null!);
+uint ID = 0;
+var env = Terminal.GetVirtualEnvironment(true, null!);
+
+env.Boot(ID);
+
+_ = Task.Run(()=>Terminal.RunRepl(env));
 
 namespace VM.Terminal
 {
     public static class Terminal
     {
-        public static async Task Run(bool forPC, string? root)
+
+        public static async Task RunRepl(Computer computer)
+        {
+            IO.WriteLine("Welcome to the command line. type help for info.");
+                
+            while (true)
+            {
+                var input = IO.ReadLine()!;
+                
+                if (input.Trim().ToLower() == "restart"){
+                    break;
+                }
+
+                if (!computer.CommandLine.TryCommand(input)){
+                    await computer.JavaScriptEngine.Execute(input);
+                }
+            }
+        }
+        public static Computer GetVirtualEnvironment(bool forPC, string? root)
         {
             while(true)
             {
 
                 var computer = new Computer();
                 computer.FS_ROOT = root!;
-                
+                computer.WORKING_DIR = root!;
                 if (forPC) 
                 {
                     IO.WriteLine("Enter a computer index, (probably just 0, unless you're multi-booting)");
@@ -28,27 +54,13 @@ namespace VM.Terminal
                         continue;
                     }
 
-                    computer.Boot(id);
+                    return computer;
                     IO.WriteLine($"Computer booted on id {id}");
                 }
-                else 
-                computer.Boot(0);
-                
-                IO.WriteLine("Welcome to the command line. type help for info.");
-                
-                while (true)
-                {
-                    var input = IO.ReadLine()!;
-                    
-                    if (input.Trim().ToLower() == "restart"){
-                        break;
-                    }
-
-                    if (!computer.CommandLine.TryCommand(input)){
-                        await computer.JavaScriptEngine.Execute(input);
-                    }
-                }
+                return computer;
             }
         }
     }
+
+   
 }

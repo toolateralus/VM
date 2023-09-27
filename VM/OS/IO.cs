@@ -1,15 +1,28 @@
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 
 namespace VM
 {
-    public class IO 
+    public static class IO 
     {
-
         public static void WriteLine(object? o) => OSTREAM?.Invoke(o);
-        public static string? ReadLine() => ISTREAM?.Invoke();
-        
-        public static Action? CSTREAM { get; private set; }
+        public static string? ReadLine(string? prompt = null)
+        {
+            if (prompt != null)
+                WriteLine(prompt);
+
+            return ISTREAM?.Invoke();
+        }
+
+        public static Action? CSTREAM { get; set; }
+
+        static IO () 
+        {
+            // fixes issue where C# console apps just scroll the console on Console.Clear(); 
+            // might not work in some terminals, have not tested it on anything but linux mint
+            CSTREAM += () => Process.Start("clear");
+        }
         public static Func<string?>? ISTREAM { get; private set; }= Console.ReadLine;
         public static Action<object?>? OSTREAM { get; private set; } = Console.WriteLine;
 

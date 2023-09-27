@@ -223,8 +223,11 @@ namespace VM.FS
             if (Directory.Exists(path))
             {
                 string[] entries = Directory.GetFileSystemEntries(path, name, SearchOption.AllDirectories);
+                
+                var _path = entries?.FirstOrDefault() ?? "";
 
-                return entries.FirstOrDefault();
+                if (File.Exists(_path))
+                    return _path;
             }
 
             return "";

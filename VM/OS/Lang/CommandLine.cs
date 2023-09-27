@@ -181,10 +181,18 @@ namespace VM.Lang
         }
         private async void RunJavaScriptSourceFile(object[]? obj)
         {
-            if (obj.Length > 0 && obj[0] is string path && FileSystem.GetResourcePath(path + ".js") is string AbsPath &&  File.Exists(AbsPath))
+            if (obj is null)
+                return;
+                
+            foreach(var path in obj?.Where(o => o is string)) 
             {
-                await Computer.JavaScriptEngine.Execute(File.ReadAllText(AbsPath));
-                IO.WriteLine($"running {AbsPath}...");
+                if(FileSystem.GetResourcePath(path + ".js") is string AbsPath &&  File.Exists(AbsPath))
+                {
+                    await Computer.JavaScriptEngine.Execute(File.ReadAllText(AbsPath));
+                    IO.WriteLine($"running {AbsPath}...");
+                }
+                else
+                IO.WriteLine($"couldn't run {path}");
             }
         }
         #endregion
