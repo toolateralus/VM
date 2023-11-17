@@ -26,6 +26,7 @@ namespace VM.JS
 
         private void CreateHook(FrameworkElement control, XAML_EVENTS @event)
         {
+            // todo: fix these potential / likely memory leaks
             switch (@event)
             {
                 case XAML_EVENTS.MOUSE_DOWN:

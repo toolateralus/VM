@@ -29,9 +29,6 @@
     <None Include="computer.utils\downloads\.git\COMMIT_EDITMSG" />
     <None Include="computer.utils\downloads\.git\config" />
     <None Include="computer.utils\downloads\.git\description" />
-    <None Include="downloads\.git\COMMIT_EDITMSG" />
-    <None Include="downloads\.git\config" />
-    <None Include="downloads\.git\description" />
   </ItemGroup>
 
   <ItemGroup>

@@ -2,21 +2,12 @@
 using System;
 using System.Collections.Generic;
 using System.Data;
-using System.Drawing;
 using System.IO;
 using System.Linq;
-using System.Runtime.CompilerServices;
-using System.Runtime.InteropServices;
-using System.Security.Cryptography.X509Certificates;
 using System.Text;
-using System.Text.RegularExpressions;
 using System.Threading.Tasks;
-using System.Windows.Documents;
-using System.Windows.Forms.VisualStyles;
 using VM.GUI;
-using VM;
 using VM.Network;
-using VM.Network.Server;
 using VM.JS;
 
 namespace VM.FS
@@ -26,16 +17,13 @@ namespace VM.FS
         public string id = "NULL";
         public Action<object[]?> Method;
         public string[] infos = Array.Empty<string>();
-        public Command(string id, Action<object[]?> method, params string[]? infos)
+        public Command(string id, Action<object[]?> method, params string[] infos)
         {
             this.id = id;
             this.Method = method;
 
             if (infos != null)
-            {
-                this.infos = this.infos.Concat(infos).ToArray();
-            }
-
+                this.infos = infos;
         }
     }
     public class CommandLine : IDisposable
@@ -114,6 +102,13 @@ namespace VM.FS
         {
             string? a = obj[0] as string;
             string? b = obj[1] as string;
+
+            if (a == null || b == null)
+            {
+                Notifications.Now("Bad arguments to : move");
+                return;
+            }
+
             Computer.FS.Move(a, b);
             Notifications.Now($"Moved {a}->{b}");
         }
@@ -397,7 +392,7 @@ namespace VM.FS
         }
         private async void RunJs(object[]? obj)
         {
-            if (obj.Length > 0 && obj[0] is string path && FileSystem.GetResourcePath(path + ".js") is string AbsPath &&  File.Exists(AbsPath))
+            if (obj != null && obj.Length > 0 && obj[0] is string path && FileSystem.GetResourcePath(path + ".js") is string AbsPath && File.Exists(AbsPath))
             {
                 await Computer.JavaScriptEngine.Execute(File.ReadAllText(AbsPath));
                 Notifications.Now($"running {AbsPath}...");
@@ -435,28 +430,20 @@ namespace VM.FS
                     jsCode = jsCode.Replace(args, newArgs);
                 }
 
-                Task.Run(async delegate { await Computer.JavaScriptEngine.Execute(jsCode); });
+                _ = Task.Run(async delegate { await Computer.JavaScriptEngine.Execute(jsCode); });
                 return true;
             }
 
             return TryInvoke(cmdName, str_args);
         }
-        public Command Find(string name)
-        {
-            if (Commands.Where(c => c.id == name).FirstOrDefault((Command)default) is Command cmd)
-            {
-                return cmd;
-            }
-            return default;
-        }
+        public Command Find(string name) => Commands.FirstOrDefault(c => c.id == name);
         public bool TryInvoke(string name, string[] args)
         {
-            if (Find(name) is Command command && command.id != null && command.id != "NULL" && command.Method != null)
-            {
-                command.Method.Invoke(args);
-                return true;
-            }
-            return false;
+            Command cmd = Find(name);
+            cmd.Method?.Invoke(args);
+            // if it wasn't null then as far as we're concerned we've invoked it 
+            // the fullest extent.
+            return cmd.Method != null;
         }
         public void RootCmd(object[]? args)
         {

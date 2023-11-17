@@ -19,6 +19,7 @@ using System.Windows.Threading;
 using System.Windows.Media;
 using System.ComponentModel;
 using static VM.GUI.ComputerWindow;
+using Microsoft.ClearScript.JavaScript;
 
 namespace VM
 {
@@ -62,9 +63,7 @@ namespace VM
             JavaScriptEngine = new(computer);
 
             if (FileSystem.GetResourcePath("startup.js") is string AbsPath)
-            {
                 JavaScriptEngine.ExecuteScript(AbsPath);
-            }
         }
         public static string SearchForParentRecursive(string targetDirectory)
         {
@@ -183,27 +182,7 @@ namespace VM
             InstalledJSApps.Remove(name);
             Window.Dispatcher.Invoke(() => { Window.RemoveDesktopIcon(name); });
         }
-        internal void FinishInit(ComputerWindow wnd)
-        {
-            LoadBackground(this, wnd);
 
-            wnd.Show();
-
-            wnd.Closed += (o, e) =>
-            {
-                Computer.Computers.Remove(this);
-                Task.Run(() => SaveConfig(Config.ToString()));
-                Dispose();
-            };
-
-            InstallCoreApps(this);
-        }
-        private static void InstallCoreApps(Computer pc)
-        {
-            pc.InstallApplication("CommandPrompt.app", typeof(CommandPrompt));
-            pc.InstallApplication("FileExplorer.app", typeof(FileExplorer));
-            pc.InstallApplication("TextEditor.app", typeof(TextEditor));
-        }
         private static void LoadBackground(Computer pc, ComputerWindow wnd)
         {
             string backgroundPath = pc?.Config?.Value<string>("BACKGROUND") ?? "background.png";
@@ -231,11 +210,6 @@ namespace VM
 
         #region Application
         public static Dictionary<Computer, ComputerWindow> Computers = new();
-        public static ComputerWindow? GetWindow(Computer pc)
-        {
-            Computers.TryGetValue(pc, out var val);
-            return val!;
-        }
         public static void Restart(uint id)
         {
             var pc = Computers.Where(C => C.Key.ID == id).FirstOrDefault();
@@ -259,38 +233,58 @@ namespace VM
             ComputerWindow wnd = new(pc);
             pc.Window = wnd;
             Computers[pc] = wnd;
-            pc.FinishInit(wnd);
-        }
-        public static T SearchForOpenWindowType<T>(Computer Computer)
-        {
-            var wnd = GetWindow(Computer);
-            T content = default!;
 
-            if (wnd is null)
+            LoadBackground(pc, wnd);
+
+            wnd.Show();
+
+            wnd.Closed += (o, e) =>
+            {
+                Computer.Computers.Remove(pc);
+                Task.Run(() => SaveConfig(pc.Config.ToString()));
+                pc.Dispose();
+            };
+
+            pc.InstallApplication("CommandPrompt.app", typeof(CommandPrompt));
+            pc.InstallApplication("FileExplorer.app", typeof(FileExplorer));
+            pc.InstallApplication("TextEditor.app", typeof(TextEditor));
+        }
+        public static T SearchForOpenWindowType<T>(Computer pc)
+        {
+
+            if (!Computers.TryGetValue(pc, out var pc_window))
             {
                 Notifications.Exception(new NullReferenceException("Window not found."));
                 return default!;
             }
 
-            foreach (var window in wnd.Computer.USER_WINDOW_INSTANCES)
+            T content = default!;
+
+            foreach (var window in pc_window.Computer.USER_WINDOW_INSTANCES)
             {
+                // we should really put a centralized job queue in each window, and let each computer manage their own
+                // threads.
+                
+                // alternatively, we could just remove all-together the concept of opening many windows at once,
+                // since there's really no point and ever since we added TCP and the minimal networking setup,
+                // it's become even more redundant and needless.
+                // it adds such unneccesary complexity and messiness to the entire repo.
+
+
                 window.Value.Dispatcher.Invoke(() => { 
                 
-                    if (window.Value is UserWindow userWindow && userWindow.Content is Grid g)
-                    {
-                        foreach (var item in g.Children)
-                        {
-                            if (item is Frame frame)
-                            {
-                                if (frame.Content is T ActualApplication)
-                                {
-                                    content =  ActualApplication;
-                                    break;
-                                }
-                            }
-                        }
+                    if (window.Value is not UserWindow userWindow || userWindow.Content is not Grid g)
+                        return;
 
-                    }
+                    var result = g.Children.ToEnumerable().FirstOrDefault(i => i is Frame frame && frame.Content is T actualApp);
+
+                    if (result == default)
+                        return;
+
+                    var frame = result as Frame;
+                    var app = (T)frame.Content;
+                    content = app;
+
                 });
             }
             return content!;

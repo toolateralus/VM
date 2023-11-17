@@ -20,8 +20,6 @@ namespace VM.GUI
 
     public partial class Runtime : Window
     {
-
-
         public Runtime()
         {
             InitializeComponent();
@@ -53,18 +51,13 @@ namespace VM.GUI
 
             StreamReader sReader = new(path);
 
-            using (XmlReader reader = XmlReader.Create(sReader))
-            {
-                IHighlightingDefinition jsHighlighting = HighlightingLoader.Load(reader, HighlightingManager.Instance);
+            using XmlReader reader = XmlReader.Create(sReader);
+            IHighlightingDefinition jsHighlighting = HighlightingLoader.Load(reader, HighlightingManager.Instance);
 
-                if (HighlightingManager.Instance.GetDefinition("JavaScriptCustom") is IHighlightingDefinition ihd && ihd != default && ihd != null)
-                {
-                    // we already registered this highlighing definition.
-                    return;
-                }
+            if (HighlightingManager.Instance.GetDefinition("JavaScriptCustom") is IHighlightingDefinition ihd && ihd != default && ihd != null)
+                return;
 
-                HighlightingManager.Instance.RegisterHighlighting("JavaScriptCustom", new[] { ".js" }, jsHighlighting);
-            }
+            HighlightingManager.Instance.RegisterHighlighting("JavaScriptCustom", new[] { ".js" }, jsHighlighting);
         }
 
         public const string COMPUTER = "computer";
@@ -133,12 +126,19 @@ namespace VM.GUI
         {
             const string xamlExt = ".xaml";
             const string xamlJsExt = ".xaml.js";
-
+            (string, string) failmsg = ("Not found!", "Not Found!");
             var absPath = FileSystem.GetResourcePath(dir);
 
             if (Directory.Exists(absPath))
             {
-                string name = dir.Split('.')[0];
+                string name = dir.Split('.').First();
+
+                if (string.IsNullOrEmpty(name))
+                {
+                    Notifications.Now("");
+                    return failmsg;
+                }
+
                 string xamlFile = Path.Combine(absPath, name + xamlExt);
                 string jsFile = Path.Combine(absPath, dir.Split('.')[0]  + xamlJsExt);
 
@@ -154,10 +154,9 @@ namespace VM.GUI
                 }
             }
 
-            return ("Not found!", "Not Found!");
+            return failmsg;
         }
        
-        #region Color Animation
         private readonly Color StartColor = Colors.MediumBlue;
         private readonly Color EndColor = Colors.MediumSlateBlue;
         private readonly TimeSpan AnimationDuration = TimeSpan.FromSeconds(5);
@@ -187,6 +186,5 @@ namespace VM.GUI
             byte b = (byte)(from.B + (to.B - from.B) * progress);
             return Color.FromRgb(r, g, b);
         }
-        #endregion
     }
 }

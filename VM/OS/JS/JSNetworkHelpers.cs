@@ -32,6 +32,7 @@ namespace VM.JS
         public void disconnect()
         {
             Computer.Network.StopClient();
+            Notifications.Now("Stopping connection to client");
         }
 
         public void connect(object? ip)

@@ -184,72 +184,53 @@ namespace VM.JS
        
         internal void ExecuteScript(string absPath)
         {
-            if (File.Exists(absPath))
-                Task.Run(()=> { try { ENGINE_JS.Execute(File.ReadAllText(absPath)); } catch { } });
-        }
-        /// <summary>
-        /// this method is used for executing js events
-        /// </summary>
-        /// <param name="code"></param>
-        internal void DIRECT_EXECUTE(string code)
-        {
-            if (Disposing)
-                return;
-            try
-            {
-                ENGINE_JS.Execute(code);
-            }
-            catch(Exception e)
-            {
-                Notifications.Exception(e);
-            }
+            var script = File.ReadAllText(absPath);
+            Task.Run(() => Execute(script));
         }
         internal async Task CreateEventHandler(string identifier, string targetControl, string methodName, int type)
         {
             
             var wnd = Computer.Window;
-
+            // check if this event already exists
             var result = await Execute($"{identifier} != null");
-
             if (result is not bool ID_EXISTS || !ID_EXISTS)
-            {
                 return;
-            }
 
+            // check if this method already exists
             result = await Execute($"{identifier}.{methodName} != null");
-
             if (result is not bool METHOD_EXISTS || !METHOD_EXISTS)
-            {
                 return;
-            }
+
             wnd.Dispatcher.Invoke(() =>
             {
+                // gets the requested ui control for the event to be attached to.
                 var content = JSInterop.GetUserContent(identifier, Computer);
 
                 if (content == null)
                 {
-                    Notifications.Now($"control {identifier} not found!");
+                    Notifications.Exception(new NullReferenceException($"control {identifier} not found!"));
                     return;
                 }
 
+                FrameworkElement? element = null;
 
-                FrameworkElement element = null;
+                // hack to get a self reference easily, which is incredibly common in oop ui.
                 if (targetControl.ToLower().Trim() == "this")
-                {
                     element = content;
-                }
                 else
-                {
-                    element = JSInterop.FindControl(content, targetControl);
-                }
+                    element = JSInterop.FindControl(content, targetControl)!;
 
 
+                // failed to get the actual element the user requested.
                 if (element == null)
                 {
-                    Notifications.Now($"control {targetControl} of {content.Name} not found.");
+                    Notifications.Exception(new NullReferenceException($"control {targetControl} of {content.Name} not found."));
                     return;
                 }
 
+                // create the actual handler, attach it to this engine,
+                // and create the hook method in the javascript environment.
+                // this does the real creation of the event.
                 var eh = new XAMLJSEventHandler(element, (XAML_EVENTS)type, this, identifier, methodName);
 
                 if (Computer.USER_WINDOW_INSTANCES.TryGetValue(identifier, out var app))
@@ -262,6 +243,7 @@ namespace VM.JS
                         eh.OnDispose?.Invoke();
                     };
                 }
+                else Notifications.Exception(new NullReferenceException("Creating an event handler failed : this is an engine bug. report it on github if you'd like"));
 
                 EventHandlers.Add(eh);
             });
@@ -274,6 +256,7 @@ namespace VM.JS
 
             if (result is not bool ID_EXISTS || !ID_EXISTS)
             {
+                Notifications.Now($"Failed to create network event handler, {identifier} one already existed.");
                 return;
             }
 
@@ -281,6 +264,7 @@ namespace VM.JS
 
             if (result is not bool METHOD_EXISTS || !METHOD_EXISTS)
             {
+                Notifications.Now($"Failed to create network event handler, {identifier}.{methodName} one already existed.");
                 return;
             }
 

@@ -1,4 +1,5 @@
-﻿using System;   
+﻿using System;
+using System.Linq;
 using VM.GUI;
 
 namespace VM
@@ -24,7 +25,7 @@ namespace VM
 
         internal static void Exception(Exception e)
         {
-            Now(e.Message + "\n" + e.InnerException + "\n" + e.Source);  
+            Now(e.Message.Split("at").FirstOrDefault(""));  
         }
     }
 }
