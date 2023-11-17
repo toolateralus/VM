@@ -23,9 +23,11 @@ function start(app) {
 function read() {
     return interop.read();
 }
+
 function install(directory) {
     interop.install(directory)
 }
+
 class OS {
     id = 0;
 
@@ -68,5 +70,5 @@ class App {
     }
 }
 
-let app = new App();
-let os = new OS()
+const app = new App();
+const os = new OS()

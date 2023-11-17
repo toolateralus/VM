@@ -14,6 +14,12 @@ using VM.JS;
 
 namespace VM.GUI
 {
+    public enum AppType
+    {
+        JAVASCRIPT_XAML_WPF,
+        CSHARP_XAML_WPF_NATIVE,
+        JS_HTML_WEB_APPLET,
+    }
     public partial class ComputerWindow : Window, IDisposable
     {
         public Computer Computer;
@@ -34,7 +40,7 @@ namespace VM.GUI
 
             CompositionTarget.Rendering += (e, o) => UpdateComputerTime();
         }
-        public Button GetOSThemeButton(double width = double.NaN, double height = double.NaN)
+        public Button MakeButton(double width = double.NaN, double height = double.NaN)
         {
             var btn = new Button()
             {
@@ -48,33 +54,36 @@ namespace VM.GUI
             };
             return btn;
         }
-        public Button GetDesktopIconButton(string appName)
+        public Button MakeDesktopButton(string appName)
         {
-            var btn = GetOSThemeButton(width: 60, height: 60);
+            var btn = MakeButton(width: 60, height: 60);
             btn.Margin = new Thickness(15, 15, 15, 15);
             btn.Content = appName;
             btn.Name = appName.Split(".")[0];
             return btn;
         }
-        public Button GetTaskbarButton(string title, RoutedEventHandler Toggle)
+        public Button MakeTaskbarButton(string title, RoutedEventHandler Toggle)
         {
-            var btn = GetOSThemeButton(width: 65);
+            var btn = MakeButton(width: 65);
 
             btn.Content = title;
             btn.Click += Toggle;
             return btn;
         }
-        public void Computer_KeyDown(object sender, System.Windows.Input.KeyEventArgs e)
+        public void Computer_KeyDown(object sender, KeyEventArgs e)
         {
             foreach (var userWindow in Computer.Windows)
             {
-                if (userWindow.Value?.JavaScriptEngine?.EventHandlers == null)
+                var handlers = userWindow.Value?.JavaScriptEngine?.EventHandlers;
+
+                if (handlers == null || !handlers.Any())
                     continue;
 
-                foreach (XAMLJSEventHandler eventHandler in userWindow.Value.JavaScriptEngine.EventHandlers.Where((e) => e is XAMLJSEventHandler))
-                {
+                var js_handlers = handlers.OfType<XAMLJSEventHandler>();
+
+                foreach (var eventHandler in js_handlers)
                     InvokeKeyEvent(sender, e, eventHandler);
-                }
+
             }
 
             switch (e.Key)
@@ -175,17 +184,12 @@ namespace VM.GUI
         /// <param name="computer"></param>
         public static void AssignComputer(object instance, Computer computer)
         {
-            var methods = instance.GetType().GetMethods();
-
-            foreach (var method in methods)
-            {
-                if (method.Name.Contains("LateInit") &&
+            var method = instance.GetType().GetMethods().FirstOrDefault(method => method.Name.Contains("LateInit") &&
                     method.GetParameters().Length == 1 &&
-                    method.GetParameters()[0].ParameterType == typeof(Computer))
-                {
-                    method.Invoke(instance, new[] { computer });
-                }
-            }
+                    method.GetParameters()[0].ParameterType == typeof(Computer));
+
+            if (method != null)
+                method.Invoke(instance, new[] { computer });
         }
         /// <summary>
         /// we rely on this <code>('public void LateInit(Computer pc){..}') </code>method being declared in the UserControl to attach the OS to the app
@@ -204,20 +208,25 @@ namespace VM.GUI
             }
             return false;
         }
-        internal UserWindow OpenAppUI(UserControl control, string title, ref Brush? background, ref Brush? foreground, JavaScriptEngine engine)
+        internal UserWindow OpenAppUI(string title, ref Brush? background, ref Brush? foreground, out ResizableWindow resizableWindow)
         {
             TopMostZIndex++;
 
             background ??= Computer.Theme.Background;
             foreground ??= Computer.Theme.Foreground;
 
+            // hosts the user content and it's utilities
             var window = new UserWindow
             {
                 Background = background,
                 Foreground = foreground,
             };
 
-            var frame = new ResizableWindow(this)
+            // TODO: add a way for users to add buttons and toolbars easily through
+            // their js code, that would be very helpful.
+
+            // does the resizing, moving, closing, minimizing, windowing stuff.
+            resizableWindow = new ResizableWindow(this)
             {
                 Content = window,
                 Width = Math.Max(window.MinWidth, window.Width),
@@ -227,54 +236,50 @@ namespace VM.GUI
                 Foreground = window.Foreground,
             };
 
-            window.InitializeUserContent(frame, control, engine);
+            // declaring this field as a hack, to capture the object in the lambda function below.
+            // cant capture an out var, but it's ok here, actually crucial to prevent a leak.
+            var rsz_win_capture = resizableWindow;
 
-            Desktop.Children.Add(frame);
-
-            Button btn = GetTaskbarButton(title, window.ToggleVisibility);
+            Button btn = MakeTaskbarButton(title, window.ToggleVisibility);
 
             TaskbarStackPanel.Children.Add(btn);
+            Desktop.Children.Add(resizableWindow);
 
             window.OnClosed += () =>
             {
+                Desktop.Children.Remove(rsz_win_capture);
                 Computer?.Windows.Remove(title);
                 RemoveTaskbarButton(title);
             };
             return window;
         }
 
-        public enum AppType
-        {
-            JAVASCRIPT_XAML_WPF,
-            CSHARP_XAML_WPF_NATIVE,
-            JS_HTML_WEB_APPLET,
-        }
+        // Todo: we shouldn't be relying on the button being present to determine whether an app is installed or not lol.
         internal void RemoveDesktopIcon(string name)
+        {
+            System.Collections.IList list = DesktopIconPanel.Children;
+
+            for (int i = 0; i < list.Count; i++)
             {
-                System.Collections.IList list = DesktopIconPanel.Children;
+                object? item = list[i];
 
-                for (int i = 0; i < list.Count; i++)
+                if (item is Button btn)
                 {
-                    object? item = list[i];
-
-                    if (item is Button btn)
+                    btn.Dispatcher.Invoke(() =>
                     {
-                        btn.Dispatcher.Invoke(() =>
+                        if (btn.Name == name.Replace(".app", "").Replace(".web", ""))
                         {
-                            if (btn.Name == name.Replace(".app", "").Replace(".web", ""))
-                            {
-                                DesktopIconPanel.Children.Remove(btn);
-                            }
-                        });
-                    }
+                            DesktopIconPanel.Children.Remove(btn);
+                        }
+                    });
                 }
             }
+        }
         public void InstallIcon(AppType type, string name, Type? runtime_type = null)
         {
-            // I think we almost have to use the dispatcher here since we're generating UI elements.
             void InstallJSWPFIcon(string type)
             {
-                var btn = GetDesktopIconButton(type);
+                var btn = MakeDesktopButton(type);
 
                 btn.MouseDoubleClick += OnDesktopIconPressed;
 
@@ -287,7 +292,7 @@ namespace VM.GUI
             }
             void WebAppDesktopIcon(string type)
             {
-                var btn = GetDesktopIconButton(type);
+                var btn = MakeDesktopButton(type);
                 btn.MouseDoubleClick += OnDesktopIconPressed;
 
                 void OnDesktopIconPressed(object? sender, RoutedEventArgs e)
@@ -302,7 +307,7 @@ namespace VM.GUI
             }
             void InstallDesktopIconNative(string name, Type type)
             {
-                var btn = GetDesktopIconButton(name);
+                var btn = MakeDesktopButton(name);
 
                 btn.MouseDoubleClick += OnDesktopIconPressed;
 
@@ -342,7 +347,6 @@ namespace VM.GUI
                 DesktopIconPanel.UpdateLayout();
             });
         }
-
         protected virtual void Dispose(bool disposing)
         {
             if (!Disposing)

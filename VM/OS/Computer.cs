@@ -65,7 +65,7 @@ namespace VM
             if (FileSystem.GetResourcePath("startup.js") is string AbsPath)
                 JavaScriptEngine.ExecuteScript(AbsPath);
         }
-        public static string SearchForParentRecursive(string targetDirectory)
+        public static string? SearchForParentRecursive(string targetDirectory)
         {
             string assemblyLocation = Assembly.GetExecutingAssembly().Location;
             string currentDirectory = Path.GetDirectoryName(assemblyLocation);
@@ -74,10 +74,7 @@ namespace VM
             {
                 currentDirectory = Directory.GetParent(currentDirectory)?.FullName;
                 if (currentDirectory == null)
-                {
-                    // Reached the root directory without finding the target
                     return null;
-                }
             }
 
             return Path.Combine(currentDirectory, targetDirectory);
@@ -90,7 +87,7 @@ namespace VM
 
             this.WORKING_DIR = Path.GetFullPath(WORKING_DIR);
             
-            // prepare the root dir for the FileSystem, since we add a dir to contain that itself.
+            // prepare the root dir for the file system
             FS_ROOT = $"{this.WORKING_DIR}\\computer{id}";
 
             FS = new(FS_ROOT, this);
@@ -153,8 +150,14 @@ namespace VM
         }
         public void OpenApp(UserControl control, string title = "window", Brush? background = null, Brush? foreground = null, JavaScriptEngine engine = null)
         {
-            UserWindow window = Window.OpenAppUI(control, title,ref background, ref foreground, engine);
+            // the resizable is the container that hosts the user app.
+            // this is made seperate to eliminate annoying and complex boiler plate.
+            UserWindow window = Window.OpenAppUI(title,ref background, ref foreground, out var resizable_window);
             Windows[title] = window;
+
+            // this is the process being opened and the UI being established for it.
+            // they are heavily woven, unfortunately.
+            window.InitializeUserContent(resizable_window, control, engine);
         }
 
         public void InstallJSWPF(string type)

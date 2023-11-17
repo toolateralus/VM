@@ -8,7 +8,7 @@ using static System.Windows.Forms.VisualStyles.VisualStyleElement;
 namespace VM.GUI
 {
     /// <summary>
-    /// Interaction logic for UserWindow.xaml
+    /// Interaction logic for UserWindow.xaml needs work big time.
     /// </summary>
     public partial class UserWindow : UserControl
     {
@@ -26,10 +26,15 @@ namespace VM.GUI
         {
             Owner = frame;
             ContentsFrame.Content = actualUserContent;
-            this.JavaScriptEngine = engine;
+            JavaScriptEngine = engine;
             
             if (engine != null) 
                 OnClosed += engine.Dispose;
+
+            object? unused_param = null!;
+
+            // these args are just from the wpf event handler and don't get used.
+            ToggleMaximize((object)unused_param, (RoutedEventArgs)unused_param); 
         }
         internal void Close()
         {
@@ -97,6 +102,4 @@ namespace VM.GUI
 
         }
     }
-
-   
 }

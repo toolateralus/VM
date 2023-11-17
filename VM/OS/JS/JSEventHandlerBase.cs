@@ -1,8 +1,10 @@
 ﻿using System;
+using System.Diagnostics;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Input;
+using VM.GUI;
 
 namespace VM.JS
 {
@@ -79,11 +81,7 @@ namespace VM.JS
             if (!Disposing)
             {
                 if (disposing)
-                {
-                    ExecutionThread?.Join(10_000);
-
-                }
-
+                    Task.Run(() => ExecutionThread?.Join());
                 Disposing = true;
             }
         }

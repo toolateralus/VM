@@ -13,7 +13,7 @@ namespace VM
             {
                 var cmd = Computer.TryGetProcess<CommandPrompt>(Computer.Current);
 
-                cmd?.Dispatcher?.Invoke(() => { cmd?.output?.AppendText("\n" + message); });
+                cmd?.output?.AppendText("\n" + message);
 
                 var notif = new NotificationControl() { Message = message };
                 cw.NotificationStackPanel.Children.Add(notif);

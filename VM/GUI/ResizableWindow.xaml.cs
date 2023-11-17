@@ -23,8 +23,6 @@ namespace VM.GUI
            MouseUp += OnMouseUp;
            MouseLeave += onMouseLeave;
 
-            // Todo: remove magic numbers, replace with config file read or something like that.
-
            MinWidth = Owner?.Computer?.Config.Value<float?>("MIN_WIN_WIDTH") ?? 50;
            MinHeight = Owner?.Computer?.Config.Value<float?>("MIN_WIN_HEIGHT") ?? 50;
            MaxWidth = Owner?.Computer?.Config.Value<float?>("MAX_WIN_WIDTH") ?? 1920;

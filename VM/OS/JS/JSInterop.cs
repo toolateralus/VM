@@ -25,31 +25,30 @@ using System.Text.RegularExpressions;
 
 namespace VM.JS
 {
+    // ## THIS DIRELY NEEDS TO BE SPLIT UP AND DOCUMENTED, JUST MAKE SURE EVERYTHING IS PUBLIC! ## \\
     public class JSInterop
     {
         public Computer Computer;
         public Action<string, object?>? OnModuleExported;
         public Func<string, object?>? OnModuleImported;
         public Action<int>? OnComputerExit;
+        public static Dictionary<string, Func<string, string, object?, object?>> EventActions = new();
 
         public JSInterop(Computer computer)
         {
             this.Computer = computer;
-            EventActions.TryAdd("draw_pixels", DrawPixelsEvent);
-            EventActions.TryAdd("draw_image", DrawImageEvent);
-            EventActions.TryAdd("set_content", SetContent);
-            EventActions.TryAdd("get_content", GetContent);
+            EventActions["draw_pixels"] = DrawPixelsEvent;
+            EventActions["draw_image"] = DrawImageEvent;
+            EventActions["set_content"] = SetContent;
+            EventActions["get_content"] = GetContent;
         }
-        
         public object getentries(string path)
         {
             if (File.Exists(path))
                 return path;
 
             if (!Directory.Exists(path))
-            {
                 return "";
-            }
 
             return Directory.GetFileSystemEntries(path);
         }
@@ -105,8 +104,6 @@ namespace VM.JS
             return result;
         }
 
-      
-
         public double random(double max)
         {
             return System.Random.Shared.NextDouble() * max;
@@ -141,8 +138,6 @@ namespace VM.JS
             }
             return default;
         }
-
-
 
         public object toBytes(string background)
         {
@@ -326,7 +321,6 @@ namespace VM.JS
         {
             return FileSystem.GetResourcePath(path) is string AbsPath && !string.IsNullOrEmpty(AbsPath) ? File.Exists(AbsPath) : false;
         }
-
         public void setAliasDirectory(string path, string regex = "")
         {
             if (FileSystem.GetResourcePath(path) is string AbsPath && !string.IsNullOrEmpty(AbsPath))
@@ -362,12 +356,11 @@ namespace VM.JS
             Action<string, string> procDir = delegate { }; 
             FileSystem.ProcessDirectoriesAndFilesRecursively(path, /*UNUSED*/ procDir, procFile);
         }
-
         public object? getProperty(string id, string controlName, object? property)
         {
             object? output = null;
 
-            Computer.Window?.Dispatcher.Invoke((Delegate)(() =>
+            Computer.Window?.Dispatcher.Invoke(() =>
             {
                 var userControl = GetUserContent(id, Computer);
                 var control = FindControl(userControl, controlName);
@@ -376,7 +369,7 @@ namespace VM.JS
                     return;
 
                 output = GetProperty(control, property as string);
-            }));
+            });
 
             return output;
         }
@@ -396,7 +389,6 @@ namespace VM.JS
             }));
 
         }
-
         #region C# Methods
 
         public T FindElementInUserControl<T>(UserControl userControl, string elementName) where T : FrameworkElement
@@ -670,7 +662,6 @@ namespace VM.JS
             image.Source = bitmap;
         }
         #endregion
-        public static Dictionary<string, Func<string, string, object?, object?>> EventActions = new();
         public object? pushEvent(string id, string targetControl, string eventType, object? data)
         {
             if (EventActions.TryGetValue(eventType, out var handler))
