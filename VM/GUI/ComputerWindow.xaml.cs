@@ -66,7 +66,7 @@ namespace VM.GUI
         }
         public void Computer_KeyDown(object sender, System.Windows.Input.KeyEventArgs e)
         {
-            foreach (var userWindow in Computer.USER_WINDOW_INSTANCES)
+            foreach (var userWindow in Computer.Windows)
             {
                 if (userWindow.Value?.JavaScriptEngine?.EventHandlers == null)
                     continue;
@@ -237,7 +237,7 @@ namespace VM.GUI
 
             window.OnClosed += () =>
             {
-                Computer?.USER_WINDOW_INSTANCES.Remove(title);
+                Computer?.Windows.Remove(title);
                 RemoveTaskbarButton(title);
             };
             return window;

@@ -233,7 +233,7 @@ namespace VM.JS
                 // this does the real creation of the event.
                 var eh = new XAMLJSEventHandler(element, (XAML_EVENTS)type, this, identifier, methodName);
 
-                if (Computer.USER_WINDOW_INSTANCES.TryGetValue(identifier, out var app))
+                if (Computer.Windows.TryGetValue(identifier, out var app))
                 {
                     app.OnClosed += () =>
                     {
@@ -270,7 +270,7 @@ namespace VM.JS
 
             var eh = new NetworkEventHandler(this, identifier, methodName);
 
-            if (Computer.USER_WINDOW_INSTANCES.TryGetValue(identifier, out var app))
+            if (Computer.Windows.TryGetValue(identifier, out var app))
             {
                 app.OnClosed += () =>
                 {

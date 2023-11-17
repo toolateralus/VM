@@ -114,7 +114,7 @@ namespace VM.FS
         }
         private void LP(object[]? obj)
         {
-            foreach (var item in Computer.USER_WINDOW_INSTANCES)
+            foreach (var item in Computer.Windows)
             {
                 Notifications.Now($"\n{item.Key}");
             }
@@ -170,7 +170,7 @@ namespace VM.FS
 
                     if (toLower == "get")
                     {
-                        var commandPrompt = Computer.SearchForOpenWindowType<CommandPrompt>(Computer);
+                        var commandPrompt = Computer.TryGetProcess<CommandPrompt>(Computer);
 
                         if (commandPrompt == default)
                         {
@@ -227,7 +227,7 @@ namespace VM.FS
                 }
                 else if (toLower == "all")
                 {
-                    var commandPrompt = Computer.SearchForOpenWindowType<CommandPrompt>(Computer);
+                    var commandPrompt = Computer.TryGetProcess<CommandPrompt>(Computer);
 
                     if (commandPrompt == default)
                     {
@@ -253,7 +253,7 @@ namespace VM.FS
         }
         private void SetFont(object[]? obj)
         {
-            var commandPrompt = Computer.SearchForOpenWindowType<CommandPrompt>(Computer);
+            var commandPrompt = Computer.TryGetProcess<CommandPrompt>(Computer);
 
             if (commandPrompt == default)
             {
@@ -294,7 +294,7 @@ namespace VM.FS
         }
         private void ListDir(object[]? obj)
         {
-            var commandPrompt = Computer.SearchForOpenWindowType<CommandPrompt>(Computer);
+            var commandPrompt = Computer.TryGetProcess<CommandPrompt>(Computer);
 
             if (commandPrompt == default)
             {
@@ -319,7 +319,7 @@ namespace VM.FS
         }
         private void Clear(object[]? obj)
         {
-            Computer.SearchForOpenWindowType<CommandPrompt>(Computer)?.output?.Clear();
+            Computer.TryGetProcess<CommandPrompt>(Computer)?.output?.Clear();
         }
         private void Copy(object[]? obj)
         {
@@ -354,7 +354,7 @@ namespace VM.FS
                 GetSpecificHelp(obj);
             }
 
-            var commandPrompt = Computer.SearchForOpenWindowType<CommandPrompt>(Computer);
+            var commandPrompt = Computer.TryGetProcess<CommandPrompt>(Computer);
 
             if (commandPrompt == default)
             {

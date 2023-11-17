@@ -61,7 +61,7 @@ namespace VM.JS
         {
             CommandPrompt cmd = null;
 
-            cmd = Computer.SearchForOpenWindowType<CommandPrompt>(Computer);
+            cmd = Computer.TryGetProcess<CommandPrompt>(Computer);
 
             Computer.Window?.Dispatcher?.Invoke(() => { 
 
@@ -82,7 +82,7 @@ namespace VM.JS
         public string? read()
         {
             CommandPrompt cmd = null;
-            cmd = Computer.SearchForOpenWindowType<CommandPrompt>(Computer);
+            cmd = Computer.TryGetProcess<CommandPrompt>(Computer);
             var waiting = true;
             string result = "";
             if (cmd is null)
@@ -463,7 +463,7 @@ namespace VM.JS
         public static UserControl? GetUserContent(string javascript_controL_class_instance_id, Computer computer)
         {
             var window = computer.Window;
-            var resizableWins = computer.USER_WINDOW_INSTANCES?.Where(W => W.Key == javascript_controL_class_instance_id);
+            var resizableWins = computer.Windows?.Where(W => W.Key == javascript_controL_class_instance_id);
             UserControl userContent = null;
 
             if (resizableWins != null && resizableWins.Any())
@@ -681,7 +681,7 @@ namespace VM.JS
         }
         public void eventHandler(string identifier, string targetControl, string methodName, int type)
         {
-            if (Computer.USER_WINDOW_INSTANCES.TryGetValue(identifier, out var app))
+            if (Computer.Windows.TryGetValue(identifier, out var app))
                 app.JavaScriptEngine?.CreateEventHandler(identifier, targetControl, methodName, type);
         }
         public void loadApps(object? path)

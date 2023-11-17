@@ -94,19 +94,14 @@ namespace VM.Network
             }
             NetworkEvents[outCh].Enqueue((msg, inCh));
 
-            foreach (var computer in Computer.Computers)
+            foreach (var userWindow in Computer.Current.Windows)
             {
-                foreach (var userWindow in computer.Key.USER_WINDOW_INSTANCES)
-                {
-                    if (userWindow.Value.JavaScriptEngine.EventHandlers == null)
-                        continue;
+                if (userWindow.Value.JavaScriptEngine.EventHandlers == null)
+                    continue;
 
-                    foreach (var eventHandler in userWindow.Value.JavaScriptEngine.EventHandlers)
-                    {
-                        if (eventHandler is NetworkEventHandler networkEventHandler)
-                            networkEventHandler.InvokeEvent(outCh, inCh, msg);
-                    }
-                }
+                foreach (var eventHandler in userWindow.Value.JavaScriptEngine.EventHandlers)
+                    if (eventHandler is NetworkEventHandler networkEventHandler)
+                        networkEventHandler.InvokeEvent(outCh, inCh, msg);
             }
         }
         public static (object? value, int reply) PullEvent(int channel, Computer computer)

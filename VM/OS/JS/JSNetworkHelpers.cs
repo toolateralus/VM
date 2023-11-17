@@ -263,7 +263,7 @@ namespace VM.JS
         }
         public void eventHandler(string identifier, string methodName)
         {
-            if (Computer.USER_WINDOW_INSTANCES.TryGetValue(identifier, out var app))
+            if (Computer.Windows.TryGetValue(identifier, out var app))
                 app.JavaScriptEngine?.CreateNetworkEventHandler(identifier, methodName);
         }
     }

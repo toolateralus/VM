@@ -33,7 +33,7 @@ namespace VM
 
         public JObject Config;
 
-        public readonly Dictionary<string, UserWindow> USER_WINDOW_INSTANCES = new();
+        public readonly Dictionary<string, UserWindow> Windows = new();
         public Theme Theme { get; private set; } = new();
 
         public readonly List<string> InstalledJSApps = new();
@@ -154,7 +154,7 @@ namespace VM
         public void OpenApp(UserControl control, string title = "window", Brush? background = null, Brush? foreground = null, JavaScriptEngine engine = null)
         {
             UserWindow window = Window.OpenAppUI(control, title,ref background, ref foreground, engine);
-            USER_WINDOW_INSTANCES[title] = window;
+            Windows[title] = window;
         }
 
         public void InstallJSWPF(string type)
@@ -209,30 +209,24 @@ namespace VM
         }
 
         #region Application
-        public static Dictionary<Computer, ComputerWindow> Computers = new();
+        private static Computer current;
+        public static Computer Current; 
         public static void Restart(uint id)
         {
-            var pc = Computers.Where(C => C.Key.ID == id).FirstOrDefault();
-
-            if (pc.Key != null && pc.Value != null)
-            {
-                var computer = pc.Key;
-                Computers.Remove(computer);
-
-                pc.Key.Exit(0);
-                pc.Value.Dispose();
-
-                Thread.Sleep(2500);
-
-                Boot(id);
-            }
+            Current.Exit(0);
+            Current.Dispose();
+            Boot(id);
         }
         internal protected static void Boot(uint cpu_id)
         {
             Computer pc = new(cpu_id);
             ComputerWindow wnd = new(pc);
             pc.Window = wnd;
-            Computers[pc] = wnd;
+
+            if (Current != null)
+                throw new InvalidOperationException("you can't open several instances of the computer window anymore. just start a few instances of the app, and use TCP IPC. this can be modded in rather easily, if you need a lower latency or better performance solution.");
+
+            Current = pc;
 
             LoadBackground(pc, wnd);
 
@@ -240,7 +234,6 @@ namespace VM
 
             wnd.Closed += (o, e) =>
             {
-                Computer.Computers.Remove(pc);
                 Task.Run(() => SaveConfig(pc.Config.ToString()));
                 pc.Dispose();
             };
@@ -249,27 +242,15 @@ namespace VM
             pc.InstallApplication("FileExplorer.app", typeof(FileExplorer));
             pc.InstallApplication("TextEditor.app", typeof(TextEditor));
         }
-        public static T SearchForOpenWindowType<T>(Computer pc)
+        public static T TryGetProcess<T>(Computer pc)
         {
-
-            if (!Computers.TryGetValue(pc, out var pc_window))
-            {
-                Notifications.Exception(new NullReferenceException("Window not found."));
-                return default!;
-            }
 
             T content = default!;
 
-            foreach (var window in pc_window.Computer.USER_WINDOW_INSTANCES)
+            foreach (var window in Current.Windows)
             {
-                // we should really put a centralized job queue in each window, and let each computer manage their own
-                // threads.
-                
-                // alternatively, we could just remove all-together the concept of opening many windows at once,
-                // since there's really no point and ever since we added TCP and the minimal networking setup,
-                // it's become even more redundant and needless.
-                // it adds such unneccesary complexity and messiness to the entire repo.
-
+                // we should really put a centralized job queue in each window, and have internal multi-threading threr with several js engines.
+                // at least optionally, since it's pretty heavy memory overhead, but that could be very powerful.
 
                 window.Value.Dispatcher.Invoke(() => { 
                 
@@ -281,7 +262,7 @@ namespace VM
                     if (result == default)
                         return;
 
-                    var frame = result as Frame;
+                    var frame = result as Frame ?? throw new NullReferenceException("failed to cast result of window search to frame, perhaps you're using the wrong XAML elements? probably an engine bug.");
                     var app = (T)frame.Content;
                     content = app;
 
@@ -319,7 +300,7 @@ namespace VM
                     FS?.Dispose();
                     CommandLine?.Dispose();
 
-                    foreach (var item in USER_WINDOW_INSTANCES)
+                    foreach (var item in Windows)
                         item.Value.Close();
                 }
                 
