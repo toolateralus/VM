@@ -11,23 +11,24 @@
         <Grid.RowDefinitions>
             <RowDefinition Height="25"/>
             <RowDefinition Height="*"/>
-            <RowDefinition Height="*"/>
-            <RowDefinition Height="*"/>
-            <RowDefinition Height="*"/>
         </Grid.RowDefinitions>
-        <Grid.ColumnDefinitions>
-            <ColumnDefinition Width="*"/>
-            <ColumnDefinition Width="*"/>
-            <ColumnDefinition Width="*"/>
-            <ColumnDefinition Width="*"/>
-        </Grid.ColumnDefinitions>
 
-        <StackPanel Orientation="Horizontal" Grid.ColumnSpan="4">
+        <StackPanel Orientation="Horizontal" Grid.Row="0">
             <Button FontFamily="Consolas" Click="LoadButton_Click" Name="LoadButton" TextBlock.TextAlignment="Center" Height="20" Width="80" Content="load" />
             <Button FontFamily="Consolas" Click="SaveButton_Click"  Name="SaveButton" TextBlock.TextAlignment="Center" Height="20" Width="80" Content="save" />
             <Button FontFamily="Consolas" Click="RunButton_Click"  Name="RunButton" TextBlock.TextAlignment="Center" Height="20" Width="80" Content="run .js" />
             <Button FontFamily="Consolas" Click="RenderMD_Click"  Name="RenderMDButton" TextBlock.TextAlignment="Center" Height="20" Width="80" Content="render .md" />
         </StackPanel>
-        <avalonEdit:TextEditor WordWrap="True" Foreground="White" Background="#28262e" Grid.Row="1" Grid.RowSpan="4" Grid.ColumnSpan="4" SyntaxHighlighting="JavaScriptCustom" ShowLineNumbers="True" FontSize="16" x:Name="input" IsReadOnly="false"  FontFamily="Consolas" Height="Auto" Width="Auto" HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Auto"/>
+        <avalonEdit:TextEditor x:Name="input" Grid.Row="1"
+            WordWrap="True"
+            Foreground="White"
+            Background="#28262e"
+            SyntaxHighlighting="JavaScriptCustom"
+            ShowLineNumbers="True"
+            FontSize="16"
+            IsReadOnly="false" 
+            FontFamily="Consolas"
+            HorizontalScrollBarVisibility="Auto"
+            VerticalScrollBarVisibility="Auto"/>
     </Grid>
 </UserControl>

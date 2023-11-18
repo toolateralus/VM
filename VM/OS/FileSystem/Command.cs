@@ -42,7 +42,10 @@ namespace VM.FS
         {
             Commands = new()
             {
-                // we need Delete, Edit (open text editor/create new file)
+                // we need  Edit (open text editor/create new file) and 
+                // a LOT of the file system commands are really bad and cause crashes / bad behaviour.
+
+                new("--kill-all", KillAll, "kills all the running processes on the computer, specify an app name like terminal to kill only those app instances, if any."),
                 new("root", RootCmd, "navigates the open file explorer to the root directory of the computer."),
                 new("edit", Edit, "opens the editor for file, or creates a new one if not found."),
                 new("delete", Delete, "deletes a file or directory"),
@@ -63,6 +66,18 @@ namespace VM.FS
                 new("unhost", (_) => Computer.Network.StopHosting(_), "if a server is currently running on this machine this halts any active connections and closes the sever."),
                 new("dispose", DisposeJSEnv, "disposes of the current running javascript environment, and instantiates a new one.")
             };
+        }
+        private void KillAll(object[]? obj)
+        {
+            if (obj != null && obj.Length == 1 && obj[0] is string name && Computer.ProcessLookupTable.TryGetValue(name, out var pids_arg))            {
+                foreach (var pid in pids_arg)
+                    Computer.Windows[pid].Close();
+                return;
+            }
+
+            foreach (var pids in Computer.ProcessLookupTable.Values)
+                foreach(var pid in pids)
+                    Computer.Windows[pid].Close();
         }
         private void DisposeJSEnv(object[]? obj)
         {

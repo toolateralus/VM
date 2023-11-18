@@ -58,12 +58,17 @@ namespace VM.GUI
         // Todo : Fix this strange problem where resizing is inconsistent when min/maximized
         public void ToggleVisibility(object sender, RoutedEventArgs e)
         {
+
             Visibility ^= Visibility.Collapsed;
             Owner.Visibility = Visibility;
            
             if (Visibility == Visibility.Visible)
+            {
                 Owner.BringToTopOfDesktop();
+            }
 
+            if (Visibility == Visibility.Hidden)
+                Visibility = Visibility.Visible;
         }
         // Todo : Fix this strange problem where resizing is inconsistent when min/maximized
         public void ToggleMaximize(object sender, RoutedEventArgs e)
