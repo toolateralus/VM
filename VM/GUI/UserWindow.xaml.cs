@@ -41,7 +41,6 @@ namespace VM.GUI
             JavaScriptEngine?.Dispose();
             if (Owner is not null && Owner.Parent is Canvas canvas)
             {
-                Owner.OnClosed?.Invoke();
                 canvas.Children.Remove(Owner);
             }
             OnClosed?.Invoke();

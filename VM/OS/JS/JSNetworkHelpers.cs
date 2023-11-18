@@ -37,16 +37,12 @@ namespace VM.JS
 
         public void connect(object? ip)
         {
-            IPAddress targetIP = null;
+            IPAddress? targetIP = null;
 
             if (ip is string IPString && IPAddress.TryParse(IPString, out targetIP))
-            {
                 ConnectToIP(targetIP, IPString);
-            }
             else if (Computer.Config?.Value<string>("DEFAULT_SERVER_IP") is string defaultIP && IPAddress.TryParse(defaultIP, out targetIP))
-            {
                 ConnectToIP(targetIP, defaultIP);
-            }
             else
             {
                 Notifications.Now("DEFAULT_SERVER_IP not found in this computer's config, nor was an IP provided. please, enter an IP address to connect to.");
@@ -241,24 +237,28 @@ namespace VM.JS
         public object? receive(params object?[]? parameters)
         {
             (object? value, int reply) @event = default;
-            if (parameters is null || parameters.Length == 0)
-            {
-                Notifications.Now("Insufficient parameters for a network connection");
-                return null;
-            }
-            if (parameters[0] is string p1 && int.TryParse(p1, out int ch))
-            {
-                @event = NetworkConfiguration.PullEvent(ch, Computer);
-            }
-            else if (parameters[0] is int chInt)
-            {
-                @event = NetworkConfiguration.PullEvent(chInt, Computer);
-            }
-            else
-            {
-                Notifications.Now($"Invalid parameter for receive {parameters[0]}");
-                return null;
-            }
+
+            Task get_task = new(async delegate { 
+                if (parameters is null || parameters.Length == 0)
+                {
+                    Notifications.Now("Insufficient parameters for a network connection");
+                    return;
+                }
+                if (parameters[0] is string p1 && int.TryParse(p1, out int ch))
+                {
+                    @event = await NetworkConfiguration.PullEventAsync(ch, Computer);
+                }
+                else if (parameters[0] is int chInt)
+                {
+                    @event = await NetworkConfiguration.PullEventAsync(chInt, Computer);
+                }
+                else
+                {
+                    Notifications.Now($"Invalid parameter for receive {parameters[0]}");
+                    return;
+                }
+            });
+
             return @event.value;
         }
         public void eventHandler(string identifier, string methodName)

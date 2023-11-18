@@ -29,7 +29,7 @@ namespace VM.GUI
         {
             InitializeComponent();
             PreviewKeyDown += CommandPrompt_PreviewKeyDown;
-            DrawTextBox("type 'help' for commands, \nor enter any valid single-line java script to interact with the environment. \nby default, results of expressions get printed to this console.");
+            DrawTextBox("type 'help' for commands, \nor enter any valid single-line java script to interact with the environment. \n");
             input.Focus();
 
             output.TextChanged += Output_TextChanged;
@@ -96,7 +96,7 @@ namespace VM.GUI
         public void LateInit(Computer computer)
         {
             this.computer = computer;
-            Engine = computer.JavaScriptEngine;
+            Engine = new(computer);
 
             output.FontFamily = new(computer.Config.Value<string>("FONT") ?? "Consolas");
             input.FontFamily = new(computer.Config.Value<string>("FONT") ?? "Consolas");
@@ -114,18 +114,15 @@ namespace VM.GUI
         {
             OnSend?.Invoke(input.Text);
 
-            // this goes before the execution so when it hangs up it doesnt 
-            // enter a space
-
             if (e != null && e.RoutedEvent != null)
                 e.Handled = true;
 
-            const string ExecutingString = "\nExecuting...";
+            var text = output.Text;
 
-            output.AppendText(ExecutingString);
             await ExecuteJavaScript(code : input.Text, timeout : computer.Config.Value<int?>("CMD_LINE_TIMEOUT") ?? 50_000);
-            output.AppendText("\nDone executing.");
 
+            if (output.Text == text) 
+                output.AppendText("\n done.");
 
             input.Clear();
 
@@ -138,9 +135,7 @@ namespace VM.GUI
             if (e.Key == System.Windows.Input.Key.Up)
             {
                 if (historyIndex == -1)
-                {
                     tempInput = input.Text;
-                }
 
                 if (historyIndex < commandHistory.Count - 1)
                 {
@@ -151,34 +146,26 @@ namespace VM.GUI
 
             if (e.Key == System.Windows.Input.Key.Down)
             {
-                if (historyIndex >= 0)
+                if (historyIndex == -1)
+                    tempInput = input.Text;
+
+                if (historyIndex > 0)
                 {
                     historyIndex--;
-                    if (historyIndex == -1)
-                    {
-                        input.Text = tempInput;
-                    }
-                    else
-                    {
-                        input.Text = commandHistory[commandHistory.Count - 1 - historyIndex];
-                    }
+                    input.Text = commandHistory[commandHistory.Count - 1 - historyIndex];
                 }
             }
 
-         
+
         }
 
         private async Task ExecuteJavaScript(string code, int timeout = int.MaxValue)
         {
             if (computer.CommandLine.TryCommand(code))
-            {
                 return;
-            }
 
             if (commandHistory.Count > 100)
-            {
                 commandHistory.RemoveAt(0);
-            }
 
             commandHistory.Add(code);
 
@@ -186,31 +173,29 @@ namespace VM.GUI
 
             try
             {
-                using (var cts = new CancellationTokenSource())
+                using var cts = new CancellationTokenSource();
+                var executionTask = Engine?.Execute(code, cts.Token);
+
+                var timeoutTask = Task.Delay(timeout);
+
+                if (executionTask == null)
+                    throw new NullReferenceException("No execution task was found, the engine probably was disposed while in use.");
+
+                var completedTask = await Task.WhenAny(executionTask, timeoutTask);
+
+                if (completedTask == timeoutTask)
                 {
-                    var executionTask = Engine?.Execute(code, cts.Token);
-                   
-                    var timeoutTask = Task.Delay(timeout);
+                    cts.Cancel(); // Cancel the execution task
+                    this.output.AppendText("\nExecution timed out.");
+                }
+                else
+                {
+                    var result = await executionTask;
+                    string? output = result?.ToString();
 
-                    if (executionTask == null)
-                        throw new NullReferenceException("No execution task was found, the engine probably was disposed while in use.");
-
-                    var completedTask = await Task.WhenAny(executionTask, timeoutTask);
-
-                    if (completedTask == timeoutTask)
+                    if (!string.IsNullOrEmpty(output))
                     {
-                        cts.Cancel(); // Cancel the execution task
-                        this.output.AppendText("\nExecution timed out.");
-                    }
-                    else
-                    {
-                        var result = await executionTask;
-                        string? output = result?.ToString();
-
-                        if (!string.IsNullOrEmpty(output))
-                        {
-                            this.output.AppendText("\n" + output);
-                        }
+                        this.output.AppendText("\n" + output);
                     }
                 }
             }

@@ -89,14 +89,13 @@ namespace VM.Network
         internal static void Broadcast(int outCh, int inCh, object? msg)
         {
             if (!NetworkEvents.TryGetValue(outCh, out _))
-            {
                 NetworkEvents.Add(outCh, new());
-            }
+
             NetworkEvents[outCh].Enqueue((msg, inCh));
 
             foreach (var userWindow in Computer.Current.Windows)
             {
-                if (userWindow.Value.JavaScriptEngine.EventHandlers == null)
+                if (userWindow.Value.JavaScriptEngine?.EventHandlers == null)
                     continue;
 
                 foreach (var eventHandler in userWindow.Value.JavaScriptEngine.EventHandlers)
@@ -104,52 +103,41 @@ namespace VM.Network
                         networkEventHandler.InvokeEvent(outCh, inCh, msg);
             }
         }
-        public static (object? value, int reply) PullEvent(int channel, Computer computer)
-        {
-            Queue<(object? val, int replyCh)>? queue;
-
-            const int timeout = int.MaxValue;
-            int it = 0;
-
-            while ((!NetworkEvents.TryGetValue(channel, out queue) || queue is null || queue.Count == 0) && !computer.Disposing)
-            {
-                if (it < timeout)
-                    it++;
-                else break;
-
-                Thread.Sleep(1);
-            }
-
-            var val = queue?.Dequeue();
-
-            if (queue?.Count == 0)
-                NetworkEvents.Remove(channel);
-
-            return val ?? default;
-        }
         public static async Task<(object? value, int reply)> PullEventAsync(int channel, VM.Computer computer, int timeout = 20_000, [CallerMemberName] string callerName = "unknown")
         {
             Queue<(object? val, int replyCh)> queue;
+
             var timeoutTask = Task.Delay(timeout);
 
-            while (!NetworkEvents.TryGetValue(channel, out queue) || queue is null || queue.Count == 0 && !computer.Disposing && computer.Network.IsConnected())
-            {
-                var completedTask = await Task.WhenAny(Task.Delay(1), timeoutTask);
+            CancellationTokenSource cts = new(); 
 
-                if (completedTask == timeoutTask)
-                {
-                    Notifications.Now($"timed out fetching from {callerName} event on channel {channel}");
-                    return (null, -1);
+            Task<(object ? value, int reply)?> loop = new(delegate {
+
+                while (!NetworkEvents.TryGetValue(channel, out queue)
+                        || queue is null
+                        || (queue.Count == 0
+                        && !computer.Disposing
+                        && computer.Network.IsConnected()))
+                {/* ----------------------------------------------- */
+                    Task.Delay(16);
                 }
+
+                var val = queue?.Dequeue();
+
+                if (queue?.Count == 0)
+                    NetworkEvents.Remove(channel);
+
+                return val;
+            }, cts);
+
+            // did time out
+            if (await Task.WhenAny(loop, timeoutTask) == timeoutTask)
+            {
+                cts.Cancel();
+                Notifications.Now("Network timeout out polling events");
             }
 
-            var val = queue?.Dequeue();
-
-            if (queue?.Count == 0)
-                NetworkEvents.Remove(channel);
-
-
-            return val ?? default;
+            return loop.Result ?? default;
         }
 
         internal void StopClient()

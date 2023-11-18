@@ -155,6 +155,7 @@ namespace VM
             UserWindow window = Window.OpenAppUI(title,ref background, ref foreground, out var resizable_window);
             Windows[title] = window;
 
+            
             // this is the process being opened and the UI being established for it.
             // they are heavily woven, unfortunately.
             window.InitializeUserContent(resizable_window, control, engine);
@@ -206,14 +207,35 @@ namespace VM
                 return;
             }
             JavaScriptEngine engine = new(this);
+            
             var jsResult = await InstantiateWindowClass(type, data, engine);
+
             OpenApp(control, title: jsResult.id, engine: engine);
+
+            if (!ProcessLookupTable.TryGetValue(type, out var array))
+            {
+                array = new();
+                ProcessLookupTable[type] = array;
+            }
+
+            ProcessLookupTable[type].Add(jsResult.id);
+
+            Windows[jsResult.id].OnClosed += delegate {
+                if (!ProcessLookupTable.ContainsKey(type))
+                    throw new NullReferenceException("The application became detached from the operating system, or is unknown.");
+
+                ProcessLookupTable[type].Remove(jsResult.id);
+
+                if (ProcessLookupTable[type].Count == 0)
+                    ProcessLookupTable.Remove(type);
+            };
+
             await engine.Execute(jsResult.code);
         }
 
         #region Application
-        private static Computer current;
-        public static Computer Current; 
+        private static Computer? current;
+        public static Computer Current => current ?? throw new NullReferenceException("No computer was active when accessed."); 
         public static void Restart(uint id)
         {
             Current.Exit(0);
@@ -226,10 +248,10 @@ namespace VM
             ComputerWindow wnd = new(pc);
             pc.Window = wnd;
 
-            if (Current != null)
+            if (current != null)
                 throw new InvalidOperationException("you can't open several instances of the computer window anymore. just start a few instances of the app, and use TCP IPC. this can be modded in rather easily, if you need a lower latency or better performance solution.");
 
-            Current = pc;
+            current = pc;
 
             LoadBackground(pc, wnd);
 
@@ -245,9 +267,8 @@ namespace VM
             pc.InstallApplication("FileExplorer.app", typeof(FileExplorer));
             pc.InstallApplication("TextEditor.app", typeof(TextEditor));
         }
-        public static T TryGetProcess<T>(Computer pc)
+        public static T TryGetProcess<T>()
         {
-
             T content = default!;
 
             foreach (var window in Current.Windows)
@@ -274,6 +295,7 @@ namespace VM
             return content!;
 
         }
+        public static Dictionary<string, List<string>> ProcessLookupTable = new();
         private static async Task<(string id, string code)> InstantiateWindowClass(string type, (string XAML, string JS) data, JavaScriptEngine engine)
         {
             var name = type.Split('.')[0];
@@ -284,7 +306,9 @@ namespace VM
 
             var instance_name = "uid" + Guid.NewGuid().ToString().Split('-')[0];
 
-            string instantiation_code = $"let {instance_name} = new {name}('{instance_name}')";
+          
+
+            string instantiation_code = $"const {instance_name} = new {name}('{instance_name}')";
 
             return (instance_name, instantiation_code);
         }

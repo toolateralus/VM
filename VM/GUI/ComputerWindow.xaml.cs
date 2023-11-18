@@ -1,7 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Collections.ObjectModel;
-using System.ComponentModel;
 using System.Linq;
 using System.Reflection;
 using System.Windows;
@@ -36,8 +33,6 @@ namespace VM.GUI
             
             Computer = pc;
             
-            IDLabel.Content = $"computer {Computer.ID}";
-
             CompositionTarget.Rendering += (e, o) => UpdateComputerTime();
         }
         public Button MakeButton(double width = double.NaN, double height = double.NaN)
@@ -247,6 +242,7 @@ namespace VM.GUI
 
             window.OnClosed += () =>
             {
+                rsz_win_capture.Dispose();
                 Desktop.Children.Remove(rsz_win_capture);
                 Computer?.Windows.Remove(title);
                 RemoveTaskbarButton(title);

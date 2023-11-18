@@ -118,5 +118,12 @@ namespace VM.GUI
                 isResizing = false;
             }
         }
+
+        internal void Dispose()
+        {
+            MouseDown -= OnMouseDown;
+            MouseMove -= OnMouseMove;
+            MouseUp -= OnMouseUp;
+        }
     }
 }

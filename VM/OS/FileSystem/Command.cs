@@ -170,7 +170,7 @@ namespace VM.FS
 
                     if (toLower == "get")
                     {
-                        var commandPrompt = Computer.TryGetProcess<CommandPrompt>(Computer);
+                        var commandPrompt = Computer.TryGetProcess<CommandPrompt>();
 
                         if (commandPrompt == default)
                         {
@@ -227,7 +227,7 @@ namespace VM.FS
                 }
                 else if (toLower == "all")
                 {
-                    var commandPrompt = Computer.TryGetProcess<CommandPrompt>(Computer);
+                    var commandPrompt = Computer.TryGetProcess<CommandPrompt>();
 
                     if (commandPrompt == default)
                     {
@@ -253,7 +253,7 @@ namespace VM.FS
         }
         private void SetFont(object[]? obj)
         {
-            var commandPrompt = Computer.TryGetProcess<CommandPrompt>(Computer);
+            var commandPrompt = Computer.TryGetProcess<CommandPrompt>();
 
             if (commandPrompt == default)
             {
@@ -294,7 +294,7 @@ namespace VM.FS
         }
         private void ListDir(object[]? obj)
         {
-            var commandPrompt = Computer.TryGetProcess<CommandPrompt>(Computer);
+            var commandPrompt = Computer.TryGetProcess<CommandPrompt>();
 
             if (commandPrompt == default)
             {
@@ -315,11 +315,18 @@ namespace VM.FS
             if (obj != null && obj.Length > 0 && obj[0] is string Path)
             {
                 Computer.FS.ChangeDirectory(Path);
+            } else
+            {
+                Notifications.Now("failed cd: bad arguments. usage : cd /path/to/wherever.. or cd .. (to go up one)");
             }
         }
         private void Clear(object[]? obj)
         {
-            Computer.TryGetProcess<CommandPrompt>(Computer)?.output?.Clear();
+            var cmd = Computer.TryGetProcess<CommandPrompt>()?.output;
+            cmd?.Clear();
+
+            if (cmd is null) 
+                Notifications.Now("failed to clear - no cmd prompt open");
         }
         private void Copy(object[]? obj)
         {
@@ -328,7 +335,7 @@ namespace VM.FS
                 for (int i = 1; i < obj.Length; i++)
                 {
                     string Destination = obj[i] as string;
-                    
+
                     if (Destination is null || string.IsNullOrEmpty(Destination))
                     {
                         Notifications.Now($"Invalid path {Destination} in Copy");
@@ -338,6 +345,10 @@ namespace VM.FS
                     Notifications.Now($"Copied from {Path}->{Destination}");
                 }
             }
+            else
+            {
+                Notifications.Now("failed cpy: bad arguments. usage : copy source dest.. (one or many destinations)");
+            }
         }
         private void MkDir(object[]? obj)
         {
@@ -345,6 +356,10 @@ namespace VM.FS
             {
                 Computer.FS.NewFile(Path); 
                 Notifications.Now($"Created directory {Path}");
+            }
+            else
+            {
+                Notifications.Now("failed mkdir: bad arguments. usage : 'mkdir directory.'");
             }
         }
         private void Help(params object[]? obj)
@@ -354,27 +369,22 @@ namespace VM.FS
                 GetSpecificHelp(obj);
             }
 
-            var commandPrompt = Computer.TryGetProcess<CommandPrompt>(Computer);
-
-            if (commandPrompt == default)
-            {
-                //Computer.Window.Open();
-            }
+            var commandPrompt = Computer.TryGetProcess<CommandPrompt>();
 
             StringBuilder cmdbuilder = new();
             StringBuilder aliasbuilder = new();
-            commandPrompt?.DrawTextBox(" ### Native Commands ### ");
 
             foreach (var item in Commands)
                 cmdbuilder?.Append($"\n{{{item.id}}} \t\n\'{string.Join(",", item.infos)}\'");
 
-            commandPrompt?.DrawTextBox(" ### Command Aliases ### ");
-
-
             foreach (var item in Aliases)
                 aliasbuilder.Append($"\n{item.Key} -> {item.Value.Split('\\').Last()}");
 
+
+            commandPrompt?.DrawTextBox(" ### Native Commands ### ");
             commandPrompt?.output.AppendText(cmdbuilder.ToString());
+
+            commandPrompt?.DrawTextBox(" ### Command Aliases ### ");
             commandPrompt?.output.AppendText(aliasbuilder.ToString());
 
         }
@@ -382,13 +392,10 @@ namespace VM.FS
         {
             var name = parameters[0] as string;
             List<string> args = new();
+
             for (int i = 0; i < parameters.Length; ++i)
-            {
                 if (parameters[i] is string arg)
-                {
                     args.Add(arg);
-                }
-            }
         }
         private async void RunJs(object[]? obj)
         {
@@ -396,8 +403,13 @@ namespace VM.FS
             {
                 await Computer.JavaScriptEngine.Execute(File.ReadAllText(AbsPath));
                 Notifications.Now($"running {AbsPath}...");
+            } else
+            {
+                Notifications.Now("failed run: bad args. usage : run 'path.js'");
             }
         }
+
+        // todo: clean up this nightmare.
         public bool TryCommand(string input)
         {
             if (Find(input) is Command _cmd && _cmd.id != null && _cmd.id != "NULL" && _cmd.Method != null)

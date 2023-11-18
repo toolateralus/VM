@@ -26,21 +26,27 @@ using System.Text.RegularExpressions;
 namespace VM.JS
 {
     // ## THIS DIRELY NEEDS TO BE SPLIT UP AND DOCUMENTED, JUST MAKE SURE EVERYTHING IS PUBLIC! ## \\
+    // Follow the current naming scheme. these are first class members in JS.
     public class JSInterop
     {
         public Computer Computer;
         public Action<string, object?>? OnModuleExported;
         public Func<string, object?>? OnModuleImported;
         public Action<int>? OnComputerExit;
-        public static Dictionary<string, Func<string, string, object?, object?>> EventActions = new();
+
+        // this are called BY the js code, to do things java script isn't solely capable of (afaik)
+        // things like fast pixel graphics, getting and setting text efficiently.
+        // just kinda hot path items you may want faster can go here.
+
+        public static Dictionary<string, Func<string, string, object?, object?>> ExposedEvents = new();
 
         public JSInterop(Computer computer)
         {
             this.Computer = computer;
-            EventActions["draw_pixels"] = DrawPixelsEvent;
-            EventActions["draw_image"] = DrawImageEvent;
-            EventActions["set_content"] = SetContent;
-            EventActions["get_content"] = GetContent;
+            ExposedEvents["draw_pixels"] = DrawPixelsEvent;
+            ExposedEvents["draw_image"] = DrawImageEvent;
+            ExposedEvents["set_content"] = SetContent;
+            ExposedEvents["get_content"] = GetContent;
         }
         public object getentries(string path)
         {
@@ -60,7 +66,7 @@ namespace VM.JS
         {
             CommandPrompt cmd = null;
 
-            cmd = Computer.TryGetProcess<CommandPrompt>(Computer);
+            cmd = Computer.TryGetProcess<CommandPrompt>();
 
             Computer.Window?.Dispatcher?.Invoke(() => { 
 
@@ -81,7 +87,7 @@ namespace VM.JS
         public string? read()
         {
             CommandPrompt cmd = null;
-            cmd = Computer.TryGetProcess<CommandPrompt>(Computer);
+            cmd = Computer.TryGetProcess<CommandPrompt>();
             var waiting = true;
             string result = "";
             if (cmd is null)
@@ -103,18 +109,24 @@ namespace VM.JS
 
             return result;
         }
-
         public double random(double max)
         {
             return System.Random.Shared.NextDouble() * max;
         }
+        /// <summary>
+        /// A non-throwing foreach over a collection of objects, running action on each object.
+        /// a try catch prints exceptions but ignores them.
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <param name="source"></param>
+        /// <param name="action"></param>
         public static void forEach<T>(IEnumerable<object> source, Action<T> action)
         {
             try
             {
                 foreach (var item in source)
                 {
-                    T instance = Cast<T>(item, out var success);
+                    T instance = try_cast<T>(item, out var success);
 
                     if (success)
                         action(instance);
@@ -128,7 +140,7 @@ namespace VM.JS
                 }
             }
         }
-        public static T Cast<T>(object item, out bool success)
+        public static T try_cast<T>(object item, out bool success)
         {
             success = false;
             if (item is T instance)
@@ -138,7 +150,6 @@ namespace VM.JS
             }
             return default;
         }
-
         public object toBytes(string background)
         {
             return Convert.FromBase64String(background);
@@ -223,7 +234,6 @@ namespace VM.JS
                 Computer.InstallJSWPF(dir);
             }
         }
-
         public void alias(string alias, string path)
         {
 
@@ -247,13 +257,6 @@ namespace VM.JS
 
             Computer.CommandLine.Aliases[alias] = FileSystem.GetResourcePath(path) ?? "not found";
         }
-        /// <summary>
-        /// this returns the callback, no need for extra listening
-        /// </summary>
-        /// <param name="id"></param>
-        /// <param name="eventType"></param>
-        /// <param name="data"></param>
-        /// <returns></returns>
         public async void sleep(int ms)
         {
             await Task.Delay(ms);
@@ -664,7 +667,7 @@ namespace VM.JS
         #endregion
         public object? pushEvent(string id, string targetControl, string eventType, object? data)
         {
-            if (EventActions.TryGetValue(eventType, out var handler))
+            if (ExposedEvents.TryGetValue(eventType, out var handler))
             {
                 return handler.Invoke(id, targetControl, data);
             }
