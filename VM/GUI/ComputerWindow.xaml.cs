@@ -52,6 +52,7 @@ namespace VM.GUI
         public Button MakeDesktopButton(string appName)
         {
             var btn = MakeButton(width: 60, height: 60);
+            
             btn.Margin = new Thickness(15, 15, 15, 15);
             btn.Content = appName;
             btn.Name = appName.Split(".")[0];
@@ -128,23 +129,49 @@ namespace VM.GUI
             string formattedDateTime = now.ToString("MM/dd/yy || h:mm");
             TimeLabel.Content = formattedDateTime;
         }
+
+        public static void SetupIcon(string name, Button btn)
+        {
+            var theme = Computer.Current.Theme;
+            
+            if (Runtime.GetAppIcon(name) is BitmapImage img)
+            {
+                btn.Background = new ImageBrush(img);
+                var contentBorder = new Border
+                {
+                    CornerRadius = new CornerRadius(10),
+                    ToolTip = name,
+                };
+                btn.Content = contentBorder;    
+            }
+            else
+            {
+                btn.Content = name;
+            }
+
+            btn.Margin = theme.BorderThickness;
+        }
+
         public static void SetupIcon(string name, Button btn, Type type) 
         {
             if (GetIcon(type) is BitmapImage img)
             {
                 btn.Background = new ImageBrush(img);
+
+                var contentBorder = new Border
+                {
+                    CornerRadius = new CornerRadius(10),
+                    ToolTip = name,
+                };
+
+                btn.Content = contentBorder;
+            } else
+            {
+                Notifications.Now("Failed to get image for native app : make sure you have a 'public static string? DesktopIcon => FileSystem.GetResourcePath(\"commandprompt.png\"); type/name/accessible field' in your .xaml.cs class");
             }
 
-            btn.Margin = new Thickness(15, 15, 15, 15);
+            btn.Margin = Computer.Current.Theme.BorderThickness;
 
-            var contentBorder = new Border
-            {
-                Background = new ImageBrush(GetIcon(type)),
-                CornerRadius = new CornerRadius(10),
-                ToolTip = name,
-            };
-
-            btn.Content = contentBorder;
         }
         public static BitmapImage LoadImage(string path)
         {
@@ -215,6 +242,9 @@ namespace VM.GUI
             {
                 Background = background,
                 Foreground = foreground,
+                FontFamily = Computer.Theme.Font,
+                FontSize = Computer.Theme.FontSize,
+                BorderThickness = Computer.Theme.BorderThickness,
             };
 
             // TODO: add a way for users to add buttons and toolbars easily through
@@ -227,13 +257,19 @@ namespace VM.GUI
                 Width = Math.Max(window.MinWidth, window.Width),
                 Height = Math.Max(window.MinHeight, window.Height),
                 Margin = window.Margin,
-                Background = window.Background,
-                Foreground = window.Foreground,
+                Background = background,
+                Foreground = foreground,
+
+                FontFamily = Computer.Theme.Font,
+                FontSize = Computer.Theme.FontSize,
+                BorderThickness = Computer.Theme.BorderThickness,
             };
 
+            // hacky ::
             // declaring this field as a hack, to capture the object in the lambda function below.
             // cant capture an out var, but it's ok here, actually crucial to prevent a leak.
             var rsz_win_capture = resizableWindow;
+            // hack ::
 
             Button btn = MakeTaskbarButton(title, window.ToggleVisibility);
 
@@ -280,9 +316,9 @@ namespace VM.GUI
                 btn.MouseDoubleClick += OnDesktopIconPressed;
 
                 async void OnDesktopIconPressed(object? sender, RoutedEventArgs e)
-                {
-                    await Computer.OpenCustom(type);
-                }
+                 => await Computer.OpenCustom(type);
+
+                SetupIcon(type, btn);
 
                 DesktopIconPanel.Children.Add(btn);
             }
@@ -293,11 +329,14 @@ namespace VM.GUI
 
                 void OnDesktopIconPressed(object? sender, RoutedEventArgs e)
                 {
-                    var app = new UserWebApplet();
-
-                    app.Path = type.Replace(".web", "");
+                    var app = new UserWebApplet
+                    {
+                        Path = type.Replace(".web", "")
+                    };
                     Computer.OpenApp(app);
                 }
+
+                SetupIcon(type, btn);
 
                 DesktopIconPanel.Children.Add(btn);
             }
@@ -331,15 +370,13 @@ namespace VM.GUI
                         break;
                     case AppType.CSHARP_XAML_WPF_NATIVE:
                         if (runtime_type != null)
-                        {
-                            InstallDesktopIconNative(name, runtime_type);
-                            return;
-                        }
+                        InstallDesktopIconNative(name, runtime_type);
                         break;
                     case AppType.JS_HTML_WEB_APPLET:
                         WebAppDesktopIcon(name);
                         break;
                 }
+
                 DesktopIconPanel.UpdateLayout();
             });
         }

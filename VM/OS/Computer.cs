@@ -34,7 +34,7 @@ namespace VM
         public JObject Config;
 
         public readonly Dictionary<string, UserWindow> Windows = new();
-        public Theme Theme { get; private set; } = new();
+        public Theme Theme { get; private set; } = new Theme();
 
         public readonly List<string> InstalledJSApps = new();
         public Dictionary<string, Type> Installed_CSharp_Apps { get; private set; } = new();
@@ -46,14 +46,13 @@ namespace VM
 
         public void InstallApplication(string exePath, Type type)
         {
-            // do we need this collection? it helps us identify already existing apps but it's almost unneccesary,
-            // we may be relying on our UI scripts to do too much behavior.
             if (Installed_CSharp_Apps.TryGetValue(exePath, out _))
             {
                 Notifications.Now("Tried to install an app that already exists on the computer, try renaming it if this was intended");
                 return;
             }
             Installed_CSharp_Apps[exePath] = type;
+
             Notifications.Now($"{exePath} installed!");
             ComputerWindow window = Window;
             InstallCSWPF(exePath, type);
@@ -155,7 +154,6 @@ namespace VM
             UserWindow window = Window.OpenAppUI(title,ref background, ref foreground, out var resizable_window);
             Windows[title] = window;
 
-            
             // this is the process being opened and the UI being established for it.
             // they are heavily woven, unfortunately.
             window.InitializeUserContent(resizable_window, control, engine);
@@ -200,6 +198,9 @@ namespace VM
         public async Task OpenCustom(string type)
         {
             var data = Runtime.GetAppDefinition(type);
+            
+
+
             var control = XamlJsInterop.ParseUserControl(data.XAML);
             if (control == null)
             {
@@ -305,8 +306,6 @@ namespace VM
             _ = await engine.Execute(JS);
 
             var instance_name = "uid" + Guid.NewGuid().ToString().Split('-')[0];
-
-          
 
             string instantiation_code = $"const {instance_name} = new {name}('{instance_name}')";
 

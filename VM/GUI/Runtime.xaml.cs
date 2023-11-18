@@ -14,6 +14,7 @@ using System.Windows.Controls;
 using System.Runtime.CompilerServices;
 using VM.JS;
 using VM.FS;
+using System.Windows.Media.Imaging;
 
 namespace VM.GUI
 {
@@ -122,6 +123,20 @@ namespace VM.GUI
                 Computer.Boot(cpu_id);
             }
         }
+        internal static BitmapImage? GetAppIcon(string type)
+        {
+            var absPath = FileSystem.GetResourcePath(type);
+
+            string? name = type.Split('.').FirstOrDefault();
+
+            string icon = Path.Combine(name ?? "bad#!file@#path", ".bmp");
+
+            // silent error, most commonly expected case.
+            if (string.IsNullOrEmpty(name) || !File.Exists(icon))
+                return null;
+
+            return ComputerWindow.LoadImage(icon);
+        }
         /// <summary>
         /// This will validate paths and load the respective js and xaml code from provided 'mydir.app' directory (any .app dir with at least one .xaml and .xaml.js file pair)
         /// Note that loading multiple JS files or even having multiple present in an app is not tested whatsoever, it may cause problems.
@@ -193,5 +208,7 @@ namespace VM.GUI
             byte b = (byte)(from.B + (to.B - from.B) * progress);
             return Color.FromRgb(r, g, b);
         }
+
+        
     }
 }

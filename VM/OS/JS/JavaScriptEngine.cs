@@ -107,10 +107,6 @@ namespace VM.JS
                 throw new JsEngineException("Something happened");
             }
         }
-        public object? GetVariable(string name)
-        {
-            return ENGINE_JS.GetVariableValue(name);
-        }
         private object? ImportModule(string arg)
         {
             if (FileSystem.GetResourcePath(arg) is string AbsPath && !string.IsNullOrEmpty(AbsPath))

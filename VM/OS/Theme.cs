@@ -13,7 +13,7 @@ namespace VM
         public Brush Foreground = Brushes.White;
         public Brush Border = Brushes.Transparent;
         public FontFamily Font = new("Consolas");
-        public Thickness BorderThickness = new(0, 0, 0, 0);
+        public Thickness BorderThickness = new(1, 1, 1, 1);
         public double FontSize = 12;
     }
 }

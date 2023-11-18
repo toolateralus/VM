@@ -31,7 +31,7 @@ namespace VM.GUI
             if (engine != null) 
                 OnClosed += engine.Dispose;
 
-            object? unused_param = null!;
+            object? unused_param = null;
 
             // these args are just from the wpf event handler and don't get used.
             ToggleMaximize((object)unused_param, (RoutedEventArgs)unused_param); 
