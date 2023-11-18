@@ -125,17 +125,13 @@ namespace VM.GUI
         }
         internal static BitmapImage? GetAppIcon(string type)
         {
-            var absPath = FileSystem.GetResourcePath(type);
-
-            string? name = type.Split('.').FirstOrDefault();
-
-            string icon = Path.Combine(name ?? "bad#!file@#path", ".bmp");
+            var absPath = FileSystem.GetResourcePath(type) + "\\icon.bmp";
 
             // silent error, most commonly expected case.
-            if (string.IsNullOrEmpty(name) || !File.Exists(icon))
+            if (string.IsNullOrEmpty(absPath) || !File.Exists(absPath))
                 return null;
 
-            return ComputerWindow.LoadImage(icon);
+            return ComputerWindow.LoadImage(absPath);
         }
         /// <summary>
         /// This will validate paths and load the respective js and xaml code from provided 'mydir.app' directory (any .app dir with at least one .xaml and .xaml.js file pair)

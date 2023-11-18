@@ -165,7 +165,8 @@ namespace VM.GUI
                 };
 
                 btn.Content = contentBorder;
-            } else
+            } 
+            else
             {
                 Notifications.Now("Failed to get image for native app : make sure you have a 'public static string? DesktopIcon => FileSystem.GetResourcePath(\"commandprompt.png\"); type/name/accessible field' in your .xaml.cs class");
             }
