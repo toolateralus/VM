@@ -9,11 +9,11 @@ namespace VM.FS
 {
     public class FileSystem : IDisposable
     {
-        class Installer
+        private static class Installer
         {
             const string PATH = "computer.utils";
 
-            public Installer(string root)
+            public static void Install(string root)
             {
                 var dir = Computer.SearchForParentRecursive("VM");
                 string fullPath = Path.Combine(dir, PATH);
@@ -24,7 +24,7 @@ namespace VM.FS
                 }
             }
 
-            private void CopyDirectory(string sourceDir, string destDir)
+            private static void CopyDirectory(string sourceDir, string destDir)
             {
                 if (!Directory.Exists(destDir))
                     Directory.CreateDirectory(destDir);
