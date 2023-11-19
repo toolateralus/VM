@@ -96,7 +96,7 @@ namespace VM.GUI
         public void LateInit(Computer computer)
         {
             this.computer = computer;
-            Engine = new(computer);
+            Engine ??= new(computer);
 
             output.FontFamily = new(computer.Config.Value<string>("FONT") ?? "Consolas");
             input.FontFamily = new(computer.Config.Value<string>("FONT") ?? "Consolas");

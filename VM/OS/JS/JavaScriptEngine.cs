@@ -12,6 +12,7 @@ using JavaScriptEngineSwitcher.V8;
 using VM.GUI;
 using VM;
 using VM.FS;
+using System.Diagnostics;
 
 namespace VM.JS
 {
@@ -19,7 +20,7 @@ namespace VM.JS
     {
         internal IJsEngine ENGINE_JS;
         IJsEngineSwitcher engineSwitcher;
-        public readonly Dictionary<string, object?> Modules_UNUSED = new();
+        public readonly Dictionary<string, object?> Modules = new();
         public readonly JSNetworkHelpers NetworkModule;
         public readonly JSInterop InteropModule;
         private readonly ConcurrentDictionary<int, (string code, Action<object?> output)> CodeDictionary = new();
@@ -50,18 +51,20 @@ namespace VM.JS
             EmbeddedObjects["network"] = NetworkModule;
             EmbeddedObjects["interop"] = InteropModule;
 
-            EmbedAllObjects();
+            EmbedObject("gfx", new Graphics());
+            EmbedType("Stopwatch", typeof(Stopwatch));
 
+            EmbedAllObjects();
             executionThread = new Thread(ExecuteAsync);
             executionThread.Start();
 
-            string jsDirectory = Computer.SearchForParentRecursive("VM");
-
-            LoadModules(jsDirectory + "\\OS-JS");
+            LoadModules(FileSystem.GetResourcePath("__os"));
 
             _ = Execute($"os.id = {computer.ID}");
 
             InteropModule.OnComputerExit += computer.Exit;
+
+            InteropModule.OnModuleExported += (path, obj) => { Modules[path] = obj; };
         }
         public void EmbedObject(string name, object? obj)
         {
@@ -75,7 +78,6 @@ namespace VM.JS
         {
             foreach (var item in EmbeddedObjects)
                 ENGINE_JS.EmbedHostObject(item.Key, item.Value);
-
         }
         // Resource intensive loops
         private async void ExecuteAsync()
@@ -111,40 +113,29 @@ namespace VM.JS
         {
             if (FileSystem.GetResourcePath(arg) is string AbsPath && !string.IsNullOrEmpty(AbsPath))
             {
-                ENGINE_JS.ExecuteFile(AbsPath);
+                object? result = null;
+                _ = Task.Run(async () => {
+                    result = await Execute(File.ReadAllText(AbsPath)); 
+                });
+                return result;
             }
             return null;
         }
         public void LoadModules(string sourceDir)
         {
-            void RecursiveLoad(string directory)
+            FileSystem.ProcessDirectoriesAndFilesRecursively(sourceDir, (_,_) => { }, file);
+
+            void file (string d, string f)
             {
-                foreach (var file in Directory.GetFiles(directory, "*.js"))
+                try
                 {
-                    void AddModule(object? obj, string path)
-                    {
-                        Modules_UNUSED[path] = obj;
-                    }
-
-                    InteropModule.OnModuleExported += (path, o) => AddModule(o, path);
-
-                    try
-                    {
-                        ENGINE_JS.Execute(File.ReadAllText(file));
-                    }
-                    catch (Exception e)
-                    {
-                        Notifications.Exception(e);
-                    }
+                    ENGINE_JS.Execute(File.ReadAllText(f));
                 }
-
-                foreach (var subDir in Directory.GetDirectories(directory))
+                catch (Exception e)
                 {
-                    RecursiveLoad(subDir);
+                    Notifications.Exception(e);
                 }
             }
-
-            RecursiveLoad(sourceDir);
         }
         public async Task<object?> Execute(string jsCode, CancellationToken token = default)
         {

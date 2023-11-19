@@ -7,9 +7,13 @@ namespace VM
 {
     public static class Notifications
     {
+
         public static void Now(string message)
         {
             var cw = Computer.Current.Window;
+
+
+            
 
             // closing the app.
             if (cw.Disposing || cw is null || cw.Dispatcher is null)
@@ -17,6 +21,11 @@ namespace VM
 
             cw.Dispatcher.Invoke(() =>
             {
+                var children = cw.NotificationStackPanel.Children;
+
+                if (children.Count > 250)
+                    children.RemoveAt(0);
+
                 var cmd = Computer.TryGetProcess<CommandPrompt>();
                 cmd?.output?.AppendText("\n" + message);
 
@@ -40,6 +49,8 @@ namespace VM
                
 
                 var notif = new NotificationControl() { Message = message };
+
+
                 cw.NotificationStackPanel.Children.Add(notif);
                 notif.Start();
             });
@@ -47,8 +58,7 @@ namespace VM
 
         internal static void Exception(Exception e)
         {
-            // todo: this is super presumptuous lol, gotta be a better way to get brief execptions withotu total loss.
-            Now(e.Message.Split("at").FirstOrDefault(""));  
+            Now(e.Message);  
         }
     }
 }

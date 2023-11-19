@@ -90,7 +90,9 @@ namespace VM.GUI
         private void OnFadeOutCompleted()
         {
             var parent = Parent as Panel;
-            parent?.Children.Remove(this);
+
+            if (parent?.Children.Contains(this) is bool b && b)
+                parent?.Children.Remove(this);
         }
     }
 }

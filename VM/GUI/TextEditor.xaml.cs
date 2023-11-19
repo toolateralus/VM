@@ -11,6 +11,7 @@ using System;
 using VM.FS;
 using System.Windows.Input;
 using System.Linq;
+using VM.JS;
 
 namespace VM.GUI
 {
@@ -31,7 +32,7 @@ namespace VM.GUI
             InitializeComponent();
             Computer = pc;
             LoadedFile = path;
-
+            Runtime.LoadCustomSyntaxHighlighting();
             LoadFile(path);
             // change the highlighting based on file extension that's opened
 
@@ -96,7 +97,6 @@ namespace VM.GUI
         }
         private void RenderMD_Click(object sender, RoutedEventArgs e)
         {
-            var wnd = Computer.Window;
             mdViewer = new MarkdownViewer();
             mdViewer.RenderMarkdown(Contents);
             Computer.OpenApp(mdViewer, "Markdown Renderer");
@@ -114,7 +114,7 @@ namespace VM.GUI
                 var dialog = new SaveFileDialog();
                 dialog.InitialDirectory = Computer.FS_ROOT;
 
-                dialog.FileName = "new_js_script";
+                dialog.FileName = "untitled";
                 dialog.DefaultExt = ".js";
 
                 bool? dlg = dialog.ShowDialog();
@@ -145,7 +145,14 @@ namespace VM.GUI
 
         private async void RunButton_Click(object sender, RoutedEventArgs e)
         {
-            await Computer.JavaScriptEngine.Execute(input.Text);
+            var cmd = new CommandPrompt();
+            cmd.LateInit(Computer.Current);
+
+            var jsEngine = new JavaScriptEngine(Computer.Current);
+
+            Computer.Current.OpenApp(cmd, engine: jsEngine);
+
+            await jsEngine.Execute(string.IsNullOrEmpty(input.Text) ? "print('You must provide some javascript to execute...')" : input.Text);
         }
     }
 }

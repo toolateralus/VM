@@ -2,7 +2,7 @@
 class trippy {
     frameCt = 0;
     speed = 10;
-    width = 64;
+    width = 128;
     bytesPerPixel = 4;
     data = [];
     newWidth = this.width;
@@ -12,6 +12,7 @@ class trippy {
     update() {
         this.width = this.newWidth;
         this.data = [];
+        
         for (let y = 0; y < this.width; y++) {
             for (let x = 0; x < this.width; x++) {
                 for (let index = 0; index < this.bytesPerPixel; index++) {
@@ -21,6 +22,12 @@ class trippy {
         }
     }
 
+    
+    packRGBA(color) {
+        var packedColor = (color[0] << 24) | (color[1] << 16) | (color[2] << 8) | color[3];
+        return packedColor;
+    }
+    
     captureTime(start) {
         if (start) 
         {
@@ -40,11 +47,9 @@ class trippy {
         this.needsUpdating = true;
     }
     writePixel(x, y, color) {
-        let index = (y * this.width + x) * this.bytesPerPixel;
-        color.forEach(byte => {
-            this.data[index] = byte;
-            index++;
-        });
+        const packed = this.packRGBA(color);
+        gfx.writePixel(this.gfx_ctx, Math.floor(x), Math.floor(y), packed);
+        
     }
     draw() {
         this.captureTime(true);
@@ -59,8 +64,6 @@ class trippy {
             }
         }
 
-        app.pushEvent(this.__ID, 'renderTarget', 'draw_pixels', this.data);
-        
         this.frameCt++;
         
         if (this.needsUpdating) {
@@ -173,5 +176,6 @@ class trippy {
         app.eventHandler(this.__ID, 'this', 'draw', XAML_EVENTS.RENDER);
         app.eventHandler(this.__ID, 'this', 'onKeyEvent', XAML_EVENTS.KEY_DOWN);
         this.update();
+        this.gfx_ctx = gfx.createCtx(this.__ID, 'renderTexture', 512, 512);
     }
 }

@@ -53,7 +53,7 @@ namespace VM.FS
             if (!Directory.Exists(root))
             {
                 Directory.CreateDirectory(root);
-                Installer installer = new(root);
+                Installer.Install(root);
             }
 
             currentDirectory = root;

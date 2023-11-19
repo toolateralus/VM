@@ -28,25 +28,22 @@ namespace VM.GUI
 
             OnWindowStateChanged += (ws) => WindowState = ws;
 
-            LoadCustomSyntaxHighlighting();
 
             IDBox.Focus();
             IDBox.Text = "0";
 
-            StartPerpetualColorAnimation();
+            //StartPerpetualColorAnimation();
 
-            TryBootComputer();
-            Close();
-
+            TryBootComputer(Close);
         }
 
-        private static void LoadCustomSyntaxHighlighting()
+        public static void LoadCustomSyntaxHighlighting()
         {
             var path = FileSystem.GetResourcePath("javascript_syntax_highlighting.xhsd");
 
             if (string.IsNullOrEmpty(path))
             {
-                Notifications.Now("An error was encountered while parsing the JavaScript syntax highlighting file, which should be called javascript_syntax_highlighting.xhsd");
+                // Notifications.Now("An error was encountered while parsing the JavaScript syntax highlighting file, which should be called javascript_syntax_highlighting.xhsd");
                 return;
             }
 
@@ -64,7 +61,7 @@ namespace VM.GUI
         public const string COMPUTER = "computer";
         public const string FAST_BOOT_FILENAME = "this.ins";
 
-        private static void TryBootComputer()
+        private static void TryBootComputer(Action closeAction)
         {
             if (FileSystem.GetResourcePath(FAST_BOOT_FILENAME) is string path && path.Contains(COMPUTER))
             {
@@ -84,9 +81,11 @@ namespace VM.GUI
                     if (uint.TryParse(computerNumber, out uint number))
                     {
                         Computer.Boot(number);
+                        closeAction?.Invoke();
                     }
                 }
-            }
+            } 
+            
         }
 
         public static Action<WindowState>? OnWindowStateChanged;

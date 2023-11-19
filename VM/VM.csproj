@@ -9,6 +9,13 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <Compile Remove="computer.utils\downloads\**" />
+    <EmbeddedResource Remove="computer.utils\downloads\**" />
+    <None Remove="computer.utils\downloads\**" />
+    <Page Remove="computer.utils\downloads\**" />
+  </ItemGroup>
+
+  <ItemGroup>
     <PackageReference Include="AvalonEdit" Version="6.3.0.90" />
     <PackageReference Include="CefNet" Version="105.3.22248.142" />
     <PackageReference Include="CefNet.Wpf" Version="105.3.22248.142" />
@@ -23,12 +30,6 @@
 
   <ItemGroup>
     <Page Include="App.xaml" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <None Include="computer.utils\downloads\.git\COMMIT_EDITMSG" />
-    <None Include="computer.utils\downloads\.git\config" />
-    <None Include="computer.utils\downloads\.git\description" />
   </ItemGroup>
 
   <ItemGroup>

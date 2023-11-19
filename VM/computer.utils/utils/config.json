@@ -1,17 +1,11 @@
 {
-  "NAME": "Default Computer Layout",
+  "NAME": "Joshz Dope Computer",
   "ALIAS_PATH": "C:\\Users\\Josh\\AppData\\Roaming\\VM\\computer0\\commands",
-  "BACKGROUND": "Background.png",
+  "BACKGROUND": "background.png",
   "FONT": "Cascadia Code Light",
-  "INSTALLED_APPS": [
-    "imageviewer.app",
-    "webConsole.web",
-    "graphicTest.app",
-    "paint.app",
-    "PaintNet.app",
-    "game.app"
-  ],
-  "WINDOW_RESIZE_SPEED": "10",
+  "INSTALLED_APPS": [],
+  "CMD_LINE_TIMEOUT": "50000",
+  "WINDOW_RESIZE_SPEED": "15",
   "DEFAULT_SERVER_IP": "192.168.0.138",
   "ALWAYS_CONNECT": true
 }

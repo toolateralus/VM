@@ -7,7 +7,6 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Reflection;
-using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using System.Threading;
 using System.Threading.Tasks;
@@ -16,15 +15,15 @@ using System.Windows.Controls;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using VM.GUI;
-using VM.Network;
-using VM;
-using VM.Types;
-using System.Runtime.Serialization.Formatters.Binary;
 using VM.FS;
+using System.Drawing;
+using System.Collections.Concurrent;
 using System.Text.RegularExpressions;
+using Image = System.Windows.Controls.Image;
 
 namespace VM.JS
 {
+
     // ## THIS DIRELY NEEDS TO BE SPLIT UP AND DOCUMENTED, JUST MAKE SURE EVERYTHING IS PUBLIC! ## \\
     // Follow the current naming scheme. these are first class members in JS.
     public class JSInterop
@@ -278,7 +277,13 @@ namespace VM.JS
             }
             return File.ReadAllText(path);
         }
-        public string fromFile(string path)
+        /// <summary>
+        /// Opens a file, reads its bytes contents, converts it to a base64 string and
+        /// returns it. great for loading images into java script and keeping data transfer lightweight
+        /// </summary>
+        /// <param name="path"></param>
+        /// <returns></returns>
+        public string base64FromFile(string path)
         {
             byte[] imageData = null;
 
@@ -609,7 +614,7 @@ namespace VM.JS
 
             List<byte> colorData = new();
 
-            JSInterop.forEach<int>(value.ToEnumerable(), (item) => colorData.Add((byte)item));
+            forEach<int>(value.ToEnumerable(), (item) => colorData.Add((byte)item));
 
             Computer.Window?.Dispatcher.Invoke(() =>
             {
@@ -630,7 +635,8 @@ namespace VM.JS
 
             return null;
         }
-        public static void Draw(List<byte> colorData, Image image)
+        
+        public static void Draw(List<byte> colorData, System.Windows.Controls.Image image)
         {
             var bytesPerPixel = 4;
             var pixelCount = colorData.Count / bytesPerPixel;
@@ -703,3 +709,4 @@ namespace VM.JS
         }
     }
 }
+

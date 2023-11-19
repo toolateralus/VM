@@ -3,7 +3,7 @@ class imageviewer {
     loadImage(sender, args) {
         const text = interop.pushEvent(this.__ID, 'textBox', 'get_content', '')
         
-        const background = interop.fromFile(text);
+        const background = interop.base64FromFile(text);
         
         if (background === null || background.length === 0){
             print('failed to get file ' + text)

@@ -85,7 +85,7 @@ namespace VM
             var WORKING_DIR = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData) + "\\VM";
 
             this.WORKING_DIR = Path.GetFullPath(WORKING_DIR);
-            
+
             // prepare the root dir for the file system
             FS_ROOT = $"{this.WORKING_DIR}\\computer{id}";
 
@@ -151,7 +151,7 @@ namespace VM
         {
             // the resizable is the container that hosts the user app.
             // this is made seperate to eliminate annoying and complex boiler plate.
-            UserWindow window = Window.OpenAppUI(title,ref background, ref foreground, out var resizable_window);
+            UserWindow window = Window.OpenAppUI(title, ref background, ref foreground, out var resizable_window);
             Windows[title] = window;
 
             // this is the process being opened and the UI being established for it.
@@ -199,19 +199,19 @@ namespace VM
         {
             var data = Runtime.GetAppDefinition(type);
             
-
-
             var control = XamlJsInterop.ParseUserControl(data.XAML);
+
             if (control == null)
             {
                 Notifications.Now($"Error : either the app was not found or there was an error parsing xaml or js for {type}.");
                 return;
             }
+
             JavaScriptEngine engine = new(this);
             
-            var jsResult = await InstantiateWindowClass(type, data, engine);
+            var (id, code) = await InstantiateWindowClass(type, data, engine);
 
-            OpenApp(control, title: jsResult.id, engine: engine);
+            OpenApp(control, title: id, engine: engine);
 
             if (!ProcessLookupTable.TryGetValue(type, out var array))
             {
@@ -219,19 +219,20 @@ namespace VM
                 ProcessLookupTable[type] = array;
             }
 
-            ProcessLookupTable[type].Add(jsResult.id);
+            ProcessLookupTable[type].Add(id);
 
-            Windows[jsResult.id].OnClosed += delegate {
+            Windows[id].OnClosed += delegate 
+            {
                 if (!ProcessLookupTable.ContainsKey(type))
                     throw new NullReferenceException("The application became detached from the operating system, or is unknown.");
 
-                ProcessLookupTable[type].Remove(jsResult.id);
+                ProcessLookupTable[type].Remove(id);
 
                 if (ProcessLookupTable[type].Count == 0)
                     ProcessLookupTable.Remove(type);
             };
 
-            await engine.Execute(jsResult.code);
+            await engine.Execute(code);
         }
 
         #region Application
@@ -297,6 +298,7 @@ namespace VM
 
         }
         public static Dictionary<string, List<string>> ProcessLookupTable = new();
+        private static uint processCount;
         private static async Task<(string id, string code)> InstantiateWindowClass(string type, (string XAML, string JS) data, JavaScriptEngine engine)
         {
             var name = type.Split('.')[0];
@@ -305,7 +307,7 @@ namespace VM
 
             _ = await engine.Execute(JS);
 
-            var instance_name = "uid" + Guid.NewGuid().ToString().Split('-')[0];
+            var instance_name = "p" + (processCount++).ToString();
 
             string instantiation_code = $"const {instance_name} = new {name}('{instance_name}')";
 

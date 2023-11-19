@@ -7,6 +7,7 @@ class renderer {
         this.resizing = false;
         this.newWidth = this.width;
         this.isDirty = true;
+        
         // 24 color, 4bpp (a,r,g,b) color palette.
         this.palette = [
             [255, 255, 0, 0],       // Red 0
@@ -35,13 +36,14 @@ class renderer {
             [255, 0, 250, 154]      // Medium Spring Green 23
         ];
     }
+    
     getRender(){
         if (this.frameData.length == 0){
             return [[0,0,0,0]]
         }
-        else return this.frameData;
+        return this.frameData;
     }
-    //#region Rendering
+
     clean(color) {
         this.width = this.newWidth;
         this.frameData = [];
@@ -70,10 +72,12 @@ class renderer {
 
     writePixel(x, y, color) {
         let index = (y * this.width + x) * this.bytesPerPixel;
-        color.forEach(byte => {
-            this.frameData[index] = byte;
-            index++;
-        });
+        
+        this.frameData[index + 0] = color[0];
+        this.frameData[index + 1] = color[1];
+        this.frameData[index + 2] = color[2];
+        this.frameData[index + 3] = color[3];
+    
         this.isDirty = true;
     }
 
@@ -101,9 +105,11 @@ class renderer {
 
                 for (let y = min_y; y < max_y; y++) {
                     for (let x = min_x; x < max_x; x++) {
-                        // wrap y axis.
-                        const wrappedY = (y + this.width) % this.width; 
-                        this.writePixel(x, wrappedY, this.palette[16]);
+                        // enable for wrapping of y.. y??
+                        //const wrappedY = (y + this.width) % this.width; 
+                        //this.writePixel(x, wrappedY, this.palette[16]);
+
+                        this.writePixel(x, y, this.palette[16]);
                     }
                 }
             }
@@ -114,14 +120,14 @@ class renderer {
     }
 }
 
+// THIS IS THE WPF CLASS! (it chooses the file name associated class.)
 class game {
     
     setupUIEvents() {
         app.eventHandler(this.__ID, 'this', '_render', XAML_EVENTS.RENDER);
-        app.eventHandler(this.__ID, 'this', '_physics', XAML_EVENTS.PHYSICS);
         app.eventHandler(this.__ID, 'this', 'onKey', XAML_EVENTS.KEY_DOWN);
     }
-    
+
     onKey(key, isDown) {
         if (key === 'W')
             this.player.velocity.y = -this.moveSpeed;
@@ -144,7 +150,7 @@ class game {
             app.pushEvent(this.__ID, 'renderTarget', 'draw_pixels', this.renderer.getRender());
         }
         this.player.update_physics()
-        this.player.confine_to_screen_space(this.width);
+        this.player.confine_to_screen_space(this.renderer.width);
     }
 
     _getSquare(size){
@@ -161,16 +167,17 @@ class game {
         this.__ID = id;
         
         // 64x64 render surface.
-        this.renderer = new renderer(64);
+        this.renderer = new renderer(128);
         
         // initialize the drawing surface
         this.renderer.clean(this.renderer.palette[15]);
 
         // pixels per frame. .12 is pretty fast since we run at 30-100 fps, ~1-3 px/s 
-        this.moveSpeed = .32;
+        this.moveSpeed = 0.32;
         
         // player init 
         // 4x4 (pixel) square sprite
+
         const verts = this._getSquare(4);
 
         // obj scale.
@@ -280,8 +287,8 @@ class gameObject {
     }
     confine_to_screen_space(width){
         const min_x = 1, min_y = 1, max_x = width - 1, max_y = width -1;
-        //this.pos.x = Math.min(Math.max(this.pos.x, min_x), max_x);
-        //this.pos.y = Math.min(Math.max(this.pos.y, min_y), max_y);
+        this.pos.x = Math.min(Math.max(this.pos.x, min_x), max_x);
+        this.pos.y = Math.min(Math.max(this.pos.y, min_y), max_y);
     }
     distanceToPoint(x1, y1, x2, y2) {
         const dx = x2 - x1;
