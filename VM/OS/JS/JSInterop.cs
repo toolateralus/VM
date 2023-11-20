@@ -635,7 +635,6 @@ namespace VM.JS
 
             return null;
         }
-        
         public static void Draw(List<byte> colorData, System.Windows.Controls.Image image)
         {
             var bytesPerPixel = 4;

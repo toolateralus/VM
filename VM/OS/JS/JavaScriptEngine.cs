@@ -78,7 +78,9 @@ namespace VM.JS
             executionThread.Start();
 
             LoadModules(FileSystem.GetResourcePath("__os"));
-            LoadModules(FileSystem.GetResourcePath("std"));
+
+            // LoadModules(FileSystem.GetResourcePath("std")); force include std java script headers, game engine, etc.
+            // 
 
             _ = Execute($"os.id = {computer.ID}");
 
