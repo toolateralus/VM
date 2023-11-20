@@ -18,8 +18,6 @@ computer in vscode. Extensions are pure preference, and vscode comes with a `jav
 
 >> note that working in _Lemur_ is much like working in a free-standing environment, for kernel or embedded development. Meaning, you likely do not have access to many common, seemingly base-line language features. such as typical imports and exports, meaning if you need third party software, it's likely you'll need to either copy paste it into a document and 'require' it (our node-like module system), or just write it yourself.
 
->>> when I started this project, I felt un-able to develop without the lsp.
-
 Not using vscode can be much more fun in terms of the emulation and experience, but vscode is practically neccesary to mid-level programming needs, like refactoring, very detailed syntax highlighting, and lsp support.
 
 ---
