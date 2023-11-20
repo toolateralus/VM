@@ -1,4 +1,4 @@
-# welcome to lemur-vdt!
+# welcome to lemur-vdk!
 a playground like virtual desktop, inspired by ComputerCraft (minecraft mod), aims to bring a similar functionality to a standalone desktop app.
 featuring a custom JS/XAML implementation, we use WPF as a front end, which allows for quick development of flexible UI. 
 
