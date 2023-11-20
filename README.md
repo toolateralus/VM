@@ -49,6 +49,11 @@ It's a TCP server with no security measures.
 
 > Step 4. At the top of the Visual Studio instance, once the project has loaded, there will be a dropdown that says either 'Release' or 'Debug' to the left of the green play buttons. choose 'Release' and then do the key chord `Ctrl + Shift + B` to build.
 
+> Note: There `WILL` be exactly 1 expected error while building the solution : `Severity	Description	Project Rank
+Error	Program does not contain a static 'Main' method suitable for an entry point	1`
+> Do not worry about this. it will only happen once, and means nothing. its a wip.
+
+
 > Step 5. You can navigate to the `lemur/lemur-vdk/bin/Release/net6.0/lemur.exe` file and right click the executable. select 'Send To' and then press desktop, or wherever you want a fast way to run the vdk.
 
 > if you're not using 6.0 remember to replace it with the appropriate .net version.
