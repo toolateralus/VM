@@ -1,7 +1,7 @@
 {
   "NAME": "Default VDK",
   "ALIAS_PATH": "computer0\\home\\commands",
-  "BACKGROUND": "background.jpg",
+  "BACKGROUND": "background.png",
   "FONT": "Cascadia Code Light",
   "INSTALLED_APPS": [],
   "CMD_LINE_TIMEOUT": "50_000",
