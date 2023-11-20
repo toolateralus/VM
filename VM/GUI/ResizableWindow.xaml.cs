@@ -64,7 +64,7 @@ namespace VM.GUI
             {
                 var delta = pos - dragOffset;
                 double maxDelta = ResizeSpeed;
-                delta = NormalizeMouseDelta(delta, maxDelta);
+               //delta = NormalizeMouseDelta(delta, maxDelta);
                 PerformResize(delta);
 
             }

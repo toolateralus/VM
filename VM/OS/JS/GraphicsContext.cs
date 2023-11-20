@@ -28,7 +28,7 @@ namespace VM.JS
 
             if (x < 0 || y < 0 || x >= Width || y >= Height)
             {
-                Notifications.Now("GraphicsContext.WritePixel - index out of bounds. your x and y input must be non negative and within bounds of your context");
+                //Notifications.Now("GraphicsContext.WritePixel - index out of bounds. your x and y input must be non negative and within bounds of your context");
                 return;
             }
 

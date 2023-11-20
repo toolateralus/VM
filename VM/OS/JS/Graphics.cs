@@ -25,11 +25,13 @@ namespace VM.JS
             }
             ctx.clearColor(color);
         }
-        public bool flushCtx(int gfx_ctx)
+        public bool flushCtx(int gfx_ctx, bool exception = false)
         {
             if (!gfxContext.TryGetValue(gfx_ctx, out var context))
             {
-                Notifications.Now($"Couldn't find graphics context for id : {gfx_ctx}");
+                if (exception) 
+                    Notifications.Now($"Couldn't find graphics context for id : {gfx_ctx}");
+
                 return false;
             }
 

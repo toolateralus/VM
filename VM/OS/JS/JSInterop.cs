@@ -30,7 +30,7 @@ namespace VM.JS
     {
         public Computer Computer;
         public Action<string, object?>? OnModuleExported;
-        public Func<string, object?>? OnModuleImported;
+        public Action<string>? OnModuleImported;
         public Action<int>? OnComputerExit;
 
         // this are called BY the js code, to do things java script isn't solely capable of (afaik)
@@ -260,9 +260,9 @@ namespace VM.JS
         {
             await Task.Delay(ms);
         }
-        public object? require(string path)
+        public void require(string path)
         {
-            return OnModuleImported?.Invoke(path);
+            Computer.JavaScriptEngine.ImportModule(path);
         }
         public object? read_file(string path)
         {
@@ -679,10 +679,10 @@ namespace VM.JS
             }
             return null;
         }
-        public void eventHandler(string identifier, string targetControl, string methodName, int type)
+        public async void eventHandler(string identifier, string targetControl, string methodName, int type)
         {
             if (Computer.Windows.TryGetValue(identifier, out var app))
-                app.JavaScriptEngine?.CreateEventHandler(identifier, targetControl, methodName, type);
+                await app.JavaScriptEngine?.CreateEventHandler(identifier, targetControl, methodName, type);
         }
         public void loadApps(object? path)
         {

@@ -8,6 +8,7 @@ using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using VM.FS;
 using VM.JS;
+using Key = System.Windows.Input.Key;
 
 namespace VM.GUI
 {

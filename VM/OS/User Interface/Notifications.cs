@@ -23,7 +23,7 @@ namespace VM
             {
                 var children = cw.NotificationStackPanel.Children;
 
-                if (children.Count > 250)
+                if (children.Count > 10)
                     children.RemoveAt(0);
 
                 var cmd = Computer.TryGetProcess<CommandPrompt>();
@@ -58,7 +58,7 @@ namespace VM
 
         internal static void Exception(Exception e)
         {
-            Now(e.Message);  
+            Now(e.Message + $"\n{e.GetType().Name}");  
         }
     }
 }

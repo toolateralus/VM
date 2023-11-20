@@ -12,6 +12,7 @@ using VM.FS;
 using System.Windows.Input;
 using System.Linq;
 using VM.JS;
+using Key = System.Windows.Input.Key;
 
 namespace VM.GUI
 {

@@ -13,13 +13,32 @@ using VM.GUI;
 using VM;
 using VM.FS;
 using System.Diagnostics;
+using System.Windows.Input;
+
 
 namespace VM.JS
 {
+    public class Key
+    {
+        public bool isDown(string key)
+        {
+            bool result = false;
+            
+            Computer.Current.Window?.Dispatcher?.Invoke(() =>
+            {
+                if (Enum.TryParse<System.Windows.Input.Key>(key, out var _key))
+                    result = Keyboard.IsKeyDown(_key);
+                else Notifications.Now($"Failed to parse key {key}");
+            });
+
+            return result;
+        }
+    }
     public class JavaScriptEngine : IDisposable
     {
         internal IJsEngine ENGINE_JS;
         IJsEngineSwitcher engineSwitcher;
+
         public readonly Dictionary<string, object?> Modules = new();
         public readonly JSNetworkHelpers NetworkModule;
         public readonly JSInterop InteropModule;
@@ -36,11 +55,8 @@ namespace VM.JS
             Computer = computer;
 
             engineSwitcher = JsEngineSwitcher.Current;
-
             engineSwitcher.EngineFactories.AddV8();
-
             engineSwitcher.DefaultEngineName = V8JsEngine.EngineName;
-
             ENGINE_JS = engineSwitcher.CreateDefaultEngine();
 
             NetworkModule = new JSNetworkHelpers(computer, computer.Network.OnSendMessage);
@@ -52,13 +68,17 @@ namespace VM.JS
             EmbeddedObjects["interop"] = InteropModule;
 
             EmbedObject("gfx", new Graphics());
+
             EmbedType("Stopwatch", typeof(Stopwatch));
+
+            EmbedObject("Key", new Key());
 
             EmbedAllObjects();
             executionThread = new Thread(ExecuteAsync);
             executionThread.Start();
 
             LoadModules(FileSystem.GetResourcePath("__os"));
+            LoadModules(FileSystem.GetResourcePath("std"));
 
             _ = Execute($"os.id = {computer.ID}");
 
@@ -109,17 +129,26 @@ namespace VM.JS
                 throw new JsEngineException("Something happened");
             }
         }
-        private object? ImportModule(string arg)
+        public string IncludedFiles = "";
+        public void ImportModule(string arg)
         {
             if (FileSystem.GetResourcePath(arg) is string AbsPath && !string.IsNullOrEmpty(AbsPath))
             {
-                object? result = null;
-                _ = Task.Run(async () => {
-                    result = await Execute(File.ReadAllText(AbsPath)); 
-                });
-                return result;
+                if (!IncludedFiles.Contains(AbsPath))
+                {
+                    IncludedFiles += AbsPath;
+                    try
+                    {
+                        var code = File.ReadAllText(AbsPath); 
+                        ENGINE_JS.Execute(code);
+                    }
+                    catch(Exception e)
+                    {
+                        Notifications.Exception(e);
+                    }
+
+                } 
             }
-            return null;
         }
         public void LoadModules(string sourceDir)
         {
@@ -181,12 +210,18 @@ namespace VM.JS
             // check if this event already exists
             var result = await Execute($"{identifier} != null");
             if (result is not bool ID_EXISTS || !ID_EXISTS)
+            {
+                Notifications.Now($"App not found : {identifier}");
                 return;
+            }
 
             // check if this method already exists
             result = await Execute($"{identifier}.{methodName} != null");
             if (result is not bool METHOD_EXISTS || !METHOD_EXISTS)
+            {
+                Notifications.Now($"Method not found : {identifier}.{methodName}");
                 return;
+            }
 
             wnd.Dispatcher.Invoke(() =>
             {
