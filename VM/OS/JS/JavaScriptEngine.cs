@@ -154,6 +154,12 @@ namespace VM.JS
         }
         public void LoadModules(string sourceDir)
         {
+            if (string.IsNullOrEmpty(sourceDir))
+            {
+                Notifications.Now("require was called with an empty string and aborted");
+                return;
+            }
+
             FileSystem.ProcessDirectoriesAndFilesRecursively(sourceDir, (_,_) => { }, file);
 
             void file (string d, string f)

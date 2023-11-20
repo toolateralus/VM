@@ -43,7 +43,7 @@ namespace VM.GUI
 
             if (string.IsNullOrEmpty(path))
             {
-                // Notifications.Now("An error was encountered while parsing the JavaScript syntax highlighting file, which should be called javascript_syntax_highlighting.xhsd");
+                Notifications.Now("An error was encountered while parsing the JavaScript syntax highlighting file, which should be called javascript_syntax_highlighting.xhsd");
                 return;
             }
 

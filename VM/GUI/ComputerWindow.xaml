@@ -21,8 +21,8 @@
             <RowDefinition Height="25"/>
         </Grid.RowDefinitions>
 
-        <Canvas x:Name="Desktop" Grid.Row="0" Grid.Column="0" Grid.ColumnSpan="2">
-            <Image x:Name="desktopBackground" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Width="Auto" Height="Auto"/>
+        <Image Grid.ColumnSpan="2" x:Name="desktopBackground" HorizontalAlignment="Center" VerticalAlignment="Center" Width="Auto" Height="Auto"/>
+        <Canvas x:Name="Desktop" Grid.Row="0" Grid.Column="0" Grid.ColumnSpan="2" HorizontalAlignment="Stretch" VerticalAlignment="Stretch">
             <WrapPanel x:Name="DesktopIconPanel" Orientation="Vertical" HorizontalAlignment="Right" VerticalAlignment="Bottom" />
         </Canvas>
         

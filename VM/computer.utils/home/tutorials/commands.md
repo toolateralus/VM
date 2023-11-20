@@ -2,7 +2,7 @@
 
 ---
 
-Writing console commands can be helpful to make a non-gui task into a single command line call
+Writing console commands can be helpful to make a non-gui task into a single command Line call
 
 
 To define a console command, first you must make a .js command file, write a script to be executed when the command is called.
@@ -23,7 +23,7 @@ ideas surrounding writing console commands for the OS in JavaScript.
 
 // our js engine doesn't manage the scope of variables when you run a script, and this means that variables defined with 'let' and 'const' will also be treated as global if this step isn't taken, so as to not create memory leaks/lack of garbage collection in the OS's main js engine, it's advised to just wrap the script in a body. this is due to the way we are using the engine, not the engine itself.
 
-// this applies to the command line and the interactive environment, which are both always running through the cmd prompts.
+// this applies to the command Line and the interactive environment, which are both always running through the cmd prompts.
 
 {
 	print('hello world command:');
@@ -47,11 +47,11 @@ alias('helloWorld', 'helloWorld')
 ---
 
 #### Getting Command Line Arguments
-You can declare an array in js to recieve any command line arguments for your script. so, 
+You can declare an array in js to recieve any command Line arguments for your script. so, 
 if you declare an appropriate array as such : 
 
 ``` javascript
-//Fetching command line arguments 
+//Fetching command Line arguments 
 	let args = [/***/]
 ```
 
@@ -72,7 +72,7 @@ your JS array will look like this
 ```
 
 note that the behavior surrounding strings vs identifiers into
-the command line is sketchy and somewhat unknown.
+the command Line is sketchy and somewhat unknown.
 
 also, be aware that the commands that are written natively into
 the os (the commands that have descriptions and help infos)

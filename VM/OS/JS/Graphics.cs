@@ -5,6 +5,7 @@ namespace VM.JS
 {
     public class Graphics
     {
+        private int ctxIndex;
         public Dictionary<int, GraphicsContext> gfxContext = new();
         public bool writePixel(int gfx_ctx, int x, int y, int color)
         {
@@ -43,8 +44,6 @@ namespace VM.JS
 
             return true;
         }
-
-        private int ctxIndex;
         public int createCtx(string id, string target, int width, int height)
         {
             int bpp = 4;

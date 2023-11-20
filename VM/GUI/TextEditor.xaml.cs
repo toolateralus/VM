@@ -33,7 +33,8 @@ namespace VM.GUI
             InitializeComponent();
             Computer = pc;
             LoadedFile = path;
-            Runtime.LoadCustomSyntaxHighlighting();
+
+            
             LoadFile(path);
             // change the highlighting based on file extension that's opened
 

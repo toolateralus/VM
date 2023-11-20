@@ -13,8 +13,6 @@ namespace VM
             var cw = Computer.Current.Window;
 
 
-            
-
             // closing the app.
             if (cw.Disposing || cw is null || cw.Dispatcher is null)
                 return;

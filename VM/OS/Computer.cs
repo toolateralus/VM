@@ -268,6 +268,8 @@ namespace VM
             pc.InstallApplication("CommandPrompt.app", typeof(CommandPrompt));
             pc.InstallApplication("FileExplorer.app", typeof(FileExplorer));
             pc.InstallApplication("TextEditor.app", typeof(TextEditor));
+
+            Runtime.LoadCustomSyntaxHighlighting();
         }
         public static T TryGetProcess<T>()
         {

@@ -1,9 +1,12 @@
 ﻿using System;
 using System.IO;
 using System.Linq;
+using System.Runtime.InteropServices;
 using System.Security.Cryptography.X509Certificates;
+using System.Windows.Shapes;
 using VM;
 using VM.Types;
+using Path = System.IO.Path;
 
 namespace VM.FS
 {
@@ -79,25 +82,47 @@ namespace VM.FS
         }
         public Deque<string> History = new();
         private bool Disposing;
-        internal static string GetResourcePath(string name)
+        public static string GetResourcePath(string name)
         {
-            var path = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData) + "\\VM";
-
-            FileSystem.VerifyOrCreateAppdataDir(path);
-
-            if (Directory.Exists(name) || File.Exists(name))
+            try
             {
-                return name;
+                if (string.IsNullOrEmpty(name))
+                {
+                    Notifications.Now($"Failed to get file {name}");
+                    return "";
+                }
+
+                if (System.IO.Path.IsPathFullyQualified(name))
+                    if (File.Exists(name) || Directory.Exists(name))
+                        return name;
+
+                var WorkingRoot = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData) + "\\VM";
+                VerifyOrCreateAppdataDir(WorkingRoot);
+
+                if (Directory.Exists(name) || File.Exists(name))
+                    return name;
+
+                if (Directory.Exists(WorkingRoot))
+                {
+                    string[] entries = Directory.GetFileSystemEntries(WorkingRoot, name, new EnumerationOptions
+                    {
+                        RecurseSubdirectories = true,
+                        MaxRecursionDepth = 100,
+                    });
+
+                    var foundPath = entries?.FirstOrDefault() ?? "";
+
+                    if (File.Exists(foundPath) || Directory.Exists(foundPath))
+                        return foundPath;
+                }
             }
-
-            if (Directory.Exists(path))
+            catch (Exception ex)
             {
-                string[] entries = Directory.GetFileSystemEntries(path, name, SearchOption.AllDirectories);
-
-                return entries.FirstOrDefault();
+                Notifications.Exception(ex);
             }
 
             return "";
+            //throw new NullReferenceException("Failed to get resource " + name);
         }
         internal static void VerifyOrCreateAppdataDir(string path)
         {
@@ -108,7 +133,6 @@ namespace VM.FS
         }
         public static void ProcessDirectoriesAndFilesRecursively(string directory, Action<string, string> processDirAction, Action<string, string> processFileAction)
         {
-            // Process files in the current directory
             foreach (string file in Directory.EnumerateFiles(directory))
             {
                 processFileAction(directory, file);

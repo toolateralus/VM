@@ -12,21 +12,19 @@ namespace VM.GUI
         private bool isDragging = false;
         private bool isResizing = false;
         private Point dragOffset;
-        public Action OnClosed { get; internal set; }
-        ComputerWindow Owner;
-        public float ResizeSpeed => Owner?.Computer?.Config.Value<float?>("WINDOW_RESIZE_SPEED") ?? 4f;
+        public Action? OnClosed { get; internal set; }
+        public float ResizeSpeed => Computer.Current?.Config.Value<float>("WINDOW_RESIZE_SPEED") ?? 1f;
         public ResizableWindow(ComputerWindow owner)
         {
-           Owner = owner;
            MouseDown += OnMouseDown;
            MouseMove += OnMouseMove;
            MouseUp += OnMouseUp;
            MouseLeave += onMouseLeave;
 
-           MinWidth = Owner?.Computer?.Config.Value<float?>("MIN_WIN_WIDTH") ?? 50;
-           MinHeight = Owner?.Computer?.Config.Value<float?>("MIN_WIN_HEIGHT") ?? 50;
-           MaxWidth = Owner?.Computer?.Config.Value<float?>("MAX_WIN_WIDTH") ?? 1920;
-           MaxHeight = Owner?.Computer?.Config.Value<float?>("MAX_WIN_HEIGHT") ?? 1080 - 25;
+           MinWidth = Computer.Current.Window?.Computer?.Config.Value<float?>("MIN_WIN_WIDTH") ?? 50;
+           MinHeight = Computer.Current.Window?.Computer?.Config.Value<float?>("MIN_WIN_HEIGHT") ?? 50;
+           MaxWidth = Computer.Current.Window?.Computer?.Config.Value<float?>("MAX_WIN_WIDTH") ?? 1920;
+           MaxHeight = Computer.Current.Window?.Computer?.Config.Value<float?>("MAX_WIN_HEIGHT") ?? 1080 - 25;
         }
         private void onMouseLeave(object sender, MouseEventArgs e)
         {
@@ -49,7 +47,7 @@ namespace VM.GUI
             {
                 grid.Children.Remove(this);
                 grid.Children.Add(this);
-                Canvas.SetZIndex(this, Owner.TopMostZIndex);
+                Canvas.SetZIndex(this, Computer.Current.Window.TopMostZIndex);
             }
         }
         protected void OnMouseMove(object sender, MouseEventArgs e)
@@ -64,7 +62,7 @@ namespace VM.GUI
             {
                 var delta = pos - dragOffset;
                 double maxDelta = ResizeSpeed;
-               //delta = NormalizeMouseDelta(delta, maxDelta);
+                delta = Clamp(delta, maxDelta);
                 PerformResize(delta);
 
             }
@@ -94,7 +92,7 @@ namespace VM.GUI
                 Height = MaxHeight;
         }
 
-        private static Vector NormalizeMouseDelta(Vector delta, double maxDelta)
+        private static Vector Clamp(Vector delta, double maxDelta)
         {
             if (Math.Abs(delta.X) > Math.Abs(delta.Y))
             {
