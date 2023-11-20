@@ -45,21 +45,12 @@ external libraries and code bases since it's not limited to a free standing envi
 ##### a message for contributors ...
 > This app type should only be used when _NEEDED_ by expert users or contributors, simply because it breaks the spirit of the project.  there is a roleplay element to emulation - and we didn't aim to make a plain C#/WPF runtime container, the remaining apps that are C# / WPF are all in the process of being ported to JS.
 
-
-
-
-> ###### "and we didn't aim to make a plain C#/WPF runtime container" 
-> ###### if you want that, just go use WPF!
-
-
 > As for performance concerns : we have the philosophy that `if we want to provide a service like the javascript framework, it must be useable to the extent of us never needing to reach outside of it for our own apps using it.` and if we do need to do so, we implement a way to do so from the framework. 
 - We hope, in doing this, we create a trustworthy, reliable, and well featured and capable framework.
 
 - Just know that right now- that is NOT exactly what this is. it's very rough and erroneous. it's most certainly usable and pretty featured,
 but it lacks reliability.
 - and by trustworthy, I just mean users can trust it will be use-able enough to suit their hobby programming interests. for any skill range.
-
-
 
 ##### Most cases won't need this app, and even _Lemur_ contributions and new system functionalites can almost always be implemented in javascript. 
 
