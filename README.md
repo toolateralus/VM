@@ -11,7 +11,7 @@ Before you begin, ensure you have the following prerequisites:
 A Linux version is currently under development with AvaloniaUI. The UI is still basic, and contributions are highly appreciated.
 
 ## Recommended Tools
-- **Visual Studio Code**: Any version is suitable, although Insiders is recommended for access to pre-release features.
+- **Visual Studio Code**: Any version is suitable
 
 ## Getting Started
 
