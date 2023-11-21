@@ -10,44 +10,10 @@ using Path = System.IO.Path;
 
 namespace Lemur.FS
 {
-    public class FileSystem : IDisposable
+    public partial class FileSystem
     {
-        private static class Installer
+        public FileSystem(string root)
         {
-            const string PATH = "computer.utils";
-
-            public static void Install(string root)
-            {
-                var dir = Computer.SearchForParentRecursive("lemur-vdk");
-                string fullPath = Path.Combine(dir, PATH);
-
-                if (Directory.Exists(fullPath))
-                {
-                    CopyDirectory(fullPath, root);
-                }
-            }
-
-            private static void CopyDirectory(string sourceDir, string destDir)
-            {
-                if (!Directory.Exists(destDir))
-                    Directory.CreateDirectory(destDir);
-
-                foreach (string file in Directory.GetFiles(sourceDir))
-                {
-                    string destFile = Path.Combine(destDir, Path.GetFileName(file));
-                    File.Copy(file, destFile, true);
-                }
-
-                foreach (string subDir in Directory.GetDirectories(sourceDir))
-                {
-                    string destSubDir = Path.Combine(destDir, Path.GetFileName(subDir));
-                    CopyDirectory(subDir, destSubDir);
-                }
-            }
-        }
-        public FileSystem(string root, Computer computer)
-        {
-            Computer = computer;
             if (string.IsNullOrEmpty(root))
             {
                 throw new ArgumentException("Invalid root directory path.");
@@ -63,7 +29,6 @@ namespace Lemur.FS
 
         }
 
-        public Computer Computer;
         private string currentDirectory;
         public string CurrentDirectory
         {
@@ -151,7 +116,7 @@ namespace Lemur.FS
         {
             if (path == "..")
             {
-                string currentDirectory = Computer.FS.CurrentDirectory;
+                string currentDirectory = Computer.Current.FS.CurrentDirectory;
 
                 string[] components = currentDirectory.Split('\\');
 
@@ -161,7 +126,7 @@ namespace Lemur.FS
 
                     string parentDirectory = string.Join("\\", parentComponents);
 
-                    Computer.FS.ChangeDirectory(parentDirectory);
+                    Computer.Current.FS.ChangeDirectory(parentDirectory);
                 }
                 return;
             }
@@ -226,7 +191,7 @@ namespace Lemur.FS
 
             if (!Path.IsPathFullyQualified(targetPath))
             {
-                targetPath = Path.Combine(Computer.FS_ROOT, fileName);
+                targetPath = Path.Combine(Computer.Current.FS_ROOT, fileName);
             }
 
             return targetPath;
@@ -330,22 +295,6 @@ namespace Lemur.FS
                     }
                 }
             }
-        }
-        protected virtual void Dispose(bool disposing)
-        {
-            if (!Disposing)
-            {
-                if (disposing)
-                {
-                    Computer = null!;
-                }
-                Disposing = true;
-            }
-        }
-        public void Dispose()
-        {
-            Dispose(disposing: true);
-            GC.SuppressFinalize(this);
         }
     }
 }

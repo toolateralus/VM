@@ -89,7 +89,7 @@ namespace Lemur
             // prepare the root dir for the file system
             FS_ROOT = $"{this.WORKING_DIR}\\computer{id}";
 
-            FS = new(FS_ROOT, this);
+            FS = new(FS_ROOT);
 
             Network = new(this);
 
@@ -328,7 +328,6 @@ namespace Lemur
                     JavaScriptEngine?.Dispose();
                     Window?.Dispose();
                     Network?.Dispose();
-                    FS?.Dispose();
                     CommandLine?.Dispose();
 
                     foreach (var item in Windows)
