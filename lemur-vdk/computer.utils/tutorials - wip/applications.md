@@ -87,7 +87,7 @@ something the repository itself does not do :D
 (not saying my code is great at all lol)
 
 ---
-### Creating & Opening Text Files & Associated Project Directories.
+### Project Structure
 
 - for us to define a valid JS/WPF application, we need to define a folder structure that the system will recognize as a 'jittable'. I use this term as a runtime paralell to executable.
 
