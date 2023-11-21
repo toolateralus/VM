@@ -55,7 +55,7 @@ After building:
 On the first launch, the application will automatically install necessary JavaScript, JSON, and other configuration dependencies.
 
 1. Launch `lemur.exe`.
-2. Press new computer, optionally adding an integer ID, or defaulting to 0. this refers to virtual file system copies / 'installs' on your local disk.
+2. Press Re\Install, optionally adding an integer ID, or defaulting to 0. this refers to virtual file system copies / 'installs' on your local disk.
 - The install will be placed at `%Appdata%/Lemur/...` and will be called `computer0` or whatever index you chose.
 
 
