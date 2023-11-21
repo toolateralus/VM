@@ -1,5 +1,18 @@
 # Welcome to Lemur VDK - Your Virtual Desktop Kit
 
+
+## Micro tutorial :
+
+#### for windowing
+- hold left alt and use left click / right click to either drag or resize windows. It is really hard to use and needs to be replaced very badly.
+- desktop icons launch 'applications'
+#### for making applications
+- make sure you check out the in-app documentation, just click navigate with the file explorer, double click a .md file, and click 'render .md'
+#### user data location
+- computers get created in User/Appdata/Roaming/Lemur/..., this is your virtual file system.
+### notes
+- knowledge of wpf and javascript in a freestanding environment is useful
+
 ## Essential Requirements
 Before you begin, ensure you have the following prerequisites:
 
@@ -51,6 +64,9 @@ On the first launch, the application will automatically install necessary JavaSc
 Lemur VDK's file system searches for files and directories by name, making it essential to use unique file names or qualified paths for accuracy.
 Misuse can lead to unintended side effects, like retrieving the wrong `setup.ini` file if multiple files share the same name without a specific path.
 you can provide semi qualified paths like `parent/myFile.txt` if you have several myFile.txt's
+
+
+
 
 Your feedback and suggestions for improvements are always welcome.
 
