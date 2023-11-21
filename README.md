@@ -1,5 +1,4 @@
-# Welcome to Lemur VDK - Your Virtual Desktop Kit
-
+# Welcome to Lemur VDK 
 
 ## Micro tutorial :
 
