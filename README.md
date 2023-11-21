@@ -1,6 +1,6 @@
 
 # Welcome to Lemur VDK 
-_If you experience ANY Issues... please let me know! `email me at joshnjoshgaming@gmail.com` or create an issue, I'm very often available._
+_If you experience any problems... create a github issue, I'm very often available._
 ## Micro tutorial :
 
 #### for windowing
