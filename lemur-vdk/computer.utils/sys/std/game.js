@@ -1,15 +1,15 @@
 class Line {
 
-    constructor(Point1, Point2) {
-        this.Point1 = Point1;
-        this.Point2 = Point2;
+    constructor(start, end) {
+        this.start = start;
+        this.end = end;
     }
 
     getClosestPoint(x, y) {
-        const dx = this.Point2.x - this.Point1.x;
-        const dy = this.Point2.y - this.Point1.y;
-        const u = ((x - this.Point1.x) * dx + (y - this.Point1.y) * dy) / (dx * dx + dy * dy);
-        return u >= 0 && u <= 1 ? this.Point1 : u < 0 ? this.Point1 : this.Point2;
+        const dx = this.end.x - this.start.x;
+        const dy = this.end.y - this.start.y;
+        const u = ((x - this.start.x) * dx + (y - this.start.y) * dy) / (dx * dx + dy * dy);
+        return u >= 0 && u <= 1 ? this.start : u < 0 ? this.start : this.end;
     }
 }
 class Point {
@@ -102,8 +102,8 @@ class GameObject {
 
         // sort edges by distance from query pt
         const sortedEdges = this.edges.slice().sort((edgeA, edgeB) => {
-            const distanceA = edgeA.Point1.distance(new Point(x, y));
-            const distanceB = edgeB.Point1.distance(new Point(x, y));
+            const distanceA = edgeA.start.distance(new Point(x, y));
+            const distanceB = edgeB.start.distance(new Point(x, y));
             return distanceA - distanceB;
         });
 
@@ -112,7 +112,7 @@ class GameObject {
 
         // get Points
         const closest = edge.getClosestPoint(x, y);
-        const other = closest === edge.Point1 ? edge.Point2 : edge.Point1;
+        const other = closest === edge.start ? edge.end : edge.start;
 
         // get ratio
         const distanceClosestToQuery = closest.distance(new Point(x, y));
@@ -134,10 +134,10 @@ class GameObject {
         for (let i = 0, j = this.edges.length - 1; i < this.edges.length; j = i++) {
             const edge = this.edges[i];
 
-            const x1 = edge.Point1.x * this.scale.x + this.pos.x;
-            const y1 = edge.Point1.y * this.scale.y + this.pos.y;
-            const x2 = edge.Point2.x * this.scale.x + this.pos.x;
-            const y2 = edge.Point2.y * this.scale.y + this.pos.y;
+            const x1 = edge.start.x * this.scale.x + this.pos.x;
+            const y1 = edge.start.y * this.scale.y + this.pos.y;
+            const x2 = edge.end.x * this.scale.x + this.pos.x;
+            const y2 = edge.end.y * this.scale.y + this.pos.y;
 
             if ((y1 > y) !== (y2 > y) && x < ((x2 - x1) * (y - y1)) / (y2 - y1) + x1) {
                 isInside = !isInside;
@@ -223,19 +223,19 @@ class Renderer {
         gfx.writePixel(this.gfx_ctx, Math.floor(x), Math.floor(y), to_color(color));
     }
 
-    drawLine(Line) {
+    drawLine(line) {
         let steep = false;
 
 
-        let x0 = Line.Point1.x;
-        let x1 = Line.Point2.x;
-        let y0 = Line.Point1.y;
-        let y1 = Line.Point2.y;
+        let x0 = line.start.x;
+        let x1 = line.end.x;
+        let y0 = line.start.y;
+        let y1 = line.end.y;
 
-        let c0 = Line.Point1.color;
-        let c1 = Line.Point2.color;
+        let c0 = line.start.color;
+        let c1 = line.end.color;
 
-        const distance = Line.Point1.sqrDist(Line.Point2);
+        const distance = line.start.sqrDist(line.end);
         var color = c0;
 
         // steep
@@ -271,11 +271,11 @@ class Renderer {
         for (let x = x0; x <= x1; ++x) {
 
             if (steep) {
-                const t = Line.Point1.sqrDistXY(y, x) / distance;
+                const t = line.start.sqrDistXY(y, x) / distance;
                 this.writePixel(y, x, this.lerpColors(c0, c1, t));
             }
             else {
-                const t = Line.Point1.sqrDistXY(x, y) / distance;
+                const t = line.start.sqrDistXY(x, y) / distance;
                 this.writePixel(x, y, this.lerpColors(c0, c1, t));
             }
 
@@ -301,8 +301,8 @@ class Renderer {
 
             edges.forEach(edge => {
 
-                var p1 = new Point(edge.Point1.x * gO.scale.x, edge.Point1.y * gO.scale.y, edge.Point1.color);
-                var p2 = new Point(edge.Point2.x * gO.scale.x, edge.Point2.y * gO.scale.y, edge.Point2.color);
+                var p1 = new Point(edge.start.x * gO.scale.x, edge.start.y * gO.scale.y, edge.start.color);
+                var p2 = new Point(edge.end.x * gO.scale.x, edge.end.y * gO.scale.y, edge.end.color);
 
                 p1.addPt(gO.pos);
                 p2.addPt(gO.pos);
