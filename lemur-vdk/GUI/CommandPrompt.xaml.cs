@@ -119,7 +119,13 @@ namespace Lemur.GUI
 
             var text = output.Text;
 
-            await ExecuteJavaScript(code : input.Text ?? "", timeout : computer.Config?.Value<int>("CMD_LINE_TIMEOUT") ?? 50_000);
+            if (string.IsNullOrEmpty(input.Text))
+            {
+                Notifications.Now("Invalid input");
+                return;
+            }
+
+            await ExecuteJavaScript(code : input.Text, timeout :  50_000);
 
             if (output.Text == text) 
                 output.AppendText("\n done.");

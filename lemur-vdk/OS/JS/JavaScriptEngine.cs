@@ -186,7 +186,7 @@ namespace Lemur.JS
             CodeDictionary.TryAdd(handle, (jsCode, callback));
 
             while (CodeDictionary.TryGetValue(handle, out _) && !token.IsCancellationRequested)
-                await Task.Delay(1, token).ConfigureAwait(false);
+                await Task.Delay(1, token);
 
             if (token.IsCancellationRequested)
             {
@@ -222,7 +222,7 @@ namespace Lemur.JS
             
             var wnd = Computer.Window;
             // check if this event already exists
-            var result = await Execute($"{identifier} != null").ConfigureAwait(true);
+            var result = await Execute($"{identifier} != null");
             if (result is not bool ID_EXISTS || !ID_EXISTS)
             {
                 Notifications.Now($"App not found : {identifier}");
@@ -230,7 +230,7 @@ namespace Lemur.JS
             }
 
             // check if this method already exists
-            result = await Execute($"{identifier}.{methodName} != null").ConfigureAwait(true);
+            result = await Execute($"{identifier}.{methodName} != null");
             if (result is not bool METHOD_EXISTS || !METHOD_EXISTS)
             {
                 Notifications.Now($"Method not found : {identifier}.{methodName}");

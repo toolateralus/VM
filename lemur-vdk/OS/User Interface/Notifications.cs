@@ -56,9 +56,6 @@ namespace Lemur
         internal static void Exception(Exception e)
         {
             Now(e.Message + $"\n{e.GetType().Name}");
-#if DEBUG
-            throw e;
-#endif
         }
     }
 }

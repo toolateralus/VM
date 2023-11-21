@@ -210,7 +210,7 @@ namespace Lemur
 
             JavaScriptEngine engine = new(this);
             
-            var (id, code) = await InstantiateWindowClass(type, data, engine).ConfigureAwait(true);
+            var (id, code) = await InstantiateWindowClass(type, data, engine);
 
             OpenApp(control, title: id, engine: engine);
 
@@ -233,7 +233,7 @@ namespace Lemur
                     ProcessLookupTable.Remove(type);
             };
 
-            await engine.Execute(code).ConfigureAwait(false);
+            await engine.Execute(code);
         }
 
         #region Application
