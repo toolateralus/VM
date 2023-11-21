@@ -74,7 +74,7 @@ class paint {
 		const Y = json.data.Y;
 		
     	if (index != undefined && index > 0 && X != undefined && Y != undefined){
-    		this.writePixel(X,Y,palette[index]);
+    		this.writePixel(X,Y, palette[index]);
     	}
     }
     displayColorName() {

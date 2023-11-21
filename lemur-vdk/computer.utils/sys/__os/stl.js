@@ -61,4 +61,32 @@ const palette = [
     [255, 255, 20, 147], // Deep Pink 22
     [255, 0, 250, 154] // Medium Spring Green 23
 ];
+
+const palette_indexed = [
+    to_color(palette[0]), // Red 0
+    to_color(palette[1]), // Orange 1
+    to_color(palette[2]), // Yellow 2
+    to_color(palette[3]), // Lime Green 3
+    to_color(palette[4]), // Green 4
+    to_color(palette[5]), // Spring Green 5
+    to_color(palette[6]), // Cyan 6
+    to_color(palette[7]), // Sky Blue 7 
+    to_color(palette[8]), // Blue 8
+    to_color(palette[9]), // Purple 9 
+    to_color(palette[10]), // Magenta 10
+    to_color(palette[11]), // Pink 11
+    to_color(palette[12]), // Light Gray 12
+    to_color(palette[13]), // Medium Gray 13
+    to_color(palette[14]), // Dark Gray 14
+    to_color(palette[15]), // Black 15
+    to_color(palette[16]), // White 16
+    to_color(palette[17]), // Red-Orange 17
+    to_color(palette[18]), // Gold 18
+    to_color(palette[19]), // Dark Green 19
+    to_color(palette[20]), // Teal 20
+    to_color(palette[21]), // Navy 21
+    to_color(palette[22]), // Deep Pink 22
+    to_color(palette[23]) // Medium Spring Green 23
+];
+
 //#endregion math

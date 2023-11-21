@@ -203,10 +203,7 @@ class Renderer {
         this.newWidth = this.width;
         this.isDirty = true;
 
-
-        
-
-        this.bgColor = to_color(palette[Color.BLACK]);
+        this.bgColor = palette_indexed[Color.BLACK];
     }
     
     setWidth(width) {
@@ -223,8 +220,7 @@ class Renderer {
     }
 
     writePixel(x, y, color) {
-        const C = to_color(color);
-        gfx.writePixel(this.gfx_ctx, Math.floor(x), Math.floor(y), C);
+        gfx.writePixel(this.gfx_ctx, Math.floor(x), Math.floor(y), to_color(color));
     }
 
     drawLine(Line) {
@@ -291,8 +287,6 @@ class Renderer {
             }
         }
     }
-
-
 
     m_drawScene(Scene) {
 

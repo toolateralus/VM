@@ -93,6 +93,25 @@ namespace Lemur.GUI
         {
             
         }
+        private void ReinstallComputerButton(object sender, RoutedEventArgs e)
+        {
+            var id = IDBox.Text;
+
+            if (!uint.TryParse(id, out var cpu_id))
+            {
+                System.Windows.MessageBox.Show($"The computer id \"{id}\" was invalid. It must be a non-negative integer.");
+                IDBox.Text = "0";
+                return;
+            }
+
+
+
+            var WORKING_DIR = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData) + $"\\Lemur\\computer{cpu_id}";
+
+            Directory.Delete(WORKING_DIR, true);
+
+            NewComputerButton(null, new());
+        }
         private void NewComputerButton(object sender, RoutedEventArgs e)
         {
             var id = IDBox.Text;

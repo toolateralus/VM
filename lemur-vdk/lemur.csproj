@@ -34,12 +34,6 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Page Update="computer.utils\utils\template_app\template_app.xaml">
-      <SubType>Designer</SubType>
-    </Page>
-  </ItemGroup>
-
-  <ItemGroup>
     <Folder Include="computer.utils\home\commands\os_commands\" />
   </ItemGroup>
 

@@ -81,10 +81,10 @@ class game2 {
         }
     }
     getsquare(size) {
-        const v1 = new Point(-0.5, -0.5, palette[0])
-        const v2 = new Point(-0.5, 0.5, palette[1])
-        const v3 = new Point(0.5, 0.5, palette[3])
-        const v4 = new Point(0.5, -0.5, palette[4])
+        const v1 = new Point(-0.5, -0.5, Color.RED)
+        const v2 = new Point(-0.5, 0.5,  Color.ORANGE)
+        const v3 = new Point(0.5, 0.5,   Color.YELLOW)
+        const v4 = new Point(0.5, -0.5,  Color.LIME_GREEN)
         const verts = [v1, v2, v3, v4];
         return verts;
     }
@@ -100,7 +100,6 @@ class game2 {
         this.renderer = new Renderer(1024, gfx_ctx);
 
         // initialize the drawing surface
-        // this.Renderer.clean(palette[Color.BLACK]);
 
         this.moveSpeed = 1;
 
