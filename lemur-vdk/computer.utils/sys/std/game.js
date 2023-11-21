@@ -204,35 +204,9 @@ class Renderer {
         this.isDirty = true;
 
 
-        // 24 color, 4bpp (a,r,g,b) color palette.
-        this.palette = [
-            [255, 255, 0, 0], // Red 0
-            [255, 255, 128, 0], // Orange 1
-            [255, 255, 255, 0], // Yellow 2
-            [255, 128, 255, 0], // Lime Green 3
-            [255, 0, 255, 0], // Green 4
-            [255, 0, 255, 128], // Spring Green 5
-            [255, 0, 255, 255], // Cyan 6
-            [255, 0, 128, 255], // Sky Blue 7 
-            [255, 0, 0, 255], // Blue 8
-            [255, 128, 0, 255], // Purple 9 
-            [255, 255, 0, 255], // Magenta 10
-            [255, 255, 0, 128], // Pink 11
-            [255, 192, 192, 192], // Light Gray 12
-            [255, 128, 128, 128], // Medium Gray 13
-            [255, 64, 64, 64], // Dark Gray 14
-            [255, 0, 0, 0], // Black 15
-            [255, 255, 255, 255], // White 16
-            [255, 255, 69, 0], // Red-Orange 17
-            [255, 255, 215, 0], // Gold 18
-            [255, 0, 128, 0], // Dark Green 19
-            [255, 0, 128, 128], // Teal 20
-            [255, 0, 0, 128], // Navy 21
-            [255, 255, 20, 147], // Deep Pink 22
-            [255, 0, 250, 154] // Medium Spring Green 23
-        ];
+        
 
-        this.bgColor = this.packRGBA(this.palette[15]);
+        this.bgColor = packRGBA(palette[Color.BLACK]);
     }
     
     setWidth(width) {
@@ -249,7 +223,7 @@ class Renderer {
     }
 
     writePixel(x, y, color) {
-        const C = this.packRGBA(color);
+        const C = packRGBA(color);
         gfx.writePixel(this.gfx_ctx, Math.floor(x), Math.floor(y), C);
     }
 
@@ -318,10 +292,7 @@ class Renderer {
         }
     }
 
-    packRGBA(color) {
-        var packedColor = (color[0] << 24) | (color[1] << 16) | (color[2] << 8) | color[3];
-        return packedColor;
-    }
+
 
     m_drawScene(Scene) {
 

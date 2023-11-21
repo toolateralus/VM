@@ -39,4 +39,8 @@
     </Page>
   </ItemGroup>
 
+  <ItemGroup>
+    <Folder Include="computer.utils\home\commands\os_commands\" />
+  </ItemGroup>
+
 </Project>

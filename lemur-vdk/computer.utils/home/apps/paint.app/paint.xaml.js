@@ -1,29 +1,4 @@
-const Color = {
-    RED: 0,
-    ORANGE: 1,
-    YELLOW: 2,
-    LIME_GREEN: 3,
-    GREEN: 4,
-    SPRING_GREEN: 5,
-    CYAN: 6,
-    SKY_BLUE: 7,
-    BLUE: 8,
-    PURPLE: 9,
-    MAGENTA: 10,
-    PINK: 11,
-    LIGHT_GRAY: 12,
-    MEDIUM_GRAY: 13,
-    DARK_GRAY: 14,
-    BLACK: 15,
-    WHITE: 16,
-    RED_ORANGE: 17,
-    GOLD: 18,
-    DARK_GREEN: 19,
-    TEAL: 20,
-    NAVY: 21,
-    DEEP_PINK: 22,
-    MEDIUM_SPRING_GREEN: 23
-};
+
 class paint {
     //#region 
     clean(color) {
@@ -53,7 +28,7 @@ class paint {
     _render() {
         
         if (this.resizing) {
-            this.clean(this.palette[Color.BLACK]);
+            this.clean(palette[Color.BLACK]);
             this.resizing = false;
         }
         if (this.isDirty === true)
@@ -73,7 +48,7 @@ class paint {
         
         this.brushColorIndex ++;
 
-        if (this.brushColorIndex >= this.palette.length){
+        if (this.brushColorIndex >= palette.length){
             this.brushColorIndex= 0;
         }
 
@@ -99,7 +74,7 @@ class paint {
 		const Y = json.data.Y;
 		
     	if (index != undefined && index > 0 && X != undefined && Y != undefined){
-    		this.writePixel(X,Y,this.palette[index]);
+    		this.writePixel(X,Y,palette[index]);
     	}
     }
     displayColorName() {
@@ -118,7 +93,7 @@ class paint {
         {
             const X = Math.floor(this.mouseState.x / width * this.width);
             const Y = Math.floor(this.mouseState.y / height * this.width);
-            const color = this.palette[this.brushColorIndex]
+            const color = palette[this.brushColorIndex]
             if (network?.IsConnected === true){
                 const colorIndex = this.brushColorIndex;
                 
@@ -172,12 +147,12 @@ class paint {
         
             let index = -1;
         
-            for (let j = 0; j < this.palette.length; j++) {
+            for (let j = 0; j < palette.length; j++) {
                 if (
-                    this.palette[j][0] === color[0] &&
-                    this.palette[j][1] === color[1] &&
-                    this.palette[j][2] === color[2] &&
-                    this.palette[j][3] === color[3]
+                    palette[j][0] === color[0] &&
+                    palette[j][1] === color[1] &&
+                    palette[j][2] === color[2] &&
+                    palette[j][3] === color[3]
                 ) {
                     index = j;
                     break;
@@ -198,10 +173,10 @@ class paint {
         const input = JSON.parse(data);
 
         for (let i = 0; i < input.length; ++i){
-            result[i + 0] = this.palette[input[i + 0]]
-            result[i + 1] = this.palette[input[i + 1]]
-            result[i + 2] = this.palette[input[i + 2]]
-            result[i + 3] = this.palette[input[i + 3]]
+            result[i + 0] = palette[input[i + 0]]
+            result[i + 1] = palette[input[i + 1]]
+            result[i + 2] = palette[input[i + 2]]
+            result[i + 3] = palette[input[i + 3]]
         }
         print(result.length);
         return result;
@@ -248,34 +223,6 @@ class paint {
         // for the engine.
         this.__ID = id;
 
-        // 24 color, 4bpp (a,r,g,b) color palette.
-        this.palette = [
-            [255, 255, 0, 0],       // Red
-            [255, 255, 128, 0],     // Orange
-            [255, 255, 255, 0],     // Yellow
-            [255, 128, 255, 0],     // Lime Green
-            [255, 0, 255, 0],       // Green
-            [255, 0, 255, 128],     // Spring Green
-            [255, 0, 255, 255],     // Cyan
-            [255, 0, 128, 255],     // Sky Blue
-            [255, 0, 0, 255],       // Blue
-            [255, 128, 0, 255],     // Purple
-            [255, 255, 0, 255],     // Magenta
-            [255, 255, 0, 128],     // Pink
-            [255, 192, 192, 192],   // Light Gray
-            [255, 128, 128, 128],   // Medium Gray
-            [255, 64, 64, 64],      // Dark Gray
-            [255, 0, 0, 0],         // Black
-            [255, 255, 255, 255],   // White
-            [255, 255, 69, 0],      // Red-Orange
-            [255, 255, 215, 0],     // Gold
-            [255, 0, 128, 0],       // Dark Green
-            [255, 0, 128, 128],     // Teal
-            [255, 0, 0, 128],       // Navy
-            [255, 255, 20, 147],    // Deep Pink
-            [255, 0, 250, 154]      // Medium Spring Green
-        ];
-        
         // object representing mouse state
         this.mouseState = 
         {
@@ -298,7 +245,7 @@ class paint {
 
         this.setupUIEvents();
         
-        this.clean(this.palette[14]);
+        this.clean(palette[14]);
 
         this.displayColorName();
     }

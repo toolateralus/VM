@@ -36,14 +36,14 @@ class game2 {
         this.frameCt++;
         
         // returns a bool indicating whether anything was actually drawn or not
-        this.Renderer.m_drawScene(this.scene, this.gfx_ctx);
+        this.renderer.m_drawScene(this.scene, this.gfx_ctx);
         this.profiler.set_marker('rendering');
         
-        gfx.flushCtx(this.Renderer.gfx_ctx);
+        gfx.flushCtx(this.renderer.gfx_ctx);
         this.profiler.set_marker('uploading');
 
         this.scene.GameObjects().forEach(gO => { gO.velocity.y += 0.01; gO.update_physics();});
-        this.scene.GameObjects().forEach(gO => { gO.confine_to_screen_space(this.Renderer.width); });
+        this.scene.GameObjects().forEach(gO => { gO.confine_to_screen_space(this.renderer.width); });
         this.scene.GameObjects().forEach(gO => { this.scene.GameObjects().forEach(gO1 => { this.collisionRes(gO, gO1); })});
 
         this.profiler.set_marker('collision');
@@ -81,10 +81,10 @@ class game2 {
         }
     }
     getsquare(size) {
-        const v1 = new Point(-0.5, -0.5, this.Renderer.palette[0])
-        const v2 = new Point(-0.5, 0.5, this.Renderer.palette[1])
-        const v3 = new Point(0.5, 0.5, this.Renderer.palette[3])
-        const v4 = new Point(0.5, -0.5, this.Renderer.palette[4])
+        const v1 = new Point(-0.5, -0.5, palette[0])
+        const v2 = new Point(-0.5, 0.5, palette[1])
+        const v3 = new Point(0.5, 0.5, palette[3])
+        const v4 = new Point(0.5, -0.5, palette[4])
         const verts = [v1, v2, v3, v4];
         return verts;
     }
@@ -97,10 +97,10 @@ class game2 {
 
         const gfx_ctx = gfx.createCtx(this.__ID, 'renderTarget', 512, 512);
         // 64x64 render surface.
-        this.Renderer = new Renderer(1024, gfx_ctx);
+        this.renderer = new Renderer(1024, gfx_ctx);
 
         // initialize the drawing surface
-        // this.Renderer.clean(this.Renderer.palette[15]);
+        // this.Renderer.clean(palette[Color.BLACK]);
 
         this.moveSpeed = 1;
 
@@ -113,7 +113,7 @@ class game2 {
 
         const half_width = 512 / 2;
 
-        for (let i = 0; i < this.Renderer.palette.length; ++i) {
+        for (let i = 0; i < palette.length; ++i) {
             const verts = this.getsquare();
             // obj scale.
             const scale = new Point(5 * i, 5 * i);
@@ -124,7 +124,7 @@ class game2 {
             
             let gO = new GameObject(verts, scale, pos);
 
-            verts.forEach(v => v.color = this.Renderer.palette[i]);
+            verts.forEach(v => v.color = palette[i]);
 
             GameObjects.push(gO);
         }
@@ -138,7 +138,7 @@ class game2 {
         this.profiler.start();
 
         // start drawing, the Renderer only draws when it's marked as dirty.
-        this.Renderer.isDirty = true;
+        this.renderer.isDirty = true;
 
     }
 }

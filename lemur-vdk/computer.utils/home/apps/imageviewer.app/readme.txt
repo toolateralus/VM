@@ -1,1 +1,0 @@
-displays an image from provided path if found. a great showcase of a tiny but effective app in our framework.

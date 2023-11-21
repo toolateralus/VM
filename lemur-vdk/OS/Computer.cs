@@ -10,15 +10,9 @@ using Lemur.Network;
 using Lemur.FS;
 using Lemur.JS;
 using Lemur.UserInterface;
-using Microsoft.VisualBasic.Devices;
-using System.Threading;
 using System.Windows.Controls;
-using System.Windows;
 using System.Linq;
-using System.Windows.Threading;
 using System.Windows.Media;
-using System.ComponentModel;
-using static Lemur.GUI.ComputerWindow;
 using Microsoft.ClearScript.JavaScript;
 
 namespace Lemur

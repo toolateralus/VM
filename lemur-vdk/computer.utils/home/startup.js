@@ -9,4 +9,5 @@ interop.setAliasDirectory('commands')
 
 /*leave this empty string arg to search whole pc and install any located apps.
      otherwise specify a target directory to recursively search for your apps*/
+
 interop.loadApps('')

@@ -32,7 +32,6 @@ namespace Lemur.FS
         public List<Command> Commands = new();
         public Dictionary<string, string> Aliases = new();
         private bool Disposing;
-
         public CommandLine(Computer computer)
         {
             Computer = computer;
@@ -341,7 +340,7 @@ namespace Lemur.FS
         private void Clear(object[]? obj)
         {
             var cmd = Computer.TryGetProcess<CommandPrompt>()?.output;
-            cmd?.Clear();
+            Computer.Current.Window.Dispatcher.Invoke(() => { cmd?.Clear(); });
 
             if (cmd is null) 
                 Notifications.Now("failed to clear - no cmd prompt open");
@@ -479,7 +478,6 @@ namespace Lemur.FS
         {
             Computer.FS.ChangeDirectory(Computer.FS_ROOT);
         }
-
         protected virtual void Dispose(bool disposing)
         {
             if (!Disposing)
@@ -493,7 +491,6 @@ namespace Lemur.FS
                 Disposing = true;
             }
         }
-
         public void Dispose()
         {
             Dispose(disposing: true);

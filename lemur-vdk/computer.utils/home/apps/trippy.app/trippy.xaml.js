@@ -7,10 +7,7 @@ class trippy {
     }
 
     
-    packRGBA(color) {
-        var packedColor = (color[0] << 24) | (color[1] << 16) | (color[2] << 8) | color[3];
-        return packedColor;
-    }
+
     
     captureTime(start) {
         if (start) 
@@ -31,11 +28,11 @@ class trippy {
         this.needsUpdating = true;
     }
     writePixel(x, y, color) {
-        const packed = this.packRGBA(color);
+        const packed = packRGBA(color);
         gfx.writePixel(this.gfx_ctx, Math.floor(x), Math.floor(y), packed);
     }
     draw() {
-        gfx.clearColor(this.gfx_ctx, this.packRGBA([0,0,0,255]))
+        gfx.clearColor(this.gfx_ctx, packRGBA([0,0,0,255]))
         this.captureTime(true);
         let halfWidth = this.width / 2;
         for (let y = 0; y < this.width; y++) {
@@ -45,7 +42,7 @@ class trippy {
                 //const colora = this.colors[x % this.colors.length];
                 //const colorb = this.colors[y % this.colors.length];
                 //this.lerpArrayFloored(colora, colorb, scale);
-                this.writePixel(x, y, this.packRGBA([255,255,255,255]))
+                this.writePixel(x, y, packRGBA([255,255,255,255]))
             }
         }
 
@@ -85,7 +82,7 @@ class trippy {
             for (let y = 0; y < this.width; ++y){
                 let index = y * this.width + x;
 
-                let color = this.colors[index];
+                let color = palette[index];
                 let original = this.colors_readonly[index];
 
                 if (color !== null && color !== undefined){
@@ -109,26 +106,7 @@ class trippy {
         this.needsUpdating = false;
         this.colorScale = 0;
         
-        this.colors = [
-            [255, 255, 0, 0],       // Red
-            [255, 255, 128, 0],     // Orange
-            [255, 255, 255, 0],     // Yellow
-            [255, 128, 255, 0],     // Lime Green
-            [255, 0, 255, 0],       // Green
-            [255, 0, 255, 128],     // Spring Green
-            [255, 0, 255, 255],     // Cyan
-            [255, 0, 128, 255],     // Sky Blue
-            [255, 0, 0, 255],       // Blue
-            [255, 128, 0, 255],     // Purple
-            [255, 255, 0, 255],     // Magenta
-            [255, 255, 0, 128],     // Pink
-            [255, 255, 69, 0],      // Red-Orange
-            [255, 0, 128, 0],       // Dark Green
-            [255, 0, 128, 128],     // Teal
-            [255, 0, 0, 128],       // Navy
-            [255, 255, 20, 147],    // Deep Pink
-            [255, 0, 250, 154]      // Medium Spring Green
-        ];
+       
         this.colors_readonly = [
             [255, 255, 0, 0],       // Red
             [255, 255, 128, 0],     // Orange
