@@ -223,6 +223,69 @@ class Renderer {
         gfx.writePixel(this.gfx_ctx, Math.floor(x), Math.floor(y), to_color(color));
     }
 
+    writePixelIndexed(x, y, index) {
+        gfx.writePixelIndexed(this.gfx_ctx, Math.floor(x), Math.floor(y), index);
+    }
+
+    drawLineIndexed(line) {
+        let steep = false;
+
+
+        let x0 = line.start.x;
+        let x1 = line.end.x;
+        let y0 = line.start.y;
+        let y1 = line.end.y;
+
+        let c0 = line.start.color;
+
+        // steep
+        if (Math.abs(x0 - x1) < Math.abs(y0 - y1)) {
+            let t = x0;
+            let t1 = x1;
+
+            x0 = y0;
+            x1 = y1;
+            y0 = t;
+            y1 = t1;
+
+            steep = true;
+        }
+
+        // not steep
+        if (x0 > x1) {
+            let t = x0;
+            let t1 = y0;
+
+            x0 = x1;
+            y0 = y1;
+            x1 = t;
+            y1 = t1;
+        }
+
+        let dx = x1 - x0;
+        let dy = y1 - y0;
+        let derror2 = Math.abs(dy) * 2;
+        let error2 = 0;
+        let y = y0;
+
+        for (let x = x0; x <= x1; ++x) {
+            if (steep) {
+                this.writePixelIndexed(y, x, c0);
+            }
+            else {
+                this.writePixelIndexed(x, y, c0);
+            }
+
+
+            error2 += derror2;
+
+            if (error2 > dx) {
+                y += (y1 > y0 ? 1 : -1);
+                error2 -= dx * 2;
+            }
+        }
+    }
+
     drawLine(line) {
         let steep = false;
 
@@ -308,7 +371,7 @@ class Renderer {
                 p2.addPt(gO.pos);
 
                 var ln = new Line(p1, p2);
-                this.drawLine(ln);
+                this.drawLineIndexed(ln);
             });
         }
     }

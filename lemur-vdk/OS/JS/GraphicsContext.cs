@@ -1,15 +1,18 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Reflection;
 using System.Runtime.InteropServices;
+using System.Threading.Tasks.Dataflow;
 using System.Windows;
 using System.Windows.Media;
+using System.Windows.Media.Animation;
 using System.Windows.Media.Imaging;
 
 namespace Lemur.JS
 {
     public record GraphicsContext(string InstanceID, string TargetControl, int PixelFormatBpp)
     {
-        public int Width, Height;
+        internal int Width, Height;
         private readonly List<byte> renderTexture = new();
         public void Resize(int width, int height)
         {
@@ -18,17 +21,46 @@ namespace Lemur.JS
             renderTexture.Clear();
             for (int i = 0; i < Width * Height * PixelFormatBpp; ++i)
                 renderTexture.Add(255);
-        } 
-        public void WritePixel(int x, int y, int color)
-        {
-            byte r, g, b, a;
-            ExtractColor(color, out r, out g, out b, out a);
+        }
 
+        static readonly List<byte[]> palette = new()
+        {
+            new byte[]{255, 255, 0, 0}, // Red 0
+            new byte[]{255, 255, 128, 0}, // Orange 1
+            new byte[]{255, 255, 255, 0}, // Yellow 2
+            new byte[]{255, 128, 255, 0}, // Lime Green 3
+            new byte[]{255, 0, 255, 0}, // Green 4
+            new byte[]{255, 0, 255, 128}, // Spring Green 5
+            new byte[]{255, 0, 255, 255}, // Cyan 6
+            new byte[]{255, 0, 128, 255}, // Sky Blue 7 
+            new byte[]{255, 0, 0, 255}, // Blue 8
+            new byte[]{255, 128, 0, 255}, // Purple 9 
+            new byte[]{255, 255, 0, 255}, // Magenta 10
+            new byte[]{255, 255, 0, 128}, // Pink 11
+            new byte[]{255, 192, 192, 192}, // Light Gray 12
+            new byte[]{255, 128, 128, 128}, // Medium Gray 13
+            new byte[]{255, 64, 64, 64}, // Dark Gray 14
+            new byte[]{255, 0, 0, 0}, // Black 15
+            new byte[]{255, 255, 255, 255}, // White 16
+            new byte[]{255, 255, 69, 0}, // Red-Orange 17
+            new byte[]{255, 255, 215, 0}, // Gold 18
+            new byte[]{255, 0, 128, 0}, // Dark Green 19
+            new byte[]{255, 0, 128, 128}, // Teal 20
+            new byte[]{255, 0, 0, 128}, // Navy 21
+            new byte[]{255, 255, 20, 147}, // Deep Pink 22
+            new byte[]{255, 0, 250, 154} // Medium Spring Green 23
+        };
+        public void WritePixelIndexed(int x, int y, int index)
+        {
+            var col = palette[index];
+            WritePixel(x, y, col[0], col[1], col[2], col[3]);
+        }
+        public void WritePixel(int x, int y, byte r, byte g, byte b, byte a)
+        {
             var index = (y * Width + x) * PixelFormatBpp;
 
             if (x < 0 || y < 0 || x >= Width || y >= Height)
             {
-                //Notifications.Now("GraphicsContext.WritePixel - index out of bounds. your x and y input must be non negative and within bounds of your context");
                 return;
             }
 
@@ -37,7 +69,12 @@ namespace Lemur.JS
             renderTexture[index + 2] = g;
             renderTexture[index + 3] = b;
         }
-
+        public void WritePixelPacked(int x, int y, int color)
+        {
+            byte r, g, b, a;
+            ExtractColor(color, out r, out g, out b, out a);
+            WritePixel(x,y, r, g, b, a);
+        }
         public static void ExtractColor(int color, out byte r, out byte g, out byte b, out byte a)
         {
             r = (byte)((color >> 24) & 0xFF);
@@ -45,7 +82,6 @@ namespace Lemur.JS
             b = (byte)((color >> 8) & 0xFF);
             a = (byte)(color & 0xFF);
         }
-
         public void Draw(System.Windows.Controls.Image image)
         {
             // expected during disposal
@@ -84,8 +120,7 @@ namespace Lemur.JS
 
             image.Source = bitmap;
         }
-
-        internal void clearColor(int color)
+        internal void ClearColor(int color)
         {
             ExtractColor(color, out var r, out var g, out var b, out var a);
             for (int i = 0; i < Width * Height * PixelFormatBpp; i += 4)

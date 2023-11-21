@@ -15,7 +15,28 @@ namespace Lemur.JS
                 Notifications.Now($"Couldn't find graphics context for id : {gfx_ctx}");
                 return false;
             }
-            ctx.WritePixel(x, y, color);
+            ctx.WritePixelPacked(x, y, color);
+            return true;
+        }
+        // mainly to allow flexibility and allow for testing of code.. not neccesarily the best method XD
+        public bool writePixelRGBA(int gfx_ctx, int x, int y, byte r, byte g, byte b, byte a)
+        {
+            if (!gfxContext.TryGetValue(gfx_ctx, out var ctx))
+            {
+                Notifications.Now($"Couldn't find graphics context for id : {gfx_ctx}");
+                return false;
+            }
+            ctx.WritePixel(x, y, r, g, b, a);
+            return true;
+        }
+        public bool writePixelIndexed(int gfx_ctx, int x, int y, int index)
+        {
+            if (!gfxContext.TryGetValue(gfx_ctx, out var ctx))
+            {
+                Notifications.Now($"Couldn't find graphics context for id : {gfx_ctx}");
+                return false;
+            }
+            ctx.WritePixelIndexed(x, y, index);
             return true;
         }
         public void clearColor(int gfx_ctx, int color)
@@ -25,7 +46,7 @@ namespace Lemur.JS
                 Notifications.Now($"Couldn't find graphics context for id : {gfx_ctx}");
                 return;
             }
-            ctx.clearColor(color);
+            ctx.ClearColor(color);
         }
         public bool flushCtx(int gfx_ctx, bool exception = false)
         {

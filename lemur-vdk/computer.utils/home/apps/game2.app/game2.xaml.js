@@ -123,7 +123,7 @@ class game2 {
             
             let gO = new GameObject(verts, scale, pos);
 
-            verts.forEach(v => v.color = palette[i]);
+            verts.forEach(v => v.color = i);
 
             GameObjects.push(gO);
         }
