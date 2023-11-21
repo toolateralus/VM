@@ -35,7 +35,7 @@ namespace Lemur.GUI
             output.TextChanged += Output_TextChanged;
             
         }
-
+  
         private void Output_TextChanged(object? sender, EventArgs e)
         {
             output.ScrollToLine(output.Text.Length);

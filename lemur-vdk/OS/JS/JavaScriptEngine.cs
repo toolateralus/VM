@@ -36,7 +36,7 @@ namespace Lemur.JS
     }
     public class JavaScriptEngine : IDisposable
     {
-        internal IJsEngine ENGINE_JS;
+        internal IJsEngine m_engine_internal;
         IJsEngineSwitcher engineSwitcher;
 
         public readonly Dictionary<string, object?> Modules = new();
@@ -44,7 +44,7 @@ namespace Lemur.JS
         public readonly JSInterop InteropModule;
         private readonly ConcurrentDictionary<int, (string code, Action<object?> output)> CodeDictionary = new();
         public readonly Dictionary<string, object> EmbeddedObjects = new();
-        public readonly List<JSEventHandler> EventHandlers = new();
+        public readonly List<JavaScriptWpfHook> EventHandlers = new();
 
         private Computer Computer { get; set; }
         private readonly Thread executionThread;
@@ -57,7 +57,7 @@ namespace Lemur.JS
             engineSwitcher = JsEngineSwitcher.Current;
             engineSwitcher.EngineFactories.AddV8();
             engineSwitcher.DefaultEngineName = V8JsEngine.EngineName;
-            ENGINE_JS = engineSwitcher.CreateDefaultEngine();
+            m_engine_internal = engineSwitcher.CreateDefaultEngine();
 
             NetworkModule = new JSNetworkHelpers(computer, computer.Network.OnSendMessage);
 
@@ -90,16 +90,16 @@ namespace Lemur.JS
         }
         public void EmbedObject(string name, object? obj)
         {
-            ENGINE_JS.EmbedHostObject(name, obj);
+            m_engine_internal.EmbedHostObject(name, obj);
         }
         public void EmbedType(string name, Type obj)
         {
-            ENGINE_JS.EmbedHostType(name, obj);
+            m_engine_internal.EmbedHostType(name, obj);
         }
         public void EmbedAllObjects()
         {
             foreach (var item in EmbeddedObjects)
-                ENGINE_JS.EmbedHostObject(item.Key, item.Value);
+                m_engine_internal.EmbedHostObject(item.Key, item.Value);
         }
         // Resource intensive loops
         private async void ExecuteAsync()
@@ -113,7 +113,7 @@ namespace Lemur.JS
 
                     try
                     {
-                        var result = ENGINE_JS.Evaluate(pair.Value.code);
+                        var result = m_engine_internal.Evaluate(pair.Value.code);
                         pair.Value.output?.Invoke(result);
                     }
                     catch (Exception e)
@@ -142,7 +142,7 @@ namespace Lemur.JS
                     try
                     {
                         var code = File.ReadAllText(AbsPath); 
-                        ENGINE_JS.Execute(code);
+                        m_engine_internal.Execute(code);
                     }
                     catch(Exception e)
                     {
@@ -166,11 +166,12 @@ namespace Lemur.JS
             {
                 try
                 {
-                    ENGINE_JS.Execute(File.ReadAllText(f));
+                    m_engine_internal.Execute(File.ReadAllText(f));
                 }
                 catch (Exception e)
                 {
                     Notifications.Exception(e);
+
                 }
             }
         }
@@ -185,7 +186,7 @@ namespace Lemur.JS
             CodeDictionary.TryAdd(handle, (jsCode, callback));
 
             while (CodeDictionary.TryGetValue(handle, out _) && !token.IsCancellationRequested)
-                await Task.Delay(1, token);
+                await Task.Delay(1, token).ConfigureAwait(false);
 
             if (token.IsCancellationRequested)
             {
@@ -196,6 +197,8 @@ namespace Lemur.JS
 
             return result;
         }
+#pragma warning disable CA5394
+        // we don't need a cryptographically secure random number generator here
         private int GetUniqueHandle()
         {
             int handle = Random.Shared.Next();
@@ -205,7 +208,7 @@ namespace Lemur.JS
 
             return handle;
         }
-       
+#pragma warning restore CA5394
         internal void ExecuteScript(string absPath)
         {
             if (string.IsNullOrEmpty(absPath))
@@ -219,7 +222,7 @@ namespace Lemur.JS
             
             var wnd = Computer.Window;
             // check if this event already exists
-            var result = await Execute($"{identifier} != null");
+            var result = await Execute($"{identifier} != null").ConfigureAwait(true);
             if (result is not bool ID_EXISTS || !ID_EXISTS)
             {
                 Notifications.Now($"App not found : {identifier}");
@@ -227,7 +230,7 @@ namespace Lemur.JS
             }
 
             // check if this method already exists
-            result = await Execute($"{identifier}.{methodName} != null");
+            result = await Execute($"{identifier}.{methodName} != null").ConfigureAwait(true);
             if (result is not bool METHOD_EXISTS || !METHOD_EXISTS)
             {
                 Notifications.Now($"Method not found : {identifier}.{methodName}");
@@ -257,7 +260,7 @@ namespace Lemur.JS
                 // failed to get the actual element the user requested.
                 if (element == null)
                 {
-                    Notifications.Exception(new NullReferenceException($"control {targetControl} of {content.Name} not found."));
+                    Notifications.Exception(new Exception($"control {targetControl} of {content.Name} not found."));
                     return;
                 }
 
@@ -273,7 +276,7 @@ namespace Lemur.JS
                         if (EventHandlers.Contains(eh))
                             EventHandlers.Remove(eh);
 
-                        eh.OnDispose?.Invoke();
+                        eh.ForceDispose();
                     };
                 }
                 else Notifications.Exception(new NullReferenceException("Creating an event handler failed : this is an engine bug. report it on github if you'd like"));
@@ -310,7 +313,7 @@ namespace Lemur.JS
                     if (EventHandlers.Contains(eh))
                         EventHandlers.Remove(eh);
 
-                    eh.OnDispose?.Invoke();
+                    eh.ForceDispose();
                 };
             }
 
@@ -323,20 +326,20 @@ namespace Lemur.JS
             {
                 if (disposing)
                 {
-                    ENGINE_JS?.Dispose();
+                    m_engine_internal?.Dispose();
 
                     Task.Run(() => executionThread.Join());
                     Task.Run(() =>
                     {
                         for (int i = 0; i < EventHandlers.Count; i++)
                         {
-                            JSEventHandler? eventHandler = EventHandlers[i];
+                            JavaScriptWpfHook? eventHandler = EventHandlers[i];
                             eventHandler?.Dispose();
                         }
                     });
                 }
 
-                ENGINE_JS = null!;
+                m_engine_internal = null!;
                 Computer = null!;
                 Disposing = true;
             }

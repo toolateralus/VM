@@ -1,48 +1,44 @@
 ﻿using System;
-using System.Diagnostics;
 using System.Threading;
 using System.Threading.Tasks;
-using System.Windows;
-using System.Windows.Input;
-using Lemur.GUI;
 
 namespace Lemur.JS
 {
-    public class JSEventHandler : IDisposable
+    public class JavaScriptWpfHook : IDisposable
     {
-        private const string ARGS_STRING = "(arg1, arg2)";
+        private const string argsString = "(arg1, arg2)";
         
         /// <summary>
         /// this is the actual call handle
         /// </summary>
-        public string? FUNCTION_HANDLE;
+        public string? functionHandle;
         
         /// <summary>
         /// this is the handle relative to the object, we don't call this
         /// </summary>
         public readonly string? m_MethodHandle;
 
-        public Action? OnDispose;
-        public Thread? ExecutionThread = null;
-        public JavaScriptEngine? JavaScriptEngine;
+        public void ForceDispose() => onDispose?.Invoke();
 
-        public int IterationDelay { get; set; }
+        protected Action? onDispose;
+        public Thread? executionThread = null;
+        public JavaScriptEngine? javaScriptEngine;
+
         public bool Disposing { get; set; }
         public virtual string CreateFunction(string identifier, string methodName)
         {
-            var event_call = $"{identifier}.{methodName}{ARGS_STRING}";
+            var event_call = $"{identifier}.{methodName}{argsString}";
             var id = $"{identifier}{methodName}";
-            string func = $"function {id} {ARGS_STRING} {{ {event_call}; }}";
-            Task.Run(() => JavaScriptEngine?.Execute(func));
+            string func = $"function {id} {argsString} {{ {event_call}; }}";
+            Task.Run(() => javaScriptEngine?.Execute(func));
             return id;
         }
       
         public virtual void HeavyWorkerLoop()
         {
-            while (!Disposing && !JavaScriptEngine.Disposing)
+            while (!Disposing && !javaScriptEngine.Disposing)
             {
                 InvokeEventUnsafe(null, null);
-                Thread.Sleep(IterationDelay);
             }
             Dispose();
         }
@@ -56,7 +52,7 @@ namespace Lemur.JS
             {
                 try
                 {
-                    JavaScriptEngine.ENGINE_JS.CallFunction(FUNCTION_HANDLE, arg1, arg2);
+                    javaScriptEngine.m_engine_internal.CallFunction(functionHandle, arg1, arg2);
                 }
                 catch (Exception e)
                 {
@@ -68,7 +64,18 @@ namespace Lemur.JS
         {
             try
             {
-                JavaScriptEngine.ENGINE_JS.CallFunction(FUNCTION_HANDLE, arg1, arg2);
+                // TODO: open an issue for this
+
+                // BUG : when opening xaml/wpf apps that have a call to create an event in the constructor (every app ever)
+                // there is unpredictable latency between the call to create the event and the end of the ctor, 
+                // so there's always a window where the event will be looking to get called when the member function / method 
+                // might not exit yet.
+                if (javaScriptEngine.m_engine_internal.HasVariable(functionHandle))
+                    javaScriptEngine.m_engine_internal.CallFunction(functionHandle, arg1, arg2);
+                else
+                {
+                    Notifications.Now("Attempted to call a javascript function that didn't exist");
+                }
             }
             catch (Exception e)
             {
@@ -81,21 +88,13 @@ namespace Lemur.JS
             if (!Disposing)
             {
                 if (disposing)
-                    Task.Run(() => ExecutionThread?.Join());
+                    Task.Run(() => executionThread?.Join());
                 Disposing = true;
             }
         }
 
-        // // TODO: override finalizer only if 'Dispose(bool disposing)' has code to free unmanaged resources
-        // ~JSEventHandler()
-        // {
-        //     // Do not change this code. Put cleanup code in 'Dispose(bool disposing)' method
-        //     Dispose(disposing: false);
-        // }
-
         public void Dispose()
         {
-            // Do not change this code. Put cleanup code in 'Dispose(bool disposing)' method
             Dispose(disposing: true);
             GC.SuppressFinalize(this);
         }

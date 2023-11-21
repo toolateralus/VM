@@ -10,7 +10,7 @@ using System.Threading;
 
 namespace Lemur.JS
 {
-    public class XAMLJSEventHandler : JSEventHandler, IDisposable
+    public class XAMLJSEventHandler : JavaScriptWpfHook, IDisposable
     {
         public XAML_EVENTS Event = XAML_EVENTS.RENDER;
         FrameworkElement element;
@@ -18,9 +18,9 @@ namespace Lemur.JS
         public XAMLJSEventHandler(FrameworkElement control, XAML_EVENTS @event, JavaScriptEngine js, string id, string method)
         {
             Event = @event;
-            this.JavaScriptEngine = js;
+            this.javaScriptEngine = js;
             element = control;
-            base.FUNCTION_HANDLE = CreateFunction(id, method);
+            base.functionHandle = CreateFunction(id, method);
             CreateHook(control, @event);
         }
 
@@ -34,47 +34,47 @@ namespace Lemur.JS
                         if (control is Button button)
                         {
                             button.Click += InvokeGeneric;
-                            OnDispose += () => button.Click -= InvokeGeneric;
+                            onDispose += () => button.Click -= InvokeGeneric;
                             break;
                         }
                         control.MouseDown += InvokeGeneric;
-                        OnDispose += () => control.MouseDown -= InvokeGeneric;
+                        onDispose += () => control.MouseDown -= InvokeGeneric;
                     }
                     break;
                 case XAML_EVENTS.MOUSE_UP:
                     {
                         control.MouseUp += InvokeGeneric;
-                        OnDispose += () => control.MouseUp -= InvokeGeneric;
+                        onDispose += () => control.MouseUp -= InvokeGeneric;
                     }
                     break;
                 case XAML_EVENTS.MOUSE_MOVE:
                     {
                         control.MouseMove += InvokeMouse;
-                        OnDispose += () => control.MouseMove -= InvokeMouse;
+                        onDispose += () => control.MouseMove -= InvokeMouse;
                     }
                     break;
                 case XAML_EVENTS.KEY_DOWN:
                     {
                         OnKeyDown += InvokeKeyboard;
-                        OnDispose += () => OnKeyDown -= InvokeKeyboard;
+                        onDispose += () => OnKeyDown -= InvokeKeyboard;
                     }
                     break;
                 case XAML_EVENTS.KEY_UP:
                     {
                         OnKeyUp += InvokeKeyboard;
-                        OnDispose += () => OnKeyUp -= InvokeKeyboard;
+                        onDispose += () => OnKeyUp -= InvokeKeyboard;
                     }
                     break;
                 case XAML_EVENTS.LOADED:
                     {
                         control.Loaded += InvokeGeneric;
-                        OnDispose += () => control.Loaded -= InvokeGeneric;
+                        onDispose += () => control.Loaded -= InvokeGeneric;
                     }
                     break;
                 case XAML_EVENTS.WINDOW_CLOSE:
                     {
                         control.Unloaded += InvokeGeneric;
-                        OnDispose += () => control.Unloaded -= InvokeGeneric;
+                        onDispose += () => control.Unloaded -= InvokeGeneric;
                     }
                     break;
 
@@ -84,16 +84,12 @@ namespace Lemur.JS
                 /// also, DELAY_BETWEEN_WORK_ITERATIONS + 1 == like 3ms,
                 /// so we use much smaller values to get a more appropriate speed.
                 case XAML_EVENTS.RENDER:
-                    // going for 60+ fps
-                    IterationDelay = 16 / 3;
-                    ExecutionThread = new(HeavyWorkerLoop);
-                    ExecutionThread.Start();
+                    executionThread = new(HeavyWorkerLoop);
+                    executionThread.Start();
                     break;
                 case XAML_EVENTS.PHYSICS:
-                    // going for ~40-50fps
-                    IterationDelay = 24 / 3;
-                    ExecutionThread = new(HeavyWorkerLoop);
-                    ExecutionThread.Start();
+                    executionThread = new(HeavyWorkerLoop);
+                    executionThread.Start();
                     break;
                 default:
                     break;

@@ -53,10 +53,12 @@ namespace Lemur
                 notif.Start();
             });
         }
-
         internal static void Exception(Exception e)
         {
-            Now(e.Message + $"\n{e.GetType().Name}");  
+            Now(e.Message + $"\n{e.GetType().Name}");
+#if DEBUG
+            throw e;
+#endif
         }
     }
 }

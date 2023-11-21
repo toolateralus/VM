@@ -21,24 +21,22 @@ namespace Lemur.GUI
     /// </summary>
     public partial class TextEditor : UserControl
     {
-        Computer Computer;
         public string LoadedFile;
-        public string Contents;
+        internal string Contents;
         public static string? DesktopIcon => FileSystem.GetResourcePath("texteditor.png");
 
         public MarkdownViewer? mdViewer;
 
-        public TextEditor(Computer pc, string path)
+        public TextEditor(string path)
         {
             InitializeComponent();
-            Computer = pc;
             LoadedFile = path;
-
-            
             LoadFile(path);
             // change the highlighting based on file extension that's opened
+        }
+        public void LateInit(Computer c)
+        {
 
-            
         }
         protected override void OnKeyUp(KeyEventArgs e)
         {
@@ -67,17 +65,13 @@ namespace Lemur.GUI
 
         private void RunMarkdownViewer(string path)
         {
-            var wnd = Computer.Window;
+            var wnd = Computer.Current.Window;
             mdViewer = new MarkdownViewer();
             Contents = File.ReadAllText(path);
             mdViewer.RenderMarkdown(Contents);
-            Computer?.OpenApp(mdViewer, "Markdown Renderer");
+            Computer.Current?.OpenApp(mdViewer, "Markdown Renderer");
         }
 
-        public void LateInit(Computer pc)
-        {
-            Computer = pc;
-        }
 
         public TextEditor()
         {
@@ -88,9 +82,8 @@ namespace Lemur.GUI
         private void LoadButton_Click(object sender, RoutedEventArgs e)
         {
             FileExplorer fileExplorer = new FileExplorer();
-            fileExplorer.LateInit(Computer);
 
-            Computer.OpenApp(fileExplorer);
+            Computer.Current.OpenApp(fileExplorer);
 
             fileExplorer.OnNavigated += (file) =>
             {
@@ -101,7 +94,7 @@ namespace Lemur.GUI
         {
             mdViewer = new MarkdownViewer();
             mdViewer.RenderMarkdown(Contents);
-            Computer.OpenApp(mdViewer, "Markdown Renderer");
+            Computer.Current.OpenApp(mdViewer, "Markdown Renderer");
         }
         private void SaveButton_Click(object sender, RoutedEventArgs e)
         {
@@ -114,7 +107,7 @@ namespace Lemur.GUI
             if (!File.Exists(LoadedFile))
             {
                 var dialog = new SaveFileDialog();
-                dialog.InitialDirectory = Computer.FS_ROOT;
+                dialog.InitialDirectory = Computer.Current.FS_ROOT;
 
                 dialog.FileName = "untitled";
                 dialog.DefaultExt = ".js";
@@ -137,7 +130,8 @@ namespace Lemur.GUI
             try
             {
                 File.WriteAllText(LoadedFile, input.Text);
-            } catch (Exception e)
+            }
+            catch (Exception e)
             {
                 Notifications.Exception(e);
             }

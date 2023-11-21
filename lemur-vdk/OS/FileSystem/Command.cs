@@ -164,7 +164,7 @@ namespace Lemur.FS
                         str.Close();
                     }
                     var wnd = Computer.Window;
-                    var tEdit = new TextEditor(Computer, AbsPath);
+                    var tEdit = new TextEditor(AbsPath);
                     Computer.OpenApp(tEdit);
                 } 
             }

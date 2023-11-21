@@ -210,7 +210,7 @@ namespace Lemur
 
             JavaScriptEngine engine = new(this);
             
-            var (id, code) = await InstantiateWindowClass(type, data, engine);
+            var (id, code) = await InstantiateWindowClass(type, data, engine).ConfigureAwait(true);
 
             OpenApp(control, title: id, engine: engine);
 
@@ -225,7 +225,7 @@ namespace Lemur
             Windows[id].OnClosed += delegate 
             {
                 if (!ProcessLookupTable.ContainsKey(type))
-                    throw new NullReferenceException("The application became detached from the operating system, or is unknown.");
+                    throw new Exception("The application became detached from the operating system, or is unknown.");
 
                 ProcessLookupTable[type].Remove(id);
 
@@ -233,12 +233,16 @@ namespace Lemur
                     ProcessLookupTable.Remove(type);
             };
 
-            await engine.Execute(code);
+            await engine.Execute(code).ConfigureAwait(false);
         }
 
         #region Application
         private static Computer? current;
-        public static Computer Current => current ?? throw new NullReferenceException("No computer was active when accessed."); 
+        public static Computer Current => current ?? throw new InvalidOperationException("No computer was active when accessed."); 
+        /// <summary>
+        /// This just causes crashes.
+        /// </summary>
+        /// <param name="id"></param>
         public static void Restart(uint id)
         {
             Current.Exit(0);
