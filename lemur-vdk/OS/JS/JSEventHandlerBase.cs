@@ -1,11 +1,13 @@
 ﻿using System;
 using System.Threading;
 using System.Threading.Tasks;
+using System.Windows.Media;
 
 namespace Lemur.JS
 {
     public class Function : IDisposable
     {
+        
         private const string argsString = "(arg1, arg2)";
         
         /// <summary>

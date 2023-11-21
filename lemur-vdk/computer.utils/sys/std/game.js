@@ -228,54 +228,45 @@ class Renderer {
     }
 
     drawLineIndexed(x0, x1, y0, y1, c0) {
-        let steep = false;
+        let steep = Math.abs(x0 - x1) < Math.abs(y0 - y1);
 
-        // steep
-        if (Math.abs(x0 - x1) < Math.abs(y0 - y1)) {
-            let t = x0;
-            let t1 = x1;
-
-            x0 = y0;
-            x1 = y1;
-            y0 = t;
-            y1 = t1;
-
-            steep = true;
+        if (steep) {
+            [x0, y0] = [y0, x0];
+            [x1, y1] = [y1, x1];
         }
-
-        // not steep
         if (x0 > x1) {
-            let t = x0;
-            let t1 = y0;
-
-            x0 = x1;
-            y0 = y1;
-            x1 = t;
-            y1 = t1;
+            [x0, x1] = [x1, x0];
+            [y0, y1] = [y1, y0];
         }
 
-        let dx = x1 - x0;
-        let dy = y1 - y0;
-        let derror2 = Math.abs(dy) * 2;
+        const dx = x1 - x0;
+        const dy = y1 - y0;
+        const derror2 = Math.abs(dy) * 2;
         let error2 = 0;
         let y = y0;
 
-        for (let x = x0; x <= x1; ++x) {
+        const writePixel = (x, y, c) => {
             if (steep) {
-                this.writePixelIndexed(y, x, c0);
+                this.writePixelIndexed(y, x, c);
+            } else {
+                this.writePixelIndexed(x, y, c);
             }
-            else {
-                this.writePixelIndexed(x, y, c0);
-            }
+        };
 
+        const yStep = y1 > y0 ? 1 : -1;
+        const error2Step = dx * 2;
+
+        for (let x = x0; x <= x1; ++x) {
+            writePixel(x, y, c0);
             error2 += derror2;
 
             if (error2 > dx) {
-                y += (y1 > y0 ? 1 : -1);
-                error2 -= dx * 2;
+                y += yStep;
+                error2 -= error2Step;
             }
         }
     }
+
 
     drawLine(line) {
         let steep = false;

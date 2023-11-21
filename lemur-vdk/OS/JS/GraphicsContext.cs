@@ -14,15 +14,7 @@ namespace Lemur.JS
     {
         internal int Width, Height;
         private readonly List<byte> renderTexture = new();
-        public void Resize(int width, int height)
-        {
-            Width = width;
-            Height = height;
-            renderTexture.Clear();
-            for (int i = 0; i < Width * Height * PixelFormatBpp; ++i)
-                renderTexture.Add(255);
-        }
-
+        WriteableBitmap bitmap;
         static readonly List<byte[]> palette = new()
         {
             new byte[]{255, 255, 0, 0}, // Red 0
@@ -50,6 +42,20 @@ namespace Lemur.JS
             new byte[]{255, 255, 20, 147}, // Deep Pink 22
             new byte[]{255, 0, 250, 154} // Medium Spring Green 23
         };
+        public void Resize(int width, int height)
+        {
+            Width = width;
+            Height = height;
+            renderTexture.Clear();
+            for (int i = 0; i < Width * Height * PixelFormatBpp; ++i)
+                renderTexture.Add(255);
+
+            Computer.Current.Window.Dispatcher.Invoke(() =>
+            {
+                bitmap = new WriteableBitmap(Width, Height, 1, 1, PixelFormats.Bgra32, null);
+            });
+        }
+       
         public void WritePixelIndexed(int x, int y, int index)
         {
             var col = palette[index];
@@ -60,14 +66,12 @@ namespace Lemur.JS
             var index = (y * Width + x) * PixelFormatBpp;
 
             if (x < 0 || y < 0 || x >= Width || y >= Height)
-            {
                 return;
-            }
 
-            renderTexture[index] = a;
-            renderTexture[index + 1] = r;
-            renderTexture[index + 2] = g;
-            renderTexture[index + 3] = b;
+            renderTexture[index + 0] = b;
+            renderTexture[index + 1] = g;
+            renderTexture[index + 2] = r;
+            renderTexture[index + 3] = a;
         }
         public void WritePixelPacked(int x, int y, int color)
         {
@@ -82,53 +86,49 @@ namespace Lemur.JS
             b = (byte)((color >> 8) & 0xFF);
             a = (byte)(color & 0xFF);
         }
+        private readonly byte[] cached_color = new byte[8];
+        public void ExtractColorToCache(int color)
+        {
+            cached_color[0 + 0] = (byte)((color >> 24) & 0xFF);
+            cached_color[0 + 1] = (byte)((color >> 16) & 0xFF);
+            cached_color[0 + 2] = (byte)((color >> 8) & 0xFF);
+            cached_color[0 + 3] = (byte)(color & 0xFF);
+        }
         public void Draw(System.Windows.Controls.Image image)
         {
-            // expected during disposal
-            if (image is null)
+            if (image == null)
                 return;
 
             var pixelCount = renderTexture.Count / PixelFormatBpp;
-
-            // pixel engine first frame 0 pixels
             if (pixelCount <= 1)
                 return;
 
-            var bitmap = new WriteableBitmap(Width, Height, 96, 96, PixelFormats.Bgra32, null);
-
             bitmap.Lock();
 
-            for (int y = 0; y < Height; y++)
+            var stride = bitmap.BackBufferStride;
+
+            if (renderTexture.Count == stride * Height)
             {
-                for (int x = 0; x < Width; x++)
-                {
-                    int pixelIndex = (y * Width + x) * PixelFormatBpp;
-                    byte a = renderTexture[pixelIndex];
-                    byte r = renderTexture[pixelIndex + 1];
-                    byte g = renderTexture[pixelIndex + 2];
-                    byte b = renderTexture[pixelIndex + 3];
+                IntPtr pBackBuffer = bitmap.BackBuffer;
 
-                    byte[] pixelData = new byte[] { b, g, r, a };
+                Marshal.Copy(renderTexture.ToArray(), 0, pBackBuffer, renderTexture.Count);
 
-                    Marshal.Copy(pixelData, 0, bitmap.BackBuffer + pixelIndex, PixelFormatBpp);
-                }
+                bitmap.AddDirtyRect(new Int32Rect(0, 0, Width, Height));
             }
 
-            bitmap.AddDirtyRect(new Int32Rect(0, 0, Width, Height));
-
             bitmap.Unlock();
-
             image.Source = bitmap;
         }
+
         internal void ClearColor(int color)
         {
-            ExtractColor(color, out var r, out var g, out var b, out var a);
+            ExtractColorToCache(color);
             for (int i = 0; i < Width * Height * PixelFormatBpp; i += 4)
             {
-                renderTexture[i + 0] = r;
-                renderTexture[i + 1] = g;
-                renderTexture[i + 2] = b;
-                renderTexture[i + 3] = a;
+                renderTexture[i + 0] = cached_color[0];
+                renderTexture[i + 1] = cached_color[1];
+                renderTexture[i + 2] = cached_color[2];
+                renderTexture[i + 3] = cached_color[3];
             }
         }
     }
