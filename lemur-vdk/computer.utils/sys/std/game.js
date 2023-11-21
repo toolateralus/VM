@@ -206,7 +206,7 @@ class Renderer {
 
         
 
-        this.bgColor = packRGBA(palette[Color.BLACK]);
+        this.bgColor = to_color(palette[Color.BLACK]);
     }
     
     setWidth(width) {
@@ -223,7 +223,7 @@ class Renderer {
     }
 
     writePixel(x, y, color) {
-        const C = packRGBA(color);
+        const C = to_color(color);
         gfx.writePixel(this.gfx_ctx, Math.floor(x), Math.floor(y), C);
     }
 

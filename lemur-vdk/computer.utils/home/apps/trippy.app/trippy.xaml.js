@@ -1,14 +1,8 @@
-// -- user -- name this class the (case sensitive) same as the name of the xaml file and this file. for generated code purposes.
+// This needs to be finished ; it's in the middle of a refactor from it's own software renderer to the new 'gfx' module.
 class trippy {
-
-
-    update() {
+    resize() {
         this.width = this.newWidth;
     }
-
-    
-
-    
     captureTime(start) {
         if (start) 
         {
@@ -22,17 +16,16 @@ class trippy {
             this.startTime = 0;
         }
     }
-
     setWidth(width) {
         this.newWidth = width;
         this.needsUpdating = true;
     }
     writePixel(x, y, color) {
-        const packed = packRGBA(color);
+        const packed = to_color(color);
         gfx.writePixel(this.gfx_ctx, Math.floor(x), Math.floor(y), packed);
     }
     draw() {
-        gfx.clearColor(this.gfx_ctx, packRGBA([0,0,0,255]))
+        gfx.clearColor(this.gfx_ctx, to_color(palette[Color.BLACK]))
         this.captureTime(true);
         let halfWidth = this.width / 2;
         for (let y = 0; y < this.width; y++) {
@@ -42,14 +35,14 @@ class trippy {
                 //const colora = this.colors[x % this.colors.length];
                 //const colorb = this.colors[y % this.colors.length];
                 //this.lerpArrayFloored(colora, colorb, scale);
-                this.writePixel(x, y, packRGBA([255,255,255,255]))
+                this.writePixel(x, y, to_color(palette[Color.WHITE]))
             }
         }
 
         this.frameCt++;
         
         if (this.needsUpdating) {
-            this.update();
+            this.resize();
             this.needsUpdating = false;
         }
 
@@ -67,7 +60,6 @@ class trippy {
         });
         return result;
     }
- 
     onKeyEvent(key, isDown){
         let dir = 0;
 
@@ -94,8 +86,6 @@ class trippy {
             }
         }       
     }
-
-    
     constructor(id) {
         /* DO NOT EDIT*/ this.__ID = id;  /* END DO NOT EDIT*/
         this.frameCt = 0;

@@ -3,7 +3,7 @@ function clamp(min,max,value){
     return Math.min(max, Math.max(min, value))
 }
 
-function packRGBA(color) {
+function to_color(color) {
     var packedColor = (color[0] << 24) | (color[1] << 16) | (color[2] << 8) | color[3];
     return packedColor;
 }
