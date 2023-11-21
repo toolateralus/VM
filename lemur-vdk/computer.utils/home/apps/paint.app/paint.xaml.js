@@ -33,7 +33,7 @@ class paint {
         }
         if (this.isDirty === true)
         {
-            app.pushEvent(this.__ID, 'renderTarget', 'draw_pixels', this.frameData);
+            app.pushEvent(this.id, 'renderTarget', 'draw_pixels', this.frameData);
             this.frameCt++;
         }
     }
@@ -79,15 +79,15 @@ class paint {
     }
     displayColorName() {
         const colorName = Object.keys(Color).find(key => Color[key] == this.brushColorIndex);
-        app.setProperty(this.__ID, 'colorNameLabel', 'Content', colorName);
+        app.setProperty(this.id, 'colorNameLabel', 'Content', colorName);
     }
     onMouseMoved(X, Y){
 
         this.mouseState.x = X;
         this.mouseState.y = Y;
 
-        const width = app.getProperty(this.__ID, 'renderTarget', 'ActualWidth')
-        const height = app.getProperty(this.__ID, 'renderTarget', 'ActualHeight')
+        const width = app.getProperty(this.id, 'renderTarget', 'ActualWidth')
+        const height = app.getProperty(this.id, 'renderTarget', 'ActualHeight')
 
         if (this.mouseState.right === true)
         {
@@ -103,8 +103,8 @@ class paint {
                     colorIndex :colorIndex,
                 };
                 const json = JSON.stringify(packet);
-                const ch = app.getProperty(this.__ID, 'chTxt', 'Content');
-                const reply = app.getProperty(this.__ID, 'replyTxt', 'Content');
+                const ch = app.getProperty(this.id, 'chTxt', 'Content');
+                const reply = app.getProperty(this.id, 'replyTxt', 'Content');
             	network.send(ch, reply, json);
                 print(`sending color data to ${ch} ${reply} ${json}`)
             }
@@ -117,23 +117,23 @@ class paint {
         this.mouseState.left = left;
     }
     setupUIEvents() {
-        app.eventHandler(this.__ID, 'this', '_render', XAML_EVENTS.RENDER);
-        app.eventHandler(this.__ID, 'this', '_physics', XAML_EVENTS.RENDER);
-        network.eventHandler(this.__ID, 'onNetworkEvent');
+        app.eventHandler(this.id, 'this', '_render', XAML_EVENTS.RENDER);
+        app.eventHandler(this.id, 'this', '_physics', XAML_EVENTS.RENDER);
+        network.eventHandler(this.id, 'onNetworkEvent');
         // brush color button click
-        app.eventHandler(this.__ID, 'changeColorBtn', 'changeBrush', XAML_EVENTS.MOUSE_DOWN);
-        app.eventHandler(this.__ID, 'saveBtn', 'onConnect', XAML_EVENTS.MOUSE_DOWN);
+        app.eventHandler(this.id, 'changeColorBtn', 'changeBrush', XAML_EVENTS.MOUSE_DOWN);
+        app.eventHandler(this.id, 'saveBtn', 'onConnect', XAML_EVENTS.MOUSE_DOWN);
 
         // save/load image UI
-        app.eventHandler(this.__ID, 'saveBtn', 'onSave', XAML_EVENTS.MOUSE_DOWN);
-        app.eventHandler(this.__ID, 'loadBtn', 'onLoad', XAML_EVENTS.MOUSE_DOWN);
+        app.eventHandler(this.id, 'saveBtn', 'onSave', XAML_EVENTS.MOUSE_DOWN);
+        app.eventHandler(this.id, 'loadBtn', 'onLoad', XAML_EVENTS.MOUSE_DOWN);
 
         // image mouse down/up in same method.
-        app.eventHandler(this.__ID, 'this', 'onMouseDown', XAML_EVENTS.MOUSE_DOWN);
-        app.eventHandler(this.__ID, 'this', 'onMouseDown', XAML_EVENTS.MOUSE_UP);
+        app.eventHandler(this.id, 'this', 'onMouseDown', XAML_EVENTS.MOUSE_DOWN);
+        app.eventHandler(this.id, 'this', 'onMouseDown', XAML_EVENTS.MOUSE_UP);
 
         // image mouse move
-        app.eventHandler(this.__ID, 'this', 'onMouseMoved', XAML_EVENTS.MOUSE_MOVE);
+        app.eventHandler(this.id, 'this', 'onMouseMoved', XAML_EVENTS.MOUSE_MOVE);
     }
     getIndexedColorData(){
         const data = [0,0,0,0,0,0,0];
@@ -183,7 +183,7 @@ class paint {
     }
     onSave(){
 
-        const path = app.getProperty(this.__ID, 'nameBox', 'Text')
+        const path = app.getProperty(this.id, 'nameBox', 'Text')
         const data = this.getIndexedColorData();
 
         if (path !== undefined && typeof path === 'string' && data.length !== 0){
@@ -196,7 +196,7 @@ class paint {
     }
     onLoad(){
 
-        const path = app.getProperty(this.__ID, 'nameBox', 'Text')
+        const path = app.getProperty(this.id, 'nameBox', 'Text')
 
         print(path);
 
@@ -221,7 +221,7 @@ class paint {
     //#endregion
     constructor(id) {
         // for the engine.
-        this.__ID = id;
+        this.id = id;
 
         // object representing mouse state
         this.mouseState = 

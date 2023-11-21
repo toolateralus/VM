@@ -10,12 +10,12 @@ using System.Threading;
 
 namespace Lemur.JS
 {
-    public class XAMLJSEventHandler : JavaScriptWpfHook, IDisposable
+    public class InteropEvent : Function
     {
         public XAML_EVENTS Event = XAML_EVENTS.RENDER;
         FrameworkElement element;
 
-        public XAMLJSEventHandler(FrameworkElement control, XAML_EVENTS @event, JavaScriptEngine js, string id, string method)
+        public InteropEvent(FrameworkElement control, XAML_EVENTS @event, JavaScriptEngine js, string id, string method)
         {
             Event = @event;
             this.javaScriptEngine = js;
@@ -78,16 +78,8 @@ namespace Lemur.JS
                     }
                     break;
 
-                /// the lower the delay, the faster the calls back to js, however this can have
-                /// a counterintuitive effect when too short or too many running, since
-                /// a low delay introduces large cpu overhead.
-                /// also, DELAY_BETWEEN_WORK_ITERATIONS + 1 == like 3ms,
-                /// so we use much smaller values to get a more appropriate speed.
                 case XAML_EVENTS.RENDER:
-                    executionThread = new(HeavyWorkerLoop);
-                    executionThread.Start();
-                    break;
-                case XAML_EVENTS.PHYSICS:
+                case XAML_EVENTS.PHYSICS: /// deprecated, use RENDER instead.
                     executionThread = new(HeavyWorkerLoop);
                     executionThread.Start();
                     break;

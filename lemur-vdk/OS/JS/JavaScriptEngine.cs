@@ -44,7 +44,7 @@ namespace Lemur.JS
         public readonly JSInterop InteropModule;
         private readonly ConcurrentDictionary<int, (string code, Action<object?> output)> CodeDictionary = new();
         public readonly Dictionary<string, object> EmbeddedObjects = new();
-        public readonly List<JavaScriptWpfHook> EventHandlers = new();
+        public readonly List<Function> EventHandlers = new();
 
         private Computer Computer { get; set; }
         private readonly Thread executionThread;
@@ -267,7 +267,7 @@ namespace Lemur.JS
                 // create the actual handler, attach it to this engine,
                 // and create the hook method in the javascript environment.
                 // this does the real creation of the event.
-                var eh = new XAMLJSEventHandler(element, (XAML_EVENTS)type, this, identifier, methodName);
+                var eh = new InteropEvent(element, (XAML_EVENTS)type, this, identifier, methodName);
 
                 if (Computer.Windows.TryGetValue(identifier, out var app))
                 {
@@ -333,7 +333,7 @@ namespace Lemur.JS
                     {
                         for (int i = 0; i < EventHandlers.Count; i++)
                         {
-                            JavaScriptWpfHook? eventHandler = EventHandlers[i];
+                            Function? eventHandler = EventHandlers[i];
                             eventHandler?.Dispose();
                         }
                     });

@@ -2,12 +2,23 @@
 function clamp(min,max,value){
     return Math.min(max, Math.max(min, value))
 }
+// returns a unit square.
+function create_square() {
+    const v1 = new Point(-0.5, -0.5, Color.WHITE)
+    const v2 = new Point(-0.5, 0.5, Color.WHITE)
+    const v3 = new Point(0.5, 0.5, Color.WHITE)
+    const v4 = new Point(0.5, -0.5, Color.WHITE)
+    const verts = [v1, v2, v3, v4];
+    return verts;
+}
 
+// returns a packed color (int) from [r,g,b,a] color array.
 function to_color(color) {
     var packedColor = (color[0] << 24) | (color[1] << 16) | (color[2] << 8) | color[3];
     return packedColor;
 }
 
+// indexed color enum.
 const Color = {
     RED: 0,
     ORANGE: 1,
@@ -35,6 +46,7 @@ const Color = {
     MEDIUM_SPRING_GREEN: 23
 };
 
+// system wide basic color palette.
 const palette = [
     [255, 255, 0, 0], // Red 0
     [255, 255, 128, 0], // Orange 1
@@ -62,17 +74,18 @@ const palette = [
     [255, 0, 250, 154] // Medium Spring Green 23
 ];
 
+// indexed version of that array.
 const palette_indexed = [
-    to_color(palette[0]), // Red 0
-    to_color(palette[1]), // Orange 1
-    to_color(palette[2]), // Yellow 2
-    to_color(palette[3]), // Lime Green 3
-    to_color(palette[4]), // Green 4
-    to_color(palette[5]), // Spring Green 5
-    to_color(palette[6]), // Cyan 6
-    to_color(palette[7]), // Sky Blue 7 
-    to_color(palette[8]), // Blue 8
-    to_color(palette[9]), // Purple 9 
+    to_color(palette[0]),  // Red 0
+    to_color(palette[1]),  // Orange 1
+    to_color(palette[2]),  // Yellow 2
+    to_color(palette[3]),  // Lime Green 3
+    to_color(palette[4]),  // Green 4
+    to_color(palette[5]),  // Spring Green 5
+    to_color(palette[6]),  // Cyan 6
+    to_color(palette[7]),  // Sky Blue 7 
+    to_color(palette[8]),  // Blue 8
+    to_color(palette[9]),  // Purple 9 
     to_color(palette[10]), // Magenta 10
     to_color(palette[11]), // Pink 11
     to_color(palette[12]), // Light Gray 12

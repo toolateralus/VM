@@ -4,7 +4,7 @@ using System.Threading.Tasks;
 
 namespace Lemur.JS
 {
-    public class JavaScriptWpfHook : IDisposable
+    public class Function : IDisposable
     {
         private const string argsString = "(arg1, arg2)";
         

@@ -18,7 +18,7 @@
 class base_app {
     loadImage() {
         
-        const text = interop.pushEvent(this.__ID, 'textBox', 'get_content', '')
+        const text = interop.pushEvent(this.id, 'textBox', 'get_content', '')
         
         // reads bytes of file at path : 'text',
         // converts those bytes to a base64 string and
@@ -35,31 +35,31 @@ class base_app {
         // 'draw_image' event on it with 'background' as data.
         // in the case of 'draw_image' you must provide a base64 string representing a common file-format image. (.png, .jpg, .bmp)
         // this is achieved with the `interop.base64FromFile(filePath)` function
-        app.pushEvent(this.__ID, 'renderTarget', 'draw_image', background);
+        app.pushEvent(this.id, 'renderTarget', 'draw_image', background);
     }
 
     
     // ## this constructor is 100% mandatory.
-    // ## `this.__ID` is a clunky but temporarily neccesary part of this system,
+    // ## `this.id` is a clunky but temporarily neccesary part of this system,
     // ## which is an identifier the WPF uses to know who is calling/requesting events/hooks and who to affect with those events/calls,
     // ## which elements to use etc.
     // ## anything that's not wrapped in the do not edit is free game, just to clarify.
     // ## feel free to move or remove the invasive comments.
 
     /* DO NOT EDIT */ constructor(id) { /* DO NOT EDIT */ 
-    /* DO NOT EDIT*/ this.__ID = id;  /* END DO NOT EDIT*/
+    /* DO NOT EDIT*/ this.id = id;  /* END DO NOT EDIT*/
 
         // call to the wpf to search this class's XAML for an element 'showImageBtn' 
         // and subscribe the javascript function (which is present in this class) called 'loadImage' to the 'MouseDown'
         // event of that 'showImageBtn' control/element.
-        app.eventHandler(this.__ID, 'showImageBtn', 'loadImage', XAML_EVENTS.MOUSE_DOWN);
+        app.eventHandler(this.id, 'showImageBtn', 'loadImage', XAML_EVENTS.MOUSE_DOWN);
 
         // call to the wpf to search this class's XAML for a control/element 'textBlock' and call the 'set_content' event
         // with that control as an argument, along with our string data we want to fill that label.
         // Note, in the case of setting text, and many other properties, theres several ways to do so.
         // this one is more limited but maybe more efficient because it does not rely on reflection.
         let string = "enter a file path (relative or absolute to any degree)";
-        app.pushEvent(this.__ID, 'textBlock', 'set_content', string);
+        app.pushEvent(this.id, 'textBlock', 'set_content', string);
 
         let x = false;
         // an alternative to the call would be 
@@ -67,7 +67,7 @@ class base_app {
         // the guard is meant to just note that this isn't expected to be called
         // as is, youd remove the if and the above app.pushEvent call.
         if (x)
-            app.setProperty(this.__ID, 'textBlock', 'Content', string)
+            app.setProperty(this.id, 'textBlock', 'Content', string)
 
         // and this can be used for basically any WPF property name, restricted only by javascript vs c# typing.
         // the bounds of this isn't well documented but outside of creating new elements at runtime,

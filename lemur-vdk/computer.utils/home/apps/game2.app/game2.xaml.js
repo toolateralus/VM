@@ -11,8 +11,8 @@ const { Profiler } = require('profiler.js');
 // THIS IS THE WPF CLASS! (it chooses the file name associated class.)
 class game2 {
     setupUIEvents() {
-        app.eventHandler(this.__ID, 'this', 'm_render', XAML_EVENTS.RENDER);
-        app.eventHandler(this.__ID, 'this', 'onKey', XAML_EVENTS.KEY_DOWN);
+        app.eventHandler(this.id, 'this', 'm_render', XAML_EVENTS.RENDER);
+        app.eventHandler(this.id, 'this', 'onKey', XAML_EVENTS.KEY_DOWN);
     }
     onKey(key, isDown) {
         
@@ -24,15 +24,26 @@ class game2 {
         } 
         else
         {
-            const captureEndTime = new Date().getTime();
-            const elapsed =captureEndTime - this.captureBeginTime;
-            app.setProperty(this.__ID, 'framerateLabel', 'Content', `fps:${ Math.floor(1 / elapsed * 1000)}`);
-            this.captureBeginTime = 0;
+            return new Date().getTime();
         }
     }
     m_render() {
 
         this.profiler.set_marker('other');
+
+        if (this.frameCt % (25 * 2) == 0) {
+            let time = this.fpsCounterFrame(false);
+            const elapsed = time - this.captureBeginTime;
+            app.setProperty(this.id, 'framerateLabel', 'Content', `fps:${Math.floor(1 / elapsed * 1000)}`);
+            this.captureBeginTime = 0;
+            this.drawProfile();
+        } else {
+            this.fpsCounterFrame(false);
+        }
+        this.fpsCounterFrame(true);
+
+        this.profiler.set_marker('profiler');
+
         this.frameCt++;
         
         // returns a bool indicating whether anything was actually drawn or not
@@ -45,25 +56,20 @@ class game2 {
         this.scene.GameObjects().forEach(gO => { gO.velocity.y += 0.01; gO.update_physics();});
         this.scene.GameObjects().forEach(gO => { gO.confine_to_screen_space(this.renderer.width); });
         this.scene.GameObjects().forEach(gO => { this.scene.GameObjects().forEach(gO1 => { this.collisionRes(gO, gO1); })});
-
         this.profiler.set_marker('collision');
-
-        this.fpsCounterFrame(false);
-        this.fpsCounterFrame(true);
-        
-        if (this.frameCt % 30 == 0)
-            this.drawProfile();
     }
+
     collisionRes(body_a, body_b) {
         if (body_a.collides(body_b.x, body_b.y)){
             print (`${body_a} collided with ${body_b}`)
         }
     }
+
     drawProfile() {
         const results = this.profiler.sample_average();
 
-        const profilerWidth = app.getProperty(this.__ID, 'ProfilerPanel', 'ActualWidth') / 2;
-        const fpsWidth = app.getProperty(this.__ID, 'framerateLabel', 'ActualWidth');
+        const profilerWidth = app.getProperty(this.id, 'ProfilerPanel', 'ActualWidth') / 2;
+        const fpsWidth = app.getProperty(this.id, 'framerateLabel', 'ActualWidth');
 
         const actualWidth = profilerWidth - fpsWidth;
         
@@ -76,44 +82,30 @@ class game2 {
 
         for (const label in results) {
             const time = results[label];
-            app.setProperty(this.__ID, label, 'Content', `${time / 10_000} ms ${label}`);
-            app.setProperty(this.__ID, label, 'Width', time * xFactor);
+            app.setProperty(this.id, label, 'Content', `${time / 10_000} ms ${label}`);
+            app.setProperty(this.id, label, 'Width', time * xFactor);
         }
     }
-    getsquare(size) {
-        const v1 = new Point(-0.5, -0.5, Color.RED)
-        const v2 = new Point(-0.5, 0.5,  Color.ORANGE)
-        const v3 = new Point(0.5, 0.5,   Color.YELLOW)
-        const v4 = new Point(0.5, -0.5,  Color.LIME_GREEN)
-        const verts = [v1, v2, v3, v4];
-        return verts;
-    }
+    
     constructor(id) {
 
-      
+        this.captureBeginTime = 0;
+        this.captureEndTime = 0;
         // for the engine.
-        this.__ID = id;
+        this.id = id;
         this.frameCt = 0;
 
-        const gfx_ctx = gfx.createCtx(this.__ID, 'renderTarget', 512, 512);
-        // 64x64 render surface.
-        this.renderer = new Renderer(1024, gfx_ctx);
+        const gfx_ctx = gfx.createCtx(this.id, 'renderTarget', 512, 512);
 
-        // initialize the drawing surface
-
-        this.moveSpeed = 1;
-
-        // player init 
-        // 4x4 (pixel) square sprite
-       
-        // make a player object
         
-        var GameObjects = [];
+        this.renderer = new Renderer(512, gfx_ctx);
+
+        var gameObjects = [];
 
         const half_width = 512 / 2;
 
         for (let i = 0; i < palette.length; ++i) {
-            const verts = this.getsquare();
+            const verts = create_square();
             // obj scale.
             const scale = new Point(5 * i, 5 * i);
             // start position
@@ -125,10 +117,10 @@ class game2 {
 
             verts.forEach(v => v.color = i);
 
-            GameObjects.push(gO);
+            gameObjects.push(gO);
         }
 
-        this.scene = new Scene(GameObjects);
+        this.scene = new Scene(gameObjects);
 
         // setup events (including render/physics loops)
         this.setupUIEvents();

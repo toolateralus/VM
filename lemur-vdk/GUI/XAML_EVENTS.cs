@@ -10,6 +10,9 @@
         LOADED = 5,
         WINDOW_CLOSE = 6,
         RENDER = 7,
-        PHYSICS = 8,
+        /// <summary>
+        /// Deprecated, use RENDER { (7)XAML_EVENTS } instead.
+        /// </summary>
+        PHYSICS = 8, 
     }
 }

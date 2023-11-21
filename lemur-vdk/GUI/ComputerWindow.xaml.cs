@@ -76,7 +76,7 @@ namespace Lemur.GUI
                 if (handlers == null || !handlers.Any())
                     continue;
 
-                var js_handlers = handlers.OfType<XAMLJSEventHandler>();
+                var js_handlers = handlers.OfType<InteropEvent>();
 
                 foreach (var eventHandler in js_handlers)
                     InvokeKeyEvent(sender, e, eventHandler);
@@ -95,7 +95,7 @@ namespace Lemur.GUI
                     break;
             }
         }
-        public static void InvokeKeyEvent(object sender, KeyEventArgs e, XAMLJSEventHandler eventHandler)
+        public static void InvokeKeyEvent(object sender, KeyEventArgs e, InteropEvent eventHandler)
         {
             if (eventHandler.Event == XAML_EVENTS.KEY_DOWN)
             {

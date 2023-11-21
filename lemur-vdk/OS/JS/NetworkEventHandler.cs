@@ -3,7 +3,7 @@ using System.Threading.Tasks;
 
 namespace Lemur.JS
 {
-    internal class NetworkEventHandler : JavaScriptWpfHook
+    internal class NetworkEventHandler : Function
     {
         public const string ARGS_STRING = "(channel, replyChannel, data)";
         public NetworkEventHandler(JavaScriptEngine javaScriptEngine, string identifier, string methodName)

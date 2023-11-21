@@ -227,16 +227,8 @@ class Renderer {
         gfx.writePixelIndexed(this.gfx_ctx, Math.floor(x), Math.floor(y), index);
     }
 
-    drawLineIndexed(line) {
+    drawLineIndexed(x0, x1, y0, y1, c0) {
         let steep = false;
-
-
-        let x0 = line.start.x;
-        let x1 = line.end.x;
-        let y0 = line.start.y;
-        let y1 = line.end.y;
-
-        let c0 = line.start.color;
 
         // steep
         if (Math.abs(x0 - x1) < Math.abs(y0 - y1)) {
@@ -276,7 +268,6 @@ class Renderer {
                 this.writePixelIndexed(x, y, c0);
             }
 
-
             error2 += derror2;
 
             if (error2 > dx) {
@@ -289,17 +280,17 @@ class Renderer {
     drawLine(line) {
         let steep = false;
 
+        const start = line.start;
+        const end = line.end;
 
-        let x0 = line.start.x;
-        let x1 = line.end.x;
-        let y0 = line.start.y;
-        let y1 = line.end.y;
+        let x0 = start.x;
+        let x1 = end.x;
+        let y0 = start.y;
+        let y1 = end.y;
+        let c0 = start.color;
+        let c1 = end.color;
 
-        let c0 = line.start.color;
-        let c1 = line.end.color;
-
-        const distance = line.start.sqrDist(line.end);
-        var color = c0;
+        const distance = start.sqrDist(line.end);
 
         // steep
         if (Math.abs(x0 - x1) < Math.abs(y0 - y1)) {
@@ -334,11 +325,12 @@ class Renderer {
         for (let x = x0; x <= x1; ++x) {
 
             if (steep) {
-                const t = line.start.sqrDistXY(y, x) / distance;
+
+                const t = start.sqrDistXY(y, x) / distance;
                 this.writePixel(y, x, this.lerpColors(c0, c1, t));
             }
             else {
-                const t = line.start.sqrDistXY(x, y) / distance;
+                const t = start.sqrDistXY(x, y) / distance;
                 this.writePixel(x, y, this.lerpColors(c0, c1, t));
             }
 
@@ -351,27 +343,36 @@ class Renderer {
         }
     }
 
-    m_drawScene(Scene) {
+    m_drawScene(scene) {
 
         gfx.clearColor(this.gfx_ctx, this.bgColor);
 
-        const gameObjects = Scene.GameObjects();
+        const gameObjects = scene.GameObjects();
 
+       
         // all objects in Scene
         for (let z = 0; z < gameObjects.length; ++z) {
             const gO = gameObjects[z];
             const edges = gO.edges;
 
+            // remove this caching and directly reference the objects,
+            // to witness the performance differnce, if any on your machine.
+            // for me i went from 25 fps with the caching to 5 fps without.
+            const scale = gO.scale;
+            const pos = gO.pos;
+            
             edges.forEach(edge => {
+                const start = edge.start;
+                const end = edge.end;
 
-                var p1 = new Point(edge.start.x * gO.scale.x, edge.start.y * gO.scale.y, edge.start.color);
-                var p2 = new Point(edge.end.x * gO.scale.x, edge.end.y * gO.scale.y, edge.end.color);
+                const x0 = start.x * scale.x + pos.x;
+                const y0 = start.y * scale.y + pos.y;
+                const c0 = start.color;
 
-                p1.addPt(gO.pos);
-                p2.addPt(gO.pos);
+                const x1 = end.x * scale.x + pos.x;
+                const y1 = end.y * scale.y + pos.y;
 
-                var ln = new Line(p1, p2);
-                this.drawLineIndexed(ln);
+                this.drawLineIndexed(x0, x1, y0, y1, c0);
             });
         }
     }
