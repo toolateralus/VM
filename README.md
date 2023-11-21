@@ -1,4 +1,4 @@
-# welcome to lemur-vdt!
+# welcome to lemur-vdk!
 a playground like virtual desktop, inspired by ComputerCraft (minecraft mod), aims to bring a similar functionality to a standalone desktop app.
 featuring a custom JS/XAML implementation, we use WPF as a front end, which allows for quick development of flexible UI. 
 
@@ -48,6 +48,11 @@ It's a TCP server with no security measures.
 > note the repo structure should NOT change, especially the name and orientation of the folders.
 
 > Step 4. At the top of the Visual Studio instance, once the project has loaded, there will be a dropdown that says either 'Release' or 'Debug' to the left of the green play buttons. choose 'Release' and then do the key chord `Ctrl + Shift + B` to build.
+
+> Note: There `WILL` be exactly 1 expected error while building the solution : `Severity	Description	Project Rank
+Error	Program does not contain a static 'Main' method suitable for an entry point	1`
+> Do not worry about this. it will only happen once, and means nothing. its a wip.
+
 
 > Step 5. You can navigate to the `lemur/lemur-vdk/bin/Release/net6.0/lemur.exe` file and right click the executable. select 'Send To' and then press desktop, or wherever you want a fast way to run the vdk.
 
