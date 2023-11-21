@@ -108,7 +108,8 @@ namespace Lemur.GUI
 
             var WORKING_DIR = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData) + $"\\Lemur\\computer{cpu_id}";
 
-            Directory.Delete(WORKING_DIR, true);
+            if (Directory.Exists(WORKING_DIR))
+                Directory.Delete(WORKING_DIR, true);
 
             NewComputerButton(null, new());
         }
