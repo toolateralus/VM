@@ -14,8 +14,8 @@
             <RowDefinition Height="25"/>
             <RowDefinition Height="25"/>
         </Grid.RowDefinitions>
-        <Button Height="45" Content="New Computer" Click="NewComputerButton"  FontFamily="Consolas" Margin="169,30,10,30" />
-        <Button Height="45" Content="Reinstall Computer" Click="ReinstallComputerButton"  FontFamily="Consolas" Margin="10,30,157,30" />
+        <Button Height="45" Content="Open" Click="NewComputerButton"  FontFamily="Consolas" Margin="169,30,10,30" />
+        <Button Height="45" Content="Re\Install" Click="ReinstallComputerButton"  FontFamily="Consolas" Margin="10,30,157,30" />
         <Label Grid.Row="1" Background="SlateGray" Foreground="White" FontFamily="Consolas" >Enter a computer id below.</Label>
         <TextBox x:Name="IDBox" Grid.Row="2" FontFamily="Consolas">
         </TextBox>
