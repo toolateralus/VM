@@ -1,109 +1,56 @@
-#### Note : this contains an insecure tcp hosting / client mechanism, and while it's just on the local network, I don't advise it be used. It's currently not even functioning, but still, use it with caution
-#### After building and running the startup / installation / first run, you'll get a copy of the documentation, including tutorials and startup info.
+# Welcome to Lemur VDK - Your Virtual Desktop Kit
 
-> # Welcome to _Lemur VDK_ - A 'Virtual Desktop Kit'
----
-> ## Dependencies you will need : 
-`Some version of Microsoft Windows between Windows 7 and Windows 11`
-> Note :  there is a linux version in development using Avalonia but it's far behind this repo and the UI is non-existent. consider contributing :D. It's not an impossibility, in fact its quite realistic to port it.
+## Essential Requirements
+Before you begin, ensure you have the following prerequisites:
 
-`Visual Studio (preferably 2019+, I use 2022)` for me it has the best WPF and C# support.
+- **Operating System**: Windows 7 - Windows 11
+- **IDE**: Visual Studio 2019 or newer for optimal WPF and C# support
+- **.NET**: SDK and Runtime 6.0 or higher (7.0+ is also supported)
 
-`.NET SDK 6.0+` you can run on 7.0+ if you'd like
+## For Linux Users
+A Linux version is currently under development with AvaloniaUI. The UI is still basic, and contributions are highly appreciated.
 
-`.NET Runtime 6.0+` you can run on 7.0+ if you'd like
+## Recommended Tools
+- **Visual Studio Code**: Any version is suitable
 
-> ## Optionally, but reccomended : 
+## Getting Started
 
-`Visual Studio Code` (any version, I use Insiders for pre-release features.)
+### Cloning the Repository
+To clone the repository, follow these steps:
 
----
-   
-> ## Building the repository
-> Right now, our installer depends on building from source. it's a janky piece of code that needs to be replaced, but until that's done, cloning & building is quite simple and gives you the flexibility to mod the engine / vdk.
+1. Open Visual Studio and select 'Clone a Repository'.
+2. Enter the repository URL: `https://github.com/toolateralus/lemur-vdk.git`.
+3. Choose your preferred local path and initiate the cloning process.
 
----
-> ## Cloning
-> Step 1. Open Visual Studio (VS22/ VS) and click 'Clone a Repository' or whatever the equivalent is.
+### Building the Project
+Once the project is cloned:
 
-> Step 2. in the URL bar, put `https://github.com/toolateralus/lemur-vdk.git`
+1. Ensure the repository structure is intact after cloning.
+2. In Visual Studio, select 'Release' mode.
+3. Right click on `lemur` in the Solution Explorer and click Build, or Build the project using the `Ctrl + Shift + B` shortcut.
 
-> Step 3. set a desired path and press Clone. 
+**Important**: If using Ctrl+Shift+B, An expected error will occur : `Program does not contain a static 'Main' method suitable for an entry point`. This error is a known issue and should not affect the build process. This is from a deprecated and not yet removed dependency.
 
-> note the repo structure should NOT change, especially the name and orientation of the folders.
+### Running Lemur VDK
+After building:
 
-> Step 4. At the top of the Visual Studio instance, once the project has loaded, there will be a dropdown that says either 'Release' or 'Debug' to the left of the green play buttons. choose 'Release' and then do the key chord `Ctrl + Shift + B` to build.
+1. Navigate to `lemur/lemur-vdk/bin/Release/net6.0/`.
+2. Locate `lemur.exe`, right-click, and create a shortcut on your desktop for easy access.
 
-> Note: There `WILL` be exactly 1 expected error while building the solution : `Severity	Description	Project Rank
-Error	Program does not contain a static 'Main' method suitable for an entry point	1`
-> Do not worry about this. it will only happen once, and means nothing. its a wip.
+**Note**: Replace `net6.0` with the correct .NET version if you are using a different one.
 
+### First Run and Installation
+On the first launch, the application will automatically install necessary JavaScript, JSON, and other configuration dependencies.
 
-> Step 5. You can navigate to the `lemur/lemur-vdk/bin/Release/net6.0/lemur.exe` file and right click the executable. select 'Send To' and then press desktop, or wherever you want a fast way to run the vdk.
-
-> if you're not using 6.0 remember to replace it with the appropriate .net version.
-
-> for contributors : please streamline this process! we can provide a install batch and bash script that does all of this, and cleans up after itself.
----
-> ## First run - Installing the OS and Required Components.
-
-> There are a number of javascript and json and other config dependencies that get installed on the first-run of the application. Don't worry, we have an installer that does all of this automatically.
-
-> Step 1. Double click the executable and launch the app.
-> you'll be greeted with a small window in the center of the screen your cursor is on. For 99.9% of cases, you can just start the computer at the ID 0. 
->> changing this ID will install new virtual file systems under those indices, such as Appdata/Lemur/computer0, computer1, and so on and so forth.
-
->> Step 2. (Only if step 1 failed:)
->> if for some reason you experience a failure on the first installation, you'll have to delete the computer0 directory under your `%Appdata%/Lemur/` directory
-
-### Your newly installed system will be available at `%Appdata%/Lemur/computer0`. Just drop that in the navigation bar in the windows explorer and press enter.
-
-> ## an important note about startup!
-
-> See the `computer/utils/this.ins` or for new systems `computer/utils/QuickStart.md` file to learn more about skipping the startup selection screen and quickbooting into specific computers
-
----
-## a very important note about the file system,
----
-#### everything is always searched for by file name. 
-###### you can search for directories like this too.
----
-##### the sole function that is the core of ALL file system accesses
-
-> `FileSystem.GetResourcePath(string path)` 
-
-> considers these various arguments ALL valid, and point to the same directory, `"myApp.app"` 
-
-The arguments are : 
-> `"User/Appdata/Roaming/Lemur/computer0/home/apps/myApp.app"`, 
-> `"/home/apps/myApp.app"`
-> `"myApp.app"`
-
-> The file system will return the first best-matching fit. this means that you should really make files have fully unique names, or always fetch them from a qualified path. 
-
-- Why does this concern me?
-> because all of your files are written, read, and searched for by this function. 
-
-- Do I have to use this?
-> probably not. beware it may take some significant effort to make it function as a normal File.Read() would in C#.
-
-> #### _this can have unintended side effects if used improperly_, 
-> such as when you have multiple files named like setup.ini, and don't access them by their parent directory explicitly. it will just return the first match.
-
-## All searches begin at `computer/..` and recursively search subdirectories 100 deep. 
-
->  so the closer to that folder (i.e 'computer0'), the sooner that file will be selected. any guarantees outside of that cannot be made.
----
+1. Launch `lemur.exe`.
+2. Press new computer, optionally adding an integer ID, or defaulting to 0. this refers to virtual file system copies / 'installs' on your local disk.
+- The install will be placed at `%Appdata%/Lemur/...` and will be called `computer0` or whatever index you chose.
 
 
-extra:
+**Note**: 
+Lemur VDK's file system searches for files and directories by name, making it essential to use unique file names or qualified paths for accuracy.
+Misuse can lead to unintended side effects, like retrieving the wrong `setup.ini` file if multiple files share the same name without a specific path.
+you can provide semi qualified paths like `parent/myFile.txt` if you have several myFile.txt's
 
----
+Your feedback and suggestions for improvements are always welcome.
 
-#### Why did you do this to the FileSystem?
-
->  it's my preference to streamline file system accesses, and to eliminate the frustrating issue of restructuring or refactoring projects and file systems and having dependencies be lost.
-
-> hard-coded paths do not work great with IDE's and refactoring tools
-
-> I know it's somewhat unconventional and I suppose I am open to reasonable arguments against it.
