@@ -1,3 +1,4 @@
+#### Note : this contains an insecure tcp hosting / client mechanism, and while it's just on the local network, I don't advise it be used. It's currently not even functioning, but still, use it with caution
 #### After building and running the startup / installation / first run, you'll get a copy of the documentation, including tutorials and startup info.
 
 > # Welcome to _Lemur VDK_ - A 'Virtual Desktop Kit'
