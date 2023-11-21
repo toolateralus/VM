@@ -122,8 +122,7 @@ To create this, for the easiest option, just use vs-code for now.
 
 > now, if we tried to run this app, (which we theoretically can even without restarting the _Lemur_ application, because everything is jitted when you press the desktop icon!) we'd get errors because the xaml file is completely empty, and no matter what xaml errors can cause runtime interference and crashing.
 
-#### `Just as a rule of thumb` generally the application WILL NOT CRASH under any circumstances. even in extremely erroneous conditions, you will only crash the app with XAML errors, or running out of resources (CPU/RAM)
-
+#### `Just as a rule of thumb` generally the application WILL NOT CRASH under any circumstances. even in extremely erroneous conditions, you will only crash the app with XAML errors, or running out of resources (CPU/RAM) anything outside of this is a bug, and there are many.
 
 Now that we have our file structure sorted, and it looks like the tree diagram, we can start actually adding some code to our app. So far it's been boring as fudge, but now we get to write some actual code. Just to get us started on our XAML boiler plate, we can navigate to the `computer/utils/base_app` directory and just copy paste the example's xaml into our `home.xaml` file.
 
