@@ -8,6 +8,7 @@
 	<AnalysisMode>all</AnalysisMode>
     <UseWindowsForms>False</UseWindowsForms>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <RunPostBuildEvent>OnOutputUpdated</RunPostBuildEvent>
   </PropertyGroup>
 
   <ItemGroup>
@@ -37,5 +38,9 @@
   <ItemGroup>
     <Folder Include="computer.utils\home\commands\os_commands\" />
   </ItemGroup>
+
+  <Target Name="PostBuild" AfterTargets="PostBuildEvent">
+    <Exec Command="xcopy /E /I /Y &quot;$(ProjectDir)computer.utils&quot; &quot;$(TargetDir)computer.utils&quot;" />
+  </Target>
 
 </Project>

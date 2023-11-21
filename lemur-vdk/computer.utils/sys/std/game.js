@@ -21,11 +21,9 @@ class Point {
     getColor() {
         return this.color;
     }
-
     addPt(pt) {
         return this.add(pt.x, pt.y);
     }
-
     add(x, y) {
         this.x += x;
         this.y += y;
@@ -188,7 +186,6 @@ class Scene {
     }
 }
 class Renderer {
-
     constructor(resolution, gfxCtx) {
         // Renderer data
         this.gfx_ctx = gfxCtx;
@@ -205,12 +202,10 @@ class Renderer {
 
         this.bgColor = palette_indexed[Color.BLACK];
     }
-    
     setWidth(width) {
         this.newWidth = width;
         this.resizing = true;
     }
-
     lerpColors(a, b, t) {
         const result = new Uint8Array(4);
         for (let i = 0; i < 4; i++) {
@@ -218,15 +213,14 @@ class Renderer {
         }
         return result;
     }
-
     writePixel(x, y, color) {
         gfx.writePixel(this.gfx_ctx, Math.floor(x), Math.floor(y), to_color(color));
     }
-
     writePixelIndexed(x, y, index) {
         gfx.writePixelIndexed(this.gfx_ctx, Math.floor(x), Math.floor(y), index);
     }
-
+    // https://en.wikipedia.org/wiki/Bresenham's_line_algorithm
+    // Bresenhams line drawing algorithm, adapted from stack overflow somewhere.
     drawLineIndexed(x0, x1, y0, y1, c0) {
         let steep = Math.abs(x0 - x1) < Math.abs(y0 - y1);
 
@@ -266,8 +260,6 @@ class Renderer {
             }
         }
     }
-
-
     drawLine(line) {
         let steep = false;
 
@@ -333,7 +325,6 @@ class Renderer {
             }
         }
     }
-
     m_drawScene(scene) {
 
         gfx.clearColor(this.gfx_ctx, this.bgColor);

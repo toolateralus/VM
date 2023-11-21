@@ -104,8 +104,6 @@ namespace Lemur.GUI
                 return;
             }
 
-
-
             var WORKING_DIR = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData) + $"\\Lemur\\computer{cpu_id}";
 
             if (Directory.Exists(WORKING_DIR))

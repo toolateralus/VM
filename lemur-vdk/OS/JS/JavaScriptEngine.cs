@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
-using System.ComponentModel;
 using System.IO;
 using System.Linq;
 using System.Threading;
@@ -10,11 +9,9 @@ using System.Windows;
 using JavaScriptEngineSwitcher.Core;
 using JavaScriptEngineSwitcher.V8;
 using Lemur.GUI;
-using Lemur;
 using Lemur.FS;
 using System.Diagnostics;
 using System.Windows.Input;
-
 
 namespace Lemur.JS
 {
@@ -24,8 +21,7 @@ namespace Lemur.JS
         {
             bool result = false;
             
-            Computer.Current.Window?.Dispatcher?.Invoke(() =>
-            {
+            Computer.Current.Window?.Dispatcher?.Invoke(() => {
                 if (Enum.TryParse<System.Windows.Input.Key>(key, out var _key))
                     result = Keyboard.IsKeyDown(_key);
                 else Notifications.Now($"Failed to parse key {key}");

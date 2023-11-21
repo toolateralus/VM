@@ -39,6 +39,8 @@ namespace Lemur.JS
             new byte[]{255, 255, 20, 147}, // Deep Pink 22
             new byte[]{255, 0, 250, 154} // Medium Spring Green 23
         };
+        private readonly byte[] cached_color = new byte[4];
+
         public void Resize(int width, int height)
         {
             Width = width;
@@ -83,7 +85,6 @@ namespace Lemur.JS
             b = (byte)((color >> 8) & 0xFF);
             a = (byte)(color & 0xFF);
         }
-        private readonly byte[] cached_color = new byte[8];
         public void ExtractColorToCache(int color)
         {
             cached_color[0 + 0] = (byte)((color >> 24) & 0xFF);

@@ -1,4 +1,5 @@
 ﻿using System.IO;
+using System.Reflection;
 using Path = System.IO.Path;
 
 namespace Lemur.FS
@@ -11,13 +12,13 @@ namespace Lemur.FS
 
             public static void Install(string root)
             {
-                var dir = Computer.SearchForParentRecursive("lemur-vdk");
-                string fullPath = Path.Combine(dir, PATH);
+                string assemblyLocation = Assembly.GetExecutingAssembly().Location;
+                string currentDirectory = Path.GetDirectoryName(assemblyLocation) ?? throw new FileNotFoundException("Couldn't locate computer.utils, the file structure was likely modified. the executable must stay in the bin folder.");
+
+                string fullPath = Path.Combine(currentDirectory, PATH);
 
                 if (Directory.Exists(fullPath))
-                {
                     CopyDirectory(fullPath, root);
-                }
             }
 
             private static void CopyDirectory(string sourceDir, string destDir)
