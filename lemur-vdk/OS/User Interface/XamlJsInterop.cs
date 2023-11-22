@@ -10,7 +10,7 @@ using Lemur;
 
 namespace Lemur.UserInterface
 {
-    public class XamlJsInterop
+    public class XamlHelper
     {
         public static UserControl? ParseUserControl(string xaml)
         {

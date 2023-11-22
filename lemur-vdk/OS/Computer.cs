@@ -181,7 +181,7 @@ namespace Lemur
         {
             var data = Runtime.GetAppDefinition(type);
             
-            var control = XamlJsInterop.ParseUserControl(data.XAML);
+            var control = XamlHelper.ParseUserControl(data.XAML);
 
             if (control == null)
             {
