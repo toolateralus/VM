@@ -14,82 +14,56 @@ using System.Windows.Controls;
 using System.Linq;
 using System.Windows.Media;
 using Microsoft.ClearScript.JavaScript;
+using lemur.OS;
 
 namespace Lemur
 {
     public class Computer : IDisposable
     {
-        public NetworkConfiguration Network = null!;
-        public ComputerWindow Window;
-        public FileSystem FS;
-        public JavaScriptEngine JavaScriptEngine;
-        public CommandLine CommandLine;
+        internal NetworkConfiguration Network { get; set; }
+        internal ComputerWindow Window { get; set; }
 
-        public JObject Config;
+        internal FileSystem fileSystem;
+        internal Engine javaScript;
+        internal CommandLine cmdLine;
 
-        public readonly Dictionary<string, UserWindow> Windows = new();
-        public Theme Theme { get; private set; } = new Theme();
+        internal JObject config;
+        internal Theme theme = new();
 
-        public readonly List<string> InstalledJSApps = new();
-        public Dictionary<string, Type> Installed_CSharp_Apps { get; private set; } = new();
+        internal readonly Dictionary<string, UserWindow> Windows = new();
+        internal readonly Dictionary<string, Type> csApps = new();
+        internal readonly List<string> jsApps = new();
+        internal uint ID { get; private set; }
+        internal string FileSystemRoot { get; private set; }
+        internal string WorkingDir { get; private set; }
+        internal bool disposing;
 
-        public uint ID { get; private set; }
-        public string FS_ROOT { get; private set; }
-        public string WORKING_DIR { get; private set; }
-        public bool Disposing { get; internal set; }
-
-        public void InstallApplication(string exePath, Type type)
-        {
-            if (Installed_CSharp_Apps.TryGetValue(exePath, out _))
-            {
-                Notifications.Now("Tried to install an app that already exists on the computer, try renaming it if this was intended");
-                return;
-            }
-            Installed_CSharp_Apps[exePath] = type;
-
-            Notifications.Now($"{exePath} installed!");
-            ComputerWindow window = Window;
-            InstallCSWPF(exePath, type);
-        }
         public void InitializeEngine(Computer computer)
         {
-            JavaScriptEngine = new(computer);
+            javaScript = new(computer);
 
             if (FileSystem.GetResourcePath("startup.js") is string AbsPath)
-                JavaScriptEngine.ExecuteScript(AbsPath);
+                javaScript.ExecuteScript(AbsPath);
         }
-        public static string? SearchForParentRecursive(string targetDirectory)
-        {
-            string assemblyLocation = Assembly.GetExecutingAssembly().Location;
-            string currentDirectory = Path.GetDirectoryName(assemblyLocation);
-
-            while (!Directory.Exists(Path.Combine(currentDirectory, targetDirectory)))
-            {
-                currentDirectory = Directory.GetParent(currentDirectory)?.FullName;
-                if (currentDirectory == null)
-                    return null;
-            }
-
-            return Path.Combine(currentDirectory, targetDirectory);
-        }
+       
         public Computer(uint id)
         {
-            CommandLine = new(this);
+            cmdLine = new(this);
 
             var WORKING_DIR = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData) + "\\Lemur";
 
-            this.WORKING_DIR = Path.GetFullPath(WORKING_DIR);
+            this.WorkingDir = Path.GetFullPath(WORKING_DIR);
 
             // prepare the root dir for the file system
-            FS_ROOT = $"{this.WORKING_DIR}\\computer{id}";
+            FileSystemRoot = $"{this.WorkingDir}\\computer{id}";
 
-            FS = new(FS_ROOT);
+            fileSystem = new(FileSystemRoot);
 
             Network = new(this);
 
             InitializeEngine(this);
 
-            Config = LoadConfig();
+            config = LoadConfig();
         }
         internal static JObject LoadConfig()
         {
@@ -142,7 +116,7 @@ namespace Lemur
             }
             Dispose();
         }
-        public void OpenApp(UserControl control, string title = "window", Brush? background = null, Brush? foreground = null, JavaScriptEngine engine = null)
+        public void OpenApp(UserControl control, string title = "window", Brush? background = null, Brush? foreground = null, Engine engine = null)
         {
             // the resizable is the container that hosts the user app.
             // this is made seperate to eliminate annoying and complex boiler plate.
@@ -154,18 +128,31 @@ namespace Lemur
             window.InitializeUserContent(resizable_window, control, engine);
         }
 
+        public void InstallCSharpApp(string exePath, Type type)
+        {
+            if (csApps.TryGetValue(exePath, out _))
+            {
+                Notifications.Now("Tried to install an app that already exists on the computer, try renaming it if this was intended");
+                return;
+            }
+            csApps[exePath] = type;
+
+            Notifications.Now($"{exePath} installed!");
+            ComputerWindow window = Window;
+            InstallCSWPF(exePath, type);
+        }
         public void InstallJSWPF(string type)
         {
-            if (Disposing)
+            if (disposing)
                 return;
-            InstalledJSApps.Add(type);
+            jsApps.Add(type);
             Window.InstallIcon(AppType.JAVASCRIPT_XAML_WPF, type);
         }
         public void InstallJSHTML(string type)
         {
-            if (Disposing)
+            if (disposing)
                 return;
-            InstalledJSApps.Add(type);
+            jsApps.Add(type);
             Window.InstallIcon(AppType.JS_HTML_WEB_APPLET, type);
         }
         public void InstallCSWPF(string exePath, Type type)
@@ -176,18 +163,18 @@ namespace Lemur
        
         public void Uninstall(string name)
         {
-            InstalledJSApps.Remove(name);
+            jsApps.Remove(name);
             Window.Dispatcher.Invoke(() => { Window.RemoveDesktopIcon(name); });
         }
 
         private static void LoadBackground(Computer pc, ComputerWindow wnd)
         {
-            string backgroundPath = pc?.Config?.Value<string>("BACKGROUND") ?? "background.png";
+            string backgroundPath = pc?.config?.Value<string>("BACKGROUND") ?? "background.png";
             wnd.desktopBackground.Source = ComputerWindow.LoadImage(FileSystem.GetResourcePath(backgroundPath) ?? "background.png");
         }
         internal void Print(object? obj)
         {
-            JavaScriptEngine?.InteropModule?.print(obj ?? "null");
+            javaScript?.InteropModule?.print(obj ?? "null");
         }
 
         public async Task OpenCustom(string type)
@@ -202,7 +189,7 @@ namespace Lemur
                 return;
             }
 
-            JavaScriptEngine engine = new(this);
+            Engine engine = new(this);
             
             var (id, code) = await InstantiateWindowClass(type, data, engine);
 
@@ -260,13 +247,13 @@ namespace Lemur
 
             wnd.Closed += (o, e) =>
             {
-                Task.Run(() => SaveConfig(pc.Config?.ToString() ?? ""));
+                Task.Run(() => SaveConfig(pc.config?.ToString() ?? ""));
                 pc.Dispose();
             };
 
-            pc.InstallApplication("CommandPrompt.app", typeof(CommandPrompt));
-            pc.InstallApplication("FileExplorer.app", typeof(FileExplorer));
-            pc.InstallApplication("TextEditor.app", typeof(TextEditor));
+            pc.InstallCSharpApp("CommandPrompt.app", typeof(CommandPrompt));
+            pc.InstallCSharpApp("FileExplorer.app", typeof(FileExplorer));
+            pc.InstallCSharpApp("TextEditor.app", typeof(TextEditor));
 
             Runtime.LoadCustomSyntaxHighlighting();
         }
@@ -300,7 +287,7 @@ namespace Lemur
         }
         public static Dictionary<string, List<string>> ProcessLookupTable = new();
         private static uint processCount;
-        private static async Task<(string id, string code)> InstantiateWindowClass(string type, (string XAML, string JS) data, JavaScriptEngine engine)
+        private static async Task<(string id, string code)> InstantiateWindowClass(string type, (string XAML, string JS) data, Engine engine)
         {
             var name = type.Split('.')[0];
 
@@ -319,26 +306,26 @@ namespace Lemur
 
         protected virtual void Dispose(bool disposing)
         {
-            if (!Disposing)
+            if (!this.disposing)
             {
                 if (disposing)
                 {
-                    JavaScriptEngine?.Dispose();
+                    javaScript?.Dispose();
                     Window?.Dispose();
                     Network?.Dispose();
-                    CommandLine?.Dispose();
+                    cmdLine?.Dispose();
 
                     foreach (var item in Windows)
                         item.Value.Close();
                 }
-                
-                JavaScriptEngine = null!;
+
+                javaScript = null!;
                 Window = null!;
                 Network = null!;
-                FS = null!;
-                CommandLine = null!;
+                fileSystem = null!;
+                cmdLine = null!;
 
-                Disposing = true;
+                this.disposing = true;
             }
         }
         public void Dispose()

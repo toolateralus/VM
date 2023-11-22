@@ -1,7 +1,6 @@
 ﻿using Newtonsoft.Json.Linq;
 using System;
 using System.Collections.Generic;
-using System.Data;
 using System.IO;
 using System.Linq;
 using System.Text;
@@ -9,23 +8,11 @@ using System.Threading.Tasks;
 using Lemur.GUI;
 using Lemur.Network;
 using Lemur.JS;
+using Lemur;
+using Lemur.FS;
 
-namespace Lemur.FS
+namespace lemur.OS
 {
-    public struct Command
-    {
-        public string id = "NULL";
-        public Action<object[]?> Method;
-        public string[] infos = Array.Empty<string>();
-        public Command(string id, Action<object[]?> method, params string[] infos)
-        {
-            this.id = id;
-            this.Method = method;
-
-            if (infos != null)
-                this.infos = infos;
-        }
-    }
     public class CommandLine : IDisposable
     {
         public Computer Computer;
@@ -68,31 +55,32 @@ namespace Lemur.FS
         }
         private void KillAll(object[]? obj)
         {
-            if (obj != null && obj.Length == 1 && obj[0] is string name && Computer.ProcessLookupTable.TryGetValue(name, out var pids_arg))            {
+            if (obj != null && obj.Length == 1 && obj[0] is string name && Computer.ProcessLookupTable.TryGetValue(name, out var pids_arg))
+            {
                 foreach (var pid in pids_arg)
                     Computer.Windows[pid].Close();
                 return;
             }
 
             foreach (var pids in Computer.ProcessLookupTable.Values)
-                foreach(var pid in pids)
+                foreach (var pid in pids)
                     Computer.Windows[pid].Close();
         }
         private void DisposeJSEnv(object[]? obj)
         {
-            if (Computer.JavaScriptEngine.Disposing)
+            if (Computer.javaScript.Disposing)
             {
                 Notifications.Now("You cannot reset the JS environment while it's in the process of disposing.");
                 return;
             }
 
-            var oldEngine = Computer.JavaScriptEngine;
+            var oldEngine = Computer.javaScript;
             oldEngine.Dispose();
 
-            JavaScriptEngine newEngine = new(Computer);
-            Computer.JavaScriptEngine = newEngine;
+            Engine newEngine = new(Computer);
+            Computer.javaScript = newEngine;
 
-            if (Computer.JavaScriptEngine == newEngine)
+            if (Computer.javaScript == newEngine)
             {
                 Notifications.Now("Engine successfully swapped");
                 return;
@@ -123,7 +111,7 @@ namespace Lemur.FS
                 return;
             }
 
-            Computer.FS.Move(a, b);
+            Computer.fileSystem.Move(a, b);
             Notifications.Now($"Moved {a}->{b}");
         }
         private void LP(object[]? obj)
@@ -143,7 +131,7 @@ namespace Lemur.FS
         {
             if (obj != null && obj.Length > 0 && obj[0] is string target)
             {
-                Computer.FS.Delete(target);
+                Computer.fileSystem.Delete(target);
             }
             else
             {
@@ -165,7 +153,7 @@ namespace Lemur.FS
                     var wnd = Computer.Window;
                     var tEdit = new TextEditor(AbsPath);
                     Computer.OpenApp(tEdit);
-                } 
+                }
             }
             else
             {
@@ -175,7 +163,7 @@ namespace Lemur.FS
         private void Config(object[]? obj)
         {
 
-            Computer.Config ??= new();
+            Computer.config ??= new();
 
             if (obj != null && obj.Length > 0 && obj[0] is string getset)
             {
@@ -195,7 +183,7 @@ namespace Lemur.FS
                             return;
                         }
 
-                        if (!Computer.Config.TryGetValue(propname, out var propValue))
+                        if (!Computer.config.TryGetValue(propname, out var propValue))
                         {
                             Notifications.Now($"Property '{propname}' not found in configuration.");
                             return;
@@ -234,12 +222,12 @@ namespace Lemur.FS
                                     objectArgs.Add(boolean);
                             }
 
-                            var jObject =JObject.FromObject(objectArgs);
+                            var jObject = JObject.FromObject(objectArgs);
 
-                            Computer.Config[propname] = jObject;
+                            Computer.config[propname] = jObject;
                         }
 
-                        Computer.Config[propname] = arg;
+                        Computer.config[propname] = arg;
                     }
                 }
                 else if (toLower == "all")
@@ -252,7 +240,7 @@ namespace Lemur.FS
                         return;
                     }
                     StringBuilder sb = new();
-                    foreach (var kvp in Computer.Config)
+                    foreach (var kvp in Computer.config)
                     {
                         sb.Append($"\n {{{kvp.Key} : {kvp.Value}}}");
                     }
@@ -285,7 +273,7 @@ namespace Lemur.FS
                 foreach (var fontNameWord in obj)
                 {
                     if (fontNameWord != null && fontNameWord is string fontName)
-                    FontName += $" {fontName}";
+                        FontName += $" {fontName}";
                 }
 
 
@@ -319,11 +307,11 @@ namespace Lemur.FS
                 return;
             }
 
-            var list = Computer.FS.DirectoryListing();
+            var list = Computer.fileSystem.DirectoryListing();
 
             var textList = string.Join("\n\t", list);
 
-            var text = $"\n##Current Directory: {Computer.FS.CurrentDirectory}###\n";
+            var text = $"\n##Current Directory: {Computer.fileSystem.CurrentDirectory}###\n";
             commandPrompt.output.AppendText(text + "\t");
             commandPrompt.output.AppendText(textList);
         }
@@ -331,8 +319,9 @@ namespace Lemur.FS
         {
             if (obj != null && obj.Length > 0 && obj[0] is string Path)
             {
-                Computer.FS.ChangeDirectory(Path);
-            } else
+                Computer.fileSystem.ChangeDirectory(Path);
+            }
+            else
             {
                 Notifications.Now("failed cd: bad arguments. usage : cd /path/to/wherever.. or cd .. (to go up one)");
             }
@@ -342,7 +331,7 @@ namespace Lemur.FS
             var cmd = Computer.TryGetProcess<CommandPrompt>()?.output;
             Computer.Current.Window.Dispatcher.Invoke(() => { cmd?.Clear(); });
 
-            if (cmd is null) 
+            if (cmd is null)
                 Notifications.Now("failed to clear - no cmd prompt open");
         }
         private void Copy(object[]? obj)
@@ -358,7 +347,7 @@ namespace Lemur.FS
                         Notifications.Now($"Invalid path {Destination} in Copy");
                         continue;
                     }
-                    Computer.FS.Copy(Path, Destination);
+                    Computer.fileSystem.Copy(Path, Destination);
                     Notifications.Now($"Copied from {Path}->{Destination}");
                 }
             }
@@ -371,7 +360,7 @@ namespace Lemur.FS
         {
             if (obj != null && obj.Length > 0 && obj[0] is string Path)
             {
-                Computer.FS.NewFile(Path); 
+                Computer.fileSystem.NewFile(Path);
                 Notifications.Now($"Created directory {Path}");
             }
             else
@@ -418,9 +407,10 @@ namespace Lemur.FS
         {
             if (obj != null && obj.Length > 0 && obj[0] is string path && FileSystem.GetResourcePath(path + ".js") is string AbsPath && File.Exists(AbsPath))
             {
-                await Computer.JavaScriptEngine.Execute(File.ReadAllText(AbsPath));
+                await Computer.javaScript.Execute(File.ReadAllText(AbsPath));
                 Notifications.Now($"running {AbsPath}...");
-            } else
+            }
+            else
             {
                 Notifications.Now("failed run: bad args. usage : run 'path.js'");
             }
@@ -459,7 +449,7 @@ namespace Lemur.FS
                     jsCode = jsCode.Replace(args, newArgs);
                 }
 
-                _ = Task.Run(async delegate { await Computer.JavaScriptEngine.Execute(jsCode); });
+                _ = Task.Run(async delegate { await Computer.javaScript.Execute(jsCode); });
                 return true;
             }
 
@@ -476,7 +466,7 @@ namespace Lemur.FS
         }
         public void RootCmd(object[]? args)
         {
-            Computer.FS.ChangeDirectory(Computer.FS_ROOT);
+            Computer.fileSystem.ChangeDirectory(Computer.FileSystemRoot);
         }
         protected virtual void Dispose(bool disposing)
         {

@@ -13,13 +13,13 @@ using Lemur.Network.Server;
 namespace Lemur.JS
 {
     public delegate void TransmissionStream(byte[] data, TransmissionType type, int outCh, int replyCh, bool isDir);
-    public class JSNetworkHelpers
+    public class Network
     {
         public event TransmissionStream OnTransmit;
         Computer Computer;
         private int size;
 
-        public JSNetworkHelpers(Computer computer, TransmissionStream transmissionStream)
+        public Network(Computer computer, TransmissionStream transmissionStream)
         {
             OnTransmit = transmissionStream;
             Computer = computer;
@@ -41,7 +41,7 @@ namespace Lemur.JS
 
             if (ip is string IPString && IPAddress.TryParse(IPString, out targetIP))
                 ConnectToIP(targetIP, IPString);
-            else if (Computer.Config?.Value<string>("DEFAULT_SERVER_IP") is string defaultIP && IPAddress.TryParse(defaultIP, out targetIP))
+            else if (Computer.config?.Value<string>("DEFAULT_SERVER_IP") is string defaultIP && IPAddress.TryParse(defaultIP, out targetIP))
                 ConnectToIP(targetIP, defaultIP);
             else
             {
@@ -50,7 +50,7 @@ namespace Lemur.JS
         }
         private async Task ConnectToIP(IPAddress targetIP, string ipString)
         {
-            Computer.JavaScriptEngine.InteropModule.print($"Trying to connect to: {ipString}");
+            Computer.javaScript.InteropModule.print($"Trying to connect to: {ipString}");
 
             Computer.Network.StopClient();
 
@@ -60,16 +60,16 @@ namespace Lemur.JS
 
                 if (Computer.Network.IsConnected())
                 {
-                    Computer.JavaScriptEngine.InteropModule.print($"Successfully connected to {ipString}.");
+                    Computer.javaScript.InteropModule.print($"Successfully connected to {ipString}.");
                 }
                 else
                 {
-                    Computer.JavaScriptEngine.InteropModule.print($"Failed to connect to {ipString} :: Not found.");
+                    Computer.javaScript.InteropModule.print($"Failed to connect to {ipString} :: Not found.");
                 }
             }
             catch (Exception e)
             {
-                Computer.JavaScriptEngine.InteropModule.print($"Failed to connect to {ipString} :: {e.Message}");
+                Computer.javaScript.InteropModule.print($"Failed to connect to {ipString} :: {e.Message}");
             }
         }
         public async void upload(string path)
@@ -150,7 +150,7 @@ namespace Lemur.JS
 
             Notifications.Now($"Downloading {path}..");
 
-            var root = Computer.FS_ROOT + "\\downloads";
+            var root = Computer.FileSystemRoot + "\\downloads";
 
             if (!Directory.Exists(root))
             {

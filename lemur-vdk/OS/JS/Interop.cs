@@ -26,7 +26,7 @@ namespace Lemur.JS
 
     // ## THIS DIRELY NEEDS TO BE SPLIT UP AND DOCUMENTED, JUST MAKE SURE EVERYTHING IS PUBLIC! ## \\
     // Follow the current naming scheme. these are first class members in JS.
-    public class JSInterop
+    public class Interop
     {
         public Computer Computer;
         public Action<string, object?>? OnModuleExported;
@@ -39,7 +39,7 @@ namespace Lemur.JS
 
         public static Dictionary<string, Func<string, string, object?, object?>> ExposedEvents = new();
 
-        public JSInterop(Computer computer)
+        public Interop(Computer computer)
         {
             this.Computer = computer;
             ExposedEvents["draw_pixels"] = DrawPixelsEvent;
@@ -163,8 +163,8 @@ namespace Lemur.JS
         }
         public async void call(string message)
         {
-            if (!Computer.CommandLine.TryCommand(message))
-                await Computer.JavaScriptEngine.Execute(message);
+            if (!Computer.cmdLine.TryCommand(message))
+                await Computer.javaScript.Execute(message);
         }
         public bool start(string path)
         {
@@ -219,7 +219,7 @@ namespace Lemur.JS
             Notifications.Now("Incorrect path for uninstall");
 
         }
-        public JObject GetConfig() => Computer.Config;
+        public JObject GetConfig() => Computer.config;
         public void install(string dir)
         {
             if (dir.Contains(".web"))
@@ -254,7 +254,7 @@ namespace Lemur.JS
                 }
             }
 
-            Computer.CommandLine.Aliases[alias] = FileSystem.GetResourcePath(path) ?? "not found";
+            Computer.cmdLine.Aliases[alias] = FileSystem.GetResourcePath(path) ?? "not found";
         }
         public async void sleep(int ms)
         {
@@ -262,7 +262,7 @@ namespace Lemur.JS
         }
         public void require(string path)
         {
-            Computer.JavaScriptEngine.ImportModule(path);
+            Computer.javaScript.ImportModule(path);
         }
         public object? read_file(string path)
         {
@@ -315,7 +315,7 @@ namespace Lemur.JS
             }
                     
             if (!Path.IsPathFullyQualified(path))
-                path = Path.Combine(Computer.FS_ROOT, path);
+                path = Path.Combine(Computer.FileSystemRoot, path);
 
             string? dir = Path.GetDirectoryName(path);
             if (dir != null && !Directory.Exists(dir))
@@ -335,7 +335,7 @@ namespace Lemur.JS
             {
                 // validated path.
                 path = AbsPath;
-                Computer.Config["ALIAS_PATH"] = path;
+                Computer.config["ALIAS_PATH"] = path;
             }
             else
             {
@@ -359,7 +359,7 @@ namespace Lemur.JS
                     name = Path.GetFileName(file).Replace(Path.GetExtension(file), "");
                 }
 
-                Computer.CommandLine.Aliases[name] = file;
+                Computer.cmdLine.Aliases[name] = file;
             };
             Action<string, string> procDir = delegate { }; 
             FileSystem.ProcessDirectoriesAndFilesRecursively(path, /*UNUSED*/ procDir, procFile);
@@ -685,7 +685,7 @@ namespace Lemur.JS
         }
         public void loadApps(object? path)
         {
-            string directory = Computer.FS_ROOT;
+            string directory = Computer.FileSystemRoot;
             if (path is string dir && !string.IsNullOrEmpty(dir))
             {
                 directory = dir;

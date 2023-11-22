@@ -8,14 +8,14 @@ namespace Lemur.FS
     {
         private static class Installer
         {
-            const string PATH = "computer.utils";
+            const string resourceDirectory = "computer.utils";
 
             public static void Install(string root)
             {
                 string assemblyLocation = Assembly.GetExecutingAssembly().Location;
                 string currentDirectory = Path.GetDirectoryName(assemblyLocation) ?? throw new FileNotFoundException("Couldn't locate computer.utils, the file structure was likely modified. the executable must stay in the bin folder.");
 
-                string fullPath = Path.Combine(currentDirectory, PATH);
+                string fullPath = Path.Combine(currentDirectory, resourceDirectory);
 
                 if (Directory.Exists(fullPath))
                     CopyDirectory(fullPath, root);

@@ -36,9 +36,9 @@ namespace Lemur.Network
 
         public NetworkConfiguration(Computer computer)
         {
-            if (computer?.Config?.Value<bool>("ALWAYS_CONNECT") is bool connect && connect)
+            if (computer?.config?.Value<bool>("ALWAYS_CONNECT") is bool connect && connect)
             {
-                if (computer?.Config?.Value<string>("DEFAULT_SERVER_IP") is string _IP && IPAddress.Parse(_IP) is IPAddress ip)
+                if (computer?.config?.Value<string>("DEFAULT_SERVER_IP") is string _IP && IPAddress.Parse(_IP) is IPAddress ip)
                 {
                     _ = StartClient(ip);
                 }
@@ -99,7 +99,7 @@ namespace Lemur.Network
                     continue;
 
                 foreach (var eventHandler in userWindow.Value.JavaScriptEngine.EventHandlers)
-                    if (eventHandler is NetworkEventHandler networkEventHandler)
+                    if (eventHandler is NetworkEvent networkEventHandler)
                         networkEventHandler.InvokeEvent(outCh, inCh, msg);
             }
         }
@@ -116,7 +116,7 @@ namespace Lemur.Network
                 while (!NetworkEvents.TryGetValue(channel, out queue)
                         || queue is null
                         || (queue.Count == 0
-                        && !computer.Disposing
+                        && !computer.disposing
                         && computer.Network.IsConnected()))
                 {/* ----------------------------------------------- */
                     Task.Delay(16);

@@ -5,7 +5,7 @@ using System.Windows.Media;
 
 namespace Lemur.JS
 {
-    public class Function : IDisposable
+    public class InteropFunction : IDisposable
     {
         
         private const string argsString = "(arg1, arg2)";
@@ -24,7 +24,7 @@ namespace Lemur.JS
 
         protected Action? onDispose;
         public Thread? executionThread = null;
-        public JavaScriptEngine? javaScriptEngine;
+        public Engine? javaScriptEngine;
 
         public bool Disposing { get; set; }
         public virtual string CreateFunction(string identifier, string methodName)

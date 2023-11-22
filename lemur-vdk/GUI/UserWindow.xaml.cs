@@ -17,12 +17,12 @@ namespace Lemur.GUI
         public double lastW = 0, lastH = 0;
         public Point lastPos = new();
         public bool Maximized = false;
-        public JavaScriptEngine JavaScriptEngine;
+        public Engine JavaScriptEngine;
         public UserWindow()
         {
             InitializeComponent();
         }
-        internal void InitializeUserContent(ResizableWindow frame, UserControl actualUserContent, JavaScriptEngine engine)
+        internal void InitializeUserContent(ResizableWindow frame, UserControl actualUserContent, Engine engine)
         {
             Owner = frame;
             ContentsFrame.Content = actualUserContent;

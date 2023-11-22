@@ -3,10 +3,10 @@ using System.Threading.Tasks;
 
 namespace Lemur.JS
 {
-    internal class NetworkEventHandler : Function
+    internal class NetworkEvent : InteropFunction
     {
         public const string ARGS_STRING = "(channel, replyChannel, data)";
-        public NetworkEventHandler(JavaScriptEngine javaScriptEngine, string identifier, string methodName)
+        public NetworkEvent(Engine javaScriptEngine, string identifier, string methodName)
         {
             base.javaScriptEngine = javaScriptEngine;
             functionHandle = CreateFunction(identifier, methodName);

@@ -30,23 +30,23 @@ namespace Lemur.JS
             return result;
         }
     }
-    public class JavaScriptEngine : IDisposable
+    public class Engine : IDisposable
     {
         internal IJsEngine m_engine_internal;
         IJsEngineSwitcher engineSwitcher;
 
         public readonly Dictionary<string, object?> Modules = new();
-        public readonly JSNetworkHelpers NetworkModule;
-        public readonly JSInterop InteropModule;
+        public readonly Network NetworkModule;
+        public readonly Interop InteropModule;
         private readonly ConcurrentDictionary<int, (string code, Action<object?> output)> CodeDictionary = new();
         public readonly Dictionary<string, object> EmbeddedObjects = new();
-        public readonly List<Function> EventHandlers = new();
+        public readonly List<InteropFunction> EventHandlers = new();
 
         private Computer Computer { get; set; }
         private readonly Thread executionThread;
         public bool Disposing { get; private set; }
 
-        public JavaScriptEngine(Computer computer)
+        public Engine(Computer computer)
         {
             Computer = computer;
 
@@ -55,9 +55,9 @@ namespace Lemur.JS
             engineSwitcher.DefaultEngineName = V8JsEngine.EngineName;
             m_engine_internal = engineSwitcher.CreateDefaultEngine();
 
-            NetworkModule = new JSNetworkHelpers(computer, computer.Network.OnSendMessage);
+            NetworkModule = new Network(computer, computer.Network.OnSendMessage);
 
-            InteropModule = new JSInterop(computer);
+            InteropModule = new Interop(computer);
             InteropModule.OnModuleImported += ImportModule;
 
             EmbeddedObjects["network"] = NetworkModule;
@@ -115,7 +115,7 @@ namespace Lemur.JS
                     catch (Exception e)
                     {
                         Notifications.Exception(e);
-                        Computer.JavaScriptEngine.InteropModule.print(e.Message);
+                        Computer.javaScript.InteropModule.print(e.Message);
                     }
                    
                     continue;
@@ -236,7 +236,7 @@ namespace Lemur.JS
             wnd.Dispatcher.Invoke(() =>
             {
                 // gets the requested ui control for the event to be attached to.
-                var content = JSInterop.GetUserContent(identifier, Computer);
+                var content = Interop.GetUserContent(identifier, Computer);
 
                 if (content == null)
                 {
@@ -250,7 +250,7 @@ namespace Lemur.JS
                 if (targetControl.ToLower().Trim() == "this")
                     element = content;
                 else
-                    element = JSInterop.FindControl(content, targetControl)!;
+                    element = Interop.FindControl(content, targetControl)!;
 
 
                 // failed to get the actual element the user requested.
@@ -300,7 +300,7 @@ namespace Lemur.JS
                 return;
             }
 
-            var eh = new NetworkEventHandler(this, identifier, methodName);
+            var eh = new NetworkEvent(this, identifier, methodName);
 
             if (Computer.Windows.TryGetValue(identifier, out var app))
             {
@@ -329,7 +329,7 @@ namespace Lemur.JS
                     {
                         for (int i = 0; i < EventHandlers.Count; i++)
                         {
-                            Function? eventHandler = EventHandlers[i];
+                            InteropFunction? eventHandler = EventHandlers[i];
                             eventHandler?.Dispose();
                         }
                     });

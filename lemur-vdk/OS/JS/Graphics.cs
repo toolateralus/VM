@@ -7,7 +7,7 @@ namespace Lemur.JS
     {
         private int ctxIndex;
 
-        public Dictionary<int, GraphicsContext> gfxContext = new();
+        public Dictionary<int, GfxContext> gfxContext = new();
         public bool writePixel(int gfx_ctx, int x, int y, int color)
         {
             if (!gfxContext.TryGetValue(gfx_ctx, out var ctx))
@@ -59,8 +59,8 @@ namespace Lemur.JS
             }
 
             Computer.Current?.Window?.Dispatcher?.Invoke(() => { 
-                var control = JSInterop.GetUserContent(context.InstanceID, Computer.Current);
-                var image = JSInterop.FindControl(control, context.TargetControl) as Image;
+                var control = Interop.GetUserContent(context.InstanceID, Computer.Current);
+                var image = Interop.FindControl(control, context.TargetControl) as Image;
                 context.Draw(image);
             });
 
@@ -70,7 +70,7 @@ namespace Lemur.JS
         {
             int bpp = 4;
             
-            var ctx = new GraphicsContext(id, target, bpp);
+            var ctx = new GfxContext(id, target, bpp);
             ctx.Resize(width, height);
 
             int i = 0;

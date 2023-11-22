@@ -107,7 +107,7 @@ namespace Lemur.GUI
             if (!File.Exists(LoadedFile))
             {
                 var dialog = new SaveFileDialog();
-                dialog.InitialDirectory = Computer.Current.FS_ROOT;
+                dialog.InitialDirectory = Computer.Current.FileSystemRoot;
 
                 dialog.FileName = "untitled";
                 dialog.DefaultExt = ".js";
@@ -144,7 +144,7 @@ namespace Lemur.GUI
             var cmd = new CommandPrompt();
             cmd.LateInit(Computer.Current);
 
-            var jsEngine = new JavaScriptEngine(Computer.Current);
+            var jsEngine = new Engine(Computer.Current);
 
             Computer.Current.OpenApp(cmd, engine: jsEngine);
 

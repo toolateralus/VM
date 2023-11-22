@@ -116,7 +116,7 @@ namespace Lemur.FS
         {
             if (path == "..")
             {
-                string currentDirectory = Computer.Current.FS.CurrentDirectory;
+                string currentDirectory = Computer.Current.fileSystem.CurrentDirectory;
 
                 string[] components = currentDirectory.Split('\\');
 
@@ -126,7 +126,7 @@ namespace Lemur.FS
 
                     string parentDirectory = string.Join("\\", parentComponents);
 
-                    Computer.Current.FS.ChangeDirectory(parentDirectory);
+                    Computer.Current.fileSystem.ChangeDirectory(parentDirectory);
                 }
                 return;
             }
@@ -191,7 +191,7 @@ namespace Lemur.FS
 
             if (!Path.IsPathFullyQualified(targetPath))
             {
-                targetPath = Path.Combine(Computer.Current.FS_ROOT, fileName);
+                targetPath = Path.Combine(Computer.Current.FileSystemRoot, fileName);
             }
 
             return targetPath;

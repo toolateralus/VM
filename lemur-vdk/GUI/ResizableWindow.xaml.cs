@@ -13,7 +13,7 @@ namespace Lemur.GUI
         private bool isResizing = false;
         private Point dragOffset;
         public Action? OnClosed { get; internal set; }
-        public float ResizeSpeed => Computer.Current?.Config?.Value<float>("WINDOW_RESIZE_SPEED") ?? 1f;
+        public float ResizeSpeed => Computer.Current?.config?.Value<float>("WINDOW_RESIZE_SPEED") ?? 1f;
         public ResizableWindow(ComputerWindow owner)
         {
            MouseDown += OnMouseDown;
@@ -21,10 +21,10 @@ namespace Lemur.GUI
            MouseUp += OnMouseUp;
            MouseLeave += onMouseLeave;
 
-           MinWidth = Computer.Current.Window?.Computer?.Config?.Value<float?>("MIN_WIN_WIDTH") ?? 50;
-           MinHeight = Computer.Current.Window?.Computer?.Config?.Value<float?>("MIN_WIN_HEIGHT") ?? 50;
-           MaxWidth = Computer.Current.Window?.Computer?.Config?.Value<float?>("MAX_WIN_WIDTH") ?? 1920;
-           MaxHeight = Computer.Current.Window?.Computer?.Config?.Value<float?>("MAX_WIN_HEIGHT") ?? 1080 - 25;
+           MinWidth = Computer.Current.Window?.Computer?.config?.Value<float?>("MIN_WIN_WIDTH") ?? 50;
+           MinHeight = Computer.Current.Window?.Computer?.config?.Value<float?>("MIN_WIN_HEIGHT") ?? 50;
+           MaxWidth = Computer.Current.Window?.Computer?.config?.Value<float?>("MAX_WIN_WIDTH") ?? 1920;
+           MaxHeight = Computer.Current.Window?.Computer?.config?.Value<float?>("MAX_WIN_HEIGHT") ?? 1080 - 25;
         }
         private void onMouseLeave(object sender, MouseEventArgs e)
         {

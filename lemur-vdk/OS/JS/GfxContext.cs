@@ -7,11 +7,14 @@ using System.Windows.Media.Imaging;
 
 namespace Lemur.JS
 {
-    public record GraphicsContext(string InstanceID, string TargetControl, int PixelFormatBpp)
+    public record GfxContext(string InstanceID, string TargetControl, int PixelFormatBpp)
     {
         internal int Width, Height;
+        
         private readonly List<byte> renderTexture = new();
-        WriteableBitmap bitmap;
+        
+        private WriteableBitmap bitmap;
+
         static readonly List<byte[]> palette = new()
         {
             new byte[]{255, 255, 0, 0}, // Red 0
@@ -39,6 +42,7 @@ namespace Lemur.JS
             new byte[]{255, 255, 20, 147}, // Deep Pink 22
             new byte[]{255, 0, 250, 154} // Medium Spring Green 23
         };
+
         private readonly byte[] cached_color = new byte[4];
 
         public void Resize(int width, int height)

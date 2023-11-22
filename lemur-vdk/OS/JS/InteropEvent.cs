@@ -10,12 +10,12 @@ using System.Threading;
 
 namespace Lemur.JS
 {
-    public class InteropEvent : Function
+    public class InteropEvent : InteropFunction
     {
         public XAML_EVENTS Event = XAML_EVENTS.RENDER;
         FrameworkElement element;
 
-        public InteropEvent(FrameworkElement control, XAML_EVENTS @event, JavaScriptEngine js, string id, string method)
+        public InteropEvent(FrameworkElement control, XAML_EVENTS @event, Engine js, string id, string method)
         {
             Event = @event;
             this.javaScriptEngine = js;

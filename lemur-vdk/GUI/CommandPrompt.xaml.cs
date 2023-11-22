@@ -15,7 +15,7 @@ namespace Lemur.GUI
     
     public partial class CommandPrompt : UserControl
     {
-        private JavaScriptEngine? Engine;
+        private Engine? Engine;
         private List<string> commandHistory = new List<string>();
         private int historyIndex = -1; 
         private string tempInput = ""; 
@@ -98,8 +98,8 @@ namespace Lemur.GUI
             this.computer = computer;
             Engine ??= new(computer);
 
-            output.FontFamily = new(computer?.Config?.Value<string>("FONT") ?? "Consolas");
-            input.FontFamily = new(computer?.Config?.Value<string>("FONT") ?? "Consolas");
+            output.FontFamily = new(computer?.config?.Value<string>("FONT") ?? "Consolas");
+            input.FontFamily = new(computer?.config?.Value<string>("FONT") ?? "Consolas");
         }
         private async void CommandPrompt_PreviewKeyDown(object sender, System.Windows.Input.KeyEventArgs e)
         {
@@ -167,7 +167,7 @@ namespace Lemur.GUI
 
         private async Task ExecuteJavaScript(string code, int timeout = int.MaxValue)
         {
-            if (computer.CommandLine.TryCommand(code))
+            if (computer.cmdLine.TryCommand(code))
                 return;
 
             if (commandHistory.Count > 100)
