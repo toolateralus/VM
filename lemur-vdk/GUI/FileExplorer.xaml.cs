@@ -26,7 +26,7 @@ namespace Lemur.GUI
     /// </summary>
     public partial class FileExplorer : UserControl
     {
-        public static string? DesktopIcon => FileSystem.GetResourcePath("fileexplorer.png");
+        public static string? DesktopIcon => FileSystem.GetResourcePath("folder.png");
         internal Action<string>? OnNavigated;
 
         private readonly ObservableCollection<string> FileViewerData = new();

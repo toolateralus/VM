@@ -11,7 +11,8 @@ namespace Lemur.GUI
     {
         private bool isDragging = false;
         private bool isResizing = false;
-        private Point dragOffset;
+        private Point leftClickPos;
+
         public Action? OnClosed { get; internal set; }
         public float ResizeSpeed => Computer.Current?.config?.Value<float>("WINDOW_RESIZE_SPEED") ?? 1f;
         public ResizableWindow(ComputerWindow owner)
@@ -30,15 +31,24 @@ namespace Lemur.GUI
         {
             isDragging = false;
             isResizing = false;
-            dragOffset = new();
         }
         private protected void OnMouseDown(object sender, MouseButtonEventArgs e)
         {
-            dragOffset = e.GetPosition(this);
+            if (!(Keyboard.IsKeyDown(Key.LeftCtrl) && Keyboard.IsKeyDown(Key.LeftShift)))
+                return;
             if (e.LeftButton == MouseButtonState.Pressed)
             {
+                leftClickPos = e.GetPosition(Computer.Current.Window);
                 BringToTopOfDesktop();
                 isDragging = true;
+                e.Handled = true;
+            }
+            else
+            if (e.RightButton == MouseButtonState.Pressed &&
+                Parent is WindowManager windowManager)
+            {
+                windowManager.BeginResize(this);
+                e.Handled = true;
             }
         }
         public void BringToTopOfDesktop()
@@ -52,60 +62,16 @@ namespace Lemur.GUI
         }
         protected void OnMouseMove(object sender, MouseEventArgs e)
         {
-            var pos = e.GetPosition(App.Current.MainWindow as Runtime);
-            var altDown = Keyboard.IsKeyDown(Key.LeftAlt) || Keyboard.IsKeyDown(Key.RightAlt);
-            
-            // Todo: refactor this entire drag/move/resize system. It's been nothing but trouble, and surprisingly
-            // This is the best state it has ever been in.
+            var pos = e.GetPosition(Computer.Current.Window);
+            var windowControlPressed = Keyboard.IsKeyDown(Key.LeftCtrl) && Keyboard.IsKeyDown(Key.LeftShift);
 
-            if (altDown && e.RightButton == MouseButtonState.Pressed)
+            if (windowControlPressed && isDragging)
             {
-                var delta = pos - dragOffset;
-                double maxDelta = ResizeSpeed;
-                delta = Clamp(delta, maxDelta);
-                PerformResize(delta);
-
-            }
-            else if (altDown && isDragging)
-            {
-                double left = pos.X - dragOffset.X;
-                double top = pos.Y - dragOffset.Y;
+                double left = pos.X - leftClickPos.X;
+                double top = pos.Y - leftClickPos.Y;
                 Canvas.SetLeft(this, left);
                 Canvas.SetTop(this, top);
             }
-        }
-
-        private void PerformResize(Vector delta)
-        {
-            if (ActualWidth + delta.X >= MinWidth && ActualWidth + delta.X <= MaxWidth)
-                Width += delta.X;
-            else if (ActualWidth + delta.X < MinWidth)
-                Width = MinWidth;
-            else if (ActualWidth + delta.X > MaxWidth)
-                Width = MaxWidth;
-
-            if (ActualHeight + delta.Y >= MinHeight && ActualHeight + delta.Y <= MaxHeight)
-                Height += delta.Y;
-            else if (ActualHeight + delta.Y < MinHeight)
-                Height = MinHeight;
-            else if (ActualHeight + delta.Y > MaxHeight)
-                Height = MaxHeight;
-        }
-
-        private static Vector Clamp(Vector delta, double maxDelta)
-        {
-            if (Math.Abs(delta.X) > Math.Abs(delta.Y))
-            {
-                delta.X = Math.Clamp(delta.X, -maxDelta, maxDelta);
-                delta.Y = 0;
-            }
-            else
-            {
-                delta.Y = Math.Clamp(delta.Y, -maxDelta, maxDelta);
-                delta.X = 0;
-            }
-
-            return delta;
         }
 
         protected void OnMouseUp(object sender, MouseButtonEventArgs e)

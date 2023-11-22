@@ -3,7 +3,7 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-        xmlns:local="clr-namespace:Lemur"
+        xmlns:gui="clr-namespace:Lemur.GUI"
         mc:Ignorable="d"
         Title="" Height="1080" Width="1920"
         Background="Black"
@@ -21,10 +21,10 @@
             <RowDefinition Height="25"/>
         </Grid.RowDefinitions>
 
-        <Image Grid.ColumnSpan="2" x:Name="desktopBackground" HorizontalAlignment="Center" VerticalAlignment="Center" Width="Auto" Height="Auto"/>
-        <Canvas x:Name="Desktop" Grid.Row="0" Grid.Column="0" Grid.ColumnSpan="2" HorizontalAlignment="Stretch" VerticalAlignment="Stretch">
+        <gui:WindowManager x:Name="Desktop" Grid.Row="0" Grid.Column="0" Grid.ColumnSpan="2" HorizontalAlignment="Stretch" VerticalAlignment="Stretch">
+            <Image Grid.ColumnSpan="2" x:Name="desktopBackground" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Width="Auto" Height="Auto"/>
             <WrapPanel x:Name="DesktopIconPanel" Orientation="Vertical" HorizontalAlignment="Right" VerticalAlignment="Bottom" />
-        </Canvas>
+        </gui:WindowManager>
         
         <StackPanel  x:Name="NotificationStackPanel" Grid.Column="1" VerticalAlignment="Bottom" CanVerticallyScroll="True" CanHorizontallyScroll="True" ScrollViewer.VerticalScrollBarVisibility="Visible" ScrollViewer.CanContentScroll="True"/>
         <Grid x:Name="Taskbar" Grid.Row="1" Grid.Column="0" Grid.ColumnSpan="2">
