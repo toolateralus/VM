@@ -6,7 +6,6 @@
              mc:Ignorable="d" 
              d:DesignHeight="450" d:DesignWidth="800"
              Background="#FF1F1F1F" FontFamily="Cascadia Mono SemiLight" Foreground="White">
-
     <UserControl.Resources>
         <ContextMenu x:Key="ItemContextMenu">
             <MenuItem Header="Add File" Click="AddFile_Click"/>
@@ -15,7 +14,6 @@
             <MenuItem Header="Properties" Click="Properties_Click"/>
         </ContextMenu>
     </UserControl.Resources>
-
     <Grid>
         <ListBox x:Name="FileBox" Margin="10,35,10,10" ContextMenu="{StaticResource ItemContextMenu}" Background="#FF333030"/>
         <StackPanel Orientation="Horizontal" VerticalAlignment="Top" Background="#FF373738" Margin="10,0,10,0">
