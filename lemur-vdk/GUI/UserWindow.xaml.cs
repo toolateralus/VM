@@ -22,19 +22,18 @@ namespace Lemur.GUI
         {
             InitializeComponent();
         }
-        internal void InitializeUserContent(ResizableWindow frame, UserControl actualUserContent, Engine engine)
+        internal void InitializeUserContent(ResizableWindow frame, UserControl actualUserContent, Engine? engine)
         {
             Owner = frame;
+
             ContentsFrame.Content = actualUserContent;
-            JavaScriptEngine = engine;
             
-            if (engine != null) 
+            // for js/wpf apps. otherwise- this could be a C#/WPF user app like the cmd prompt
+            if (engine != null)
+            {
+                JavaScriptEngine = engine;
                 OnClosed += engine.Dispose;
-
-            object? unused_param = null;
-
-            // these args are just from the wpf event handler and don't get used.
-            ToggleMaximize((object)unused_param, (RoutedEventArgs)unused_param); 
+            }
         }
         internal void Close()
         {
@@ -100,8 +99,8 @@ namespace Lemur.GUI
             lastPos = new(Canvas.GetLeft(Owner), Canvas.GetTop(Owner));
             Canvas.SetTop(Owner, 0);
             Canvas.SetLeft(Owner, 0);
-            Owner.Width = 1920;
-            Owner.Height = 1080;
+            Owner.Width = SystemParameters.PrimaryScreenWidth;
+            Owner.Height = SystemParameters.PrimaryScreenHeight;
             Owner.BringToTopOfDesktop();
 
         }
