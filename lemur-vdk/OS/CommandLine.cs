@@ -15,16 +15,14 @@ namespace lemur.OS
 {
     public class CommandLine : IDisposable
     {
-        public Computer Computer;
         public List<Command> Commands = new();
         public Dictionary<string, string> Aliases = new();
         private bool Disposing;
-        public CommandLine(Computer computer)
+        public CommandLine()
         {
-            Computer = computer;
-            RegisterNativeCommands(computer);
+            RegisterNativeCommands();
         }
-        private void RegisterNativeCommands(Computer computer)
+        private void RegisterNativeCommands()
         {
             Commands = new()
             {
@@ -44,13 +42,12 @@ namespace lemur.OS
                 new("clear", Clear, "makes directory at provided path if permitted"),
                 new("font", SetFont, "sets the command prompts font for this session. call this from a startup to set as default"),
                 new("config" ,Config, "config <set or get> <property name> (set only) <new value>"),
-                new("ip", getIP, "fetches the local ip address of wifi/ethernet"),
                 new("move", Move, "moves a file/changes its name"),
-                new("restart", (_) => Computer.Restart(computer.ID), "restarts this computer"),
                 new("lp", LP, "lists all the running proccesses"),
-                new("host", Host, "hosts a server on the provided <port>, none provided it will default to 8080"),
-                new("unhost", (_) => Computer.Network.StopHosting(_), "if a server is currently running on this machine this halts any active connections and closes the sever."),
-                new("dispose", DisposeJSEnv, "disposes of the current running javascript environment, and instantiates a new one.")
+                new("dispose", DisposeJSEnv, "disposes of the current running javascript environment, and instantiates a new one."),
+                //new("ip", getIP, "fetches the local ip address of wifi/ethernet"),
+                //new("host", Host, "hosts a server on the provided <port>, none provided it will default to 8080"),
+                //new("unhost", (_) => Computer.Current.Network.StopHosting(_), "if a server is currently running on this machine this halts any active connections and closes the sever."),
             };
         }
         private void KillAll(object[]? obj)
@@ -58,29 +55,29 @@ namespace lemur.OS
             if (obj != null && obj.Length == 1 && obj[0] is string name && Computer.ProcessLookupTable.TryGetValue(name, out var pids_arg))
             {
                 foreach (var pid in pids_arg)
-                    Computer.Windows[pid].Close();
+                    Computer.Current.Windows[pid].Close();
                 return;
             }
 
             foreach (var pids in Computer.ProcessLookupTable.Values)
                 foreach (var pid in pids)
-                    Computer.Windows[pid].Close();
+                    Computer.Current.Windows[pid].Close();
         }
         private void DisposeJSEnv(object[]? obj)
         {
-            if (Computer.javaScript.Disposing)
+            if (Computer.Current.javaScript.Disposing)
             {
                 Notifications.Now("You cannot reset the JS environment while it's in the process of disposing.");
                 return;
             }
 
-            var oldEngine = Computer.javaScript;
+            var oldEngine = Computer.Current.javaScript;
             oldEngine.Dispose();
 
-            Engine newEngine = new(Computer);
-            Computer.javaScript = newEngine;
+            Engine newEngine = new(Computer.Current);
+            Computer.Current.javaScript = newEngine;
 
-            if (Computer.javaScript == newEngine)
+            if (Computer.Current.javaScript == newEngine)
             {
                 Notifications.Now("Engine successfully swapped");
                 return;
@@ -92,9 +89,9 @@ namespace lemur.OS
             Task.Run(async () =>
             {
                 int? port = obj?[0] as int?;
-                if (await Computer.Network.StartHosting(port ?? NetworkConfiguration.DEFAULT_PORT))
+                if (await Computer.Current.Network.StartHosting(port ?? NetworkConfiguration.DEFAULT_PORT))
                 {
-                    Notifications.Now($"Hosting on {Computer.Network.GetIPPortString()}");
+                    Notifications.Now($"Hosting on {Computer.Current.Network.GetIPPortString()}");
                     return;
                 }
                 Notifications.Now($"Failed to begin hosting on {LANIPFetcher.GetLocalIPAddress().MapToIPv4()}:{port}");
@@ -111,12 +108,12 @@ namespace lemur.OS
                 return;
             }
 
-            Computer.fileSystem.Move(a, b);
+            Computer.Current.fileSystem.Move(a, b);
             Notifications.Now($"Moved {a}->{b}");
         }
         private void LP(object[]? obj)
         {
-            foreach (var item in Computer.Windows)
+            foreach (var item in Computer.Current.Windows)
             {
                 Notifications.Now($"\n{item.Key}");
             }
@@ -131,7 +128,7 @@ namespace lemur.OS
         {
             if (obj != null && obj.Length > 0 && obj[0] is string target)
             {
-                Computer.fileSystem.Delete(target);
+                Computer.Current.fileSystem.Delete(target);
             }
             else
             {
@@ -150,9 +147,9 @@ namespace lemur.OS
                         var str = File.Create(AbsPath);
                         str.Close();
                     }
-                    var wnd = Computer.Window;
+                    var wnd = Computer.Current.Window;
                     var tEdit = new TextEditor(AbsPath);
-                    Computer.OpenApp(tEdit);
+                    Computer.Current.OpenApp(tEdit);
                 }
             }
             else
@@ -163,7 +160,7 @@ namespace lemur.OS
         private void Config(object[]? obj)
         {
 
-            Computer.config ??= new();
+            Computer.Current.config ??= new();
 
             if (obj != null && obj.Length > 0 && obj[0] is string getset)
             {
@@ -183,7 +180,7 @@ namespace lemur.OS
                             return;
                         }
 
-                        if (!Computer.config.TryGetValue(propname, out var propValue))
+                        if (!Computer.Current.config.TryGetValue(propname, out var propValue))
                         {
                             Notifications.Now($"Property '{propname}' not found in configuration.");
                             return;
@@ -224,10 +221,10 @@ namespace lemur.OS
 
                             var jObject = JObject.FromObject(objectArgs);
 
-                            Computer.config[propname] = jObject;
+                            Computer.Current.config[propname] = jObject;
                         }
 
-                        Computer.config[propname] = arg;
+                        Computer.Current.config[propname] = arg;
                     }
                 }
                 else if (toLower == "all")
@@ -240,7 +237,7 @@ namespace lemur.OS
                         return;
                     }
                     StringBuilder sb = new();
-                    foreach (var kvp in Computer.config)
+                    foreach (var kvp in Computer.Current.config)
                     {
                         sb.Append($"\n {{{kvp.Key} : {kvp.Value}}}");
                     }
@@ -307,11 +304,11 @@ namespace lemur.OS
                 return;
             }
 
-            var list = Computer.fileSystem.DirectoryListing();
+            var list = Computer.Current.fileSystem.DirectoryListing();
 
             var textList = string.Join("\n\t", list);
 
-            var text = $"\n##Current Directory: {Computer.fileSystem.CurrentDirectory}###\n";
+            var text = $"\n##Current Directory: {Computer.Current.fileSystem.CurrentDirectory}###\n";
             commandPrompt.output.AppendText(text + "\t");
             commandPrompt.output.AppendText(textList);
         }
@@ -319,7 +316,7 @@ namespace lemur.OS
         {
             if (obj != null && obj.Length > 0 && obj[0] is string Path)
             {
-                Computer.fileSystem.ChangeDirectory(Path);
+                Computer.Current.fileSystem.ChangeDirectory(Path);
             }
             else
             {
@@ -347,7 +344,7 @@ namespace lemur.OS
                         Notifications.Now($"Invalid path {Destination} in Copy");
                         continue;
                     }
-                    Computer.fileSystem.Copy(Path, Destination);
+                    Computer.Current.fileSystem.Copy(Path, Destination);
                     Notifications.Now($"Copied from {Path}->{Destination}");
                 }
             }
@@ -360,7 +357,7 @@ namespace lemur.OS
         {
             if (obj != null && obj.Length > 0 && obj[0] is string Path)
             {
-                Computer.fileSystem.NewFile(Path);
+                Computer.Current.fileSystem.NewFile(Path);
                 Notifications.Now($"Created directory {Path}");
             }
             else
@@ -407,7 +404,7 @@ namespace lemur.OS
         {
             if (obj != null && obj.Length > 0 && obj[0] is string path && FileSystem.GetResourcePath(path + ".js") is string AbsPath && File.Exists(AbsPath))
             {
-                await Computer.javaScript.Execute(File.ReadAllText(AbsPath));
+                await Computer.Current.javaScript.Execute(File.ReadAllText(AbsPath));
                 Notifications.Now($"running {AbsPath}...");
             }
             else
@@ -449,7 +446,7 @@ namespace lemur.OS
                     jsCode = jsCode.Replace(args, newArgs);
                 }
 
-                _ = Task.Run(async delegate { await Computer.javaScript.Execute(jsCode); });
+                _ = Task.Run(async delegate { await Computer.Current.javaScript.Execute(jsCode); });
                 return true;
             }
 
@@ -466,7 +463,7 @@ namespace lemur.OS
         }
         public void RootCmd(object[]? args)
         {
-            Computer.fileSystem.ChangeDirectory(Computer.FileSystemRoot);
+            Computer.Current.fileSystem.ChangeDirectory(Computer.Current.FileSystemRoot);
         }
         protected virtual void Dispose(bool disposing)
         {
@@ -474,7 +471,6 @@ namespace lemur.OS
             {
                 if (disposing)
                 {
-                    Computer = null!;
                     Commands.Clear();
                     Aliases.Clear();
                 }

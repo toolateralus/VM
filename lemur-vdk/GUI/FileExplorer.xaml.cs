@@ -34,6 +34,8 @@ namespace Lemur.GUI
         public FileExplorer()
         {
             InitializeComponent();
+            FileBox.FontSize = 16;
+
             FileBox.ItemsSource = FileViewerData;
             FileBox.SelectionChanged += PreviewPath;
             FileBox.MouseDoubleClick += (sender, @event) =>
@@ -42,7 +44,9 @@ namespace Lemur.GUI
                 UpdateView();
 
             }; 
-            KeyDown += FileExplorer_KeyDown;
+
+            Computer.Current.Window.KeyDown += FileExplorer_KeyDown;
+
             UpdateView();
 
         }
@@ -81,6 +85,12 @@ namespace Lemur.GUI
             const string FolderIcon = "📁 ";
             const string FileIcon =   "📄 ";
 
+            var parentAddr = ".. back";
+
+            FileViewerData.Add(parentAddr);
+
+            OriginalPaths[parentAddr] = Directory.GetParent(Computer.Current.fileSystem.CurrentDirectory)?.FullName ?? throw new InvalidOperationException("Invalid file structure");
+
             foreach (var file in fileNames)
             {
                 StringBuilder visualPath = new(file.Split('\\').LastOrDefault("???"));
@@ -96,9 +106,6 @@ namespace Lemur.GUI
                 OriginalPaths[finalVisualPath] = file;
             }
 
-            FileViewerData.Add("..");
-
-            OriginalPaths[".."] = Directory.GetParent(Computer.Current.fileSystem.CurrentDirectory)?.FullName ?? throw new InvalidOperationException("Invalid file structure");
         }
         private void AddFile_Click(object sender, RoutedEventArgs e)
         {

@@ -48,7 +48,7 @@ namespace Lemur
        
         public Computer(uint id)
         {
-            cmdLine = new(this);
+            cmdLine = new();
 
             var WORKING_DIR = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData) + "\\Lemur";
 

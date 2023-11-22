@@ -32,7 +32,7 @@ namespace Lemur.GUI
             isResizing = false;
             dragOffset = new();
         }
-        protected void OnMouseDown(object sender, MouseButtonEventArgs e)
+        private protected void OnMouseDown(object sender, MouseButtonEventArgs e)
         {
             dragOffset = e.GetPosition(this);
             if (e.LeftButton == MouseButtonState.Pressed)
