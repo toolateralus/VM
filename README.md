@@ -4,6 +4,7 @@ _If you experience any problems... create a github issue, I'm very often availab
 ## Micro tutorial :
 
 #### for windowing
+( the latest commit broke windowing. use ctrl + shift and rmb + dragging the mouse to resize. )
 - hold left alt and use left click / right click to either drag or resize windows. It is really hard to use and needs to be replaced very badly.
 - desktop icons launch 'applications'
 #### for making applications
