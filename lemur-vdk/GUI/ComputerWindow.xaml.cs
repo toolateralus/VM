@@ -350,11 +350,14 @@ namespace Lemur.GUI
                 void OnDesktopIconPressed(object? sender, RoutedEventArgs e)
                 {
                     var members = type.GetMethods();
-
-                    if (IsValidType(members) && Activator.CreateInstance(type) is object instance && instance is UserControl userControl)
+                    if (Activator.CreateInstance(type) is object instance && instance is UserControl userControl)
                     {
-                        AssignComputer(instance, Computer);
+                        if (IsValidType(members))
+                            AssignComputer(instance, Computer);
                         Computer.OpenApp(userControl, name);
+                    } else
+                    {
+                        Notifications.Now("Failed to create instance of native application. the app is likely misconfigured");
                     }
                 }
 

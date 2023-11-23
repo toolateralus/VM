@@ -15,6 +15,7 @@ using System.Linq;
 using System.Windows.Media;
 using Microsoft.ClearScript.JavaScript;
 using lemur.OS;
+using lemur.Graphics;
 
 namespace Lemur
 {
@@ -135,17 +136,20 @@ namespace Lemur
                 Notifications.Now("Tried to install an app that already exists on the computer, try renaming it if this was intended");
                 return;
             }
+
             csApps[exePath] = type;
 
             Notifications.Now($"{exePath} installed!");
-            ComputerWindow window = Window;
+
             InstallCSWPF(exePath, type);
         }
         public void InstallJSWPF(string type)
         {
             if (disposing)
                 return;
+            
             jsApps.Add(type);
+
             Window.InstallIcon(AppType.JAVASCRIPT_XAML_WPF, type);
         }
         public void InstallJSHTML(string type)
@@ -158,7 +162,7 @@ namespace Lemur
         public void InstallCSWPF(string exePath, Type type)
         {
             var name = exePath.Split('.')[0];
-            Window.InstallIcon(AppType.CSHARP_XAML_WPF_NATIVE, exePath, type); ;
+            Window.InstallIcon(AppType.CSHARP_XAML_WPF_NATIVE, exePath, type);
         }
        
         public void Uninstall(string name)
@@ -254,6 +258,7 @@ namespace Lemur
             pc.InstallCSharpApp("CommandPrompt.app", typeof(CommandPrompt));
             pc.InstallCSharpApp("FileExplorer.app", typeof(FileExplorer));
             pc.InstallCSharpApp("TextEditor.app", typeof(TextEditor));
+            pc.InstallCSharpApp("GL_TEST.app", typeof(OpenGLWindow));
 
             Runtime.LoadCustomSyntaxHighlighting();
         }

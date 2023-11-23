@@ -20,21 +20,23 @@
 
   <ItemGroup>
     <PackageReference Include="AvalonEdit" Version="6.3.0.90" />
-    
-	<PackageReference Include="JavaScriptEngineSwitcher.Core" Version="3.21.0" />
+    <PackageReference Include="CefNet" Version="105.3.22248.142" />
+    <PackageReference Include="CefNet.Wpf" Version="105.3.22248.142" />
+    <PackageReference Include="JavaScriptEngineSwitcher.Core" Version="3.21.0" />
     <PackageReference Include="JavaScriptEngineSwitcher.V8" Version="3.21.3" />
-    <PackageReference Include="Markdig" Version="0.33.0" />
+    <PackageReference Include="Markdig" Version="0.32.0" />
     <PackageReference Include="Markdig.Wpf" Version="0.5.0.1" />
-	  
     <PackageReference Include="Microsoft.ClearScript.V8.Native.win-x64" Version="7.4.2" />
     <PackageReference Include="Microsoft.Web.WebView2" Version="1.0.1901.177" />
-	  
-    <PackageReference Include="OpenTK" Version="4.8.1" />
-    <PackageReference Include="OpenTK.GLWpfControl" Version="4.2.3" />
+    <PackageReference Include="Unofficial.Cef.libcef" Version="3.2883.1539" />
   </ItemGroup>
 
   <ItemGroup>
     <Page Include="App.xaml" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Folder Include="computer.utils\home\commands\os_commands\" />
   </ItemGroup>
 
   <Target Name="PostBuild" AfterTargets="PostBuildEvent">
