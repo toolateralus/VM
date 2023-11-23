@@ -14,22 +14,23 @@ namespace Lemur.GUI
         public Point lastPos = new();
         public bool Maximized = false;
         public Action? OnClosed { get; internal set; }
-
-        protected override void OnPreviewMouseDown(MouseButtonEventArgs e)
+        protected override void OnPreviewMouseRightButtonDown(MouseButtonEventArgs e)
         {
             if (e is null)
                 throw new ArgumentNullException(nameof(e));
 
             if (Parent is not WindowManager windowManager)
                 return;
-
-            var position = e.GetPosition(windowManager);
-
-            if (e.LeftButton == MouseButtonState.Pressed)
-                windowManager.BeginMove(this, position);
-            else if (e.RightButton == MouseButtonState.Pressed)
-                windowManager.BeginResize(this);
+            windowManager.BeginResize(this);
         }
+
+        internal void BeginMove(Point position)
+        {
+            if (Parent is not WindowManager windowManager)
+                return;
+            windowManager.BeginMove(this, position);
+        }
+
         public void BringToTopOfDesktop()
         {
             if (Parent is Canvas grid && grid.Children.Contains(this))
