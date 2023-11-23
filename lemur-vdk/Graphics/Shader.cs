@@ -2,13 +2,13 @@
 
 namespace Lemur.Graphics
 {
-    internal static class DefaultShaders
+    internal static class Shader
     {
         /// <summary>
         ///  If this isn't null, it contains a bare minimal shader.
         ///  only useful when using multiple contexts, if possible.
         /// </summary>
-        public static int? DefaultShader { get; private set; }
+        public static int? Default { get; private set; }
 
         /// <summary>
         /// This must get called from the graphics context.
@@ -45,10 +45,10 @@ namespace Lemur.Graphics
             GL.ShaderSource(fragShader, fragShaderSource);
             GL.CompileShader(fragShader);
 
-            DefaultShader = GL.CreateProgram();
-            GL.AttachShader(DefaultShader.Value, vertShader);
-            GL.AttachShader(DefaultShader.Value, fragShader);
-            GL.LinkProgram(DefaultShader.Value);
+            Default = GL.CreateProgram();
+            GL.AttachShader(Default.Value, vertShader);
+            GL.AttachShader(Default.Value, fragShader);
+            GL.LinkProgram(Default.Value);
 
             GL.DeleteShader(vertShader);
             GL.DeleteShader(fragShader);

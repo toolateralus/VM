@@ -1,4 +1,4 @@
-﻿using lemur.GUI;
+﻿using Lemur.GUI;
 using System;
 using System.Windows;
 using System.Windows.Controls;

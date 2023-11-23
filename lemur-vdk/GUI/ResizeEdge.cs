@@ -1,4 +1,4 @@
-﻿namespace lemur.GUI
+﻿namespace Lemur.GUI
 {
     enum ResizeEdge
     {

@@ -246,7 +246,6 @@ namespace Lemur.JS
 
                 FrameworkElement? element = null;
 
-                // hack to get a self reference easily, which is incredibly common in oop ui.
                 if (targetControl.ToLower().Trim() == "this")
                     element = content;
                 else
