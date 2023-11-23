@@ -9,7 +9,7 @@
         <RichTextBox IsDocumentEnabled="True" Background="#FF3A3838" Foreground="#FFC5C5C5">
             <FlowDocument>
                 <Paragraph>
-                    Welcome to lemur vdk. to resize a window hold alt and right click while moving the mouse.
+                    Welcome to lemur vdk. to resize a hold right mouse button down and drag. to move a window, hold left moue button and drag
                 </Paragraph>
             </FlowDocument>
         </RichTextBox>
