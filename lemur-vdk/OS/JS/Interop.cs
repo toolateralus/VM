@@ -465,20 +465,15 @@ namespace Lemur.JS
 
             if (resizableWins != null && resizableWins.Any())
             {
-                var win = resizableWins.First().Value;
+                var win = resizableWins.First().Value as UserWindow;
 
                 if (win != null)
                 {
-                    var contentGrid = win.Content as Grid;
+                    var frame = win.ContentsFrame;
 
-                    if (contentGrid != null)
+                    if (frame != null)
                     {
-                        var frame = contentGrid.Children.OfType<Frame>().FirstOrDefault();
-
-                        if (frame != null)
-                        {
-                            userContent = frame.Content as UserControl;
-                        }
+                        userContent = frame.Content as UserControl;
                     }
                 }
             }

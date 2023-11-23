@@ -16,11 +16,11 @@ namespace Lemur.GUI
         public bool Maximized = false;
         public Action? OnClosed { get; internal set; }
 
-        internal void BeginResize(ResizeEdge edge)
+        internal void BeginResize(ResizeEdge edge, Point relPos)
         {
             if (Parent is not WindowManager windowManager)
                 return;
-            windowManager.BeginResize(this, edge);
+            windowManager.BeginResize(this, edge, relPos);
         }
 
         internal void BeginMove(Point position)

@@ -70,7 +70,7 @@ namespace Lemur.GUI
             if (sender is not Button button || button.Tag is not string tag)
                 return;
             ResizeEdge edge = (ResizeEdge)Enum.Parse(typeof(ResizeEdge), tag);
-            Owner.BeginResize(edge);
+            Owner.BeginResize(edge, e.GetPosition(this));
             e.Handled = true;
         }
     }
