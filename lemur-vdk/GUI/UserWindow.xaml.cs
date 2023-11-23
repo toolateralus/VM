@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Input;
 using Lemur;
 using Lemur.JS;
 using static System.Windows.Forms.VisualStyles.VisualStyleElement;
@@ -55,8 +56,12 @@ namespace Lemur.GUI
         private void CloseWindow(object sender, RoutedEventArgs e)
         {
             Close();
+            e.Handled = true;
         }
-
-       
+        protected override void OnMouseLeftButtonDown(MouseButtonEventArgs e)
+        {
+            Owner.BeginMove(e.GetPosition(this));
+            e.Handled = true;
+        }
     }
 }
