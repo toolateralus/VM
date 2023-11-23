@@ -85,8 +85,8 @@ namespace Lemur.GUI
 
         internal void Resize(double width, double height)
         {
-            width = Math.Clamp(width, MinWidth, MaxWidth);
-            height = Math.Clamp(height, MinHeight, MaxHeight);
+            width = Math.Max(25, width);
+            height = Math.Max(25, height);
             Width = width;
             Height = height;
         }
