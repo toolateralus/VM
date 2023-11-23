@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace lemur.OS
+namespace Lemur.OS
 {
     public struct Command
     {

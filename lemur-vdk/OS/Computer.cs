@@ -14,8 +14,8 @@ using System.Windows.Controls;
 using System.Linq;
 using System.Windows.Media;
 using Microsoft.ClearScript.JavaScript;
-using lemur.OS;
-using lemur.Graphics;
+using Lemur.OS;
+using Lemur.Graphics;
 
 namespace Lemur
 {
@@ -258,7 +258,7 @@ namespace Lemur
             pc.InstallCSharpApp("CommandPrompt.app", typeof(CommandPrompt));
             pc.InstallCSharpApp("FileExplorer.app", typeof(FileExplorer));
             pc.InstallCSharpApp("TextEditor.app", typeof(TextEditor));
-            pc.InstallCSharpApp("GL_TEST.app", typeof(OpenGLWindow));
+            pc.InstallCSharpApp("GL_TEST.app", typeof(OpenGL2Window));
 
             Runtime.LoadCustomSyntaxHighlighting();
         }

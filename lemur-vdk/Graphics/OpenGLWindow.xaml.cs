@@ -8,17 +8,19 @@ using static OpenTK.Graphics.OpenGL4.GL;
 using Lemur.FS;
 using System.Threading.Tasks;
 
-namespace lemur.Graphics
+namespace Lemur.Graphics
 {
     /// <summary>
     /// Interaction logic for OpenGLWindow.xaml
     /// </summary>
-    public partial class OpenGLWindow : UserControl
+    public partial class OpenGL2Window : UserControl
     {
+        internal readonly GL4RenderLib renderLib;
         public static string? DesktopIcon => FileSystem.GetResourcePath("background.png");
-        public OpenGLWindow()
+        public OpenGL2Window()
         {
             InitializeComponent();
+
             var settings = new GLWpfControlSettings
             {
                 MajorVersion = 4,
@@ -27,12 +29,14 @@ namespace lemur.Graphics
             };
 
             Renderer.Start(settings);
-
+            renderLib = new();
         }
-        private void Renderer_Render(TimeSpan obj)
+        private void Renderer_Render(TimeSpan span)
         {
-            ClearColor(Color4.Blue);
+            ClearColor(Color4.Black);
             Clear(ClearBufferMask.ColorBufferBit | ClearBufferMask.DepthBufferBit);
+
+            renderLib.Render(span);
         }
     }
 }

@@ -11,7 +11,7 @@ using Lemur.JS;
 using Lemur;
 using Lemur.FS;
 
-namespace lemur.OS
+namespace Lemur.OS
 {
     public class CommandLine : IDisposable
     {
