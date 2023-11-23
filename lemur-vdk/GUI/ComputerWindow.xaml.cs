@@ -253,11 +253,11 @@ namespace Lemur.GUI
             // their js code, that would be very helpful.
 
             // does the resizing, moving, closing, minimizing, windowing stuff.
-            resizableWindow = new ResizableWindow(this)
+            resizableWindow = new ResizableWindow()
             {
                 Content = window,
-                Width = Math.Max(window.MinWidth, window.Width),
-                Height = Math.Max(window.MinHeight, window.Height),
+                Width=200,
+                Height=200,
                 Margin = window.Margin,
                 Background = background,
                 Foreground = foreground,
@@ -280,7 +280,6 @@ namespace Lemur.GUI
 
             window.OnClosed += () =>
             {
-                rsz_win_capture.Dispose();
                 Desktop.Children.Remove(rsz_win_capture);
                 Computer?.Windows.Remove(title);
                 RemoveTaskbarButton(title);

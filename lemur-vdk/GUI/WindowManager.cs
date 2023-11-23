@@ -7,32 +7,64 @@ namespace Lemur.GUI
 {
     public class WindowManager : Canvas
     {
-        ResizableWindow? targetWindow;
-        protected override void OnMouseRightButtonUp(MouseButtonEventArgs e)
+        private ResizableWindow? targetWindow;
+        private Point startDragPosition;
+        private bool isDragging;
+        private bool isResizing;
+
+        protected override void OnPreviewMouseUp(MouseButtonEventArgs e)
         {
-            base.OnMouseRightButtonUp(e);
             if (targetWindow != null)
-            {
                 targetWindow = null;
-                e.Handled = true;
+            isDragging = false;
+            isResizing = false;
+        }
+        protected override void OnPreviewMouseMove(MouseEventArgs e)
+        {
+             if (e is null)
+                throw new ArgumentNullException(nameof(e));
+
+            if ((!isResizing && !isDragging) || targetWindow == null)
+                return;
+
+            var pos = e.GetPosition(this);
+
+            if (isResizing)
+            {
+                pos.X = Math.Clamp(pos.X, MinWidth, MaxWidth);
+                pos.Y = Math.Clamp(pos.Y, MinHeight, MaxHeight);
+
+                targetWindow.Width = pos.X;
+                targetWindow.Height = pos.Y;
+            }
+            else if (isDragging)
+            {
+                var left = pos.X - startDragPosition.X;
+                var top = pos.Y - startDragPosition.Y;
+
+                SetLeft(targetWindow, Math.Clamp(left, 0, MaxWidth));
+                SetTop(targetWindow, Math.Clamp(top, 0, MaxHeight));
             }
         }
-        protected override void OnMouseMove(MouseEventArgs e)
-        {
-            base.OnMouseMove(e);
-            if (targetWindow == null)
-                return;
-            var newSize = e.GetPosition(targetWindow);
-            newSize.X = Math.Clamp(newSize.X, MinWidth, MaxWidth);
-            newSize.Y = Math.Clamp(newSize.Y, MinHeight, MaxHeight);
 
-            targetWindow.Width = newSize.X;
-            targetWindow.Height = newSize.Y;
-            e.Handled = true;
+        internal void BeginMove(ResizableWindow window, Point mousePos)
+        {
+            if (!isDragging)
+            {
+                window.BringToTopOfDesktop();
+                startDragPosition = mousePos;
+                targetWindow = window;
+                isDragging = true;
+            }
         }
+
         internal void BeginResize(ResizableWindow window)
         {
-            targetWindow = window;
+            if (!isResizing)
+            {
+                targetWindow = window;
+                isResizing = true;
+            }
         }
     }
 }
