@@ -34,8 +34,9 @@ namespace Lemur.GUI
         }
         private protected void OnMouseDown(object sender, MouseButtonEventArgs e)
         {
-            if (!(Keyboard.IsKeyDown(Key.LeftCtrl) && Keyboard.IsKeyDown(Key.LeftShift)))
+            if (!Keyboard.IsKeyDown(Key.LeftAlt))
                 return;
+
             if (e.LeftButton == MouseButtonState.Pressed)
             {
                 leftClickPos = e.GetPosition(Computer.Current.Window);
