@@ -27,10 +27,10 @@ namespace Lemur.GUI
             if (targetWindow == null || (!isResizing && !isDragging))
                 return;
 
-            var pos = e.GetPosition(this);
 
             if (isResizing)
             {
+                var pos = e.GetPosition(targetWindow);
                 pos.X = Math.Clamp(pos.X, MinWidth, MaxWidth);
                 pos.Y = Math.Clamp(pos.Y, MinHeight, MaxHeight);
 
@@ -40,6 +40,7 @@ namespace Lemur.GUI
             else if (isDragging)
             {
                 // Todo: fix window going to (0,0) every second time you click on it;
+                var pos = e.GetPosition(this);
                 var left = pos.X - startDragPosition.X;
                 var top = pos.Y - startDragPosition.Y;
                 SetLeft(targetWindow, Math.Clamp(left, 0, MaxWidth));
