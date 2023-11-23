@@ -166,14 +166,9 @@ namespace Lemur.JS
             if (!Computer.cmdLine.TryCommand(message))
                 await Computer.javaScript.Execute(message);
         }
-        public bool start(string path)
+        public async void start(string path)
         {
-            if (path.Contains(".app"))
-            {
-                Task.Run(async() => { await Computer.OpenCustom(path); });
-                return true;
-            }
-            return false;
+            Computer.Current.Window.Dispatcher.Invoke(async() => await Computer.OpenCustom(path)); 
         }
         public void print(object message)
         {

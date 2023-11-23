@@ -11,3 +11,7 @@ interop.setAliasDirectory('commands')
      otherwise specify a target directory to recursively search for your apps*/
 
 interop.loadApps('')
+
+interop.start('welcome.app')
+
+interop.uninstall('welcome.app')
