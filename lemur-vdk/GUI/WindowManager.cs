@@ -9,7 +9,7 @@ namespace Lemur.GUI
     public class WindowManager : Canvas
     {
         private ResizableWindow? targetWindow;
-        private static Vector resizeMargin = new(10, 10);
+        private static double resizeMargin = 10;
         private ResizeEdge resizingEdge;
         private Point startDragPosition;
         private bool isDragging;
@@ -48,8 +48,8 @@ namespace Lemur.GUI
 
         private void MoveWindow(ResizableWindow window, double left, double top)
         {
-            SetLeft(window, Math.Clamp(left, -resizeMargin.X, MaxWidth));
-            SetTop(window, Math.Clamp(top, -resizeMargin.Y, MaxHeight));
+            SetLeft(window, Math.Clamp(left, -resizeMargin, MaxWidth));
+            SetTop(window, Math.Clamp(top, -resizeMargin, MaxHeight));
         }
 
         private void PerformResize(ResizableWindow window, ResizeEdge edge, Point relPos)
@@ -59,32 +59,40 @@ namespace Lemur.GUI
                 case ResizeEdge.None:
                     break;
                 case ResizeEdge.TopLeft:
-                    relPos -= resizeMargin;
-                    Vector winPos = new(GetLeft(window) + relPos.X, GetTop(window) + relPos.Y);
-                    Point winSize = new(window.Width - relPos.X, window.Height - relPos.Y);
-                    window.Resize(winSize);
-                    MoveWindow(window, winPos.X, winPos.Y);
+                    relPos.X -= resizeMargin;
+                    relPos.Y -= resizeMargin;
+                    window.Resize(window.Width - relPos.X, window.Height - relPos.Y);
+                    MoveWindow(window, GetLeft(window) + relPos.X, GetTop(window) + relPos.Y);
                     break;
                 case ResizeEdge.TopCenter:
+                    relPos.Y -= resizeMargin;
+                    window.Resize(window.Width, window.Height - relPos.Y);
+                    MoveWindow(window, GetLeft(window), GetTop(window) + relPos.Y);
                     break;
                 case ResizeEdge.TopRight:
+                    relPos.Y -= resizeMargin;
+                    window.Resize(relPos.X + resizeMargin, window.Height - relPos.Y);
+                    MoveWindow(window, GetLeft(window), GetTop(window) + relPos.Y);
                     break;
                 case ResizeEdge.CenterLeft:
+                    relPos.X -= resizeMargin;
+                    window.Resize(window.Width - relPos.X, window.Height);
+                    MoveWindow(window, GetLeft(window) + relPos.X, GetTop(window));
                     break;
                 case ResizeEdge.CenterRight:
-                    relPos.X += resizeMargin.X;
-                    relPos.Y = window.Height;
-                    window.Resize(relPos);
+                    window.Resize(relPos.X + resizeMargin, window.Height);
                     break;
                 case ResizeEdge.BottomLeft:
+                    relPos.X -= resizeMargin;
+                    relPos.Y += resizeMargin;
+                    window.Resize(window.Width - relPos.X, relPos.Y);
+                    MoveWindow(window, GetLeft(window) + relPos.X, GetTop(window));
                     break;
                 case ResizeEdge.BottomCenter:
-                    relPos.Y += resizeMargin.Y;
-                    relPos.X = window.Width;
-                    window.Resize(relPos);
+                    window.Resize(window.Width, relPos.Y + resizeMargin);
                     break;
                 case ResizeEdge.BottomRight:
-                    window.Resize(relPos + resizeMargin);
+                    window.Resize(relPos.X + resizeMargin, relPos.Y + resizeMargin);
                     break;
                 default:
                     break;
