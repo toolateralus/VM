@@ -242,7 +242,6 @@ namespace Lemur.GUI
             // hosts the user content and it's utilities
             var window = new UserWindow
             {
-                Background = background,
                 Foreground = foreground,
                 FontFamily = Computer.theme.Font,
                 FontSize = Computer.theme.FontSize,
@@ -259,7 +258,6 @@ namespace Lemur.GUI
                 Width=200,
                 Height=200,
                 Margin = window.Margin,
-                Background = background,
                 Foreground = foreground,
 
                 FontFamily = Computer.theme.Font,

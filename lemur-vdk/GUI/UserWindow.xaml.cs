@@ -2,9 +2,11 @@
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
+using lemur.GUI;
 using Lemur;
 using Lemur.JS;
 using static System.Windows.Forms.VisualStyles.VisualStyleElement;
+using Button = System.Windows.Controls.Button;
 
 namespace Lemur.GUI
 {
@@ -61,6 +63,14 @@ namespace Lemur.GUI
         protected override void OnMouseLeftButtonDown(MouseButtonEventArgs e)
         {
             Owner.BeginMove(e.GetPosition(this));
+            e.Handled = true;
+        }
+        private void OnResizeBorderClicked(object sender, MouseButtonEventArgs e)
+        {
+            if (sender is not Button button || button.Tag is not string tag)
+                return;
+            ResizeEdge edge = (ResizeEdge)Enum.Parse(typeof(ResizeEdge), tag);
+            Owner.BeginResize(edge);
             e.Handled = true;
         }
     }

@@ -1,4 +1,5 @@
-﻿using System;
+﻿using lemur.GUI;
+using System;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
@@ -8,6 +9,7 @@ namespace Lemur.GUI
     public class WindowManager : Canvas
     {
         private ResizableWindow? targetWindow;
+        private ResizeEdge resizingEdge;
         private Point startDragPosition;
         private bool isDragging;
         private bool isResizing;
@@ -30,12 +32,7 @@ namespace Lemur.GUI
 
             if (isResizing)
             {
-                var pos = e.GetPosition(targetWindow);
-                pos.X = Math.Clamp(pos.X, MinWidth, MaxWidth);
-                pos.Y = Math.Clamp(pos.Y, MinHeight, MaxHeight);
-
-                targetWindow.Width = pos.X;
-                targetWindow.Height = pos.Y;
+                PerformResize(targetWindow, resizingEdge, e.GetPosition(targetWindow));
             }
             else if (isDragging)
             {
@@ -45,6 +42,34 @@ namespace Lemur.GUI
                 var top = pos.Y - startDragPosition.Y;
                 SetLeft(targetWindow, Math.Clamp(left, 0, MaxWidth));
                 SetTop(targetWindow, Math.Clamp(top, 0, MaxHeight));
+            }
+        }
+
+        private static void PerformResize(ResizableWindow window, ResizeEdge edge, Point relPos)
+        {
+            switch (edge)
+            {
+                case ResizeEdge.None:
+                    break;
+                case ResizeEdge.TopLeft:
+                    break;
+                case ResizeEdge.TopCenter:
+                    break;
+                case ResizeEdge.TopRight:
+                    break;
+                case ResizeEdge.CenterLeft:
+                    break;
+                case ResizeEdge.CenterRight:
+                    break;
+                case ResizeEdge.BottomLeft:
+                    break;
+                case ResizeEdge.BottomCenter:
+                    break;
+                case ResizeEdge.BottomRight:
+                    window.Resize(relPos);
+                    break;
+                default:
+                    break;
             }
         }
 
@@ -59,10 +84,11 @@ namespace Lemur.GUI
             }
         }
 
-        internal void BeginResize(ResizableWindow window)
+        internal void BeginResize(ResizableWindow window, ResizeEdge edge)
         {
             if (!isResizing)
             {
+                resizingEdge = edge;
                 targetWindow = window;
                 isResizing = true;
             }
