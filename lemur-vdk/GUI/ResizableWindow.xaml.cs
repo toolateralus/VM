@@ -1,4 +1,5 @@
-﻿using Newtonsoft.Json.Linq;
+﻿using lemur.GUI;
+using Newtonsoft.Json.Linq;
 using System;
 using System.Net.Mail;
 using System.Windows;
@@ -14,14 +15,12 @@ namespace Lemur.GUI
         public Point lastPos = new();
         public bool Maximized = false;
         public Action? OnClosed { get; internal set; }
-        protected override void OnPreviewMouseRightButtonDown(MouseButtonEventArgs e)
-        {
-            if (e is null)
-                throw new ArgumentNullException(nameof(e));
 
+        internal void BeginResize(ResizeEdge edge)
+        {
             if (Parent is not WindowManager windowManager)
                 return;
-            windowManager.BeginResize(this);
+            windowManager.BeginResize(this, edge);
         }
 
         internal void BeginMove(Point position)
@@ -82,6 +81,14 @@ namespace Lemur.GUI
             Height = SystemParameters.PrimaryScreenHeight;
             BringToTopOfDesktop();
 
+        }
+
+        internal void Resize(Point pos)
+        {
+            pos.X = Math.Clamp(pos.X, MinWidth, MaxWidth);
+            pos.Y = Math.Clamp(pos.Y, MinHeight, MaxHeight);
+            Width = pos.X;
+            Height = pos.Y;
         }
     }
 }

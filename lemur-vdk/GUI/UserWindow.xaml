@@ -4,25 +4,43 @@
       xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
       xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
       xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+      xmlns:s="clr-namespace:System;assembly=mscorlib"
+      xmlns:gui="clr-namespace:Lemur.GUI"
       mc:Ignorable="d" 
-      Background="#FF1F1F1F" FontFamily="Cascadia Mono SemiLight" Foreground="White">
-
-    <Grid  Background="#FF1F1F1F" >
-        
+      FontFamily="Cascadia Mono SemiLight">
+    <UserControl.Resources>
+        <s:Double x:Key="resizeEdgeMargin">10</s:Double>
+    </UserControl.Resources>
+    <Grid>
         <Grid.RowDefinitions>
-            <RowDefinition Height="25"/>
+            <RowDefinition Height="{Binding Source={StaticResource resizeEdgeMargin}}"/>
             <RowDefinition Height="*"/>
+            <RowDefinition Height="{Binding Source={StaticResource resizeEdgeMargin}}"/>
         </Grid.RowDefinitions>
-        
-        <StackPanel Grid.Row="0" MinHeight="25" x:Name="Toolbar" Orientation="Horizontal" Grid.ColumnSpan="5">
-            <Button MinWidth="25" MinHeight="15" Margin="5" BorderBrush="DarkCyan" Foreground="White" Background="#FF5F36A9" x:Name="xBtn" Width="35" FontFamily="Consolas" FontSize="10" Content="X"/>
-            <Button MinWidth="25" MinHeight="15" Margin="5" BorderBrush="DarkCyan" Foreground="White" Background="#FF5F36A9" x:Name="minimizeBtn" Width="35" FontFamily="Consolas" FontSize="10" Content="MIN"/>
-            <Button MinWidth="25" MinHeight="15" Margin="5" BorderBrush="DarkCyan" Foreground="White" Background="#FF5F36A9" x:Name="maximizeBtn" Width="35" FontFamily="Consolas" FontSize="10" Content="MAX"/>
-        </StackPanel>
-
-        <Frame Grid.Row="1" Grid.ColumnSpan="4" Grid.RowSpan="4" x:Name="ContentsFrame">
-            
-        </Frame>
-        
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="{Binding Source={StaticResource resizeEdgeMargin}}" />
+            <ColumnDefinition Width="*" />
+            <ColumnDefinition Width="{Binding Source={StaticResource resizeEdgeMargin}}" />
+        </Grid.ColumnDefinitions>
+        <Grid Background="#FF1F1F1F" Grid.Row="1" Grid.Column="1">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="25"/>
+                <RowDefinition Height="*"/>
+            </Grid.RowDefinitions>
+            <StackPanel Grid.Row="0" MinHeight="25" x:Name="Toolbar" Orientation="Horizontal">
+                <Button MinWidth="25" MinHeight="15" Margin="5" BorderBrush="DarkCyan" Foreground="White" Background="#FF5F36A9" x:Name="xBtn" Width="35" FontFamily="Consolas" FontSize="10" Content="X"/>
+                <Button MinWidth="25" MinHeight="15" Margin="5" BorderBrush="DarkCyan" Foreground="White" Background="#FF5F36A9" x:Name="minimizeBtn" Width="35" FontFamily="Consolas" FontSize="10" Content="MIN"/>
+                <Button MinWidth="25" MinHeight="15" Margin="5" BorderBrush="DarkCyan" Foreground="White" Background="#FF5F36A9" x:Name="maximizeBtn" Width="35" FontFamily="Consolas" FontSize="10" Content="MAX"/>
+            </StackPanel>
+            <Frame Grid.Row="1" x:Name="ContentsFrame" />
+        </Grid>
+        <gui:HoverButton Tag="TopLeft" Grid.Row="0" Grid.Column="0" PreviewMouseLeftButtonDown="OnResizeBorderClicked"/>
+        <gui:HoverButton Tag="TopCenter" Grid.Row="0" Grid.Column="1" PreviewMouseLeftButtonDown="OnResizeBorderClicked"/>
+        <gui:HoverButton Tag="TopRight" Grid.Row="0" Grid.Column="2" PreviewMouseLeftButtonDown="OnResizeBorderClicked"/>
+        <gui:HoverButton Tag="CenterLeft" Grid.Row="1" Grid.Column="0" PreviewMouseLeftButtonDown="OnResizeBorderClicked"/>
+        <gui:HoverButton Tag="CenterRight" Grid.Row="1" Grid.Column="2" PreviewMouseLeftButtonDown="OnResizeBorderClicked"/>
+        <gui:HoverButton Tag="BottomLeft" Grid.Row="2" Grid.Column="0" PreviewMouseLeftButtonDown="OnResizeBorderClicked"/>
+        <gui:HoverButton Tag="BottomCenter" Grid.Row="2" Grid.Column="1" PreviewMouseLeftButtonDown="OnResizeBorderClicked"/>
+        <gui:HoverButton Tag="BottomRight" Grid.Row="2" Grid.Column="2" PreviewMouseLeftButtonDown="OnResizeBorderClicked"/>
     </Grid>
 </UserControl>
