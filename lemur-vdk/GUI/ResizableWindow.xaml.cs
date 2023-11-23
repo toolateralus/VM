@@ -1,4 +1,4 @@
-﻿using lemur.GUI;
+﻿using Lemur.GUI;
 using Newtonsoft.Json.Linq;
 using System;
 using System.Net.Mail;
