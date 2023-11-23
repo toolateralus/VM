@@ -9,6 +9,7 @@ namespace Lemur.GUI
     public class WindowManager : Canvas
     {
         private ResizableWindow? targetWindow;
+        private static Vector resizeMargin = new(10, 10);
         private ResizeEdge resizingEdge;
         private Point startDragPosition;
         private bool isDragging;
@@ -40,18 +41,29 @@ namespace Lemur.GUI
                 var pos = e.GetPosition(this);
                 var left = pos.X - startDragPosition.X;
                 var top = pos.Y - startDragPosition.Y;
-                SetLeft(targetWindow, Math.Clamp(left, 0, MaxWidth));
-                SetTop(targetWindow, Math.Clamp(top, 0, MaxHeight));
+                ResizableWindow window = targetWindow;
+                MoveWindow(window, left, top);
             }
         }
 
-        private static void PerformResize(ResizableWindow window, ResizeEdge edge, Point relPos)
+        private void MoveWindow(ResizableWindow window, double left, double top)
+        {
+            SetLeft(window, Math.Clamp(left, -resizeMargin.X, MaxWidth));
+            SetTop(window, Math.Clamp(top, -resizeMargin.Y, MaxHeight));
+        }
+
+        private void PerformResize(ResizableWindow window, ResizeEdge edge, Point relPos)
         {
             switch (edge)
             {
                 case ResizeEdge.None:
                     break;
                 case ResizeEdge.TopLeft:
+                    relPos -= resizeMargin;
+                    Vector winPos = new(GetLeft(window) + relPos.X, GetTop(window) + relPos.Y);
+                    Point winSize = new(window.Width - relPos.X, window.Height - relPos.Y);
+                    window.Resize(winSize);
+                    MoveWindow(window, winPos.X, winPos.Y);
                     break;
                 case ResizeEdge.TopCenter:
                     break;
@@ -60,13 +72,19 @@ namespace Lemur.GUI
                 case ResizeEdge.CenterLeft:
                     break;
                 case ResizeEdge.CenterRight:
+                    relPos.X += resizeMargin.X;
+                    relPos.Y = window.Height;
+                    window.Resize(relPos);
                     break;
                 case ResizeEdge.BottomLeft:
                     break;
                 case ResizeEdge.BottomCenter:
+                    relPos.Y += resizeMargin.Y;
+                    relPos.X = window.Width;
+                    window.Resize(relPos);
                     break;
                 case ResizeEdge.BottomRight:
-                    window.Resize(relPos);
+                    window.Resize(relPos + resizeMargin);
                     break;
                 default:
                     break;
@@ -84,10 +102,12 @@ namespace Lemur.GUI
             }
         }
 
-        internal void BeginResize(ResizableWindow window, ResizeEdge edge)
+        internal void BeginResize(ResizableWindow window, ResizeEdge edge, Point relPos)
         {
             if (!isResizing)
             {
+                window.BringToTopOfDesktop();
+                PerformResize(window, edge, relPos);
                 resizingEdge = edge;
                 targetWindow = window;
                 isResizing = true;
