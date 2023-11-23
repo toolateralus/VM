@@ -10,6 +10,9 @@ namespace Lemur.GUI
 {
     public partial class ResizableWindow : Frame
     {
+        public double lastW = 0, lastH = 0;
+        public Point lastPos = new();
+        public bool Maximized = false;
         public Action? OnClosed { get; internal set; }
 
         protected override void OnPreviewMouseDown(MouseButtonEventArgs e)
@@ -35,6 +38,49 @@ namespace Lemur.GUI
                 grid.Children.Add(this);
                 Panel.SetZIndex(this, Computer.Current.Window.TopMostZIndex);
             }
+        }
+        internal void ToggleVisibility()
+        {
+
+            Visibility ^= Visibility.Collapsed;
+
+            if (Visibility == Visibility.Visible)
+                BringToTopOfDesktop();
+
+            if (Visibility == Visibility.Hidden)
+                Visibility = Visibility.Visible;
+        }
+        public void ToggleMaximize()
+        {
+            Visibility = Visibility.Visible;
+            if (!Maximized)
+                Maximize();
+            else
+                UnMaximize();
+        }
+        /// <summary>
+        /// Not quite a minimize, just a maximization cancel.
+        /// </summary>
+        private void UnMaximize()
+        {
+            Maximized = false;
+            Height = lastH;
+            Width = lastW;
+            Canvas.SetLeft(this, lastPos.X);
+            Canvas.SetTop(this, lastPos.Y);
+        }
+        private void Maximize()
+        {
+            Maximized = true;
+            lastW = Width;
+            lastH = Height;
+            lastPos = new(Canvas.GetLeft(this), Canvas.GetTop(this));
+            Canvas.SetTop(this, 0);
+            Canvas.SetLeft(this, 0);
+            Width = SystemParameters.PrimaryScreenWidth;
+            Height = SystemParameters.PrimaryScreenHeight;
+            BringToTopOfDesktop();
+
         }
     }
 }

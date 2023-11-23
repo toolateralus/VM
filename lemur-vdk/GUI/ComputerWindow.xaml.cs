@@ -59,12 +59,12 @@ namespace Lemur.GUI
             btn.Name = appName.Split(".")[0];
             return btn;
         }
-        public Button MakeTaskbarButton(string title, RoutedEventHandler Toggle)
+        public Button MakeTaskbarButton(string title, Action Toggle)
         {
             var btn = MakeButton(width: 65);
 
             btn.Content = title;
-            btn.Click += Toggle;
+            btn.Click += (_,_) => Toggle?.Invoke();
             return btn;
         }
         public void Computer_KeyDown(object sender, KeyEventArgs e)
@@ -273,7 +273,7 @@ namespace Lemur.GUI
             var rsz_win_capture = resizableWindow;
             // hack ::
 
-            Button btn = MakeTaskbarButton(title, window.ToggleVisibility);
+            Button btn = MakeTaskbarButton(title, resizableWindow.ToggleVisibility);
 
             TaskbarStackPanel.Children.Add(btn);
             Desktop.Children.Add(resizableWindow);

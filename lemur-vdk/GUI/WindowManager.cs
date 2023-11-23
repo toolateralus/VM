@@ -24,7 +24,7 @@ namespace Lemur.GUI
              if (e is null)
                 throw new ArgumentNullException(nameof(e));
 
-            if ((!isResizing && !isDragging) || targetWindow == null)
+            if (targetWindow == null || (!isResizing && !isDragging))
                 return;
 
             var pos = e.GetPosition(this);
@@ -39,9 +39,9 @@ namespace Lemur.GUI
             }
             else if (isDragging)
             {
+                // Todo: fix window going to (0,0) every second time you click on it;
                 var left = pos.X - startDragPosition.X;
                 var top = pos.Y - startDragPosition.Y;
-
                 SetLeft(targetWindow, Math.Clamp(left, 0, MaxWidth));
                 SetTop(targetWindow, Math.Clamp(top, 0, MaxHeight));
             }

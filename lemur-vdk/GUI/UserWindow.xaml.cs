@@ -14,13 +14,16 @@ namespace Lemur.GUI
     {
         public ResizableWindow Owner;
         internal Action? OnClosed;
-        public double lastW = 0, lastH = 0;
-        public Point lastPos = new();
-        public bool Maximized = false;
+        
         public Engine JavaScriptEngine;
         public UserWindow()
         {
             InitializeComponent();
+            xBtn.Click += CloseWindow;
+
+            // TODO: fix this up
+            minimizeBtn.Click += (_, _) => Owner?.ToggleVisibility();
+            maximizeBtn.Click += (_, _) => Owner?.ToggleMaximize();
         }
         internal void InitializeUserContent(ResizableWindow frame, UserControl actualUserContent, Engine? engine)
         {
@@ -54,55 +57,6 @@ namespace Lemur.GUI
             Close();
         }
 
-        // Todo : Fix this strange problem where resizing is inconsistent when min/maximized
-        public void ToggleVisibility(object sender, RoutedEventArgs e)
-        {
-
-            Visibility ^= Visibility.Collapsed;
-            Owner.Visibility = Visibility;
-           
-            if (Visibility == Visibility.Visible)
-            {
-                Owner.BringToTopOfDesktop();
-            }
-
-            if (Visibility == Visibility.Hidden)
-                Visibility = Visibility.Visible;
-        }
-        // Todo : Fix this strange problem where resizing is inconsistent when min/maximized
-        public void ToggleMaximize(object sender, RoutedEventArgs e)
-        {
-            Visibility = Visibility.Visible;
-            if (!Maximized)
-            {
-                Maximize();
-                return;
-            }
-            UnMaximize();
-        }
-        /// <summary>
-        /// Not quite a minimize, just a maximization cancel.
-        /// </summary>
-        private void UnMaximize()
-        {
-            Maximized = false;
-            Owner.Height = lastH;
-            Owner.Width = lastW;
-            Canvas.SetLeft(Owner, lastPos.X);
-            Canvas.SetTop(Owner, lastPos.Y);
-        }
-        private void Maximize()
-        {
-            Maximized = true;
-            lastW = Owner.Width;
-            lastH = Owner.Height;
-            lastPos = new(Canvas.GetLeft(Owner), Canvas.GetTop(Owner));
-            Canvas.SetTop(Owner, 0);
-            Canvas.SetLeft(Owner, 0);
-            Owner.Width = SystemParameters.PrimaryScreenWidth;
-            Owner.Height = SystemParameters.PrimaryScreenHeight;
-            Owner.BringToTopOfDesktop();
-
-        }
+       
     }
 }

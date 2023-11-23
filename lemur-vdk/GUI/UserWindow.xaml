@@ -15,9 +15,9 @@
         </Grid.RowDefinitions>
         
         <StackPanel Grid.Row="0" MinHeight="25" x:Name="Toolbar" Orientation="Horizontal" Grid.ColumnSpan="5">
-            <Button MinWidth="25" MinHeight="15" Margin="5" BorderBrush="DarkCyan" Foreground="White" Background="#FF5F36A9" x:Name="xBtn" Click="CloseWindow"  Width="35" FontFamily="Consolas" FontSize="10" Content="X"/>
-            <Button MinWidth="25" MinHeight="15" Margin="5" BorderBrush="DarkCyan" Foreground="White" Background="#FF5F36A9" x:Name="minimizeBtn" Click="ToggleVisibility"  Width="35" FontFamily="Consolas" FontSize="10" Content="MIN"/>
-            <Button MinWidth="25" MinHeight="15" Margin="5" BorderBrush="DarkCyan" Foreground="White" Background="#FF5F36A9" x:Name="maximizeBtn" Click="ToggleMaximize" Width="35" FontFamily="Consolas" FontSize="10" Content="MAX"/>
+            <Button MinWidth="25" MinHeight="15" Margin="5" BorderBrush="DarkCyan" Foreground="White" Background="#FF5F36A9" x:Name="xBtn" Width="35" FontFamily="Consolas" FontSize="10" Content="X"/>
+            <Button MinWidth="25" MinHeight="15" Margin="5" BorderBrush="DarkCyan" Foreground="White" Background="#FF5F36A9" x:Name="minimizeBtn" Width="35" FontFamily="Consolas" FontSize="10" Content="MIN"/>
+            <Button MinWidth="25" MinHeight="15" Margin="5" BorderBrush="DarkCyan" Foreground="White" Background="#FF5F36A9" x:Name="maximizeBtn" Width="35" FontFamily="Consolas" FontSize="10" Content="MAX"/>
         </StackPanel>
 
         <Frame Grid.Row="1" Grid.ColumnSpan="4" Grid.RowSpan="4" x:Name="ContentsFrame">
