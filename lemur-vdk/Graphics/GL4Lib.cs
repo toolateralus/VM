@@ -11,29 +11,6 @@ using System.Windows.Shapes;
 
 namespace Lemur.Graphics
 {
-
-    [StructLayout(LayoutKind.Sequential)]
-    public struct Vertex
-    {
-        public Vector3 positions;
-        public Color4 color;
-        public Vector3 normals;
-        public Vertex(Vector3 position, Vector3 normal, Color4 color)
-        {
-            this.normals = normal;
-            this.positions = position;
-            this.color = color;
-        }
-    }
-    public class Shape
-    {
-        internal Vertex[] Vertices;
-
-        public Shape(Vertex[] vertices)
-        {
-            Vertices = vertices;
-        }
-    }
     public class GL4RenderLib
     {
         private int vertexBuffer, vertexArray;
@@ -44,50 +21,60 @@ namespace Lemur.Graphics
         public void EnqueueWork(Action<GL4RenderLib> job) => JobQueue.Enqueue(job);
         public GL4RenderLib()
         {
-            InitializeOpenGL();
-            InitializeShaders();
-            SetupBuffers();
-        }
-        private void InitializeOpenGL()
-        {
             vertexBuffer = GL.GenBuffer();
             vertexArray = GL.GenVertexArray();
-
-            GL.BindVertexArray(vertexArray);
+            
             GL.BindBuffer(BufferTarget.ArrayBuffer, vertexBuffer);
+            GL.BindVertexArray(vertexArray);
 
-            shapes.Add(ShapeGenerator.CreateCube());
+            var vertexSize = Marshal.SizeOf<Vertex>();
+
+            // vert
+            GL.EnableVertexAttribArray(0);
+            GL.VertexAttribPointer(0, 3, VertexAttribPointerType.Float, false, vertexSize, 0);
+
+            // normal
+            GL.EnableVertexAttribArray(2);
+            GL.VertexAttribPointer(1, 3, VertexAttribPointerType.Float, false, vertexSize, vertexSize);
+
+            // color
+            GL.EnableVertexAttribArray(1);
+            GL.VertexAttribPointer(2, 4, VertexAttribPointerType.Float, false, vertexSize, vertexSize + Marshal.SizeOf<Vector3>());
+
+            CompileShader();
+
+            shapes.Add(Cube.Unit());
         }
-        private void InitializeShaders()
+        private void CompileShader()
         {
             var vertShaderSource = @"
-#version 400 core
-layout(location = 0) in vec3 inPosition;
-layout(location = 1) in vec3 inColor;
-layout(location = 2) in vec3 inNormal;
+                #version 400 core
+                layout(location = 0) in vec3 inPosition;
+                layout(location = 1) in vec3 inNormal;
+                layout(location = 2) in vec3 inColor;
+                
+                out vec3 pass_Color;
+                out vec3 pass_Normal;
 
-out vec3 pass_Color;
-out vec3 pass_Normal;
-
-void main()
-{
-    gl_Position = vec4(inPosition, 1.0);
-    pass_Color = inColor;
-    pass_Normal = inNormal;
-}
+                void main()
+                {
+                    gl_Position = vec4(inPosition, 1.0);
+                    pass_Color = inColor;
+                    pass_Normal = inNormal;
+                }
             ";
 
             var fragShaderSource = @"
                 #version 400 core
-in vec3 pass_Color;
-in vec3 pass_Normal;
+                in vec3 pass_Color;
+                in vec3 pass_Normal;
 
-out vec4 fragColor;
+                out vec4 fragColor;
 
-void main()
-{
-    fragColor = vec4(pass_Color, 1.0);
-}
+                void main()
+                {
+                    fragColor = vec4(pass_Color, 1.0);
+                }
             ";
 
             // Compile and link shaders to create a shader program
@@ -103,36 +90,26 @@ void main()
             GL.AttachShader(shaderProgram, vertShader);
             GL.AttachShader(shaderProgram, fragShader);
             GL.LinkProgram(shaderProgram);
+            GL.UseProgram(shaderProgram); // right now we only use one shader.
 
             GL.DeleteShader(vertShader);
             GL.DeleteShader(fragShader);
         }
-        private static void SetupBuffers()
-        {
-            var vertexSize = Marshal.SizeOf<Vertex>();
 
-            // vert
-            GL.EnableVertexAttribArray(0);
-            GL.VertexAttribPointer(0, 3, VertexAttribPointerType.Float, false, vertexSize, 0);
-
-            // color
-            GL.EnableVertexAttribArray(1);
-            GL.VertexAttribPointer(1, 4, VertexAttribPointerType.Float, false, vertexSize, vertexSize);
-
-            // normal
-            GL.EnableVertexAttribArray(2);
-            GL.VertexAttribPointer(2, 3, VertexAttribPointerType.Float, false, vertexSize, vertexSize + Marshal.SizeOf<Color4>());
-        }
+        
         public void Render(TimeSpan span)
         {
             var vertices = shapes.SelectMany(i => i.Vertices).ToArray();
 
-            GL.BufferData(BufferTarget.ArrayBuffer, sizeof(float), vertices, BufferUsageHint.StaticDraw);
-
-            GL.UseProgram(shaderProgram);
-            GL.BindVertexArray(vertexArray);
+            GL.BufferData(BufferTarget.ArrayBuffer, Marshal.SizeOf<Vertex>() * vertices.Length, vertices, BufferUsageHint.DynamicDraw);
 
             GL.DrawArrays(PrimitiveType.Triangles, 0, vertices.Length);
+            
+            ErrorCode err;
+
+            if ((err = GL.GetError()) != ErrorCode.NoError)
+                Notifications.Now(err.ToString());
+
         }
     }
 }

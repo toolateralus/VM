@@ -455,11 +455,11 @@ namespace Lemur.JS
 
             return output;
         }
-        public static UserControl? GetUserContent(string javascript_controL_class_instance_id, Computer computer)
+        public static UserControl? GetUserContent(string id, Computer computer)
         {
             var window = computer.Window;
 
-            var resizableWins = computer.Windows?.Where(W => W.Key == javascript_controL_class_instance_id);
+            var resizableWins = computer.Windows?.Where(W => W.Key == id);
 
             UserControl userContent = null;
 
