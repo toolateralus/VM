@@ -461,24 +461,15 @@ namespace Lemur.JS
 
             var resizableWins = computer.Windows?.Where(W => W.Key == id);
 
-            UserControl userContent = null;
-
             if (resizableWins != null && resizableWins.Any())
             {
-                var win = resizableWins.First().Value as UserWindow;
-
-                if (win != null)
-                {
-                    var frame = win.ContentsFrame;
-
-                    if (frame != null)
-                    {
-                        userContent = frame.Content as UserControl;
-                    }
-                }
+                UserWindow win = resizableWins.First().Value;
+                var frame = win.ContentsFrame;
+                if (frame.Content is UserControl userContent)
+                    return userContent;
             }
 
-            return userContent;
+            return null;
         }
         public static FrameworkElement? FindControl(UserControl userControl, string controlName)
         {

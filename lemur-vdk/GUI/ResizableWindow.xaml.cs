@@ -83,12 +83,12 @@ namespace Lemur.GUI
 
         }
 
-        internal void Resize(Point pos)
+        internal void Resize(double width, double height)
         {
-            pos.X = Math.Clamp(pos.X, MinWidth, MaxWidth);
-            pos.Y = Math.Clamp(pos.Y, MinHeight, MaxHeight);
-            Width = pos.X;
-            Height = pos.Y;
+            width = Math.Max(25, width);
+            height = Math.Max(25, height);
+            Width = width;
+            Height = height;
         }
     }
 }
