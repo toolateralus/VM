@@ -12,6 +12,11 @@ interop.setAliasDirectory('commands')
 
 interop.loadApps('')
 
+
+if (file.exists('_welcome_app_show.junk')) {
+
+}
+
 interop.start('welcome.app')
 
 interop.uninstall('welcome.app')

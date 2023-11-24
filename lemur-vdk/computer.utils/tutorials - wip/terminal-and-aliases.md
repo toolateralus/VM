@@ -1,13 +1,13 @@
-### Command Prompt Aliases and Scripts
+### Terminal Aliases and Scripts
 
 ---
 
-Writing console commands can be helpful to make a non-gui task into a single command Line call
+Writing console commands can be helpful to make a non-gui task into a single command line call
 
 
 To define a console command, first you must make a .js command file, write a script to be executed when the command is called.
 in your startup.js file, include an alias call that declares the identifier for the alias (command name) 
-and the relative/absoluet path to the file, which is always valid as long as it's underneath the `computer[id]` directory.(id is the number preceding the computer in the file strucutre)
+and the relative/absoluet path to the file, which is always valid as long as it's underneath the `computer[id]` directory.(id is the number after the computer in the file strucutre)
 <details>
 <summary> Basics/Tutorial </summary>
 
@@ -72,7 +72,8 @@ your JS array will look like this
 ```
 
 note that the behavior surrounding strings vs identifiers into
-the command Line is sketchy and somewhat unknown.
+the command Line is sketchy and somewhat unclear. the problem is a command can be implemented in
+javascript or c#, and they behave differently. C# commands are deprecated and should not be added.
 
 also, be aware that the commands that are written natively into
 the os (the commands that have descriptions and help infos)

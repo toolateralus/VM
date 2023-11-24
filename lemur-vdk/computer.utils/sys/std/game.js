@@ -359,6 +359,7 @@ class Renderer {
         }
     }
 }
+
 return {  
     Point : Point,
     Line : Line, 

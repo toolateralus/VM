@@ -1,107 +1,53 @@
 
-## Intro to programming in Lemur : 
-#### _In this tutorial we're going to :_
-
-- learn about the file structure of _Lemur_ and how to setup dev tools.
-
-- cover the types of executables (i refer to them as `jittables` :D) allowed in _Lemur_
-
-- describe some use cases to help you pick an app type for your program
-
-### Setting up external development tools : 
-###### See the intro to lemur tutorial to learn more about this process.
-
-#### you don't absolutely _NEED_ vscode .. but..
-
-> However, if you need/ are really used to things like LSP (red squigglys and suggestions, intellisense) support, you can just open up your
-computer in vscode. Extensions are pure preference, and vscode comes with a `javascript lsp`, so it should already have excellent support.
-
->> note that working in _Lemur_ is much like working in a free-standing environment, for kernel or embedded development. Meaning, you likely do not have access to many common, seemingly base-line language features. such as typical imports and exports, meaning if you need third party software, it's likely you'll need to either copy paste it into a document and 'require' it (our node-like module system), or just write it yourself.
-
-Not using vscode can be much more fun in terms of the emulation and experience, but vscode is practically neccesary to mid-level programming needs, like refactoring, very detailed syntax highlighting, and lsp support.
-
 ---
-# Apps in Lemur
-- There are three kinds of user-space application you can create in _Lemur_. You should be aware of the options even though there is a HEAVILY suggested option.
-### The reccomended option
-#### JS / WPF _Lemur Native_ app.
-- This is the type of app the project was created to run !
-- It features a free-standing javascript environment that we've implemented a bunch of WPF hooks and functionality into, so you can create WPF apps with java script as your backend 100% of the way.
-> This has its limitations and resistances, but its our greatest goal to make this development process super intuitive, performant, and fun to use. for the beginner, intermediate, or expert!
-
-
-#### JS / HTML Web app run in a browser container
-- I don't know too much about web dev- so I don't have much to say here. the browser container is a modern browser, Microsoft Edge, and should be fully featured. There are some sample apps chat gpt wrote
-for this setup. 
-- libraries, connectivity and security are things I know nothing about here.
-
-####  C# / WPF app compiled into the source - do not use - 
-
-- This app has the most flexibility as in it can link with many
-external libraries and code bases since it's not limited to a free standing environment. 
-- This app performs generally better than the other kinds due to it being compiled in the native language of the project.
-- This app has the highest implementation overhead - They can be complex to write and implement compared to the other types.
-
-##### a message for contributors ...
-> This app type should only be used when _NEEDED_ by expert users or contributors, simply because it breaks the spirit of the project.  there is a roleplay element to emulation - and we didn't aim to make a plain C#/WPF runtime container, the remaining apps that are C# / WPF are all in the process of being ported to JS.
-> 
-##### Most cases won't need this app, and even _Lemur_ contributions and new system functionalites can almost always be implemented in javascript. 
-
-##### new `system-app / shipped-apps` pull requests must be in js/wpf, even if it requires new C# backends... but we would love to feature any of your apps!! at any skill level!
-
----
----
-# Creating a JS/WPF Application in Lemur :
+# Making an app :
 ### _In this tutorial we're going to :_
 
 - learn how to create, open, and edit text files.
 - learn the requirements for a '.app' application, setup our directories and files to create a valid .app project. 
 - create a 'hello world' GUI app that runs when our computer starts.
 
-### _In this tutorial, we expect you :_
-
-- are familiar with Javascript
-
-- understand the implications and meaning of the phrase `freestanding environment` when it comes to compilation (a term used in kernel and embedded development)
-
-- `are going to be patient if features do not behave as expected!!!`, 
-especally if you plan to implement anything above a small-medium scale!!
-
-this is very much so a WIP and is very rough around the edges!! 
-
+_In this tutorial, we expect you :_
 ---
-#### a note to programmers
 
-`users are highly encouraged to contribute anywhere they want.` 
-Avoid applying massive complex systems where unneccesary, or making
-hard-to-read 'clever' code, make things dead simple and safe (especially c#)
+- `are going to be patient if features do not behave as expected`, 
+this project is very rough and is in very early development, so it is guaranteed you will run into things that do not work, do not work as expected, or are completely broken.
 
-something the repository itself does not do :D 
-(not saying my code is great at all lol)
+> This is a hobby project and has many flaws. it's very messy. but contributions (modifications, features, and especially bugfixes /  reworks of specific systems) are greatly appreciated. I am often available, and check github frequently.
 
+
+Setting up the Application Directory
 ---
-### Creating & Opening Text Files & Associated Project Directories.
 
-- for us to define a valid JS/WPF application, we need to define a folder structure that the system will recognize as a 'jittable'. I use this term as a runtime paralell to executable.
+To define a valid JS/WPF application, you need to create a specific folder structure that the system recognizes as a 'jittable' runtime parallel to an executable.
 
-here are the rules : 
-> Your app folder must end in a `.app` extension.
+Here are the rules:
 
-> You must have both a `<app_name>.xaml.js` and  `<app_name>.xaml` files in this directory, with the same name as the `.app` folder
+1. Your app folder must have a `.app` extension.
 
-> Your app folder is your apps name, which will need to match the name of your JS and XAML files, and the name of the JS class.
+2. Inside the `.app` folder, you should have the following files:
 
-> You may have a `icon.bmp` file that will be used as a desktop-icon for your application. note it must be named exactly this, and must be directly under your `.app` directory
+   - `<app_name>.xaml.js`: This file defines the JavaScript logic for your application. Replace `<app_name>` with your actual application name.
 
-Let's visualize what this structure should look like, for our app called `home.app` :
-> note this is displayed in a format much like the 'tree' command in linux, where each child is displayed using └── or ├── in a hierarchical fashion.
+   - `<app_name>.xaml`: This file contains the XAML markup for your application's user interface. Replace `<app_name>` with your application's name.
+
+   - `icon.bmp`: Optionally, you can include an `icon.bmp` file directly under your `.app` directory. This image will serve as the desktop icon for your application.
+
+So our directory for our app called `home.app` would look like this :
 ```
 home.app         (required)
 ├── home.xaml.js (required)
 ├── home.xaml    (required)
 └── icon.bmp     (optional)
 ```
-This is the bare-minimum, and you can have any `.js` files in there along with your apps code, just these are used for creating and jitting your app.
+
+This is the bare-minimum, and you can have any files in there along with your apps code, these are just used for creating and jitting your app.
+
+Ensure that the folder name, the names of the `.xaml` and `.xaml.js` files, and the name of the JavaScript class all match your application's name for proper recognition by the system.
+
+This folder structure will make your application "jittable" and ready for installation, and then execution.
+
+
 
 To create this, for the easiest option, just use vs-code for now.
 
@@ -164,8 +110,9 @@ Just for ease of use here, these are the provided xaml / js files.
     just a reminder!
 
     ### PURPOSE OF THIS DEMO ###
-        provide a application that shows some easy interactions in a somewhat bare-metal JS/XAML application.
+        provide an application that shows some easy interactions in a somewhat bare-metal JS/XAML application.
         make an easy copy-paste template that can be used to avoid boilerplate.
+        provide obnoxiously extensive explanations of everything used, to educate beginners.
 
 */
 class base_app {
@@ -231,28 +178,15 @@ class base_app {
 }
 ```
 
-
-- ##### Now, with that code in our files, and especially _with those comments and code READ_, we have a basic skeleton to get us started and running in a window with some bare functionality.
+---
+### Now, with that code in our files, and the comments read, we have a basic skeleton to get us started and running in a window with some bare functionality.
 
 The next step would be actually installing our app, and running it.
-Now, theres a few ways to do this, we're just going to choose what
-will likely be the most common and easy to use. First, we need to talk about 
-
-#### `startup.js`
-
-`startup.js` is a file located within each computer that, as the title suggests, is run at start-up.
-
-It doesn't matter where this file is as long as it's present.
-Why is that useful for us here? Well, we have provided some functionalities kind of geared towards use in start up. One of those features is setting an `installed apps directory.` There's already a tutorial on startup and scripting, see the documentation.
-Specifically here, we will just use this info to understand if we put our application in the default `installed apps directory`, `home/apps/...`
-our app will be installed next startup and we don't have to worry about it again.
 
 Apps must be reinstalled every time the computer starts as theyre all dynamically created runtime objects and there is no way to save them.
 
-So now, with our app in the `computer/home/apps/` directory, we can close and re-open our _Lemur_ machine to install, or we can just test directly by running the command
-`install 'home.app`
-which temporarily installs to this instance of the _Lemur_ machine
-for use this run-time. 
+To just make it easy, the computer defaults to searching the entire file structure at startup and 
+linking & gathering any `.app` directories with valid contents.
 
 You'll know your app is installed when its added as an icon on the desktop. right now this is basically the only way to start apps, outside of triggering from code.
 
