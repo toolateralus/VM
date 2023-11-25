@@ -12,11 +12,8 @@ const { Profiler } = require('profiler.js');
 class game2 {
     setupUIEvents() {
         app.eventHandler(this.id, 'this', 'm_render', XAML_EVENTS.RENDER);
-        app.eventHandler(this.id, 'this', 'onKey', XAML_EVENTS.KEY_DOWN);
     }
-    onKey(key, isDown) {
-        
-    }
+  
     fpsCounterFrame(start) {
         if (start) 
         {

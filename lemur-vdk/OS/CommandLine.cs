@@ -55,13 +55,13 @@ namespace Lemur.OS
             if (obj != null && obj.Length == 1 && obj[0] is string name && Computer.ProcessLookupTable.TryGetValue(name, out var pids_arg))
             {
                 foreach (var pid in pids_arg)
-                    Computer.Current.userWindows[pid].Close();
+                    Computer.Current.UserWindows[pid].Close();
                 return;
             }
 
             foreach (var pids in Computer.ProcessLookupTable.Values)
                 foreach (var pid in pids)
-                    Computer.Current.userWindows[pid].Close();
+                    Computer.Current.UserWindows[pid].Close();
         }
         private void DisposeJSEnv(object[]? obj)
         {
@@ -113,7 +113,7 @@ namespace Lemur.OS
         }
         private void LP(object[]? obj)
         {
-            foreach (var item in Computer.Current.userWindows)
+            foreach (var item in Computer.Current.UserWindows)
             {
                 Notifications.Now($"\n{item.Key}");
             }

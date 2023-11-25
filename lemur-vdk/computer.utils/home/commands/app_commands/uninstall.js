@@ -1,4 +1,4 @@
 {
     args = [/***/];
-    interop.uninstall(args[0]);
+    app.uninstall(args[0]);
 }

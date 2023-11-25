@@ -89,7 +89,7 @@ must follow C style data formats, such as double quoted strings `"mystring"` etc
 To enhance your console command system, consider dynamically
 loading your commands.
 ``` javascript
-interop.setAliasDirectory($path)
+term.setAliasDirectory($path)
 ```
 calling this function allows you to load all command files within a specified directory to avoid modifying the startup script for every new command.
 ```javascript startup.js
@@ -99,7 +99,7 @@ calling this function allows you to load all command files within a specified di
 	// note : this reloads the currently loaded 
 	// aliases and only loads under this dir.
 
-	interop.setAliasDirectory(commandDirectory);
+	term.setAliasDirectory(commandDirectory);
 	// By default, the method will just get the file name
 	// as in ::
 	// C//Users//MyPath.js
@@ -112,7 +112,7 @@ calling this function allows you to load all command files within a specified di
 	if (/*overriding the naming convention*/)
 	{
 		const regex = '^(.*?)_(.*?)_(.*?)\.js$';
-		interop.setAliasDirectory(commandDirectory, regex)
+		term.setAliasDirectory(commandDirectory, regex)
 	}
 }
 ```

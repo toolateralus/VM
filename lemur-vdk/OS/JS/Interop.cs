@@ -23,66 +23,61 @@ using Image = System.Windows.Controls.Image;
 
 namespace Lemur.JS
 {
-
-    // ## THIS DIRELY NEEDS TO BE SPLIT UP AND DOCUMENTED, JUST MAKE SURE EVERYTHING IS PUBLIC! ## \\
-    // Follow the current naming scheme. these are first class members in JS.
-    public class Interop
+    public class conv
     {
-        public Computer Computer;
-        public Action<string, object?>? OnModuleExported;
-        public Action<string>? OnModuleImported;
-        public Action<int>? OnComputerExit;
-
-        // this are called BY the js code, to do things java script isn't solely capable of (afaik)
-        // things like fast pixel graphics, getting and setting text efficiently.
-        // just kinda hot path items you may want faster can go here.
-
-        public static Dictionary<string, Func<string, string, object?, object?>> ExposedEvents = new();
-
-        public Interop(Computer computer)
+        public object toBytes(string background) => Convert.FromBase64String(background);
+        public string toBase64(object ints)
         {
-            this.Computer = computer;
-            ExposedEvents["draw_pixels"] = DrawPixelsEvent;
-            ExposedEvents["draw_image"] = DrawImageEvent;
-            ExposedEvents["set_content"] = SetContent;
-            ExposedEvents["get_content"] = GetContent;
+            List<byte> bytes = new List<byte>();
+
+            interop.ForEachCast<int>(ints.ToEnumerable(), (data) => bytes.Add((byte)data));
+
+            return Convert.ToBase64String(bytes.ToArray());
         }
-        public object getentries(string path)
+        /// <summary>
+        /// Opens a file, reads its bytes contents, converts it to a base64 string and
+        /// returns it. great for loading images into java script and keeping data transfer lightweight
+        /// </summary>
+        /// <param name="path"></param>
+        /// <returns></returns>
+        public string? base64FromFile(string path)
         {
-            if (File.Exists(path))
-                return path;
+            byte[] imageData = null;
 
-            if (!Directory.Exists(path))
-                return "";
+            if (!File.Exists(path))
+            {
+                if (FileSystem.GetResourcePath(path) is string absPath && !string.IsNullOrEmpty(absPath))
+                    imageData = File.ReadAllBytes(absPath);
+            }
+            else
+            {
+                imageData = File.ReadAllBytes(path);
+            }
 
-            return Directory.GetFileSystemEntries(path);
+            if (imageData != null)
+                return Convert.ToBase64String(imageData);
+
+            return null!;
         }
-        public void disconnect()
+    }
+    public class term
+    {
+        public void print(object message)
         {
-            Computer.Network.StopClient();
-        }
-        public void reawaken_console()
-        {
-            CommandPrompt cmd = null;
-
-            cmd = Computer.TryGetProcessOfType<CommandPrompt>();
-
-            Computer.Window?.Dispatcher?.Invoke(() => { 
-
-                var history = CommandPrompt.LastSentInput;
-
-                if (cmd is null)
+            try
+            {
+                Computer.Current.Window?.Dispatcher.Invoke(() =>
                 {
-                    Notifications.Now("No console was open, so reading is impossible");
-                    return;
-                }
-         
-                cmd.Dispatcher.Invoke(() => {
-                    cmd.output.Text = history;
+                    Debug.WriteLine(message);
+                    Notifications.Now(message?.ToString() ?? "null");
                 });
-
-            });
+            }
+            catch (Exception e)
+            {
+                Notifications.Exception(e);
+            }
         }
+
         public string? read()
         {
             CommandPrompt cmd = null;
@@ -108,126 +103,6 @@ namespace Lemur.JS
 
             return result;
         }
-        public double random(double max)
-        {
-            return System.Random.Shared.NextDouble() * max;
-        }
-        /// <summary>
-        /// A non-throwing foreach over a collection of objects, running action on each object.
-        /// a try catch prints exceptions but ignores them.
-        /// </summary>
-        /// <typeparam name="T"></typeparam>
-        /// <param name="source"></param>
-        /// <param name="action"></param>
-        public static void forEach<T>(IEnumerable<object> source, Action<T> action)
-        {
-            try
-            {
-                foreach (var item in source)
-                {
-                    T instance = try_cast<T>(item, out var success);
-
-                    if (success)
-                        action(instance);
-                }
-            }
-            catch (Exception e)
-            {
-                if (e is not ObjectDisposedException ode)
-                {
-                    Notifications.Exception(e);
-                }
-            }
-        }
-        public static T try_cast<T>(object item, out bool success)
-        {
-            success = false;
-            if (item is T instance)
-            {
-                success = true;
-                return instance;
-            }
-            return default;
-        }
-        public object toBytes(string background)
-        {
-            return Convert.FromBase64String(background);
-        }
-        public string toBase64(object ints)
-        {
-            List<byte> bytes = new List<byte>();
-
-            forEach<int>(ints.ToEnumerable(), (i) => bytes.Add((byte)i));
-
-            return Convert.ToBase64String(bytes.ToArray());
-        }
-        public async void call(string message)
-        {
-            if (!Computer.cmdLine.TryCommand(message))
-                await Computer.JavaScript.Execute(message);
-        }
-        public async void start(string path)
-        {
-            Computer.Current.Window.Dispatcher.Invoke(async() => await Computer.OpenCustom(path)); 
-        }
-        public void print(object message)
-        {
-            try
-            {
-                Computer.Window?.Dispatcher.Invoke(() =>
-                {
-                    Debug.WriteLine(message);
-                    Notifications.Now(message?.ToString() ?? "null");
-                });
-            }
-            catch(Exception e)
-            {
-                Notifications.Exception(e);
-            }
-        }
-        public void export(string id, object? obj)
-        {
-            OnModuleExported?.Invoke(id, obj);
-        }
-        public void exit(int code)
-        {
-            OnComputerExit?.Invoke(code);
-        }
-        public void uninstall(string dir)
-        {
-            ComputerWindow window = Computer.Window;
-
-            // js/html app
-            if (dir.Contains(".web"))
-            {
-                Computer.Uninstall(dir); 
-                return;
-            }
-
-            // wpf app
-            if (dir.Contains(".app"))
-            {
-                Computer.Uninstall(dir);
-                return;
-            }
-
-            Notifications.Now("Incorrect path for uninstall");
-
-        }
-        public JObject GetConfig() => Computer.Config;
-        public void install(string dir)
-        {
-            if (dir.Contains(".web"))
-            {
-                Computer.InstallJSHTML(dir);
-                return;
-            }
-
-            if (dir.Contains(".app"))
-            {
-                Computer.InstallJSWPF(dir);
-            }
-        }
         public void alias(string alias, string path)
         {
 
@@ -249,80 +124,7 @@ namespace Lemur.JS
                 }
             }
 
-            Computer.cmdLine.Aliases[alias] = FileSystem.GetResourcePath(path) ?? "not found";
-        }
-        public async void sleep(int ms)
-        {
-            await Task.Delay(ms);
-        }
-        public void require(string path)
-        {
-            Computer.JavaScript.ImportModule(path);
-        }
-        public object? read_file(string path)
-        {
-            if (!File.Exists(path))
-            {
-                if (FileSystem.GetResourcePath(path) is string AbsPath && !string.IsNullOrEmpty(AbsPath))
-                {
-                    return File.ReadAllText(AbsPath);
-                }
-
-                return null;
-            }
-            return File.ReadAllText(path);
-        }
-        /// <summary>
-        /// Opens a file, reads its bytes contents, converts it to a base64 string and
-        /// returns it. great for loading images into java script and keeping data transfer lightweight
-        /// </summary>
-        /// <param name="path"></param>
-        /// <returns></returns>
-        public string base64FromFile(string path)
-        {
-            byte[] imageData = null;
-
-            if (!File.Exists(path))
-            {
-                if (FileSystem.GetResourcePath(path) is string absPath && !string.IsNullOrEmpty(absPath))
-                {
-                    imageData = File.ReadAllBytes(absPath);
-                }
-            }
-            else
-            {
-                imageData = File.ReadAllBytes(path);
-            }
-
-            if (imageData != null)
-            {
-                return Convert.ToBase64String(imageData);
-            }
-
-            return null;
-        }
-        public void write_file(string path, object? data)
-        {
-            if (string.IsNullOrEmpty(path))
-            {
-                Notifications.Exception(e : new ArgumentNullException("Tried to write a file with a null or empty path, this is not allowed."));
-                return;
-            }
-                    
-            if (!Path.IsPathFullyQualified(path))
-                path = Path.Combine(Computer.FileSystemRoot, path);
-
-            string? dir = Path.GetDirectoryName(path);
-            if (dir != null && !Directory.Exists(dir))
-            {
-                Directory.CreateDirectory(dir);
-            }
-
-            File.WriteAllText(path, data?.ToString() ?? "");
-        }
-        public bool file_exists(string path)
-        {
-            return FileSystem.GetResourcePath(path) is string AbsPath && !string.IsNullOrEmpty(AbsPath) ? File.Exists(AbsPath) : false;
+            Computer.Current.cmdLine.Aliases[alias] = FileSystem.GetResourcePath(path) ?? "not found";
         }
         public void setAliasDirectory(string path, string regex = "")
         {
@@ -330,13 +132,13 @@ namespace Lemur.JS
             {
                 // validated path.
                 path = AbsPath;
-                Computer.Config["ALIAS_PATH"] = path;
+                Computer.Current.Config["ALIAS_PATH"] = path;
             }
             else
             {
                 Notifications.Now("Attempted to set command directory to an emtpy or null string");
                 return;
-            } 
+            }
             if (File.Exists(path) && !Directory.Exists(path))
             {
                 Notifications.Now("Attempted to set command directory to an existing file or a nonexistent directory");
@@ -354,69 +156,73 @@ namespace Lemur.JS
                     name = Path.GetFileName(file).Replace(Path.GetExtension(file), "");
                 }
 
-                Computer.cmdLine.Aliases[name] = file;
+                Computer.Current.cmdLine.Aliases[name] = file;
             };
-            Action<string, string> procDir = delegate { }; 
+            Action<string, string> procDir = delegate { };
             FileSystem.ProcessDirectoriesAndFilesRecursively(path, /*UNUSED*/ procDir, procFile);
         }
-        public object? getProperty(string id, string controlName, object? property)
+    }
+    public class file
+    {
+        public object? read(string path)
         {
-            object? output = null;
-
-            Computer.Window?.Dispatcher.Invoke(() =>
+            if (!File.Exists(path))
             {
-                var userControl = GetUserContent(id, Computer);
-                var control = FindControl(userControl, controlName);
-
-                if (control is null)
-                    return;
-
-                output = GetProperty(control, property as string);
-            });
-
-            return output;
-        }
-        public void setProperty(string id, string controlName, object? property, object? value)
-        {
-            object? output = null;
-
-            Computer.Window?.Dispatcher.Invoke((Delegate)(() =>
-            {
-                var userControl = GetUserContent(id, Computer);
-                var control = FindControl(userControl, controlName);
-
-                if (control is null)
-                    return;
-
-                SetProperty(control, property as string, value);
-            }));
-
-        }
-        #region C# Methods
-
-        public T FindElementInUserControl<T>(UserControl userControl, string elementName) where T : FrameworkElement
-        {
-            var elementType = typeof(T);
-            var contentProperty = userControl.GetType().GetProperty("Content");
-
-            if (contentProperty != null)
-            {
-                var content = contentProperty.GetValue(userControl);
-
-                if (content != null)
+                if (FileSystem.GetResourcePath(path) is string AbsPath && !string.IsNullOrEmpty(AbsPath))
                 {
-                    foreach (var property in content.GetType().GetProperties())
-                    {
-                        if (elementType.IsAssignableFrom(property.PropertyType) && property.Name == elementName && property.GetValue(content) is T Instance)
-                        {
-                            return Instance;
-                        }
-                    }
+                    return File.ReadAllText(AbsPath);
                 }
+
+                return null;
+            }
+            return File.ReadAllText(path);
+        }
+        public void write(string path, object? data)
+        {
+            if (string.IsNullOrEmpty(path))
+            {
+                Notifications.Exception(e: new ArgumentNullException("Tried to write a file with a null or empty path, this is not allowed."));
+                return;
             }
 
-            return default;
+            if (!Path.IsPathFullyQualified(path))
+                path = Path.Combine(Computer.Current.FileSystemRoot, path);
+
+            string? dir = Path.GetDirectoryName(path);
+            if (dir != null && !Directory.Exists(dir))
+            {
+                Directory.CreateDirectory(dir);
+            }
+
+            File.WriteAllText(path, data?.ToString() ?? "");
         }
+        public bool exists(string path)
+        {
+            return FileSystem.GetResourcePath(path) is string AbsPath && !string.IsNullOrEmpty(AbsPath) ? File.Exists(AbsPath) : false;
+        }
+        public object get_entries(string path)
+        {
+            if (File.Exists(path))
+                return path;
+
+            if (!Directory.Exists(path))
+                return "";
+
+            return Directory.GetFileSystemEntries(path);
+        }
+    }
+    public class app
+    {
+        public static Dictionary<string, Func<string, string, object?, object?>> ExposedEvents = new();
+
+        public app()
+        {
+            ExposedEvents["draw_pixels"] = DrawPixelsEvent; // somewhat deprecated, use the dedicated graphics module instead.
+            ExposedEvents["draw_image"] = DrawImageEvent;
+            ExposedEvents["set_content"] = SetContent;
+            ExposedEvents["get_content"] = GetContent;
+        }
+
         public static void SetProperty(object target, string propertyName, object? value)
         {
             var targetType = target.GetType();
@@ -435,9 +241,9 @@ namespace Lemur.JS
         {
             object? output = null;
 
-            Computer.Window?.Dispatcher.Invoke(() =>
+            Computer.Current.Window?.Dispatcher.Invoke(() =>
             {
-                var userControl = GetUserContent(id, Computer);
+                var userControl = GetUserContent(id, Computer.Current);
                 var control = FindControl(userControl, controlName);
 
                 if (control is null)
@@ -459,7 +265,7 @@ namespace Lemur.JS
         {
             var window = computer.Window;
 
-            var resizableWins = computer.userWindows?.Where(W => W.Key == id);
+            var resizableWins = computer.UserWindows?.Where(W => W.Key == id);
 
             if (resizableWins != null && resizableWins.Any())
             {
@@ -520,11 +326,11 @@ namespace Lemur.JS
         {
             object? output = null;
 
-            var wnd = Computer.Window;
+            var wnd = Computer.Current.Window;
 
             wnd?.Dispatcher.Invoke(() =>
             {
-                var userControl = GetUserContent(id, Computer);
+                var userControl = GetUserContent(id, Computer.Current);
 
                 if (userControl == null)
                     return;
@@ -545,7 +351,7 @@ namespace Lemur.JS
             });
             return output;
         }
-        public BitmapImage BitmapImageFromBase64(string base64String)
+        public static BitmapImage BitmapImageFromBase64(string base64String)
         {
             try
             {
@@ -573,9 +379,9 @@ namespace Lemur.JS
             if (value is null)
                 return null;
 
-            Computer.Window?.Dispatcher.Invoke(() =>
+            Computer.Current.Window?.Dispatcher.Invoke(() =>
             {
-                var control = GetUserContent(id, Computer);
+                var control = GetUserContent(id, Computer.Current);
 
                 var image = FindControl(control, target_control);
 
@@ -597,11 +403,11 @@ namespace Lemur.JS
 
             List<byte> colorData = new();
 
-            forEach<int>(value.ToEnumerable(), (item) => colorData.Add((byte)item));
+            interop.ForEachCast<int>(value.ToEnumerable(), (item) => colorData.Add((byte)item));
 
-            Computer.Window?.Dispatcher.Invoke(() =>
+            Computer.Current.Window?.Dispatcher.Invoke(() =>
             {
-                var control = GetUserContent(id, Computer);
+                var control = GetUserContent(id, Computer.Current);
                 if (control?.Content is Grid grid)
                 {
                     if (grid != null)
@@ -652,7 +458,39 @@ namespace Lemur.JS
 
             image.Source = bitmap;
         }
-        #endregion
+        public object? getProperty(string id, string controlName, object? property)
+        {
+            object? output = null;
+
+            Computer.Current.Window?.Dispatcher.Invoke(() =>
+            {
+                var userControl = GetUserContent(id, Computer.Current);
+                var control = FindControl(userControl, controlName);
+
+                if (control is null)
+                    return;
+
+                output = GetProperty(control, property as string);
+            });
+
+            return output;
+        }
+        public void setProperty(string id, string controlName, object? property, object? value)
+        {
+            object? output = null;
+
+            Computer.Current.Window?.Dispatcher.Invoke((Delegate)(() =>
+            {
+                var userControl = GetUserContent(id, Computer.Current);
+                var control = FindControl(userControl, controlName);
+
+                if (control is null)
+                    return;
+
+                SetProperty(control, property as string, value);
+            }));
+
+        }
         public object? pushEvent(string id, string targetControl, string eventType, object? data)
         {
             if (ExposedEvents.TryGetValue(eventType, out var handler))
@@ -663,32 +501,137 @@ namespace Lemur.JS
         }
         public async void eventHandler(string identifier, string targetControl, string methodName, int type)
         {
-            if (Computer.userWindows.TryGetValue(identifier, out var app))
+            if (Computer.Current.UserWindows.TryGetValue(identifier, out var app))
                 await app.JavaScriptEngine?.CreateEventHandler(identifier, targetControl, methodName, type);
         }
+        public async void start(string path)
+            {
+                _ = Computer.Current.Window.Dispatcher.Invoke(async () => await Computer.Current.OpenCustom(path));
+            }
         public void loadApps(object? path)
         {
-            string directory = Computer.FileSystemRoot;
+            string directory = Computer.Current.FileSystemRoot;
+
             if (path is string dir && !string.IsNullOrEmpty(dir))
-            {
                 directory = dir;
-            }
+
             if (FileSystem.GetResourcePath(directory) is string AbsPath && Directory.Exists(AbsPath))
             {
-                Action<string, string> procDir = (root, file) => { 
+                Action<string, string> procDir = (root, file) => {
                     if (Path.GetExtension(file) is string ext && ext == ".app")
-                    {
-                        Computer.InstallJSWPF(Path.GetFileName(file));
-                    }
+                        Computer.Current.InstallJSWPF(Path.GetFileName(file));
                     if (Path.GetExtension(file) is string _ext && _ext == ".web")
-                    {
-                        Computer.InstallJSHTML(Path.GetFileName(file));
-                    }
+                        Computer.Current.InstallJSHTML(Path.GetFileName(file));
                 };
 
-                FileSystem.ProcessDirectoriesAndFilesRecursively(AbsPath, procDir , /* proc file */ (_,_) => { });
+                FileSystem.ProcessDirectoriesAndFilesRecursively(AbsPath, procDir, /* proc file */ (_, _) => { });
             }
         }
+        public void install(string dir)
+        {
+            if (dir.Contains(".web"))
+            {
+                Computer.Current.InstallJSHTML(dir);
+                return;
+            }
+
+            if (dir.Contains(".app"))
+            {
+                Computer.Current.InstallJSWPF(dir);
+            }
+        }
+        public void uninstall(string dir)
+        {
+            ComputerWindow window = Computer.Current.Window;
+
+            // js/html app
+            if (dir.Contains(".web"))
+            {
+                Computer.Current.Uninstall(dir);
+                return;
+            }
+
+            // wpf app
+            if (dir.Contains(".app"))
+            {
+                Computer.Current.Uninstall(dir);
+                return;
+            }
+
+            Notifications.Now("Incorrect path for uninstall");
+
+        }
+    }
+    // ## THIS DIRELY NEEDS TO BE SPLIT UP AND DOCUMENTED, JUST MAKE SURE EVERYTHING IS PUBLIC! ## \\
+    // Follow the current naming scheme. these are first class members in JS.
+    public class interop
+    {
+        public Action<string, object?>? OnModuleExported;
+        public Action<string>? OnModuleImported;
+        public Action<int>? OnComputerExit;
+        public interop()
+        {
+            
+        }
+        public double random(double max)
+        {
+            return System.Random.Shared.NextDouble() * max;
+        }
+        /// <summary>
+        /// A non-throwing foreach over a collection of objects, running action on each object.
+        /// a try catch prints exceptions but ignores them.
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <param name="source"></param>
+        /// <param name="action"></param>
+        public static void ForEachCast<T>(IEnumerable<object> source, Action<T> action)
+        {
+            try
+            {
+                foreach (var item in source)
+                {
+                    T instance = try_cast<T>(item, out var success);
+
+                    if (success)
+                        action(instance);
+                }
+            }
+            catch (Exception e)
+            {
+                if (e is not ObjectDisposedException ode)
+                {
+                    Notifications.Exception(e);
+                }
+            }
+        }
+        public static T try_cast<T>(object item, out bool success)
+        {
+            success = false;
+            if (item is T instance)
+            {
+                success = true;
+                return instance;
+            }
+            return default;
+        }
+        public async void sleep(int ms)
+        {
+            await Task.Delay(ms);
+        }
+        public void exit(int code)
+        {
+            OnComputerExit?.Invoke(code);
+        }
+        public JObject get_config() => Computer.Current.Config;
+        public void require(string path)
+        {
+            Computer.Current.JavaScript.ImportModule(path);
+        }
+        public void export(string id, object? obj)
+        {
+            OnModuleExported?.Invoke(id, obj);
+        }
+
     }
 }
 

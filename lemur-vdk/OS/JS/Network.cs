@@ -50,7 +50,7 @@ namespace Lemur.JS
         }
         private async Task ConnectToIP(IPAddress targetIP, string ipString)
         {
-            Computer.JavaScript.InteropModule.print($"Trying to connect to: {ipString}");
+            Notifications.Now($"Trying to connect to: {ipString}");
 
             Computer.Network.StopClient();
 
@@ -60,16 +60,16 @@ namespace Lemur.JS
 
                 if (Computer.Network.IsConnected())
                 {
-                    Computer.JavaScript.InteropModule.print($"Successfully connected to {ipString}.");
+                    Notifications.Now($"Successfully connected to {ipString}.");
                 }
                 else
                 {
-                    Computer.JavaScript.InteropModule.print($"Failed to connect to {ipString} :: Not found.");
+                    Notifications.Now($"Failed to connect to {ipString} :: Not found.");
                 }
             }
             catch (Exception e)
             {
-                Computer.JavaScript.InteropModule.print($"Failed to connect to {ipString} :: {e.Message}");
+                Notifications.Now($"Failed to connect to {ipString} :: {e.Message}");
             }
         }
         public async void upload(string path)
@@ -263,7 +263,7 @@ namespace Lemur.JS
         }
         public void eventHandler(string identifier, string methodName)
         {
-            if (Computer.userWindows.TryGetValue(identifier, out var app))
+            if (Computer.UserWindows.TryGetValue(identifier, out var app))
                 app.JavaScriptEngine?.CreateNetworkEventHandler(identifier, methodName);
         }
     }

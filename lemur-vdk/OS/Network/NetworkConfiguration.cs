@@ -92,7 +92,7 @@ namespace Lemur.Network
 
             NetworkEvents[outCh].Enqueue((msg, inCh));
 
-            foreach (var userWindow in Computer.Current.userWindows)
+            foreach (var userWindow in Computer.Current.UserWindows)
             {
                 if (userWindow.Value.JavaScriptEngine?.EventHandlers == null)
                     continue;

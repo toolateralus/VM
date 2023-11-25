@@ -33,7 +33,7 @@ namespace Lemur
         internal JObject Config;
         internal Theme theme = new();
 
-        internal readonly Dictionary<string, UserWindow> userWindows = new();
+        internal readonly Dictionary<string, UserWindow> UserWindows = new();
         internal readonly Dictionary<string, Type> csApps = new();
 
         internal readonly List<string> jsApps = new();
@@ -125,11 +125,19 @@ namespace Lemur
             // the resizable is the container that hosts the user app.
             // this is made seperate to eliminate annoying and complex boiler plate.
             UserWindow window = Window.OpenAppUI(title, ref background, ref foreground, out var resizable_window);
-            userWindows[title] = window;
+            UserWindows[title] = window;
 
             // this is the process being opened and the UI being established for it.
             // they are heavily woven, unfortunately.
             window.InitializeUserContent(resizable_window, control, engine);
+
+            resizable_window.BringToTopOfDesktop();
+
+            resizable_window.Width = 650;
+            resizable_window.Height = 650;
+
+            Canvas.SetTop(resizable_window, 200);
+            Canvas.SetLeft(resizable_window, 200);
         }
 
         public void InstallCSharpApp(string exePath, Type type)
@@ -179,10 +187,7 @@ namespace Lemur
             string backgroundPath = pc?.Config?.Value<string>("BACKGROUND") ?? "background.png";
             wnd.desktopBackground.Source = ComputerWindow.LoadImage(FileSystem.GetResourcePath(backgroundPath) ?? "background.png");
         }
-        internal void Print(object? obj)
-        {
-            JavaScript?.InteropModule?.print(obj ?? "null");
-        }
+        
 
         public async Task OpenCustom(string type)
         {
@@ -210,7 +215,7 @@ namespace Lemur
 
             ProcessLookupTable[type].Add(id);
 
-            userWindows[id].OnClosed += delegate 
+            UserWindows[id].OnClosed += delegate 
             {
                 if (!ProcessLookupTable.ContainsKey(type))
                     throw new Exception("The application became detached from the operating system, or is unknown.");
@@ -269,7 +274,7 @@ namespace Lemur
         public static IReadOnlyCollection<T> TryGetAllProcessesOfType<T>() where T : UserControl
         {
             List<T> contents = new();
-            foreach (var window in Current.userWindows)
+            foreach (var window in Current.UserWindows)
             {
                 window.Value.Dispatcher.Invoke(() => {
 
@@ -291,7 +296,7 @@ namespace Lemur
         public static T TryGetProcessOfType<T>() where T : UserControl
         {
             T content = null;
-            foreach (var window in Current.userWindows)
+            foreach (var window in Current.UserWindows)
             {
                 window.Value.Dispatcher.Invoke(() => { 
                 
@@ -343,7 +348,7 @@ namespace Lemur
                     Network?.Dispose();
                     cmdLine?.Dispose();
 
-                    foreach (var item in userWindows)
+                    foreach (var item in UserWindows)
                         item.Value.Close();
                 }
 

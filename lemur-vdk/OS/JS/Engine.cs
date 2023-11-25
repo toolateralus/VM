@@ -12,10 +12,11 @@ using Lemur.GUI;
 using Lemur.FS;
 using System.Diagnostics;
 using System.Windows.Input;
+using OpenTK.Graphics.ES11;
 
 namespace Lemur.JS
 {
-    public class Key
+    public class key
     {
         public bool isDown(string key)
         {
@@ -34,17 +35,24 @@ namespace Lemur.JS
     {
         internal IJsEngine m_engine_internal;
         IJsEngineSwitcher engineSwitcher;
-
-        public readonly Dictionary<string, object?> Modules = new();
-        public readonly Network NetworkModule;
-        public readonly Interop InteropModule;
-        private readonly ConcurrentDictionary<int, (string code, Action<object?> output)> CodeDictionary = new();
-        public readonly Dictionary<string, object> EmbeddedObjects = new();
-        public readonly List<InteropFunction> EventHandlers = new();
-
         private Computer Computer { get; set; }
+
         private readonly Thread executionThread;
+        public readonly Dictionary<string, object?> Modules = new();
+        
+        public readonly List<InteropFunction> EventHandlers = new();
+        public readonly Dictionary<string, object> EmbeddedObjects = new();
+        private readonly ConcurrentDictionary<int, (string code, Action<object?> output)> CodeDictionary = new();
         public bool Disposing { get; private set; }
+
+        public Network NetworkModule { get; }
+        public interop InteropModule { get; }
+        public graphics GraphicsModule { get; }
+        public conv ConvModule { get; }
+        public app AppModule { get; }
+        public file FileModule { get; }
+        public term TermModule { get; }
+        public key KeyModule { get; }
 
         public Engine(Computer computer)
         {
@@ -57,28 +65,33 @@ namespace Lemur.JS
 
             NetworkModule = new Network(computer, computer.Network.OnSendMessage);
 
-            InteropModule = new Interop(computer);
+            InteropModule = new interop();
             InteropModule.OnModuleImported += ImportModule;
 
-            EmbeddedObjects["network"] = NetworkModule;
-            EmbeddedObjects["interop"] = InteropModule;
+            GraphicsModule = new graphics();
+            ConvModule = new conv();
+            AppModule = new app();
+            FileModule = new file();
+            TermModule = new term();
+            KeyModule = new key();
 
-            EmbedObject("gfx", new Graphics());
+            EmbedObject("conv", ConvModule);
+            EmbedObject("network", NetworkModule);
+            EmbedObject("interop", InteropModule);
+            EmbedObject("gfx", GraphicsModule);
+            EmbedObject("app", AppModule);
+            EmbedObject("file", FileModule);
+            EmbedObject("term", TermModule);
+            EmbedObject("Key", KeyModule);
 
             EmbedType("Stopwatch", typeof(Stopwatch));
-
-            EmbedObject("Key", new Key());
 
             EmbedAllObjects();
             executionThread = new Thread(ExecuteAsync);
             executionThread.Start();
 
+            // the basic modules that are auto-included with each context.
             LoadModules(FileSystem.GetResourcePath("do_not_delete"));
-
-            // LoadModules(FileSystem.GetResourcePath("std")); force include std java script headers, game engine, etc.
-            // 
-
-            _ = Execute($"os.id = {computer.ID}");
 
             InteropModule.OnComputerExit += computer.Exit;
 
@@ -115,7 +128,7 @@ namespace Lemur.JS
                     catch (Exception e)
                     {
                         Notifications.Exception(e);
-                        Computer.JavaScript.InteropModule.print(e.Message);
+                        
                     }
                    
                     continue;
@@ -236,7 +249,7 @@ namespace Lemur.JS
             wnd.Dispatcher.Invoke(() =>
             {
                 // gets the requested ui control for the event to be attached to.
-                var content = Interop.GetUserContent(identifier, Computer);
+                var content = Lemur.JS.app.GetUserContent(identifier, Computer);
 
                 if (content == null)
                 {
@@ -249,7 +262,7 @@ namespace Lemur.JS
                 if (targetControl.ToLower().Trim() == "this")
                     element = content;
                 else
-                    element = Interop.FindControl(content, targetControl)!;
+                    element = Lemur.JS.app.FindControl(content, targetControl)!;
 
 
                 // failed to get the actual element the user requested.
@@ -264,7 +277,7 @@ namespace Lemur.JS
                 // this does the real creation of the event.
                 var eh = new InteropEvent(element, (XAML_EVENTS)type, this, identifier, methodName);
 
-                if (Computer.userWindows.TryGetValue(identifier, out var app))
+                if (Computer.UserWindows.TryGetValue(identifier, out var app))
                 {
                     app.OnClosed += () =>
                     {
@@ -301,7 +314,7 @@ namespace Lemur.JS
 
             var eh = new NetworkEvent(this, identifier, methodName);
 
-            if (Computer.userWindows.TryGetValue(identifier, out var app))
+            if (Computer.UserWindows.TryGetValue(identifier, out var app))
             {
                 app.OnClosed += () =>
                 {

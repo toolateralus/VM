@@ -62,7 +62,7 @@ namespace Lemur.Game
     {
         public Scene(string id)
         {
-            var content =  Interop.GetUserContent(id, Computer.Current);
+            var content =  JS.app.GetUserContent(id, Computer.Current);
         }
         internal GL4Renderer renderer;
 

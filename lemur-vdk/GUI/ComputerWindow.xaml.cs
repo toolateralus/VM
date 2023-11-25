@@ -69,7 +69,7 @@ namespace Lemur.GUI
         }
         public void Computer_KeyDown(object sender, KeyEventArgs e)
         {
-            foreach (var userWindow in Computer.userWindows)
+            foreach (var userWindow in Computer.UserWindows)
             {
                 var handlers = userWindow.Value?.JavaScriptEngine?.EventHandlers;
 
@@ -279,7 +279,7 @@ namespace Lemur.GUI
             window.OnClosed += () =>
             {
                 Desktop.Children.Remove(rsz_win_capture);
-                Computer?.userWindows.Remove(title);
+                Computer?.UserWindows.Remove(title);
                 RemoveTaskbarButton(title);
             };
             return window;

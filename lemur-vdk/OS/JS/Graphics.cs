@@ -3,7 +3,7 @@ using Image = System.Windows.Controls.Image;
 
 namespace Lemur.JS
 {
-    public class Graphics
+    public class graphics
     {
         private int ctxIndex;
 
@@ -59,8 +59,8 @@ namespace Lemur.JS
             }
 
             Computer.Current?.Window?.Dispatcher?.Invoke(() => { 
-                var control = Interop.GetUserContent(context.InstanceID, Computer.Current);
-                var image = Interop.FindControl(control, context.TargetControl) as Image;
+                var control = JS.app.GetUserContent(context.InstanceID, Computer.Current);
+                var image = JS.app.FindControl(control, context.TargetControl) as Image;
                 context.Draw(image);
             });
 

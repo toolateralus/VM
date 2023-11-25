@@ -1,4 +1,4 @@
 {
     args = [/***/];
-    install(args[0]);
+    app.install(args[0]);
 }

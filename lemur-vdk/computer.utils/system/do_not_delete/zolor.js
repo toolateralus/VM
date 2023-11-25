@@ -1,23 +1,3 @@
-//#region math
-function clamp(min,max,value){
-    return Math.min(max, Math.max(min, value))
-}
-// returns a unit square.
-function create_square() {
-    const v1 = new Point(-0.5, -0.5, Color.WHITE)
-    const v2 = new Point(-0.5, 0.5, Color.WHITE)
-    const v3 = new Point(0.5, 0.5, Color.WHITE)
-    const v4 = new Point(0.5, -0.5, Color.WHITE)
-    const verts = [v1, v2, v3, v4];
-    return verts;
-}
-
-// returns a packed color (int) from [r,g,b,a] color array.
-function to_color(color) {
-    var packedColor = (color[0] << 24) | (color[1] << 16) | (color[2] << 8) | color[3];
-    return packedColor;
-}
-
 // indexed color enum.
 const Color = {
     RED: 0,
@@ -101,5 +81,3 @@ const palette_indexed = [
     to_color(palette[22]), // Deep Pink 22
     to_color(palette[23]) // Medium Spring Green 23
 ];
-
-//#endregion math
