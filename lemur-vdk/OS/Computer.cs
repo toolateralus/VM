@@ -38,7 +38,8 @@ namespace Lemur
         internal string FileSystemRoot { get; private set; }
         internal string WorkingDir { get; private set; }
         internal bool disposing;
-
+        public static Dictionary<string, List<string>> ProcessLookupTable = new();
+        private static uint processCount;
         public void InitializeEngine(Computer computer)
         {
             javaScript = new(computer);
@@ -268,30 +269,24 @@ namespace Lemur
 
             foreach (var window in Current.Windows)
             {
-                // we should really put a centralized job queue in each window, and have internal multi-threading threr with several js engines.
-                // at least optionally, since it's pretty heavy memory overhead, but that could be very powerful.
-
                 window.Value.Dispatcher.Invoke(() => { 
                 
-                    if (window.Value is not UserWindow userWindow || userWindow.Content is not Grid g)
+                    if (window.Value is not UserWindow userWindow)
                         return;
 
-                    var result = g.Children.ToEnumerable().FirstOrDefault(i => i is Frame frame && frame.Content is T actualApp);
-
-                    if (result == default)
+                    if (userWindow.ContentsFrame is not Frame frame)
                         return;
 
-                    var frame = result as Frame ?? throw new NullReferenceException("failed to cast result of window search to frame, perhaps you're using the wrong XAML elements? probably an engine bug.");
-                    var app = (T)frame.Content;
-                    content = app;
+                    if (frame.Content is not T instance)
+                        return;
 
+                    content = instance;
                 });
             }
             return content!;
 
         }
-        public static Dictionary<string, List<string>> ProcessLookupTable = new();
-        private static uint processCount;
+    
         private static async Task<(string id, string code)> InstantiateWindowClass(string type, (string XAML, string JS) data, Engine engine)
         {
             var name = type.Split('.')[0];

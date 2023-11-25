@@ -1,4 +1,5 @@
-function print(obj){
+// simple global 'system' functions. just easier.
+function print(obj) {
     interop.print(obj);
 }
 function alias(cmd, path){
@@ -20,14 +21,19 @@ function start(app) {
 // Todo: add a way to directly access the WPF Window's 'Resoure' Dictionary.'
 // Would allow us to bypass the need to implement config readers/getters everywhere, at least for the UI.
 
+// to be deprecated
 function read() {
     return interop.read();
 }
 
+// to be deprecated
 function install(directory) {
     interop.install(directory)
 }
 
+// to be deprecated
+// pretty useless. many methods from interop can be moved into new types, such as OS, and we can 
+// have a much better sense of organization.
 class OS {
     id = 0;
 
@@ -40,6 +46,8 @@ class OS {
     }
 }
 
+
+// You cannot embed a typical enum and it's very easy to copy-paste them from C# to JS so we just do that.
 const XAML_EVENTS = {
     MOUSE_DOWN: 0,
     MOUSE_UP: 1,
@@ -52,6 +60,10 @@ const XAML_EVENTS = {
     PHYSICS: 8,
 };
 
+// to be deprecated
+// todo: remove this. this redundant and silly hack of wrappers came from a long time bug that's now fixed.
+// each of these functions should be removed from `interop` and moved into their own type called App or something,
+// then directly embedded.
 class App {
     install(directory) {
         interop.install(directory)

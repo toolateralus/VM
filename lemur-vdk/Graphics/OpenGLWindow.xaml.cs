@@ -15,7 +15,7 @@ namespace Lemur.Graphics
     /// </summary>
     public partial class OpenGL2Window : UserControl
     {
-        internal readonly GL4RenderLib renderLib;
+        internal readonly GL4Renderer renderLib;
         public static string? DesktopIcon => FileSystem.GetResourcePath("background.png");
         public OpenGL2Window()
         {

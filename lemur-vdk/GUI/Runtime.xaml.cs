@@ -59,11 +59,11 @@ namespace Lemur.GUI
         }
 
         public const string COMPUTER = "computer";
-        public const string FAST_BOOT_FILENAME = "this.ins";
+        public const string FASTBOOTFILENAME = "this.ins";
 
         private static void TryBootComputer(Action closeAction)
         {
-            if (FileSystem.GetResourcePath(FAST_BOOT_FILENAME) is string path && path.Contains(COMPUTER))
+            if (FileSystem.GetResourcePath(FASTBOOTFILENAME) is string path && path.Contains(COMPUTER))
             {
                 int startIndex = path.IndexOf(COMPUTER) + COMPUTER.Length;
 

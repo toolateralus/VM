@@ -1,10 +1,10 @@
 ﻿namespace Lemur.Graphics
 {
-    public class Shape
+    public class LemurShape
     {
         internal Vertex[] Vertices;
 
-        public Shape(Vertex[] vertices)
+        public LemurShape(Vertex[] vertices)
         {
             Vertices = vertices;
         }

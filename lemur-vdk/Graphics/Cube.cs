@@ -3,7 +3,7 @@ using OpenTK.Mathematics;
 
 namespace Lemur.Graphics
 {
-    public class Cube : Shape
+    public class Cube : LemurShape
     {
         private static readonly Vector3[] positions = new Vector3[]
         {
@@ -91,11 +91,11 @@ namespace Lemur.Graphics
         {
             Color4[] colors = new Color4[positions.Length];
             for (int i = 0; i < colors.Length; i++)
-                colors[i] = Color4.White;
+                colors[i] = Color4.Pink;
 
             Vertex[] vertices = new Vertex[positions.Length];
             for (int i = 0; i < positions.Length; i++)
-                vertices[i] = new Vertex(positions[i], normals[i], colors[i]);
+                vertices[i] = new Vertex(positions[i], normals[i], colors[(i + i) % colors.Length]);
 
             return new Cube(vertices);
         }
