@@ -13,6 +13,7 @@
         /// <summary>
         /// Deprecated, use RENDER { (7)XAML_EVENTS } instead.
         /// </summary>
-        PHYSICS = 8, 
+        PHYSICS = 8,
+        MOUSE_LEAVE = 9,
     }
 }

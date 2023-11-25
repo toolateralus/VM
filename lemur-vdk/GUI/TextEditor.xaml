@@ -19,7 +19,7 @@
             <Button FontFamily="Consolas" Click="RunButton_Click"  Name="RunButton" TextBlock.TextAlignment="Center" Height="20" Width="80" Content="run .js" />
             <Button FontFamily="Consolas" Click="RenderMD_Click"  Name="RenderMDButton" TextBlock.TextAlignment="Center" Height="20" Width="80" Content="render .md" />
         </StackPanel>
-        <avalonEdit:TextEditor x:Name="input" Grid.Row="1"
+        <avalonEdit:TextEditor x:Name="textEditor" Grid.Row="1"
             WordWrap="True"
             Foreground="White"
             Background="#28262e"

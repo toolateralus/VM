@@ -49,6 +49,7 @@ namespace Lemur.GUI
             StreamReader sReader = new(path);
 
             using XmlReader reader = XmlReader.Create(sReader);
+
             IHighlightingDefinition jsHighlighting = HighlightingLoader.Load(reader, HighlightingManager.Instance);
 
             if (HighlightingManager.Instance.GetDefinition("JavaScriptCustom") is IHighlightingDefinition ihd && ihd != default && ihd != null)

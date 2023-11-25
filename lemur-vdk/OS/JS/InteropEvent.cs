@@ -83,6 +83,12 @@ namespace Lemur.JS
                     executionThread = new(HeavyWorkerLoop);
                     executionThread.Start();
                     break;
+                case XAML_EVENTS.MOUSE_LEAVE:
+                    {
+                        control.MouseLeave += InvokeGeneric;
+                        onDispose += () => control.MouseLeave -= InvokeGeneric;
+                    }
+                    break;
                 default:
                     break;
             }

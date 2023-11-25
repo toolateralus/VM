@@ -40,7 +40,8 @@ namespace Lemur.JS
         {
             while (!Disposing && !javaScriptEngine.Disposing)
             {
-                InvokeEventUnsafe(null, null);
+                if (javaScriptEngine.m_engine_internal.HasVariable(functionHandle))
+                    InvokeEventUnsafe(null, null);
             }
             Dispose();
         }

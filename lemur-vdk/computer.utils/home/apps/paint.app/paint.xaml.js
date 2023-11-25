@@ -118,22 +118,23 @@ class paint {
     }
     setupUIEvents() {
         app.eventHandler(this.id, 'this', '_render', XAML_EVENTS.RENDER);
-        app.eventHandler(this.id, 'this', '_physics', XAML_EVENTS.RENDER);
+
         network.eventHandler(this.id, 'onNetworkEvent');
         // brush color button click
         app.eventHandler(this.id, 'changeColorBtn', 'changeBrush', XAML_EVENTS.MOUSE_DOWN);
-        app.eventHandler(this.id, 'saveBtn', 'onConnect', XAML_EVENTS.MOUSE_DOWN);
 
         // save/load image UI
         app.eventHandler(this.id, 'saveBtn', 'onSave', XAML_EVENTS.MOUSE_DOWN);
         app.eventHandler(this.id, 'loadBtn', 'onLoad', XAML_EVENTS.MOUSE_DOWN);
 
         // image mouse down/up in same method.
-        app.eventHandler(this.id, 'this', 'onMouseDown', XAML_EVENTS.MOUSE_DOWN);
-        app.eventHandler(this.id, 'this', 'onMouseDown', XAML_EVENTS.MOUSE_UP);
+        app.eventHandler(this.id, 'renderTarget', 'onMouseDown', XAML_EVENTS.MOUSE_DOWN);
+        app.eventHandler(this.id, 'renderTarget', 'onMouseDown', XAML_EVENTS.MOUSE_UP);
+
+        app.eventHandler(this.id, 'renderTarget', 'onMouseLeave', XAML_EVENTS.MOUSE_LEAVE);
 
         // image mouse move
-        app.eventHandler(this.id, 'this', 'onMouseMoved', XAML_EVENTS.MOUSE_MOVE);
+        app.eventHandler(this.id, 'renderTarget', 'onMouseMoved', XAML_EVENTS.MOUSE_MOVE);
     }
     getIndexedColorData(){
         const data = [0,0,0,0,0,0,0];

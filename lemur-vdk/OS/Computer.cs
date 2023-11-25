@@ -119,8 +119,7 @@ namespace Lemur
             UserWindow window = Window.OpenAppUI(title, ref background, ref foreground, out var resizable_window);
             UserWindows[title] = window;
 
-            // this is the process being opened and the UI being established for it.
-            // they are heavily woven, unfortunately.
+         
             window.InitializeUserContent(resizable_window, control, engine);
 
             resizable_window.BringToTopOfDesktop();
@@ -219,6 +218,16 @@ namespace Lemur
             };
 
             await engine.Execute(code);
+        }
+        public static string GetProcessClass(string identifier)
+        {
+            var processClass = "Unknown process";
+
+            foreach (var proc in Computer.ProcessLookupTable)
+                foreach (var pid in proc.Value)
+                    if (pid == identifier)
+                        processClass = proc.Key;
+            return processClass;
         }
 
         #region Application

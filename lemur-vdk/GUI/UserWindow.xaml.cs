@@ -26,7 +26,22 @@ namespace Lemur.GUI
 
             // TODO: fix this up
             minimizeBtn.Click += (_, _) => Owner?.ToggleVisibility();
-            maximizeBtn.Click += (_, _) => Owner?.ToggleMaximize();
+
+            maximizeBtn.Click += (_,_) => Owner?.ToggleMaximize();
+
+            long lastClickedTime = 0;
+
+            Toolbar.MouseLeftButtonDown += (_, e) =>
+            {
+                if (DateTimeOffset.Now.ToUnixTimeMilliseconds() - lastClickedTime < 500)
+                    Owner?.ToggleMaximize();
+                else
+                    Owner?.BeginMove(e.GetPosition(this));
+
+                lastClickedTime = DateTimeOffset.Now.ToUnixTimeMilliseconds();
+
+                e.Handled = true;
+            };
         }
         internal void InitializeUserContent(ResizableWindow frame, UserControl actualUserContent, Engine? engine)
         {
@@ -60,11 +75,7 @@ namespace Lemur.GUI
             Close();
             e.Handled = true;
         }
-        protected override void OnMouseLeftButtonDown(MouseButtonEventArgs e)
-        {
-            Owner.BeginMove(e.GetPosition(this));
-            e.Handled = true;
-        }
+
         private void OnResizeBorderClicked(object sender, MouseButtonEventArgs e)
         {
             if (sender is not Button button || button.Tag is not string tag)

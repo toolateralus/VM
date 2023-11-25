@@ -228,21 +228,24 @@ namespace Lemur.JS
         }
         internal async Task CreateEventHandler(string identifier, string targetControl, string methodName, int type)
         {
-            
+
             var wnd = Computer.Window;
             // check if this event already exists
             var result = await Execute($"{identifier} != null");
             if (result is not bool ID_EXISTS || !ID_EXISTS)
             {
-                Notifications.Now($"App not found : {identifier}");
+                Notifications.Now($"App not found : {identifier}..  that is NOT good...");
                 return;
             }
 
             // check if this method already exists
             result = await Execute($"{identifier}.{methodName} != null");
+            
+            string processClass = Computer.GetProcessClass(identifier).Replace(".app", "");
+
             if (result is not bool METHOD_EXISTS || !METHOD_EXISTS)
             {
-                Notifications.Now($"Method not found : {identifier}.{methodName}");
+                Notifications.Now($"'app.eventHandler(...)' threw an exception : {processClass}.{methodName} not found. Make sure {methodName} is defined and spelled correctly in both the hook function call and the definition.");
                 return;
             }
 
@@ -292,6 +295,9 @@ namespace Lemur.JS
                 EventHandlers.Add(eh);
             });
         }
+
+        
+
         internal async Task CreateNetworkEventHandler(string identifier, string methodName)
         {
             var wnd = Computer.Window;

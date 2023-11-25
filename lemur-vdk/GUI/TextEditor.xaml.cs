@@ -1,18 +1,14 @@
 ﻿using ICSharpCode.AvalonEdit.Highlighting;
-using ICSharpCode.AvalonEdit;
 using Microsoft.Win32;
 using System.IO;
 using System.Windows;
 using System.Windows.Controls;
-using System.Windows.Shapes;
-using Lemur;
 using ICSharpCode.AvalonEdit.Search;
 using System;
 using Lemur.FS;
-using System.Windows.Input;
 using System.Linq;
 using Lemur.JS;
-using Key = System.Windows.Input.Key;
+using System.Windows.Input;
 
 namespace Lemur.GUI
 {
@@ -45,11 +41,11 @@ namespace Lemur.GUI
             if (ctrl && e.Key == Key.S)
                 Save();
             else if (ctrl && e.Key == Key.OemPlus)
-                input.FontSize += 1;
-            else if (ctrl && e.Key == Key.OemMinus && input.FontSize > 0)
-                input.FontSize -= 1;
+                textEditor.FontSize += 1;
+            else if (ctrl && e.Key == Key.OemMinus && textEditor.FontSize > 0)
+                textEditor.FontSize -= 1;
 
-            Contents = input.Text;
+            Contents = textEditor.Text;
         }
         private void LoadFile(string path)
         {
@@ -61,9 +57,11 @@ namespace Lemur.GUI
 
                 if (extension == null)
                     return;
-                input.SyntaxHighlighting = HighlightingManager.Instance.GetDefinitionByExtension(extension);
+                
+                textEditor.SyntaxHighlighting = HighlightingManager.Instance.GetDefinitionByExtension(extension);
+
                 Contents = File.ReadAllText(path);
-                input.Text = Contents;
+                textEditor.Text = Contents;
             }
         }
 
@@ -80,7 +78,7 @@ namespace Lemur.GUI
         public TextEditor()
         {
             InitializeComponent();
-            SearchPanel.Install(input);
+            SearchPanel.Install(textEditor);
         }
 
         private void LoadButton_Click(object sender, RoutedEventArgs e)
@@ -133,14 +131,14 @@ namespace Lemur.GUI
             }
             try
             {
-                File.WriteAllText(LoadedFile, input.Text);
+                File.WriteAllText(LoadedFile, textEditor.Text);
             }
             catch (Exception e)
             {
                 Notifications.Exception(e);
             }
 
-            Notifications.Now($"Saved {input.LineCount} lines and {input.Text.Length} characters to ...\\{LoadedFile.Split('\\').LastOrDefault()}");
+            Notifications.Now($"Saved {textEditor.LineCount} lines and {textEditor.Text.Length} characters to ...\\{LoadedFile.Split('\\').LastOrDefault()}");
         }
 
         private async void RunButton_Click(object sender, RoutedEventArgs e)
@@ -152,7 +150,7 @@ namespace Lemur.GUI
 
             Computer.Current.OpenApp(cmd, engine: jsEngine);
 
-            await jsEngine.Execute(string.IsNullOrEmpty(input.Text) ? "print('You must provide some javascript to execute...')" : input.Text);
+            await jsEngine.Execute(string.IsNullOrEmpty(textEditor.Text) ? "print('You must provide some javascript to execute...')" : textEditor.Text);
         }
     }
 }

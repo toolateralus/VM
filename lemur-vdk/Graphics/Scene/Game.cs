@@ -11,9 +11,9 @@ namespace Lemur.Game
     public class Node
     {
         // m prefix because the lowercase javascript syntax, distinguish from field and method.
-        public Vector3 mPosition;
-        public Vector3 mRotation;
-        public Vector3 mScale;
+        public Vector3 mPosition = default;
+        public Vector3 mRotation = default;
+        public Vector3 mScale = default;
         internal Matrix4 Transform
         {
             get
@@ -74,8 +74,7 @@ namespace Lemur.Game
             // directly modifying vertices could behave poorly
             renderer.EnqueueJob(() => {
                 IEnumerable<MeshRenderer> meshes = nodes.OfType<MeshRenderer>();
-                IEnumerable<Vertex> vertsList = meshes.SelectMany(i => i.shapes.SelectMany(j => j.Vertices));
-                renderer.vertices = vertsList.ToArray();
+                renderer.meshes = meshes.ToList();
             });
         }
     }
@@ -87,7 +86,7 @@ namespace Lemur.Game
             this.shapes = shapes.ToList();
         }
     }
-    public class Camera
+    public class Camera : Node
     {
         public Camera(float perspectiveFov)
         {

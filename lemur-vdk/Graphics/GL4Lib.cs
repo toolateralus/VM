@@ -1,9 +1,12 @@
-﻿using Lemur.Graphics;
+﻿using Lemur.Game;
+using Lemur.Graphics;
 using OpenTK.Graphics.OpenGL4;
 using OpenTK.Mathematics;
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Diagnostics;
+using System.Globalization;
 using System.Linq;
 using System.Runtime.InteropServices;
 using System.Threading.Tasks;
@@ -20,9 +23,9 @@ namespace Lemur.Graphics
         // vertex buffer object, vertex array object.
         private int vbo, vao;
         private int shader;
-        internal Vertex[] vertices = Array.Empty<Vertex>();
+        internal List<MeshRenderer> meshes = new();
         private bool disposedValue;
-        internal Matrix4 mvp;
+        internal Matrix4 viewProjection;
 
         public Queue<Action> Jobs { get; private set; } = new();
 
@@ -102,7 +105,22 @@ namespace Lemur.Graphics
                 GL.DeleteShader(vertShader);
                 GL.DeleteShader(fragShader);
             });
+
+
+            Jobs.Enqueue(() => {
+                var shape = Cube.Unit();
+                var mesh = new MeshRenderer(Vector3.One, Vector3.One, Vector3.One, shape);
+                meshes.Add(mesh);
+            });
+
+            Game.Camera cam = new(60f);
+
+            var view = Matrix4.Invert(Matrix4.CreateTranslation(0,0,-5));
+            var proj = cam.CalculateProjection();
+
+            viewProjection = view * proj;
         }
+
         public void Render(TimeSpan span)
         {
 
@@ -112,25 +130,23 @@ namespace Lemur.Graphics
                 ThrowGLError();
             }
 
-            ThrowGLError();
+            Matrix4 mvp = Matrix4.Identity;
+            foreach(var mesh in meshes)
+            {
+                var vertices = mesh.shapes.SelectMany(i => i.Vertices).ToArray();
+                var size = Marshal.SizeOf<Vertex>() * vertices.Length;
 
-            var size = Marshal.SizeOf<Vertex>() * vertices.Length;
+                var mvpLocation = GL.GetUniformLocation(shader, "mvp");
 
-            var mvpLocation = GL.GetUniformLocation(shader, "mvp");
+                mvp = viewProjection * mesh.Transform;
 
-            ThrowGLError();
+                GL.UniformMatrix4(mvpLocation, false, ref mvp);
 
-            GL.UniformMatrix4(mvpLocation, false, ref mvp);
+                GL.BufferData(BufferTarget.ArrayBuffer, size, vertices, BufferUsageHint.DynamicDraw);
 
-            ThrowGLError();
+                GL.DrawArrays(PrimitiveType.TriangleFan, 0, vertices.Length);
+            }
 
-            GL.BufferData(BufferTarget.ArrayBuffer, size, vertices, BufferUsageHint.DynamicDraw);
-
-            ThrowGLError();
-
-            GL.DrawArrays(PrimitiveType.TriangleFan, 0, vertices.Length);
-
-            ThrowGLError();
         }
 
         private static void ThrowGLError()
