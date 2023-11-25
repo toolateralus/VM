@@ -150,7 +150,7 @@ namespace Lemur.JS
 
             Notifications.Now($"Downloading {path}..");
 
-            var root = Computer.FileSystemRoot + "\\downloads";
+            var root = FileSystem.Root + "\\downloads";
 
             if (!Directory.Exists(root))
             {

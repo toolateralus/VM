@@ -167,7 +167,7 @@ namespace Lemur.GUI
 
         private async Task ExecuteJavaScript(string code, int timeout = int.MaxValue)
         {
-            if (computer.cmdLine.TryCommand(code))
+            if (computer.CmdLine.TryCommand(code))
                 return;
 
             if (commandHistory.Count > 100)

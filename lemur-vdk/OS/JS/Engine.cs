@@ -83,8 +83,8 @@ namespace Lemur.JS
             EmbedObject("file", FileModule);
             EmbedObject("term", TermModule);
             EmbedObject("Key", KeyModule);
-
             EmbedType("Stopwatch", typeof(Stopwatch));
+            EmbedObject("config", computer.Config);
 
             EmbedAllObjects();
             executionThread = new Thread(ExecuteAsync);

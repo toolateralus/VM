@@ -22,28 +22,26 @@ namespace Lemur
 {
     public class Computer : IDisposable
     {
+        internal string WorkingDir { get; private set; }
+        internal uint ID { get; private set; }
+        private static uint processCount;
+
         [Obsolete("This is a (probably broken) tcp network implementation. It is not especially secure. Use at your own risk, but probably don't use this. it is unused by default")]
         internal NetworkConfiguration Network { get; set; }
         internal ComputerWindow Window { get; set; }
+        internal FileSystem FileSystem { get; set; }
+        internal Engine JavaScript { get; set; }
+        internal CommandLine CmdLine { get; set; }
+        internal JObject Config { get; set; }
+        internal Theme Theme { get; set; } = new();
 
-        internal FileSystem FileSystem;
-        internal Engine JavaScript;
-        internal CommandLine cmdLine;
-
-        internal JObject Config;
-        internal Theme theme = new();
-
+        internal static Dictionary<string, List<string>> ProcessLookupTable = new();
         internal readonly Dictionary<string, UserWindow> UserWindows = new();
         internal readonly Dictionary<string, Type> csApps = new();
 
         internal readonly List<string> jsApps = new();
 
-        internal uint ID { get; private set; }
-        internal string FileSystemRoot { get; private set; }
-        internal string WorkingDir { get; private set; }
         internal bool disposing;
-        internal static Dictionary<string, List<string>> ProcessLookupTable = new();
-        private static uint processCount;
         public void InitializeEngine(Computer computer)
         {
             JavaScript = new(computer);
@@ -52,24 +50,18 @@ namespace Lemur
                 JavaScript.ExecuteScript(AbsPath);
         }
        
-        public Computer(uint id)
+        public Computer(FileSystem fs)
         {
-            cmdLine = new();
+            this.FileSystem = fs;
 
-            var WORKING_DIR = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData) + "\\Lemur";
-
-            this.WorkingDir = Path.GetFullPath(WORKING_DIR);
-
-            // prepare the root dir for the file system
-            FileSystemRoot = $"{this.WorkingDir}\\computer{id}";
-
-            FileSystem = new(FileSystemRoot);
+            CmdLine = new();
              
             Network = new(this);
 
+            Config = LoadConfig();
+
             InitializeEngine(this);
 
-            Config = LoadConfig();
         }
         internal static JObject? LoadConfig()
         {
@@ -133,9 +125,9 @@ namespace Lemur
 
             resizable_window.BringToTopOfDesktop();
 
+            // todo : change this
             resizable_window.Width = 650;
             resizable_window.Height = 650;
-
             Canvas.SetTop(resizable_window, 200);
             Canvas.SetLeft(resizable_window, 200);
         }
@@ -244,7 +236,11 @@ namespace Lemur
         }
         internal protected static void Boot(uint cpu_id)
         {
-            Computer pc = new(cpu_id);
+            var workingDir = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData) + $"\\Lemur\\computer{cpu_id}";
+            var FileSystemRoot = $"{workingDir}\\computer{cpu_id}";
+            var FileSystem = new FileSystem(FileSystemRoot);
+
+            Computer pc = new(FileSystem);
             ComputerWindow wnd = new(pc);
             pc.Window = wnd;
 
@@ -346,7 +342,7 @@ namespace Lemur
                     JavaScript?.Dispose();
                     Window?.Dispose();
                     Network?.Dispose();
-                    cmdLine?.Dispose();
+                    CmdLine?.Dispose();
 
                     foreach (var item in UserWindows)
                         item.Value.Close();
@@ -356,7 +352,7 @@ namespace Lemur
                 Window = null!;
                 Network = null!;
                 FileSystem = null!;
-                cmdLine = null!;
+                CmdLine = null!;
 
                 this.disposing = true;
             }

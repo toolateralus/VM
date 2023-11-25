@@ -12,6 +12,7 @@ namespace Lemur.FS
 {
     public partial class FileSystem
     {
+        public static string Root { get; private set; }
         public FileSystem(string root)
         {
             if (string.IsNullOrEmpty(root))
@@ -25,12 +26,11 @@ namespace Lemur.FS
                 Installer.Install(root);
             }
 
-            currentDirectory = root;
-
+            Root = currentDirectory = root;
         }
 
-        private string currentDirectory;
-        public string CurrentDirectory
+        private static string currentDirectory;
+        public static string CurrentDirectory
         {
             get { return currentDirectory; }
             set
@@ -45,8 +45,7 @@ namespace Lemur.FS
                 }
             }
         }
-        public Deque<string> History = new();
-        private bool Disposing;
+        public static Deque<string> History = new();
         public static string GetResourcePath(string name)
         {
             try
@@ -59,17 +58,24 @@ namespace Lemur.FS
 
                 if (System.IO.Path.IsPathFullyQualified(name))
                     if (File.Exists(name) || Directory.Exists(name))
-                        return name;
+                    {
+                        if (WithinFileSystemBounds(name))
+                            return name;
+                        else Notifications.Now($"File {name} is inaccessible due to it being outside of the restricted file system");
+                    }
 
-                var WorkingRoot = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData) + "\\Lemur";
-                VerifyOrCreateAppdataDir(WorkingRoot);
+                VerifyOrCreateAppdataDir(Root);
 
                 if (Directory.Exists(name) || File.Exists(name))
-                    return name;
-
-                if (Directory.Exists(WorkingRoot))
                 {
-                    string[] entries = Directory.GetFileSystemEntries(WorkingRoot, name, new EnumerationOptions
+                    if (WithinFileSystemBounds(name))
+                        return name;
+                    else Notifications.Now($"File {name} is inaccessible due to it being outside of the restricted file system");
+                }
+
+                if (Directory.Exists(Root))
+                {
+                    string[] entries = Directory.GetFileSystemEntries(Root, name, new EnumerationOptions
                     {
                         RecurseSubdirectories = true,
                         MaxRecursionDepth = 100,
@@ -78,7 +84,12 @@ namespace Lemur.FS
                     var foundPath = entries?.FirstOrDefault() ?? "";
 
                     if (File.Exists(foundPath) || Directory.Exists(foundPath))
+                    {
+                        if (WithinFileSystemBounds(foundPath))
+                            return foundPath;
+                        else Notifications.Now($"File {name} is inaccessible due to it being outside of the restricted file system");
                         return foundPath;
+                    }
                 }
             }
             catch (Exception ex)
@@ -89,6 +100,7 @@ namespace Lemur.FS
             return "";
             //throw new NullReferenceException("Failed to get resource " + name);
         }
+        private static bool WithinFileSystemBounds(string name) => name.StartsWith(Root);
         internal static void VerifyOrCreateAppdataDir(string path)
         {
             if (!Directory.Exists(path))
@@ -112,11 +124,11 @@ namespace Lemur.FS
                 ProcessDirectoriesAndFilesRecursively(subDir, processDirAction, processFileAction);
             }
         }
-        public void ChangeDirectory(string path)
+        public static void ChangeDirectory(string path)
         {
             if (path == "..")
             {
-                string currentDirectory = Computer.Current.FileSystem.CurrentDirectory;
+                string currentDirectory = FileSystem.CurrentDirectory;
 
                 string[] components = currentDirectory.Split('\\');
 
@@ -126,26 +138,28 @@ namespace Lemur.FS
 
                     string parentDirectory = string.Join("\\", parentComponents);
 
-                    Computer.Current.FileSystem.ChangeDirectory(parentDirectory);
+                    FileSystem.ChangeDirectory(parentDirectory);
                 }
                 return;
             }
 
             path = GetRelativeOrAbsolute(path);
 
-            if (Directory.Exists(path))
+            if (Directory.Exists(path) && WithinFileSystemBounds(path))
             {
-
                 History.Push(currentDirectory);
-
                 currentDirectory = path;
             }
             else if (!File.Exists(path))
             {
                 Notifications.Now($"Directory '{path}' not found in current path.");
             }
+            else if (!WithinFileSystemBounds(path))
+            {
+                Notifications.Now($"Directory '{path}' is inaccessible due to it being outside of the restricted file system");
+            }
         }
-        public void NewFile(string fileName, bool isDirectory = false)
+        public static void NewFile(string fileName, bool isDirectory = false)
         {
             string path = GetRelativeOrAbsolute(fileName);
 
@@ -165,7 +179,7 @@ namespace Lemur.FS
                 }
             }
         }
-        public void Delete(string fileName, bool isDirectory = false)
+        public static void Delete(string fileName, bool isDirectory = false)
         {
             string targetPath = GetRelativeOrAbsolute(fileName);
 
@@ -185,23 +199,23 @@ namespace Lemur.FS
                 }
             }
         }
-        private string GetRelativeOrAbsolute(string fileName)
+        private static string GetRelativeOrAbsolute(string fileName)
         {
             var targetPath = fileName;
 
             if (!Path.IsPathFullyQualified(targetPath))
             {
-                targetPath = Path.Combine(Computer.Current.FileSystemRoot, fileName);
+                targetPath = Path.Combine(FileSystem.Root, fileName);
             }
 
             return targetPath;
         }
-        public void Write(string fileName, string content)
+        public static void Write(string fileName, string content)
         {
             fileName = GetRelativeOrAbsolute(fileName);
             File.WriteAllText(fileName, content);
         }
-        public string Read(string fileName)
+        public static string Read(string fileName)
         {
             fileName = GetRelativeOrAbsolute(fileName);
             if (File.Exists(fileName))
@@ -214,12 +228,12 @@ namespace Lemur.FS
                 return "";
             }
         }
-        public bool FileExists(string fileName)
+        public static bool FileExists(string fileName)
         {
             fileName = GetRelativeOrAbsolute(fileName);
             return File.Exists(fileName);
         }
-        public bool DirectoryExists(string directoryName)
+        public static bool DirectoryExists(string directoryName)
         {
             directoryName = GetRelativeOrAbsolute(directoryName);
             return Directory.Exists(directoryName);
@@ -229,7 +243,7 @@ namespace Lemur.FS
             string[] content = Directory.GetFileSystemEntries(currentDirectory);
             return content;
         }
-        internal void Copy(string sourcePath, string destinationPath)
+        internal static void Copy(string sourcePath, string destinationPath)
         {
             sourcePath = GetRelativeOrAbsolute(sourcePath);
             destinationPath = GetRelativeOrAbsolute(destinationPath);
@@ -264,7 +278,7 @@ namespace Lemur.FS
                 Notifications.Now("Source file or directory not found.. \n" + sourcePath);
             }
         }
-        internal void Move(string? path, string? dest)
+        internal static void Move(string? path, string? dest)
         {
             if (path != null && dest != null)
             {

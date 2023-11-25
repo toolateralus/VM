@@ -48,9 +48,13 @@ namespace Lemur.GUI
                 input.FontSize += 1;
             else if (ctrl && e.Key == Key.OemMinus && input.FontSize > 0)
                 input.FontSize -= 1;
+
+            Contents = input.Text;
         }
         private void LoadFile(string path)
         {
+            path = FileSystem.GetResourcePath(path);
+
             if (File.Exists(path))
             {
                 string? extension = System.IO.Path.GetExtension(path)?.ToLower();
@@ -107,7 +111,7 @@ namespace Lemur.GUI
             if (!File.Exists(LoadedFile))
             {
                 var dialog = new SaveFileDialog();
-                dialog.InitialDirectory = Computer.Current.FileSystemRoot;
+                dialog.InitialDirectory = FileSystem.Root;
 
                 dialog.FileName = "untitled";
                 dialog.DefaultExt = ".js";

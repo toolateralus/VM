@@ -75,6 +75,8 @@ namespace Lemur.OS
             oldEngine.Dispose();
 
             Engine newEngine = new(Computer.Current);
+            
+
             Computer.Current.JavaScript = newEngine;
 
             if (Computer.Current.JavaScript == newEngine)
@@ -108,7 +110,7 @@ namespace Lemur.OS
                 return;
             }
 
-            Computer.Current.FileSystem.Move(a, b);
+            FileSystem.Move(a, b);
             Notifications.Now($"Moved {a}->{b}");
         }
         private void LP(object[]? obj)
@@ -128,7 +130,7 @@ namespace Lemur.OS
         {
             if (obj != null && obj.Length > 0 && obj[0] is string target)
             {
-                Computer.Current.FileSystem.Delete(target);
+                FileSystem.Delete(target);
             }
             else
             {
@@ -308,7 +310,7 @@ namespace Lemur.OS
 
             var textList = string.Join("\n\t", list);
 
-            var text = $"\n##Current Directory: {Computer.Current.FileSystem.CurrentDirectory}###\n";
+            var text = $"\n##Current Directory: {FileSystem.CurrentDirectory}###\n";
             commandPrompt.output.AppendText(text + "\t");
             commandPrompt.output.AppendText(textList);
         }
@@ -316,7 +318,7 @@ namespace Lemur.OS
         {
             if (obj != null && obj.Length > 0 && obj[0] is string Path)
             {
-                Computer.Current.FileSystem.ChangeDirectory(Path);
+                FileSystem.ChangeDirectory(Path);
             }
             else
             {
@@ -344,7 +346,7 @@ namespace Lemur.OS
                         Notifications.Now($"Invalid path {Destination} in Copy");
                         continue;
                     }
-                    Computer.Current.FileSystem.Copy(Path, Destination);
+                    FileSystem.Copy(Path, Destination);
                     Notifications.Now($"Copied from {Path}->{Destination}");
                 }
             }
@@ -357,7 +359,7 @@ namespace Lemur.OS
         {
             if (obj != null && obj.Length > 0 && obj[0] is string Path)
             {
-                Computer.Current.FileSystem.NewFile(Path);
+                FileSystem.NewFile(Path);
                 Notifications.Now($"Created directory {Path}");
             }
             else
@@ -463,7 +465,7 @@ namespace Lemur.OS
         }
         public void RootCmd(object[]? args)
         {
-            Computer.Current.FileSystem.ChangeDirectory(Computer.Current.FileSystemRoot);
+            FileSystem.ChangeDirectory(FileSystem.Root);
         }
         protected virtual void Dispose(bool disposing)
         {

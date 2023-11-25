@@ -15,6 +15,7 @@ using System.Runtime.CompilerServices;
 using Lemur.JS;
 using Lemur.FS;
 using System.Windows.Media.Imaging;
+using System.Data.Common;
 
 namespace Lemur.GUI
 {
@@ -34,7 +35,12 @@ namespace Lemur.GUI
 
             //StartPerpetualColorAnimation();
 
-            TryBootComputer(Close);
+            if (uint.TryParse(IDBox.Text, out uint number))
+            {
+                Computer.Boot(number);
+                Close();
+            }
+
         }
 
         public static void LoadCustomSyntaxHighlighting()
@@ -61,33 +67,6 @@ namespace Lemur.GUI
         public const string COMPUTER = "computer";
         public const string FASTBOOTFILENAME = "this.ins";
 
-        private static void TryBootComputer(Action closeAction)
-        {
-            if (FileSystem.GetResourcePath(FASTBOOTFILENAME) is string path && path.Contains(COMPUTER))
-            {
-                int startIndex = path.IndexOf(COMPUTER) + COMPUTER.Length;
-
-                if (startIndex < path.Length)
-                {
-                    string computerNumber = path.Substring(startIndex);
-
-                    int endIndex = computerNumber.IndexOfAny(new char[] { '/', '\\' });
-
-                    if (endIndex != -1)
-                    {
-                        computerNumber = computerNumber.Substring(0, endIndex);
-                    }
-
-                    if (uint.TryParse(computerNumber, out uint number))
-                    {
-                        Computer.Boot(number);
-                        closeAction?.Invoke();
-                    }
-                }
-            } 
-            
-        }
-
         public static Action<WindowState>? OnWindowStateChanged;
         private void IDBox_KeyDown(object sender, KeyEventArgs e)
         {
@@ -104,10 +83,7 @@ namespace Lemur.GUI
                 return;
             }
 
-            var WORKING_DIR = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData) + $"\\Lemur\\computer{cpu_id}";
-
-            if (Directory.Exists(WORKING_DIR))
-                Directory.Delete(WORKING_DIR, true);
+           
 
             NewComputerButton(null, new());
         }

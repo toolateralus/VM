@@ -15,7 +15,7 @@
         </ContextMenu>
     </UserControl.Resources>
     <Grid>
-        <ListBox x:Name="FileBox" Margin="10,35,10,10" ContextMenu="{StaticResource ItemContextMenu}" Background="#FF333030"/>
+        <ListBox x:Name="FileBox" Margin="10,35,10,10" ContextMenu="{StaticResource ItemContextMenu}" Foreground="White" Background="#FF333030"/>
         <StackPanel Orientation="Horizontal" VerticalAlignment="Top" Background="#FF373738" Margin="10,0,10,0">
             <Button MinWidth="25" Margin="5" BorderBrush="DarkCyan" Foreground="White" Background="#FF5F36A9" Click="BackPressed" Height="20" Content="Back" >
                 <Button.Effect>
