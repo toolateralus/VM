@@ -33,12 +33,13 @@ namespace Lemur.Network
         public static string LAST_KNOWN_SERVER_IP => "192.168.0.138";
         public static IPAddress SERVER_IP => IPAddress.Parse(LAST_KNOWN_SERVER_IP);
         public static int LAST_KNOWN_SERVER_PORT { get; internal set; }
+        public static Dictionary<int, Queue<(object? val, int replyCh)>> NetworkEvents = new();
 
         public NetworkConfiguration(Computer computer)
         {
-            if (computer?.config?.Value<bool>("ALWAYS_CONNECT") is bool connect && connect)
+            if (computer?.Config?.Value<bool>("ALWAYS_CONNECT") is bool connect && connect)
             {
-                if (computer?.config?.Value<string>("DEFAULT_SERVER_IP") is string _IP && IPAddress.Parse(_IP) is IPAddress ip)
+                if (computer?.Config?.Value<string>("DEFAULT_SERVER_IP") is string _IP && IPAddress.Parse(_IP) is IPAddress ip)
                 {
                     _ = StartClient(ip);
                 }
@@ -48,7 +49,6 @@ namespace Lemur.Network
                 }
             }
         }
-        
         public async Task StartClient(IPAddress ip)
         {
             await Task.Run(() =>
@@ -85,7 +85,6 @@ namespace Lemur.Network
 
             return host.Running;
         }
-        public static Dictionary<int, Queue<(object? val, int replyCh)>> NetworkEvents = new();
         internal static void Broadcast(int outCh, int inCh, object? msg)
         {
             if (!NetworkEvents.TryGetValue(outCh, out _))
@@ -93,7 +92,7 @@ namespace Lemur.Network
 
             NetworkEvents[outCh].Enqueue((msg, inCh));
 
-            foreach (var userWindow in Computer.Current.Windows)
+            foreach (var userWindow in Computer.Current.userWindows)
             {
                 if (userWindow.Value.JavaScriptEngine?.EventHandlers == null)
                     continue;
@@ -134,17 +133,15 @@ namespace Lemur.Network
             if (await Task.WhenAny(loop, timeoutTask) == timeoutTask)
             {
                 cts.Cancel();
-                Notifications.Now("Network timeout out polling events");
+                Notifications.Now("Network timed out while polling an event");
             }
 
             return loop.Result ?? default;
         }
-
         internal void StopClient()
         {
             Dispose();
         }
-
         public void Dispose()
         {
             client?.Close();
@@ -152,12 +149,10 @@ namespace Lemur.Network
             Task.Run(() => receiveThread?.Join());
             Notifications.Now($"Disconnected from {LAST_KNOWN_SERVER_IP}::{LAST_KNOWN_SERVER_PORT}");
         }
-
         public void StopHosting(object?[] args)
         {
             host?.Dispose();
         }
-
         internal bool IsConnected()
         {
             return stream != null && client != null && client.Connected;
@@ -166,15 +161,17 @@ namespace Lemur.Network
         {
             return $"{LANIPFetcher.GetLocalIPAddress().MapToIPv4()}:{host?.OPEN_PORT}";
         }
-
         public void ReceiveMessages()
         {
             try
             {
                 while (IsConnected())
                 {
-                    // blocking call to server that actually reads data.
-                    var packet = RecieveMessage(stream, client, false);
+                    // ! operator usage
+                    // IsConnected() is a widely used way to validate that stream & client aren't null and are connected.
+                    // They cannot be null
+                    var packet = RecieveMessage(stream!, client!, false);
+
                     int messageLength = packet.Metadata.Value<int>("size");
                     int sender_ch = packet.Metadata.Value<int>("ch");
                     int reciever_ch = packet.Metadata.Value<int>("reply");
@@ -182,15 +179,16 @@ namespace Lemur.Network
                     var data = packet.Metadata.Value<string>("data") ?? "";
                     packet.Metadata["data"] = Encoding.UTF8.GetString(Convert.FromBase64String(data));
 
+                    // normal messages
+                    // send the whole packet? or deconstruct for the user?
+                    // this way implies you need to send formatted json in send message which is false, it formats your message for you.
                     if (path is null)
-                    {
-                        NetworkConfiguration.Broadcast(sender_ch, reciever_ch, packet.Metadata.ToString());
-                    }
+                        Broadcast(sender_ch, reciever_ch, packet.Metadata.ToString());
+                        
+
+                    // downloads // file transfer
                     else
-                    {
-                        // DOWNLOADS // FILE TRANSFER
-                        NetworkConfiguration.Broadcast(sender_ch, reciever_ch, packet.Metadata);
-                    }
+                        Broadcast(sender_ch, reciever_ch, packet.Metadata);
                 }
             }
             catch (Exception e)
@@ -199,14 +197,13 @@ namespace Lemur.Network
             }
             finally
             {
-                // server disconnect
                 stream?.Close();
                 client?.Close();
             }
         }
         internal void OnSendMessage(byte[] dataBytes, TransmissionType type, int ch, int reply, bool isDir = false)
         {
-            var metadata = Server.Server.ToJson(dataBytes.Length, dataBytes, type, ch, reply, isDir);
+            var metadata = ToJson(dataBytes.Length, dataBytes, type, ch, reply, isDir);
 
             byte[] metadataBytes = Encoding.UTF8.GetBytes(metadata);
             byte[] lengthBytes = BitConverter.GetBytes(metadataBytes.Length);

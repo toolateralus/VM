@@ -98,8 +98,8 @@ namespace Lemur.GUI
             this.computer = computer;
             Engine ??= new(computer);
 
-            output.FontFamily = new(computer?.config?.Value<string>("FONT") ?? "Consolas");
-            input.FontFamily = new(computer?.config?.Value<string>("FONT") ?? "Consolas");
+            output.FontFamily = new(computer?.Config?.Value<string>("FONT") ?? "Consolas");
+            input.FontFamily = new(computer?.Config?.Value<string>("FONT") ?? "Consolas");
         }
         private async void CommandPrompt_PreviewKeyDown(object sender, System.Windows.Input.KeyEventArgs e)
         {

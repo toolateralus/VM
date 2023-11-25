@@ -41,7 +41,7 @@ namespace Lemur.JS
 
             if (ip is string IPString && IPAddress.TryParse(IPString, out targetIP))
                 ConnectToIP(targetIP, IPString);
-            else if (Computer.config?.Value<string>("DEFAULT_SERVER_IP") is string defaultIP && IPAddress.TryParse(defaultIP, out targetIP))
+            else if (Computer.Config?.Value<string>("DEFAULT_SERVER_IP") is string defaultIP && IPAddress.TryParse(defaultIP, out targetIP))
                 ConnectToIP(targetIP, defaultIP);
             else
             {
@@ -50,7 +50,7 @@ namespace Lemur.JS
         }
         private async Task ConnectToIP(IPAddress targetIP, string ipString)
         {
-            Computer.javaScript.InteropModule.print($"Trying to connect to: {ipString}");
+            Computer.JavaScript.InteropModule.print($"Trying to connect to: {ipString}");
 
             Computer.Network.StopClient();
 
@@ -60,16 +60,16 @@ namespace Lemur.JS
 
                 if (Computer.Network.IsConnected())
                 {
-                    Computer.javaScript.InteropModule.print($"Successfully connected to {ipString}.");
+                    Computer.JavaScript.InteropModule.print($"Successfully connected to {ipString}.");
                 }
                 else
                 {
-                    Computer.javaScript.InteropModule.print($"Failed to connect to {ipString} :: Not found.");
+                    Computer.JavaScript.InteropModule.print($"Failed to connect to {ipString} :: Not found.");
                 }
             }
             catch (Exception e)
             {
-                Computer.javaScript.InteropModule.print($"Failed to connect to {ipString} :: {e.Message}");
+                Computer.JavaScript.InteropModule.print($"Failed to connect to {ipString} :: {e.Message}");
             }
         }
         public async void upload(string path)
@@ -263,7 +263,7 @@ namespace Lemur.JS
         }
         public void eventHandler(string identifier, string methodName)
         {
-            if (Computer.Windows.TryGetValue(identifier, out var app))
+            if (Computer.userWindows.TryGetValue(identifier, out var app))
                 app.JavaScriptEngine?.CreateNetworkEventHandler(identifier, methodName);
         }
     }

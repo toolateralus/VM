@@ -73,7 +73,7 @@ namespace Lemur.JS
             executionThread = new Thread(ExecuteAsync);
             executionThread.Start();
 
-            LoadModules(FileSystem.GetResourcePath("__os"));
+            LoadModules(FileSystem.GetResourcePath("do_not_delete"));
 
             // LoadModules(FileSystem.GetResourcePath("std")); force include std java script headers, game engine, etc.
             // 
@@ -115,7 +115,7 @@ namespace Lemur.JS
                     catch (Exception e)
                     {
                         Notifications.Exception(e);
-                        Computer.javaScript.InteropModule.print(e.Message);
+                        Computer.JavaScript.InteropModule.print(e.Message);
                     }
                    
                     continue;
@@ -264,7 +264,7 @@ namespace Lemur.JS
                 // this does the real creation of the event.
                 var eh = new InteropEvent(element, (XAML_EVENTS)type, this, identifier, methodName);
 
-                if (Computer.Windows.TryGetValue(identifier, out var app))
+                if (Computer.userWindows.TryGetValue(identifier, out var app))
                 {
                     app.OnClosed += () =>
                     {
@@ -301,7 +301,7 @@ namespace Lemur.JS
 
             var eh = new NetworkEvent(this, identifier, methodName);
 
-            if (Computer.Windows.TryGetValue(identifier, out var app))
+            if (Computer.userWindows.TryGetValue(identifier, out var app))
             {
                 app.OnClosed += () =>
                 {

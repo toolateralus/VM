@@ -65,7 +65,7 @@ namespace Lemur.JS
         {
             CommandPrompt cmd = null;
 
-            cmd = Computer.TryGetProcess<CommandPrompt>();
+            cmd = Computer.TryGetProcessOfType<CommandPrompt>();
 
             Computer.Window?.Dispatcher?.Invoke(() => { 
 
@@ -86,7 +86,7 @@ namespace Lemur.JS
         public string? read()
         {
             CommandPrompt cmd = null;
-            cmd = Computer.TryGetProcess<CommandPrompt>();
+            cmd = Computer.TryGetProcessOfType<CommandPrompt>();
             var waiting = true;
             string result = "";
             if (cmd is null)
@@ -164,7 +164,7 @@ namespace Lemur.JS
         public async void call(string message)
         {
             if (!Computer.cmdLine.TryCommand(message))
-                await Computer.javaScript.Execute(message);
+                await Computer.JavaScript.Execute(message);
         }
         public async void start(string path)
         {
@@ -214,7 +214,7 @@ namespace Lemur.JS
             Notifications.Now("Incorrect path for uninstall");
 
         }
-        public JObject GetConfig() => Computer.config;
+        public JObject GetConfig() => Computer.Config;
         public void install(string dir)
         {
             if (dir.Contains(".web"))
@@ -257,7 +257,7 @@ namespace Lemur.JS
         }
         public void require(string path)
         {
-            Computer.javaScript.ImportModule(path);
+            Computer.JavaScript.ImportModule(path);
         }
         public object? read_file(string path)
         {
@@ -330,7 +330,7 @@ namespace Lemur.JS
             {
                 // validated path.
                 path = AbsPath;
-                Computer.config["ALIAS_PATH"] = path;
+                Computer.Config["ALIAS_PATH"] = path;
             }
             else
             {
@@ -459,7 +459,7 @@ namespace Lemur.JS
         {
             var window = computer.Window;
 
-            var resizableWins = computer.Windows?.Where(W => W.Key == id);
+            var resizableWins = computer.userWindows?.Where(W => W.Key == id);
 
             if (resizableWins != null && resizableWins.Any())
             {
@@ -663,7 +663,7 @@ namespace Lemur.JS
         }
         public async void eventHandler(string identifier, string targetControl, string methodName, int type)
         {
-            if (Computer.Windows.TryGetValue(identifier, out var app))
+            if (Computer.userWindows.TryGetValue(identifier, out var app))
                 await app.JavaScriptEngine?.CreateEventHandler(identifier, targetControl, methodName, type);
         }
         public void loadApps(object? path)

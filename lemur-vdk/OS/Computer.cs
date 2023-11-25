@@ -16,36 +16,40 @@ using System.Windows.Media;
 using Microsoft.ClearScript.JavaScript;
 using Lemur.OS;
 using Lemur.Graphics;
+using Newtonsoft.Json;
 
 namespace Lemur
 {
     public class Computer : IDisposable
     {
+        [Obsolete("This is a (probably broken) tcp network implementation. It is not especially secure. Use at your own risk, but probably don't use this. it is unused by default")]
         internal NetworkConfiguration Network { get; set; }
         internal ComputerWindow Window { get; set; }
 
-        internal FileSystem fileSystem;
-        internal Engine javaScript;
+        internal FileSystem FileSystem;
+        internal Engine JavaScript;
         internal CommandLine cmdLine;
 
-        internal JObject config;
+        internal JObject Config;
         internal Theme theme = new();
 
-        internal readonly Dictionary<string, UserWindow> Windows = new();
+        internal readonly Dictionary<string, UserWindow> userWindows = new();
         internal readonly Dictionary<string, Type> csApps = new();
+
         internal readonly List<string> jsApps = new();
+
         internal uint ID { get; private set; }
         internal string FileSystemRoot { get; private set; }
         internal string WorkingDir { get; private set; }
         internal bool disposing;
-        public static Dictionary<string, List<string>> ProcessLookupTable = new();
+        internal static Dictionary<string, List<string>> ProcessLookupTable = new();
         private static uint processCount;
         public void InitializeEngine(Computer computer)
         {
-            javaScript = new(computer);
+            JavaScript = new(computer);
 
             if (FileSystem.GetResourcePath("startup.js") is string AbsPath)
-                javaScript.ExecuteScript(AbsPath);
+                JavaScript.ExecuteScript(AbsPath);
         }
        
         public Computer(uint id)
@@ -59,15 +63,15 @@ namespace Lemur
             // prepare the root dir for the file system
             FileSystemRoot = $"{this.WorkingDir}\\computer{id}";
 
-            fileSystem = new(FileSystemRoot);
-
+            FileSystem = new(FileSystemRoot);
+             
             Network = new(this);
 
             InitializeEngine(this);
 
-            config = LoadConfig();
+            Config = LoadConfig();
         }
-        internal static JObject LoadConfig()
+        internal static JObject? LoadConfig()
         {
             if (FileSystem.GetResourcePath("config.json") is string AbsPath)
             {
@@ -79,16 +83,14 @@ namespace Lemur
                     {
                         return JObject.Parse(json);
                     }
-                    catch (Exception ex)
+                    catch (JsonException ex)
                     {
                         Notifications.Now($"Error loading JSON: {ex.Message}");
                     }
                 }
                 else
                 {
-                    // TODO: Make the default installer include a config? it should already.
-                    // I guess on first install this probably just gets called pre-install. Fix that!
-                    //Notifications.Now("JSON file not found.");
+                    Notifications.Now("Could not locate a valid 'config.json' file.");
                 }
             }
 
@@ -123,7 +125,7 @@ namespace Lemur
             // the resizable is the container that hosts the user app.
             // this is made seperate to eliminate annoying and complex boiler plate.
             UserWindow window = Window.OpenAppUI(title, ref background, ref foreground, out var resizable_window);
-            Windows[title] = window;
+            userWindows[title] = window;
 
             // this is the process being opened and the UI being established for it.
             // they are heavily woven, unfortunately.
@@ -174,12 +176,12 @@ namespace Lemur
 
         private static void LoadBackground(Computer pc, ComputerWindow wnd)
         {
-            string backgroundPath = pc?.config?.Value<string>("BACKGROUND") ?? "background.png";
+            string backgroundPath = pc?.Config?.Value<string>("BACKGROUND") ?? "background.png";
             wnd.desktopBackground.Source = ComputerWindow.LoadImage(FileSystem.GetResourcePath(backgroundPath) ?? "background.png");
         }
         internal void Print(object? obj)
         {
-            javaScript?.InteropModule?.print(obj ?? "null");
+            JavaScript?.InteropModule?.print(obj ?? "null");
         }
 
         public async Task OpenCustom(string type)
@@ -208,7 +210,7 @@ namespace Lemur
 
             ProcessLookupTable[type].Add(id);
 
-            Windows[id].OnClosed += delegate 
+            userWindows[id].OnClosed += delegate 
             {
                 if (!ProcessLookupTable.ContainsKey(type))
                     throw new Exception("The application became detached from the operating system, or is unknown.");
@@ -252,7 +254,7 @@ namespace Lemur
 
             wnd.Closed += (o, e) =>
             {
-                Task.Run(() => SaveConfig(pc.config?.ToString() ?? ""));
+                Task.Run(() => SaveConfig(pc.Config?.ToString() ?? ""));
                 pc.Dispose();
             };
 
@@ -263,11 +265,33 @@ namespace Lemur
 
             Runtime.LoadCustomSyntaxHighlighting();
         }
-        public static T TryGetProcess<T>()
-        {
-            T content = default!;
 
-            foreach (var window in Current.Windows)
+        public static IReadOnlyCollection<T> TryGetAllProcessesOfType<T>() where T : UserControl
+        {
+            List<T> contents = new();
+            foreach (var window in Current.userWindows)
+            {
+                window.Value.Dispatcher.Invoke(() => {
+
+                    if (window.Value is not UserWindow userWindow)
+                        return;
+
+                    if (userWindow.ContentsFrame is not Frame frame)
+                        return;
+
+                    if (frame.Content is not T instance)
+                        return;
+
+                    contents.Add(instance);
+                });
+            }
+            return contents;
+        }
+
+        public static T TryGetProcessOfType<T>() where T : UserControl
+        {
+            T content = null;
+            foreach (var window in Current.userWindows)
             {
                 window.Value.Dispatcher.Invoke(() => { 
                 
@@ -282,9 +306,13 @@ namespace Lemur
 
                     content = instance;
                 });
+                
+                if (content != null)
+                {
+                    return content;
+                }
             }
             return content!;
-
         }
     
         private static async Task<(string id, string code)> InstantiateWindowClass(string type, (string XAML, string JS) data, Engine engine)
@@ -310,19 +338,19 @@ namespace Lemur
             {
                 if (disposing)
                 {
-                    javaScript?.Dispose();
+                    JavaScript?.Dispose();
                     Window?.Dispose();
                     Network?.Dispose();
                     cmdLine?.Dispose();
 
-                    foreach (var item in Windows)
+                    foreach (var item in userWindows)
                         item.Value.Close();
                 }
 
-                javaScript = null!;
+                JavaScript = null!;
                 Window = null!;
                 Network = null!;
-                fileSystem = null!;
+                FileSystem = null!;
                 cmdLine = null!;
 
                 this.disposing = true;

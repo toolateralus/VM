@@ -65,7 +65,7 @@ namespace Lemur.GUI
             if (e.Key == Key.Escape)
             {
                 Keyboard.ClearFocus();
-                SearchBar.Text = Computer.Current.fileSystem.CurrentDirectory;
+                SearchBar.Text = Computer.Current.FileSystem.CurrentDirectory;
                 UpdateView();
             }
             if (e.Key == Key.Enter)
@@ -80,7 +80,7 @@ namespace Lemur.GUI
             
             FileViewerData.Clear();
             
-            var fileNames = Computer.Current.fileSystem.DirectoryListing();
+            var fileNames = Computer.Current.FileSystem.DirectoryListing();
 
             const string FolderIcon = "📁 ";
             const string FileIcon =   "📄 ";
@@ -89,7 +89,7 @@ namespace Lemur.GUI
 
             FileViewerData.Add(parentAddr);
 
-            OriginalPaths[parentAddr] = Directory.GetParent(Computer.Current.fileSystem.CurrentDirectory)?.FullName ?? throw new InvalidOperationException("Invalid file structure");
+            OriginalPaths[parentAddr] = Directory.GetParent(Computer.Current.FileSystem.CurrentDirectory)?.FullName ?? throw new InvalidOperationException("Invalid file structure");
 
             foreach (var file in fileNames)
             {
@@ -109,34 +109,34 @@ namespace Lemur.GUI
         }
         private void AddFile_Click(object sender, RoutedEventArgs e)
         {
-            Computer.Current.fileSystem.NewFile(SearchBar.Text);
+            Computer.Current.FileSystem.NewFile(SearchBar.Text);
             UpdateView();
 
         }
         private void AddDirectory_Click(object sender, RoutedEventArgs e)
         {
-            Computer.Current.fileSystem.NewFile(SearchBar.Text, true);
+            Computer.Current.FileSystem.NewFile(SearchBar.Text, true);
             UpdateView();
 
         }
         private void Delete_Click(object sender, RoutedEventArgs e)
         {
-            Computer.Current.fileSystem.Delete(SearchBar.Text);
+            Computer.Current.FileSystem.Delete(SearchBar.Text);
             UpdateView();
 
         }
         private void Properties_Click(object sender, RoutedEventArgs e)
         {
-            Notifications.Now(Computer.Current.fileSystem.CurrentDirectory);
+            Notifications.Now(Computer.Current.FileSystem.CurrentDirectory);
         }
         private void BackPressed(object sender, RoutedEventArgs e)
         {
-            if (Computer.Current.fileSystem.History.Count == 0)
+            if (Computer.Current.FileSystem.History.Count == 0)
             {
                 Notifications.Now("No file or directory to go back to.");
             }
 
-            Computer.Current.fileSystem.ChangeDirectory(Computer.Current.fileSystem.History.Pop());
+            Computer.Current.FileSystem.ChangeDirectory(Computer.Current.FileSystem.History.Pop());
 
             UpdateView();
         }
@@ -156,24 +156,24 @@ namespace Lemur.GUI
                 return;
             }
 
-            var exists = Computer.Current.fileSystem.FileExists(path) || Computer.Current.fileSystem.DirectoryExists(path);
+            var exists = Computer.Current.FileSystem.FileExists(path) || Computer.Current.FileSystem.DirectoryExists(path);
 
             if (exists)
             {
-                if (Computer.Current.fileSystem.FileExists(path))
+                if (Computer.Current.FileSystem.FileExists(path))
                 {
                     Computer.Current.OpenApp(new TextEditor(path));
                     OnNavigated?.Invoke(path);
                 }
 
 
-                Computer.Current.fileSystem.ChangeDirectory(path);
+                Computer.Current.FileSystem.ChangeDirectory(path);
             }
 
         }
         private void UpPressed(object sender, RoutedEventArgs e)
         {
-            Computer.Current.fileSystem.ChangeDirectory("..");
+            Computer.Current.FileSystem.ChangeDirectory("..");
             UpdateView();
         }
         private void ForwardPressed(object sender, RoutedEventArgs e)

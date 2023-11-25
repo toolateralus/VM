@@ -20,3 +20,6 @@ if (file.exists('_welcome_app_show.junk')) {
 interop.start('welcome.app')
 
 interop.uninstall('welcome.app')
+
+// for development - though built into source.
+interop.uninstall('GL_TEST.app')

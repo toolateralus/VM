@@ -24,7 +24,7 @@ namespace Lemur
                 if (children.Count > 10)
                     children.RemoveAt(0);
 
-                var cmd = Computer.TryGetProcess<CommandPrompt>();
+                var cmd = Computer.TryGetProcessOfType<CommandPrompt>();
                 cmd?.output?.AppendText("\n" + message);
 
                 StringBuilder sb = new();

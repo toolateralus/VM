@@ -116,7 +116,7 @@ namespace Lemur.FS
         {
             if (path == "..")
             {
-                string currentDirectory = Computer.Current.fileSystem.CurrentDirectory;
+                string currentDirectory = Computer.Current.FileSystem.CurrentDirectory;
 
                 string[] components = currentDirectory.Split('\\');
 
@@ -126,7 +126,7 @@ namespace Lemur.FS
 
                     string parentDirectory = string.Join("\\", parentComponents);
 
-                    Computer.Current.fileSystem.ChangeDirectory(parentDirectory);
+                    Computer.Current.FileSystem.ChangeDirectory(parentDirectory);
                 }
                 return;
             }
