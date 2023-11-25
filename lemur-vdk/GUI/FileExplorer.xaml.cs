@@ -58,7 +58,10 @@ namespace Lemur.GUI
         private void PreviewPath(object sender, SelectionChangedEventArgs e)
         {
             if (FileBox.SelectedItem is string Path && OriginalPaths.TryGetValue(Path, out var AbsolutePath))
-                SearchBar.Text = AbsolutePath.Replace(FileSystem.Root + "\\", "");
+            {
+                var x = FileSystem.Root + "\\";
+                SearchBar.Text = AbsolutePath.Replace(x, "");
+            }
         }
         private void FileExplorer_KeyDown(object sender, KeyEventArgs e)
         {

@@ -69,7 +69,7 @@ namespace Lemur.JS
             InteropModule.OnModuleImported += ImportModule;
 
             GraphicsModule = new graphics();
-            ConvModule = new conv();
+            ConvModule = new    conv();
             AppModule = new app();
             FileModule = new file();
             TermModule = new term();

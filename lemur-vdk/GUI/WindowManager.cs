@@ -1,5 +1,6 @@
 ﻿using Lemur.GUI;
 using System;
+using System.Linq;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
@@ -15,10 +16,16 @@ namespace Lemur.GUI
         private bool isDragging;
         private bool isResizing;
 
+        // TODO : Add Ctrl + W (Close Window)
+
+        // TODO : in BringToTopOfDesktop(), set targetWindow to last clicked window
+        // TODO : bring the rest of the functions here like BringToTopOfDesktop();
+
         protected override void OnPreviewMouseUp(MouseButtonEventArgs e)
         {
             if (targetWindow != null)
                 targetWindow = null;
+
             isDragging = false;
             isResizing = false;
         }

@@ -33,14 +33,7 @@ namespace Lemur.GUI
             IDBox.Focus();
             IDBox.Text = "0";
 
-            //StartPerpetualColorAnimation();
-
-            if (uint.TryParse(IDBox.Text, out uint number))
-            {
-                Computer.Boot(number);
-                Close();
-            }
-
+            StartPerpetualColorAnimation();
         }
 
         public static void LoadCustomSyntaxHighlighting()
@@ -83,7 +76,16 @@ namespace Lemur.GUI
                 return;
             }
 
-           
+            var workingDir = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData) + $"\\Lemur\\computer{cpu_id}";
+
+            if (Directory.Exists(workingDir))
+            {
+                var result = MessageBox.Show($"Are you sure? this action will delete any existing data in  ..\\Appdata\\Lemur\\computer{cpu_id}", "Installer", MessageBoxButton.YesNoCancel);
+
+                if (result == MessageBoxResult.Yes)
+                    Directory.Delete(workingDir, true);
+                else return;
+            }
 
             NewComputerButton(null, new());
         }
@@ -197,7 +199,5 @@ namespace Lemur.GUI
             byte b = (byte)(from.B + (to.B - from.B) * progress);
             return Color.FromRgb(r, g, b);
         }
-
-        
     }
 }

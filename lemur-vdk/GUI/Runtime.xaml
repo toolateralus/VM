@@ -5,19 +5,20 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:Lemur"
         mc:Ignorable="d"
-        Title="" Height="250" Width="300"
+        Title="" Height="125" Width="300"
         Background="MediumSlateBlue"
         WindowStartupLocation="CenterScreen">
     <Grid>
         <Grid.RowDefinitions>
             <RowDefinition Height="*"/>
-            <RowDefinition Height="25"/>
+            <RowDefinition Height="*"/>
             <RowDefinition Height="25"/>
         </Grid.RowDefinitions>
-        <Button Height="45" Content="Open" Click="NewComputerButton"  FontFamily="Consolas" Margin="169,30,10,30" />
-        <Button Height="45" Content="Re\Install" Click="ReinstallComputerButton"  FontFamily="Consolas" Margin="10,30,157,30" />
-        <Label Grid.Row="1" Background="SlateGray" Foreground="White" FontFamily="Consolas" >Enter a computer id below.</Label>
-        <TextBox x:Name="IDBox" Grid.Row="2" FontFamily="Consolas">
-        </TextBox>
+        <StackPanel Grid.Row="1" Orientation="Horizontal" HorizontalAlignment="Stretch">
+            <Button MinWidth="150" Content="Boot" Click="NewComputerButton" FontFamily="Consolas"/>
+            <Button MinWidth="150" Grid.Row="1" Content="Install" Click="ReinstallComputerButton" FontFamily="Consolas"/>
+        </StackPanel>
+        <Label Background="SlateGray" Foreground="White" FontFamily="Consolas">Enter a computer id below.</Label>
+        <TextBox x:Name="IDBox" Grid.Row="2" FontFamily="Consolas" Text="0"/>
     </Grid>
 </Window>

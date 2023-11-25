@@ -38,8 +38,9 @@
     <Page Include="App.xaml" />
   </ItemGroup>
 
-  <Target Name="PostBuild" AfterTargets="PostBuildEvent">
-    <Exec Command="xcopy /E /I /Y &quot;$(ProjectDir)computer.utils&quot; &quot;$(TargetDir)computer.utils&quot;" />
-  </Target>
+	<Target Name="PostBuild" AfterTargets="PostBuildEvent">
+		<Exec Command="rmdir /s /q &quot;$(TargetDir)computer.utils&quot;&#xD;&#xA;xcopy /E /I /Y &quot;$(ProjectDir)computer.utils&quot; &quot;$(TargetDir)computer.utils&quot;" />
+	</Target>
+
 
 </Project>

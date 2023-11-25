@@ -237,8 +237,7 @@ namespace Lemur
         internal protected static void Boot(uint cpu_id)
         {
             var workingDir = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData) + $"\\Lemur\\computer{cpu_id}";
-            var FileSystemRoot = $"{workingDir}\\computer{cpu_id}";
-            var FileSystem = new FileSystem(FileSystemRoot);
+            var FileSystem = new FileSystem(workingDir);
 
             Computer pc = new(FileSystem);
             ComputerWindow wnd = new(pc);
