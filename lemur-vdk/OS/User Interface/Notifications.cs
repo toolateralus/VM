@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using Lemur.GUI;
@@ -7,7 +8,6 @@ namespace Lemur
 {
     public static class Notifications
     {
-
         public static void Now(string message)
         {
             var cw = Computer.Current.Window;
@@ -53,6 +53,21 @@ namespace Lemur
                 notif.Start();
             });
         }
+
+        internal static void Clear()
+        {
+            var stopped = new List<NotificationControl>();
+
+            foreach (var control in Computer.Current.Window.NotificationStackPanel.Children) 
+            {
+                if (control is NotificationControl notif)
+                    stopped.Add(notif);
+            }
+
+            foreach(var control in stopped)
+                control.Stop();
+        }
+
         internal static void Exception(Exception e)
         {
             Now(e.Message + $"\n{e.GetType().Name}");

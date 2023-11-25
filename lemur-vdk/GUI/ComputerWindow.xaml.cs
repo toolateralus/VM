@@ -405,5 +405,10 @@ namespace Lemur.GUI
             Dispose(disposing: true);
             GC.SuppressFinalize(this);
         }
+
+        private void ClearNotificaionsClicked(object sender, RoutedEventArgs e)
+        {
+            Notifications.Clear();
+        }
     }
 }

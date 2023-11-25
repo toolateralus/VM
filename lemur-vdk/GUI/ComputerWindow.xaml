@@ -39,6 +39,7 @@
             </StackPanel>
 
             <StackPanel Grid.Row="1" Grid.Column="2" x:Name="RightSideTaskbarPanel" Background="#FF1B4B5B">
+                <Button Content="Clear Notifications" Click="ClearNotificaionsClicked"/>
             </StackPanel>
         </Grid>
     </Grid>

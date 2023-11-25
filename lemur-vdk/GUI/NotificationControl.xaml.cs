@@ -42,20 +42,27 @@ namespace Lemur.GUI
 
             DataContext = this;
 
-            TextBox.FontFamily = new("Consolas MS");
+            TextBox.FontFamily = Computer.Current.Theme.Font;
 
-            fadeOutTimer = new DispatcherTimer();
-            fadeOutTimer.Interval = TimeSpan.FromSeconds(10);
+            fadeOutTimer = new DispatcherTimer
+            {
+                Interval = TimeSpan.FromSeconds(10)
+            };
             fadeOutTimer.Tick += OnFadeOutTimerTick;
             MouseDoubleClick += NotificationControl_MouseDoubleClick;
 
         }
-
         private void NotificationControl_MouseDoubleClick(object sender, System.Windows.Input.MouseButtonEventArgs e)
         {
-            OnFadeOutCompleted();
+            Stop();
         }
+        internal void Stop()
+        {
+            var parent = Parent as Panel;
 
+            if (parent?.Children.Contains(this) is bool b && b)
+                parent?.Children.Remove(this);
+        }
         private void OnLoaded(object? sender, RoutedEventArgs e)
         {
             var fadeInAnimation = new DoubleAnimation(0, 1, TimeSpan.FromSeconds(1));
@@ -81,18 +88,11 @@ namespace Lemur.GUI
             var fadeOutAnimation = new DoubleAnimation(1, 0, TimeSpan.FromSeconds(1.5));
             fadeOutAnimation.Completed += (s, _) =>
             {
-                OnFadeOutCompleted();
+                Stop();
             };
             BeginAnimation(OpacityProperty, fadeOutAnimation);
             fadeOutTimer.Stop();
         }
-
-        private void OnFadeOutCompleted()
-        {
-            var parent = Parent as Panel;
-
-            if (parent?.Children.Contains(this) is bool b && b)
-                parent?.Children.Remove(this);
-        }
+        
     }
 }
