@@ -343,7 +343,7 @@ class Renderer {
                 const start = edge.start;
                 const end = edge.end;
 
-                const x0 = start.x * scale.x + pos.x + sin();
+                const x0 = start.x * scale.x + pos.x;
                 const y0 = start.y * scale.y + pos.y;
                 const c0 = start.color;
 
