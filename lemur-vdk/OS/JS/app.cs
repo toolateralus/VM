@@ -11,13 +11,30 @@ using System.Windows.Media.Imaging;
 using Lemur.GUI;
 using Lemur.FS;
 using Image = System.Windows.Controls.Image;
+using System.Security.Permissions;
+using System.Reflection;
 
 namespace Lemur.JS
 {
     public class app
     {
-        public static Dictionary<string, Func<string, string, object?, object?>> ExposedEvents = new();
+        public delegate bool SetPropertyHandler(PropertyInfo? propertyInfo, object target, object? value);
+        public delegate object? AppEvent(string ID, string target, object? value);
 
+
+        public static Dictionary<string, AppEvent> ExposedEvents = new();
+        public static Dictionary<string, SetPropertyHandler> SetPropertyHandlers = new()
+        {
+            {"Visibility", (propertyInfo, target, value) => {
+                if (value is int i) {
+                    Visibility val = (Visibility)i;
+                    propertyInfo?.SetValue(target, val);
+                    return true;
+                }
+                return false;
+            }},
+
+        };
         public app()
         {
             ExposedEvents["draw_pixels"] = DrawPixelsEvent; // somewhat deprecated, use the dedicated graphics module instead.
@@ -28,17 +45,44 @@ namespace Lemur.JS
 
         public static void SetProperty(object target, string propertyName, object? value)
         {
+            if (target == null)
+            {
+                Notifications.Now("Target control in 'SetProperty' was null.");
+                return;
+            }
+
             var targetType = target.GetType();
             var propertyInfo = targetType.GetProperty(propertyName);
 
-            propertyInfo?.SetValue(target, value);
+            // the property had no special handler.
+            // this could mean that the property is unsupported and it may throw an exception
+            // but it probably means it's the normal case of a supported set of args coming from js,
+            // like ActualWidth taking a double/long or whatever.
+            if (!SetPropertyHandlers.TryGetValue(propertyName, out var handler))
+            {
+                propertyInfo?.SetValue(target, value);
+            }
+            else
+            {
+                if (handler.Invoke(propertyInfo, target, value))
+                    return;
+
+                // failed in setting the property
+                Notifications.Now($"{propertyName} failed to set. this likely means 'app.setProperty' recieved some bad arguments, or invalid for the particular property.");
+                return;
+            }
         }
-        public static object GetProperty(object target, string propertyName)
+        public static object? GetProperty(object target, string propertyName)
         {
+            if (target == null)
+            {
+                Notifications.Now("Target control in 'GetProperty' was null.");
+                return null;
+            }
             var targetType = target.GetType();
             var propertyInfo = targetType.GetProperty(propertyName);
 
-            return propertyInfo != null ? propertyInfo.GetValue(target) : null;
+            return propertyInfo?.GetValue(target);
         }
         private object? GetContent(string id, string controlName, object? value)
         {
@@ -66,7 +110,7 @@ namespace Lemur.JS
         }
         public static UserControl? GetUserContent(string id, Computer computer)
         {
-            var window = computer.Window;
+            var window = computer?.Window;
 
             var resizableWins = computer.UserWindows?.Where(W => W.Key == id);
 

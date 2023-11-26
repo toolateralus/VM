@@ -12,6 +12,7 @@ namespace Lemur.JS
         {
             if (!gfxContext.TryGetValue(gfx_ctx, out var ctx))
             {
+
                 Notifications.Now($"Couldn't find graphics context for id : {gfx_ctx}");
                 return false;
             }
@@ -26,6 +27,7 @@ namespace Lemur.JS
                 Notifications.Now($"Couldn't find graphics context for id : {gfx_ctx}");
                 return false;
             }
+
             ctx.WritePixel(x, y, r, g, b, a);
             return true;
         }
@@ -59,9 +61,8 @@ namespace Lemur.JS
             }
 
             Computer.Current?.Window?.Dispatcher?.Invoke(() => { 
-                var control = JS.app.GetUserContent(context.InstanceID, Computer.Current);
-                var image = JS.app.FindControl(control, context.TargetControl) as Image;
-                context.Draw(image);
+              
+                context.Draw(context.image);
             });
 
             return true;
@@ -70,9 +71,11 @@ namespace Lemur.JS
         {
             int bpp = 4;
             
-            var ctx = new GfxContext(id, target, bpp);
-            ctx.Resize(width, height);
 
+            var ctx = new GfxContext(id, target, bpp);
+
+            ctx.Resize(width, height);
+            
             int i = 0;
 
             while (gfxContext.ContainsKey(ctxIndex))

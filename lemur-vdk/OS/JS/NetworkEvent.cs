@@ -9,10 +9,10 @@ namespace Lemur.JS
         public NetworkEvent(Engine javaScriptEngine, string identifier, string methodName)
         {
             base.javaScriptEngine = javaScriptEngine;
-            functionHandle = CreateFunction(identifier, methodName);
+            Task.Run(async delegate { functionHandle = await CreateFunction(identifier, methodName); });
         }
 
-        public override string CreateFunction(string identifier, string methodName)
+        public override async Task<string> CreateFunction(string identifier, string methodName)
         {
             var event_call = $"{identifier}.{methodName}{ARGS_STRING}";
             var id = $"Network{identifier}{methodName}";

@@ -15,5 +15,7 @@
         /// </summary>
         PHYSICS = 8,
         MOUSE_LEAVE = 9,
+
+        SELECTION_CHANGED = 10,
     }
 }

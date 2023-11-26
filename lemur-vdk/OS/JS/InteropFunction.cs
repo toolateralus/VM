@@ -27,12 +27,12 @@ namespace Lemur.JS
         public Engine? javaScriptEngine;
 
         public bool Disposing { get; set; }
-        public virtual string CreateFunction(string identifier, string methodName)
+        public virtual async Task<string> CreateFunction(string identifier, string methodName)
         {
             var event_call = $"{identifier}.{methodName}{argsString}";
             var id = $"{identifier}{methodName}";
             string func = $"function {id} {argsString} {{ {event_call}; }}";
-            Task.Run(() => javaScriptEngine?.Execute(func));
+            await javaScriptEngine?.Execute(func);
             return id;
         }
       
@@ -40,22 +40,30 @@ namespace Lemur.JS
         {
             while (!Disposing && !javaScriptEngine.Disposing)
             {
-                if (javaScriptEngine.m_engine_internal.HasVariable(functionHandle))
-                    InvokeEventUnsafe(null, null);
+                try
+                {
+                    if (javaScriptEngine.m_engine_internal.HasVariable(functionHandle))
+                        InvokeEventImmediate(null, null);
+                }
+                catch (Exception e)
+                {
+                    Notifications.Exception(e);
+                }
             }
             Dispose();
         }
         public virtual void InvokeGeneric(object? sender, object? arguments)
         {
-            InvokeEvent();
+            InvokeEventBackground();
         }
-        public virtual void InvokeEvent(object? arg1 = null, object? arg2 = null)
+        public virtual void InvokeEventBackground(object? arg1 = null, object? arg2 = null)
         {
             Task.Run(() =>
             {
                 try
                 {
-                    javaScriptEngine.m_engine_internal.CallFunction(functionHandle, arg1, arg2);
+                    if (javaScriptEngine.m_engine_internal.HasVariable(functionHandle))
+                        javaScriptEngine?.m_engine_internal?.CallFunction(functionHandle, arg1, arg2);
                 }
                 catch (Exception e)
                 {
@@ -63,16 +71,11 @@ namespace Lemur.JS
                 }
             });
         }
-        public virtual void InvokeEventUnsafe(object? arg1 = null, object? arg2 = null)
+        public virtual void InvokeEventImmediate(object? arg1 = null, object? arg2 = null)
         {
             try
             {
-                // TODO: open an issue for this
-
-                // BUG : when opening xaml/wpf apps that have a call to create an event in the constructor (every app ever)
-                // there is unpredictable latency between the call to create the event and the end of the ctor, 
-                // so there's always a window where the event will be looking to get called when the member function / method 
-                // might not exit yet.
+           
                 if (javaScriptEngine.m_engine_internal.HasVariable(functionHandle))
                     javaScriptEngine.m_engine_internal.CallFunction(functionHandle, arg1, arg2);
                 else

@@ -12,7 +12,6 @@ using Lemur.GUI;
 using Lemur.FS;
 using System.Diagnostics;
 using System.Windows.Input;
-using OpenTK.Graphics.ES11;
 
 namespace Lemur.JS
 {
@@ -230,8 +229,10 @@ namespace Lemur.JS
         {
 
             var wnd = Computer.Window;
+            
             // check if this event already exists
             var result = await Execute($"{identifier} != null");
+
             if (result is not bool ID_EXISTS || !ID_EXISTS)
             {
                 Notifications.Now($"App not found : {identifier}..  that is NOT good...");

@@ -1,3 +1,5 @@
+
+
 // terminal -------------------------
 function print(obj) {
     term.print(obj);
@@ -38,9 +40,24 @@ function random(max = 1) {
     return interop.random(max);
 }
 function describe(obj) {
-    for (const property in obj) {
-        print(property + ": " + obj[property]);
+
+    if (obj === undefined) {
+        print('describe : undefined')
+        return;
     }
+
+    if (obj === null) {
+        print('describe : null')
+        return;
+    }
+
+    var string = "";
+
+    for (const property in obj) {
+        string += property + ": " + obj[property];
+    }
+
+    print(string);
 }
 //-------------------------
 
@@ -54,10 +71,12 @@ function require(path) {
     IS_EXPORTING = true;
 
     if (__INCLUDES.includes(path)) {
+        IS_EXPORTING = false;
         return __INCLUDES[path];
     } else {
         const fn = new Function(file.read(path));
         const result = fn();
+        IS_EXPORTING = false; 
         return result;
     }
 }

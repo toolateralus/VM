@@ -4,12 +4,58 @@ const {
     GameObject,
     Scene,
     Renderer,
-} = require('game.js');
+} = require(' game.js');
 const { Profiler } = require('profiler.js');
 
 
 // THIS IS THE WPF CLASS! (it chooses the file name associated class.)
 class game2 {
+    constructor(id) {
+
+        this.captureBeginTime = 0;
+        this.captureEndTime = 0;
+        // for the engine.
+        this.id = id;
+        this.frameCt = 0;
+
+        const gfx_ctx = gfx.createCtx(this.id, 'renderTarget', 512, 512);
+
+
+        this.renderer = new Renderer(512, gfx_ctx);
+
+        var gameObjects = [];
+
+        const half_width = 512 / 2;
+
+        for (let i = 0; i < palette.length; ++i) {
+            const verts = create_square();
+            // obj scale.
+            const scale = new Point(5 * i, 5 * i);
+            // start position
+            const pos = new Point(half_width + i, half_width + i);
+
+            this.player = new GameObject(verts, scale, pos);
+
+            let gO = new GameObject(verts, scale, pos);
+
+            verts.forEach(v => v.color = i);
+
+            gameObjects.push(gO);
+        }
+
+        this.scene = new Scene(gameObjects);
+
+        // setup events (including render/physics loops)
+        this.setupUIEvents();
+
+        this.profiler = new Profiler();
+        this.profiler.start();
+
+        // start drawing, the Renderer only draws when it's marked as dirty.
+        this.renderer.isDirty = true;
+
+    }
+
     setupUIEvents() {
         app.eventHandler(this.id, 'this', 'm_render', XAML_EVENTS.RENDER);
     }
@@ -84,49 +130,5 @@ class game2 {
         }
     }
     
-    constructor(id) {
-
-        this.captureBeginTime = 0;
-        this.captureEndTime = 0;
-        // for the engine.
-        this.id = id;
-        this.frameCt = 0;
-
-        const gfx_ctx = gfx.createCtx(this.id, 'renderTarget', 512, 512);
-
-        
-        this.renderer = new Renderer(512, gfx_ctx);
-
-        var gameObjects = [];
-
-        const half_width = 512 / 2;
-
-        for (let i = 0; i < palette.length; ++i) {
-            const verts = create_square();
-            // obj scale.
-            const scale = new Point(5 * i, 5 * i);
-            // start position
-            const pos = new Point(half_width + i, half_width + i);
-            
-            this.player = new GameObject(verts, scale, pos);
-            
-            let gO = new GameObject(verts, scale, pos);
-
-            verts.forEach(v => v.color = i);
-
-            gameObjects.push(gO);
-        }
-
-        this.scene = new Scene(gameObjects);
-
-        // setup events (including render/physics loops)
-        this.setupUIEvents();
-
-        this.profiler = new Profiler();
-        this.profiler.start();
-
-        // start drawing, the Renderer only draws when it's marked as dirty.
-        this.renderer.isDirty = true;
-
-    }
+    
 }

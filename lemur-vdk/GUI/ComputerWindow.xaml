@@ -21,11 +21,13 @@
             <RowDefinition Height="25"/>
         </Grid.RowDefinitions>
 
-        <gui:WindowManager x:Name="Desktop" Grid.Row="0" Grid.Column="0" Grid.ColumnSpan="2" HorizontalAlignment="Stretch" VerticalAlignment="Stretch">
-            <Image Grid.ColumnSpan="2" x:Name="desktopBackground" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Width="Auto" Height="Auto"/>
-            <WrapPanel x:Name="DesktopIconPanel" Orientation="Vertical" HorizontalAlignment="Right" VerticalAlignment="Bottom" />
-        </gui:WindowManager>
+
+        <Image Grid.ColumnSpan="2" x:Name="desktopBackground" Stretch="UniformToFill"/>
         
+        <gui:WindowManager x:Name="Desktop" Grid.Row="0" Grid.Column="0" Grid.ColumnSpan="2" Background="Transparent">
+            <WrapPanel x:Name="DesktopIconPanel" Orientation="Vertical" />
+        </gui:WindowManager>
+
         <StackPanel  x:Name="NotificationStackPanel" Grid.Column="1" VerticalAlignment="Bottom" CanVerticallyScroll="True" CanHorizontallyScroll="True" ScrollViewer.VerticalScrollBarVisibility="Visible" ScrollViewer.CanContentScroll="True"/>
         <Grid x:Name="Taskbar" Grid.Row="1" Grid.Column="0" Grid.ColumnSpan="2">
             <Grid.ColumnDefinitions>

@@ -5,75 +5,259 @@
              mc:Ignorable="d" 
              d:DesignHeight="450" d:DesignWidth="800" Background="#474354" BorderBrush="White" BorderThickness="5">
     <Grid>
-        <Grid.RowDefinitions>
-            <RowDefinition Height="30"/>
-            <RowDefinition Height="*"/>
-            <RowDefinition Height="30"/>
-        </Grid.RowDefinitions>
-
-        <Label Grid.Row="0"
-               FontSize="12" 
-               Foreground="#61c28e" 
-               BorderBrush="Purple" 
-               Background="Black">Paint</Label>
-
-        <StackPanel 
-                    Grid.Row="2" 
-                    Orientation="Horizontal" 
-                    Opacity="0.75" 
-                    Background="Black" 
-                    MinHeight="30" 
-                    MaxHeight="30"
-                    VerticalAlignment="Bottom">
-            
-            <Button FontSize="12" 
-                              x:Name="changeColorBtn" 
-                              FontFamily="Consolas MS Bold" 
-                              Foreground="#61c28e" 
-                              BorderBrush="Purple" 
-                              Background="Black" MinWidth="60" 
-                              MaxWidth="250" 
-                              Content="next color"/>
-
-            <Label x:Name="colorNameLabel"
-                              FontSize="12" 
-                              Foreground="#61c28e" 
-                              BorderBrush="Purple" 
-                              Background="Black" 
-                              MinWidth="100"/>
-
-
-            <Button FontSize="12" 
-                              x:Name="saveBtn" 
-                              FontFamily="Consolas MS Bold" 
-                              Foreground="#61c28e" 
-                              BorderBrush="Purple" 
-                              Background="Black" MinWidth="60" 
-                              MaxWidth="250" 
-                              Content="save"/>
-
-            <Button FontSize="12" 
-                              x:Name="loadBtn" 
-                              FontFamily="Consolas MS Bold" 
-                              Foreground="#61c28e" 
-                              BorderBrush="Purple" 
-                              Background="Black" MinWidth="60" 
-                              MaxWidth="250" 
-                              Content="load"/>
-
-            <TextBlock Background="White" FontFamily="Consolas" x:Name="nameBox" MinWidth="100" Text="Enter a file path here to save/load from"/>
-            <Rectangle Height="100" Stroke="Black" Width="100"/>
-
-        </StackPanel>
-
-        <Image Grid.Row="1"
-               x:Name="renderTarget" 
+        <Image x:Name="renderTarget" 
                HorizontalAlignment="Stretch" 
                VerticalAlignment="Stretch"
                Stretch="Fill" 
                RenderOptions.BitmapScalingMode="NearestNeighbor"/>
-
-       
+        <StackPanel HorizontalAlignment="Left" x:Name="colorPickerPanel">
+            <ComboBox x:Name="colorPickerBox" Width="150" Background="#474354" Margin="5">
+                <ComboBoxItem>
+                    <StackPanel Orientation="Horizontal">
+                        <Rectangle Width="20" Height="10" Margin="5">
+                            <Rectangle.Fill>
+                                <SolidColorBrush Color="Red" />
+                            </Rectangle.Fill>
+                        </Rectangle>
+                        <TextBlock Text="red"/>
+                    </StackPanel>
+                </ComboBoxItem>
+                <ComboBoxItem>
+                    <StackPanel Orientation="Horizontal">
+                        <Rectangle Width="20" Height="10" Margin="5">
+                            <Rectangle.Fill>
+                                <SolidColorBrush Color="Orange" />
+                            </Rectangle.Fill>
+                        </Rectangle>
+                        <TextBlock Text="orange"/>
+                    </StackPanel>
+                </ComboBoxItem>
+                <ComboBoxItem>
+                    <StackPanel Orientation="Horizontal">
+                        <Rectangle Width="20" Height="10" Margin="5">
+                            <Rectangle.Fill>
+                                <SolidColorBrush Color="Yellow" />
+                            </Rectangle.Fill>
+                        </Rectangle>
+                        <TextBlock Text="yellow"/>
+                    </StackPanel>
+                </ComboBoxItem>
+                <ComboBoxItem>
+                    <StackPanel Orientation="Horizontal">
+                        <Rectangle Width="20" Height="10" Margin="5">
+                            <Rectangle.Fill>
+                                <SolidColorBrush Color="LimeGreen" />
+                            </Rectangle.Fill>
+                        </Rectangle>
+                        <TextBlock Text="lime green"/>
+                    </StackPanel>
+                </ComboBoxItem>
+                <ComboBoxItem>
+                    <StackPanel Orientation="Horizontal">
+                        <Rectangle Width="20" Height="10" Margin="5">
+                            <Rectangle.Fill>
+                                <SolidColorBrush Color="Green" />
+                            </Rectangle.Fill>
+                        </Rectangle>
+                        <TextBlock Text="green"/>
+                    </StackPanel>
+                </ComboBoxItem>
+                <ComboBoxItem>
+                    <StackPanel Orientation="Horizontal">
+                        <Rectangle Width="20" Height="10" Margin="5">
+                            <Rectangle.Fill>
+                                <SolidColorBrush Color="SpringGreen" />
+                            </Rectangle.Fill>
+                        </Rectangle>
+                        <TextBlock Text="spring green"/>
+                    </StackPanel>
+                </ComboBoxItem>
+                <ComboBoxItem>
+                    <StackPanel Orientation="Horizontal">
+                        <Rectangle Width="20" Height="10" Margin="5">
+                            <Rectangle.Fill>
+                                <SolidColorBrush Color="Cyan" />
+                            </Rectangle.Fill>
+                        </Rectangle>
+                        <TextBlock Text="cyan"/>
+                    </StackPanel>
+                </ComboBoxItem>
+                <ComboBoxItem>
+                    <StackPanel Orientation="Horizontal">
+                        <Rectangle Width="20" Height="10" Margin="5">
+                            <Rectangle.Fill>
+                                <SolidColorBrush Color="SkyBlue" />
+                            </Rectangle.Fill>
+                        </Rectangle>
+                        <TextBlock Text="sky blue"/>
+                    </StackPanel>
+                </ComboBoxItem>
+                <ComboBoxItem>
+                    <StackPanel Orientation="Horizontal">
+                        <Rectangle Width="20" Height="10" Margin="5">
+                            <Rectangle.Fill>
+                                <SolidColorBrush Color="Blue" />
+                            </Rectangle.Fill>
+                        </Rectangle>
+                        <TextBlock Text="blue"/>
+                    </StackPanel>
+                </ComboBoxItem>
+                <ComboBoxItem>
+                    <StackPanel Orientation="Horizontal">
+                        <Rectangle Width="20" Height="10" Margin="5">
+                            <Rectangle.Fill>
+                                <SolidColorBrush Color="Purple" />
+                            </Rectangle.Fill>
+                        </Rectangle>
+                        <TextBlock Text="purple"/>
+                    </StackPanel>
+                </ComboBoxItem>
+                <ComboBoxItem>
+                    <StackPanel Orientation="Horizontal">
+                        <Rectangle Width="20" Height="10" Margin="5">
+                            <Rectangle.Fill>
+                                <SolidColorBrush Color="Magenta" />
+                            </Rectangle.Fill>
+                        </Rectangle>
+                        <TextBlock Text="magenta"/>
+                    </StackPanel>
+                </ComboBoxItem>
+                <ComboBoxItem>
+                    <StackPanel Orientation="Horizontal">
+                        <Rectangle Width="20" Height="10" Margin="5">
+                            <Rectangle.Fill>
+                                <SolidColorBrush Color="Pink" />
+                            </Rectangle.Fill>
+                        </Rectangle>
+                        <TextBlock Text="pink"/>
+                    </StackPanel>
+                </ComboBoxItem>
+                <ComboBoxItem>
+                    <StackPanel Orientation="Horizontal">
+                        <Rectangle Width="20" Height="10" Margin="5">
+                            <Rectangle.Fill>
+                                <SolidColorBrush Color="LightGray" />
+                            </Rectangle.Fill>
+                        </Rectangle>
+                        <TextBlock Text="light gray"/>
+                    </StackPanel>
+                </ComboBoxItem>
+                <ComboBoxItem>
+                    <StackPanel Orientation="Horizontal">
+                        <Rectangle Width="20" Height="10" Margin="5">
+                            <Rectangle.Fill>
+                                <SolidColorBrush Color="LightGray" />
+                            </Rectangle.Fill>
+                        </Rectangle>
+                        <TextBlock Text="medium gray"/>
+                    </StackPanel>
+                </ComboBoxItem>
+                <ComboBoxItem>
+                    <StackPanel Orientation="Horizontal">
+                        <Rectangle Width="20" Height="10" Margin="5">
+                            <Rectangle.Fill>
+                                <SolidColorBrush Color="DarkGray" />
+                            </Rectangle.Fill>
+                        </Rectangle>
+                        <TextBlock Text="dark gray"/>
+                    </StackPanel>
+                </ComboBoxItem>
+                <ComboBoxItem>
+                    <StackPanel Orientation="Horizontal">
+                        <Rectangle Width="20" Height="10" Margin="5">
+                            <Rectangle.Fill>
+                                <SolidColorBrush Color="Black" />
+                            </Rectangle.Fill>
+                        </Rectangle>
+                        <TextBlock Text="black"/>
+                    </StackPanel>
+                </ComboBoxItem>
+                <ComboBoxItem>
+                    <StackPanel Orientation="Horizontal">
+                        <Rectangle Width="20" Height="10" Margin="5">
+                            <Rectangle.Fill>
+                                <SolidColorBrush Color="White" />
+                            </Rectangle.Fill>
+                        </Rectangle>
+                        <TextBlock Text="white"/>
+                    </StackPanel>
+                </ComboBoxItem>
+                <ComboBoxItem>
+                    <StackPanel Orientation="Horizontal">
+                        <Rectangle Width="20" Height="10" Margin="5">
+                            <Rectangle.Fill>
+                                <SolidColorBrush Color="OrangeRed" />
+                            </Rectangle.Fill>
+                        </Rectangle>
+                        <TextBlock Text="red orange"/>
+                    </StackPanel>
+                </ComboBoxItem>
+                <ComboBoxItem>
+                    <StackPanel Orientation="Horizontal">
+                        <Rectangle Width="20" Height="10" Margin="5">
+                            <Rectangle.Fill>
+                                <SolidColorBrush Color="Gold" />
+                            </Rectangle.Fill>
+                        </Rectangle>
+                        <TextBlock Text="gold"/>
+                    </StackPanel>
+                </ComboBoxItem>
+                <ComboBoxItem>
+                    <StackPanel Orientation="Horizontal">
+                        <Rectangle Width="20" Height="10" Margin="5">
+                            <Rectangle.Fill>
+                                <SolidColorBrush Color="DarkGreen" />
+                            </Rectangle.Fill>
+                        </Rectangle>
+                        <TextBlock Text="dark green"/>
+                    </StackPanel>
+                </ComboBoxItem>
+                <ComboBoxItem>
+                    <StackPanel Orientation="Horizontal">
+                        <Rectangle Width="20" Height="10" Margin="5">
+                            <Rectangle.Fill>
+                                <SolidColorBrush Color="Teal" />
+                            </Rectangle.Fill>
+                        </Rectangle>
+                        <TextBlock Text="teal"/>
+                    </StackPanel>
+                </ComboBoxItem>
+                <ComboBoxItem>
+                    <StackPanel Orientation="Horizontal">
+                        <Rectangle Width="20" Height="10" Margin="5">
+                            <Rectangle.Fill>
+                                <SolidColorBrush Color="Navy" />
+                            </Rectangle.Fill>
+                        </Rectangle>
+                        <TextBlock Text="navy"/>
+                    </StackPanel>
+                </ComboBoxItem>
+                <ComboBoxItem>
+                    <StackPanel Orientation="Horizontal">
+                        <Rectangle Width="20" Height="10" Margin="5">
+                            <Rectangle.Fill>
+                                <SolidColorBrush Color="DeepPink" />
+                            </Rectangle.Fill>
+                        </Rectangle>
+                        <TextBlock Text="deep pink"/>
+                    </StackPanel>
+                </ComboBoxItem>
+                <ComboBoxItem>
+                    <StackPanel Orientation="Horizontal">
+                        <Rectangle Width="20" Height="10" Margin="5">
+                            <Rectangle.Fill>
+                                <SolidColorBrush Color="MediumSpringGreen" />
+                            </Rectangle.Fill>
+                        </Rectangle>
+                        <TextBlock Text="medium spring green"/>
+                    </StackPanel>
+                </ComboBoxItem>
+            </ComboBox>
+           <!--<Slider x:Name="R" Width="120" Margin="5"/>
+            <Slider x:Name="G" Width="120" Margin="5"/>
+            <Slider x:Name="B" Width="120" Margin="5"/>
+            <Slider x:Name="A" Width="120" Margin="5"/>-->
+        </StackPanel>
     </Grid>
 </UserControl>
 

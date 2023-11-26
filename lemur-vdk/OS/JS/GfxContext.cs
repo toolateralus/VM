@@ -2,19 +2,33 @@
 using System.Collections.Generic;
 using System.Runtime.InteropServices;
 using System.Windows;
+using System.Windows.Controls;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
 
 namespace Lemur.JS
 {
-    public record GfxContext(string InstanceID, string TargetControl, int PixelFormatBpp)
+    public class GfxContext
     {
+        public GfxContext(string InstanceID, string TargetControl, int PixelFormatBpp) {
+
+            Image image = null;
+            Computer.Current.Window.Dispatcher.Invoke(() =>
+            {
+                var control = JS.app.GetUserContent(InstanceID, Computer.Current);
+                image = JS.app.FindControl(control, TargetControl) as Image ?? throw new InvalidCastException(nameof(control));
+            });
+            this.image = image;
+            this.PixelFormatBpp = PixelFormatBpp;
+        } 
+
+        internal int PixelFormatBpp;
         internal int Width, Height;
-        
-        private readonly List<byte> renderTexture = new();
+
+        private byte[] renderTexture = Array.Empty<byte>();
         
         private WriteableBitmap bitmap;
-
+        internal readonly Image image;
         static readonly List<byte[]> palette = new()
         {
             new byte[]{255, 255, 0, 0}, // Red 0
@@ -49,16 +63,19 @@ namespace Lemur.JS
         {
             Width = width;
             Height = height;
-            renderTexture.Clear();
+            renderTexture = new byte[Width * Height * 4];
+
             for (int i = 0; i < Width * Height * PixelFormatBpp; ++i)
-                renderTexture.Add(255);
+                renderTexture[i] = 255;
 
             Computer.Current.Window.Dispatcher.Invoke(() =>
             {
                 bitmap = new WriteableBitmap(Width, Height, 1, 1, PixelFormats.Bgra32, null);
             });
         }
-       
+         
+
+
         public void WritePixelIndexed(int x, int y, int index)
         {
             var col = palette[index];
@@ -101,7 +118,7 @@ namespace Lemur.JS
             if (image == null)
                 return;
 
-            var pixelCount = renderTexture.Count / PixelFormatBpp;
+            var pixelCount = renderTexture.Length / PixelFormatBpp;
             if (pixelCount <= 1)
                 return;
 
@@ -109,11 +126,11 @@ namespace Lemur.JS
 
             var stride = bitmap.BackBufferStride;
 
-            if (renderTexture.Count == stride * Height)
+            if (renderTexture.Length == stride * Height)
             {
                 IntPtr pBackBuffer = bitmap.BackBuffer;
 
-                Marshal.Copy(renderTexture.ToArray(), 0, pBackBuffer, renderTexture.Count);
+                Marshal.Copy(renderTexture, 0, pBackBuffer, renderTexture.Length);
 
                 bitmap.AddDirtyRect(new Int32Rect(0, 0, Width, Height));
             }
