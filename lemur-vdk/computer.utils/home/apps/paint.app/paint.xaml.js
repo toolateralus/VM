@@ -17,7 +17,7 @@ class paint {
                 for (let y = -radius; y < radius; ++y) {
                     const pxX = Math.floor(x + this.mouseState.x / width * this.resolution);
                     const pxY = Math.floor(y + this.mouseState.y / height * this.resolution);
-                    gfx.writePixel(this.gfx_ctx, pxX, pxY, to_color(palette[14]));
+                    gfx.writePixelIndexed(this.gfx_ctx, pxX, pxY, this.brushIndex);
                 }
             }
             gfx.flushCtx(this.gfx_ctx);
@@ -44,7 +44,7 @@ class paint {
     }
 
     onSelectionChanged(index) {
-        
+        this.brushIndex = index;
     }
 
     constructor(id) {
@@ -59,6 +59,10 @@ class paint {
             left : false,
             right : false
         }
+
+        app.setProperty(this.id, 'colorPickerPanel', 'Visibility', 1)
+
+        this.brushIndex = 0;
 
         this.resolution = 256;
 
