@@ -16,6 +16,7 @@ using Lemur.JS;
 using Lemur.FS;
 using System.Windows.Media.Imaging;
 using System.Data.Common;
+using System.Security.Cryptography;
 
 namespace Lemur.GUI
 {
@@ -84,7 +85,17 @@ namespace Lemur.GUI
                 var result = MessageBox.Show($"Are you sure? this action will delete any existing data in  ..\\Appdata\\Lemur\\computer{cpu_id}", "Installer", MessageBoxButton.YesNoCancel);
 
                 if (result == MessageBoxResult.Yes)
-                    Directory.Delete(workingDir, true);
+                {
+                    try
+                    {
+                        Directory.Delete(workingDir, true);
+                    }
+                    catch (Exception ee)
+                    {
+                        MessageBox.Show(ee.Message, "File/Directory may be in use");
+                        return;
+                    }
+                }
                 else return;
             }
 

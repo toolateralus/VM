@@ -253,10 +253,7 @@
                     </StackPanel>
                 </ComboBoxItem>
             </ComboBox>
-           <!--<Slider x:Name="R" Width="120" Margin="5"/>
-            <Slider x:Name="G" Width="120" Margin="5"/>
-            <Slider x:Name="B" Width="120" Margin="5"/>
-            <Slider x:Name="A" Width="120" Margin="5"/>-->
+           <Slider x:Name="thicknessSlider" Width="120" Margin="5"/>
         </StackPanel>
     </Grid>
 </UserControl>

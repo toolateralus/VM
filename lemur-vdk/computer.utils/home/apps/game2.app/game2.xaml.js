@@ -4,7 +4,7 @@ const {
     GameObject,
     Scene,
     Renderer,
-} = require(' game.js');
+} = require('game.js');
 const { Profiler } = require('profiler.js');
 
 
@@ -88,8 +88,7 @@ class game2 {
         this.profiler.set_marker('profiler');
 
         this.frameCt++;
-        
-        // returns a bool indicating whether anything was actually drawn or not
+
         this.renderer.m_drawScene(this.scene, this.gfx_ctx);
         this.profiler.set_marker('rendering');
         
@@ -98,7 +97,8 @@ class game2 {
 
         this.scene.GameObjects().forEach(gO => { gO.velocity.y += 0.01; gO.update_physics();});
         this.scene.GameObjects().forEach(gO => { gO.confine_to_screen_space(this.renderer.width); });
-        this.scene.GameObjects().forEach(gO => { this.scene.GameObjects().forEach(gO1 => { this.collisionRes(gO, gO1); })});
+        this.scene.GameObjects().forEach(gO => { this.scene.GameObjects().forEach(gO1 => { this.collisionRes(gO, gO1); }) });
+
         this.profiler.set_marker('collision');
     }
 

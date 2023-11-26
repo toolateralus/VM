@@ -64,20 +64,10 @@ function describe(obj) {
 
 
 // require -------------------------
-let IS_EXPORTING = false;
-let __INCLUDES = [];
 
 function require(path) {
-    IS_EXPORTING = true;
-
-    if (__INCLUDES.includes(path)) {
-        IS_EXPORTING = false;
-        return __INCLUDES[path];
-    } else {
-        const fn = new Function(file.read(path));
-        const result = fn();
-        IS_EXPORTING = false; 
-        return result;
-    }
+    const fn = new Function(file.read(path));
+    const result = fn();
+    return result;
 }
 // -------------------------

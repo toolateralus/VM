@@ -359,7 +359,7 @@ namespace Lemur.OS
         {
             if (obj != null && obj.Length > 0 && obj[0] is string Path)
             {
-                FileSystem.NewFile(Path);
+                FileSystem.NewDirectory(Path);
                 Notifications.Now($"Created directory {Path}");
             }
             else

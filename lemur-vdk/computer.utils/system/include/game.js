@@ -224,6 +224,7 @@ class Renderer {
     drawLineIndexed(x0, x1, y0, y1, c0) {
         let steep = Math.abs(x0 - x1) < Math.abs(y0 - y1);
 
+        // flippy
         if (steep) {
             [x0, y0] = [y0, x0];
             [x1, y1] = [y1, x1];
@@ -331,15 +332,10 @@ class Renderer {
 
         const gameObjects = scene.GameObjects();
 
-       
         // all objects in Scene
         for (let z = 0; z < gameObjects.length; ++z) {
             const gO = gameObjects[z];
             const edges = gO.edges;
-
-            // remove this caching and directly reference the objects,
-            // to witness the performance differnce, if any on your machine.
-            // for me i went from 25 fps with the caching to 5 fps without.
             const scale = gO.scale;
             const pos = gO.pos;
             
@@ -347,7 +343,7 @@ class Renderer {
                 const start = edge.start;
                 const end = edge.end;
 
-                const x0 = start.x * scale.x + pos.x;
+                const x0 = start.x * scale.x + pos.x + sin();
                 const y0 = start.y * scale.y + pos.y;
                 const c0 = start.color;
 

@@ -310,5 +310,29 @@ namespace Lemur.FS
                 }
             }
         }
+
+        internal static async void NewDirectory(string path)
+        {
+            path = GetRelativeOrAbsolute(path);
+            if (!File.Exists(path) && !Directory.Exists(path))
+                Directory.CreateDirectory(path);
+            else
+            {
+                Notifications.Now("that directory or file already exists. do you want to overwrite? [y/n]");
+
+                var result = await Computer.Current.JavaScript.Execute($"read()");
+                
+                if (result is string answer && answer == "y")
+                {
+                    if (File.Exists(path)) 
+                        File.Delete(path);
+
+                    if (Directory.Exists(path)) 
+                        Directory.Delete(path);
+
+                    Directory.CreateDirectory(path);
+                }
+            }
+        }
     }
 }

@@ -12,14 +12,21 @@ class paint {
         const height = app.getProperty(this.id, 'renderTarget', 'ActualHeight');
 
         if (this.mouseState.right === true) {
-            const radius = 3;
+            const radius = Math.floor(app.getProperty(this.id, 'thicknessSlider', 'Value') ?? 3);
+
+            const msX = this.mouseState.x / width  * this.resolution;
+            const msY = this.mouseState.y / height * this.resolution;
+            const brush = this.brushIndex;
+            const ctx = this.gfx_ctx;
+
             for (let x = -radius; x < radius; ++x) {
                 for (let y = -radius; y < radius; ++y) {
-                    const pxX = Math.floor(x + this.mouseState.x / width * this.resolution);
-                    const pxY = Math.floor(y + this.mouseState.y / height * this.resolution);
-                    gfx.writePixelIndexed(this.gfx_ctx, pxX, pxY, this.brushIndex);
+                    const pxX = Math.floor(x + msX);
+                    const pxY = Math.floor(y + msY);
+                    gfx.writePixelIndexed(ctx, pxX, pxY, brush);
                 }
             }
+
             gfx.flushCtx(this.gfx_ctx);
         }
     }

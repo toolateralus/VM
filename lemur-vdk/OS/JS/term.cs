@@ -30,6 +30,7 @@ namespace Lemur.JS
         {
             CommandPrompt cmd = null;
             cmd = Computer.TryGetProcessOfType<CommandPrompt>();
+
             var waiting = true;
             string result = "";
             if (cmd is null)

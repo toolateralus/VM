@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using System.Windows;
 using System.Windows.Controls;
@@ -139,16 +140,12 @@ namespace Lemur.JS
             image.Source = bitmap;
         }
 
-        internal void ClearColor(int color)
+        internal unsafe void ClearColor(int color)
         {
             ExtractColorToCache(color);
-            for (int i = 0; i < Width * Height * PixelFormatBpp; i += 4)
-            {
-                renderTexture[i + 0] = cached_color[0];
-                renderTexture[i + 1] = cached_color[1];
-                renderTexture[i + 2] = cached_color[2];
-                renderTexture[i + 3] = cached_color[3];
-            }
+            for (int i = 0; i < Width * Height; i++)
+                fixed (byte *ptr = renderTexture)
+                    Marshal.Copy(cached_color, 0, (nint)ptr + i * PixelFormatBpp, PixelFormatBpp);
         }
     }
 }
