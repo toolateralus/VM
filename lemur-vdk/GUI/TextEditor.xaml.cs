@@ -26,13 +26,13 @@ namespace Lemur.GUI
         public TextEditor(string path)
         {
             InitializeComponent();
-            LoadedFile = path;
+           
             LoadFile(path);
             // change the highlighting based on file extension that's opened
         }
         public void LateInit(Computer c)
         {
-
+            // neccesary, deprecated
         }
         protected override void OnKeyUp(KeyEventArgs e)
         {
@@ -50,7 +50,7 @@ namespace Lemur.GUI
         private void LoadFile(string path)
         {
             path = FileSystem.GetResourcePath(path);
-
+            LoadedFile = path;
             if (File.Exists(path))
             {
                 string? extension = System.IO.Path.GetExtension(path)?.ToLower();

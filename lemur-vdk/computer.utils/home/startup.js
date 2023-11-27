@@ -5,20 +5,15 @@
 // the name & call id of the command
 // such as
 // myCommandFile.js
-term.setAliasDirectory('commands')
+term.setAliasDirectory('commands');
 
 /*leave this empty string arg to search whole pc and install any located apps.
      otherwise specify a target directory to recursively search for your apps*/
 
-app.loadApps('')
+app.loadApps('');
 
-if (file.exists('_welcome_app_show.junk')) {
-
+if (config['welcome_read']) {
+    app.uninstall('welcome.app');
+} else {
+    app.start('welcome.app');
 }
-
-app.start('welcome.app')
-
-app.uninstall('welcome.app')
-
-// for development - though built into source.
-app.uninstall('GL_TEST.app')

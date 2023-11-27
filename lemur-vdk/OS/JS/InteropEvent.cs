@@ -113,8 +113,8 @@ namespace Lemur.JS
                     }
                     break;
 
-                case XAML_EVENTS.RENDER:
                 case XAML_EVENTS.PHYSICS: /// deprecated, use RENDER instead.
+                case XAML_EVENTS.RENDER:
                     executionThread = new(HeavyWorkerLoop);
                     executionThread.Start();
 

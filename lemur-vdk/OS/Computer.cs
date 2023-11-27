@@ -270,7 +270,9 @@ namespace Lemur
             pc.InstallCSharpApp("CommandPrompt.app", typeof(CommandPrompt));
             pc.InstallCSharpApp("FileExplorer.app", typeof(FileExplorer));
             pc.InstallCSharpApp("TextEditor.app", typeof(TextEditor));
+#if DEBUG   
             pc.InstallCSharpApp("GL_TEST.app", typeof(OpenGL2Window));
+#endif
 
             Runtime.LoadCustomSyntaxHighlighting();
         }
