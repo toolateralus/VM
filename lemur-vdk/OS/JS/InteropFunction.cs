@@ -25,6 +25,7 @@ namespace Lemur.JS
         protected Action? onDispose;
         public Thread? executionThread = null;
         public Engine? javaScriptEngine;
+        public bool Running { get; private set; }
 
         public bool Disposing { get; set; }
         public virtual async Task<string> CreateFunction(string identifier, string methodName)
@@ -36,9 +37,10 @@ namespace Lemur.JS
             return id;
         }
       
-        public virtual void HeavyWorkerLoop()
+        public virtual void HeavyWorkerLoop(object? sender, DoWorkEventArgs e)
         {
-            while (!Disposing && !javaScriptEngine.Disposing)
+            Running = true;
+            while (Running)
             {
                 try
                 {
