@@ -21,6 +21,8 @@ namespace Lemur.JS
         public Action<object?, KeyEventArgs> OnKeyUp;
 
         public Action<object?, KeyEventArgs> OnKeyDown;
+        private bool executionThreadAlive;
+
         public InteropEvent(FrameworkElement control, XAML_EVENTS @event, Engine js, string id, string method)
         {
             Event = @event;
@@ -44,46 +46,60 @@ namespace Lemur.JS
                         if (control is Button button)
                         {
                             button.Click += InvokeGeneric;
+                            onDispose += () => button.Click -= InvokeGeneric;
                             break;
                         }
                         control.MouseDown += InvokeGeneric;
+                        onDispose += () => control.MouseDown -= InvokeGeneric;
                     }
                     break;
                 case XAML_EVENTS.MOUSE_UP:
                     {
                         control.MouseUp += InvokeGeneric;
+                        onDispose += () => control.MouseUp -= InvokeGeneric;
                     }
                     break;
                 case XAML_EVENTS.MOUSE_MOVE:
                     {
                         control.MouseMove += InvokeMouse;
+                        onDispose += () => control.MouseMove -= InvokeMouse;
                     }
                     break;
                 case XAML_EVENTS.KEY_DOWN:
                     {
                         OnKeyDown += InvokeKeyboard;
+                        onDispose += () => OnKeyDown -= InvokeKeyboard;
                     }
                     break;
                 case XAML_EVENTS.KEY_UP:
                     {
                         OnKeyUp += InvokeKeyboard;
+                        onDispose += () => OnKeyUp -= InvokeKeyboard;
                     }
                     break;
                 case XAML_EVENTS.LOADED:
                     {
                         control.Loaded += InvokeGeneric;
+                        onDispose += () => control.Loaded -= InvokeGeneric;
                     }
                     break;
                 case XAML_EVENTS.WINDOW_CLOSE:
                     {
                         control.Unloaded += InvokeGeneric;
+                        onDispose += () => control.Unloaded -= InvokeGeneric;
                     }
                     break;
                 case XAML_EVENTS.SELECTION_CHANGED:
                     {
                         if (control is Selector lb)
                         {
-                            lb.SelectionChanged += (sender, e) => InvokeGeneric(sender, lb.SelectedIndex);
+
+                            void selectorevent(object? sender, SelectionChangedEventArgs e)
+                            {
+                                InvokeGeneric(sender, lb.SelectedIndex);
+                            }
+                            lb.SelectionChanged += selectorevent;
+                            onDispose += () => lb.SelectionChanged -= selectorevent;
                         }
                         else {
                             Notifications.Now($"Invalid hook: {control.Name} did not have the 'SELECTION_CHANGED' event to hook into");
@@ -93,6 +109,7 @@ namespace Lemur.JS
                 case XAML_EVENTS.MOUSE_LEAVE:
                     {
                         control.MouseLeave += InvokeGeneric;
+                        onDispose += () => control.MouseLeave -= InvokeGeneric;
                     }
                     break;
 

@@ -280,6 +280,7 @@ namespace Lemur.GUI
             {
                 Desktop.Children.Remove(rsz_win_capture);
                 Computer?.UserWindows.Remove(title);
+                rsz_win_capture.Content = null;
                 RemoveTaskbarButton(title);
             };
             return window;

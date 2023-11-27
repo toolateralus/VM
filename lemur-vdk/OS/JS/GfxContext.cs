@@ -19,7 +19,7 @@ namespace Lemur.JS
                 var control = JS.app.GetUserContent(InstanceID, Computer.Current);
                 image = JS.app.FindControl(control, TargetControl) as Image ?? throw new InvalidCastException(nameof(control));
             });
-            this.image = image;
+            this.image = new(image);
             this.PixelFormatBpp = PixelFormatBpp;
         } 
 
@@ -29,7 +29,7 @@ namespace Lemur.JS
         private byte[] renderTexture = Array.Empty<byte>();
         
         private WriteableBitmap bitmap;
-        internal readonly Image image;
+        internal readonly WeakReference<Image> image;
         static readonly List<byte[]> palette = new()
         {
             new byte[]{255, 0, 0, 255}, // Red 0

@@ -13,7 +13,6 @@ namespace Lemur.JS
     {
         internal Action<string, object?>? OnModuleExported;
         internal Action<string>? OnModuleImported;
-        internal Action<int>? OnComputerExit;
 
         public static double random(double  max)
         {
@@ -59,10 +58,6 @@ namespace Lemur.JS
         public async void sleep(int ms)
         {
             await Task.Delay(ms);
-        }
-        public void exit(int code)
-        {
-            OnComputerExit?.Invoke(code);
         }
         public void require(string path)
         {

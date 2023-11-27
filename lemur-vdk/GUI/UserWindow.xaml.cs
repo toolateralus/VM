@@ -17,7 +17,6 @@ namespace Lemur.GUI
     {
         public ResizableWindow Owner;
         internal Action? OnClosed;
-        
         public Engine JavaScriptEngine;
         public UserWindow()
         {
@@ -49,20 +48,12 @@ namespace Lemur.GUI
 
             ContentsFrame.Content = actualUserContent;
             
-            // for js/wpf apps. otherwise- this could be a C#/WPF user app like the cmd prompt
             if (engine != null)
-            {
                 JavaScriptEngine = engine;
-                OnClosed += engine.Dispose;
-            }
         }
         internal void Close()
         {
             JavaScriptEngine?.Dispose();
-            if (Owner is not null && Owner.Parent is Canvas canvas)
-            {
-                canvas.Children.Remove(Owner);
-            }
             OnClosed?.Invoke();
         }
         /// <summary>
@@ -75,7 +66,6 @@ namespace Lemur.GUI
             Close();
             e.Handled = true;
         }
-
         private void OnResizeBorderClicked(object sender, MouseButtonEventArgs e)
         {
             if (sender is not Button button || button.Tag is not string tag)

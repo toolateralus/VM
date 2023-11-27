@@ -68,7 +68,7 @@ namespace Lemur.JS
             InteropModule.OnModuleImported += ImportModule;
 
             GraphicsModule = new graphics();
-            ConvModule = new    conv();
+            ConvModule = new conv();
             AppModule = new app();
             FileModule = new file();
             TermModule = new term();
@@ -91,10 +91,9 @@ namespace Lemur.JS
 
             // the basic modules that are auto-included with each context.
             LoadModules(FileSystem.GetResourcePath("do_not_delete"));
-
-            InteropModule.OnComputerExit += computer.Exit;
-
-            InteropModule.OnModuleExported += (path, obj) => { Modules[path] = obj; };
+            InteropModule.OnModuleExported = (path, obj) => {
+                Modules[path] = obj;
+            };
         }
         public void EmbedObject(string name, object? obj)
         {
@@ -117,7 +116,6 @@ namespace Lemur.JS
                 if (!CodeDictionary.IsEmpty)
                 {
                     var pair = CodeDictionary.Last();
-                    CodeDictionary.Remove(pair.Key, out _);
 
                     try
                     {
@@ -128,6 +126,10 @@ namespace Lemur.JS
                     {
                         Notifications.Exception(e);
                         
+                    }
+                    finally
+                    {
+                        CodeDictionary.Remove(pair.Key, out _);
                     }
                    
                     continue;
@@ -202,6 +204,8 @@ namespace Lemur.JS
                 CodeDictionary.TryRemove(handle, out _);
                 return null;
             }
+
+            Thread.SpinWait(1);
 
             return result;
         }
@@ -281,17 +285,11 @@ namespace Lemur.JS
                 // this does the real creation of the event.
                 var eh = new InteropEvent(element, (XAML_EVENTS)type, this, identifier, methodName);
 
-                if (Computer.UserWindows.TryGetValue(identifier, out var app))
+                if (!Computer.UserWindows.TryGetValue(identifier, out var app))
                 {
-                    app.OnClosed += () =>
-                    {
-                        if (EventHandlers.Contains(eh))
-                            EventHandlers.Remove(eh);
-
-                        eh.ForceDispose();
-                    };
+                    Notifications.Exception(new NullReferenceException("Creating an event handler failed : this is an engine bug. report it on github if you'd like"));
+                    return;
                 }
-                else Notifications.Exception(new NullReferenceException("Creating an event handler failed : this is an engine bug. report it on github if you'd like"));
 
                 EventHandlers.Add(eh);
             });
@@ -335,36 +333,17 @@ namespace Lemur.JS
             EventHandlers.Add(eh);
         }
 
-        protected virtual void Dispose(bool disposing)
-        {
-            if (!Disposing)
-            {
-                if (disposing)
-                {
-                    m_engine_internal?.Dispose();
-
-                    Task.Run(() => executionThread.Join());
-                    Task.Run(() =>
-                    {
-                        for (int i = 0; i < EventHandlers.Count; i++)
-                        {
-                            InteropFunction? eventHandler = EventHandlers[i];
-                            eventHandler?.Dispose();
-                        }
-                    });
-                }
-
-                m_engine_internal = null!;
-                Computer = null!;
-                Disposing = true;
-            }
-        }
-
         public void Dispose()
         {
-            // Do not change this code. Put cleanup code in 'Dispose(bool disposing)' method
-            Dispose(disposing: true);
-            GC.SuppressFinalize(this);
+            m_engine_internal.Dispose();
+            executionThread.Join();
+
+            for (int i = 0; i < EventHandlers.Count; i++)
+            {
+                InteropFunction? eventHandler = EventHandlers[i];
+                eventHandler?.Dispose();
+            }
+            EventHandlers.Clear();
         }
     }
 }
