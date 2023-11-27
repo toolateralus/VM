@@ -1,11 +1,13 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Drawing;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
+using Image = System.Windows.Controls.Image;
 
 namespace Lemur.JS
 {
@@ -29,8 +31,8 @@ namespace Lemur.JS
         private byte[] renderTexture = Array.Empty<byte>();
         
         private WriteableBitmap bitmap;
-        internal readonly WeakReference<Image> image;
-        static readonly List<byte[]> palette = new()
+        internal readonly WeakReference<System.Windows.Controls.Image> image;
+        public static readonly List<byte[]> palette = new()
         {
             new byte[]{255, 0, 0, 255}, // Red 0
             new byte[]{255, 128, 0, 255}, // Orange 1
@@ -145,6 +147,16 @@ namespace Lemur.JS
             ExtractColorToCache(color);
             for (int i = 0; i < Width * Height; i++)
                 fixed (byte *ptr = renderTexture)
+                    Marshal.Copy(cached_color, 0, (nint)ptr + i * PixelFormatBpp, PixelFormatBpp);
+        }
+
+        internal unsafe void ClearColorIndex(int index)
+        {
+            fixed (byte* ptr = cached_color)
+                Marshal.Copy(palette[index], 0, (nint)ptr, 3);
+
+            for (int i = 0; i < Width * Height; i++)
+                fixed (byte* ptr = renderTexture)
                     Marshal.Copy(cached_color, 0, (nint)ptr + i * PixelFormatBpp, PixelFormatBpp);
         }
     }

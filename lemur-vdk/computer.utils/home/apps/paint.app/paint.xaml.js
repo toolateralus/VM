@@ -19,20 +19,50 @@ class paint {
             const brush = this.brushIndex;
             const ctx = this.gfx_ctx;
 
-            for (let x = -radius; x < radius; ++x) {
-                for (let y = -radius; y < radius; ++y) {
-                    const cosx = Math.cos(x);
-                    const cosy = Math.sin(y);
-                    const pxX = Math.floor(x + cosx + msX);
-                    const pxY = Math.floor(x + cosy + msY);
-                    gfx.writePixelIndexed(ctx, pxX, pxY, brush);
+            const sqrRad = radius * radius
 
+            for (let x = -radius; x <= radius; ++x) {
+                for (let y = -radius; y < radius; ++y) {
+
+                    const dist = (x * x) + (y * y);
+
+                    if (dist < sqrRad) {
+                        const pxX = Math.floor(x + msX);
+                        const pxY = Math.floor(y + msY);
+
+                        this.indexMap[pxX, pxY] = brush;
+
+                        if (brush > palette.length) print(brush);
+
+                        gfx.writePixelIndexed(ctx, pxX, pxY, brush);
+                    }
                 }
             }
 
             gfx.flushCtx(this.gfx_ctx);
         }
     }
+
+    drawCached() {
+        const width = app.getProperty(this.id, 'renderTarget', 'ActualWidth');
+        const height = app.getProperty(this.id, 'renderTarget', 'ActualHeight');
+
+        const msX = this.mouseState.x / width * this.resolution;
+        const msY = this.mouseState.y / height * this.resolution;
+        const ctx = this.gfx_ctx;
+
+        for (let x = 0; x < this.resolution; ++x) {
+            for (let y = 0; y < this.resolution; ++y) {
+                const pxX = Math.floor(x + msX);
+                const pxY = Math.floor(y + msY);
+                const index = this.indexMap[pxX, pxY];
+                gfx.writePixelIndexed(ctx, pxX, pxY, index);
+            }
+        }
+
+        gfx.flushCtx(this.gfx_ctx);
+    }
+
 
     onMouseDown(left, right) {
         this.mouseState.right = right;
@@ -56,9 +86,24 @@ class paint {
     onSelectionChanged(index) {
         this.brushIndex = index;
     }
-
+    onSavePressed() {
+        file.write('test.id', JSON.stringify(this.indexMap));
+    }
+    onLoadPressed() {
+        this.indexMap = JSON.parse(file.read('test.id'));
+        this.drawCached();
+    }
+    onClearPressed() {
+        gfx.clearColorIndexed(this.gfx_ctx, Color.WHITE);
+        gfx.flushCtx(this.gfx_ctx);
+    }
+    onFillPressed() {
+        gfx.clearColorIndexed(this.gfx_ctx, this.brushIndex);
+        gfx.flushCtx(this.gfx_ctx);
+    }
     constructor(id) {
         this.id = id;
+
 
         this.pickerOpen = 0;
 
@@ -70,11 +115,18 @@ class paint {
             right : false
         }
 
-        app.setProperty(this.id, 'colorPickerPanel', 'Visibility', 1)
+        app.setProperty(this.id, 'colorPickerPanel', 'Visibility', 0)
 
         this.brushIndex = 0;
 
         this.resolution = 256;
+
+        this.indexMap = [[]];
+
+        for (let i = 0; i < 256; ++i)
+            for (let j = 0; j < 256; ++j) {
+                this.indexMap[i, j] = Color.WHITE;
+            }
 
         this.gfx_ctx = gfx.createCtx(this.id, 'renderTarget', this.resolution, this.resolution);
 
@@ -83,6 +135,10 @@ class paint {
         app.eventHandler(this.id, 'renderTarget', 'onMouseDown', XAML_EVENTS.MOUSE_DOWN);
         app.eventHandler(this.id, 'renderTarget', 'onMouseDown', XAML_EVENTS.MOUSE_UP);
 
+        app.eventHandler(this.id, 'SaveButton', 'onSavePressed', XAML_EVENTS.MOUSE_DOWN);
+        app.eventHandler(this.id, 'LoadButton', 'onLoadPressed', XAML_EVENTS.MOUSE_DOWN);
+        app.eventHandler(this.id, 'ClearButton', 'onClearPressed', XAML_EVENTS.MOUSE_DOWN);
+        app.eventHandler(this.id, 'FillButton', 'onFillPressed', XAML_EVENTS.MOUSE_DOWN);
 
         app.eventHandler(this.id, 'renderTarget', 'onMouseLeave', XAML_EVENTS.MOUSE_LEAVE);
         app.eventHandler(this.id, 'renderTarget', 'onMouseMoved', XAML_EVENTS.MOUSE_MOVE);

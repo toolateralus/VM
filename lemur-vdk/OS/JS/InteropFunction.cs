@@ -1,50 +1,37 @@
 ﻿using System;
 using System.ComponentModel;
+using System.Data;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Media;
 
 namespace Lemur.JS
 {
-    public class InteropFunction : IDisposable
+    public class InteropFunction
     {
-        
         private const string argsString = "(arg1, arg2)";
-        
         /// <summary>
         /// this is the actual call handle
         /// </summary>
         public string? functionHandle;
-        
         /// <summary>
         /// this is the handle relative to the object, we don't call this
         /// </summary>
         public readonly string? m_MethodHandle;
-
-        public void ForceDispose() => onDispose?.Invoke();
-
         protected Action? onDispose;
         public Thread? executionThread = null;
         public Engine? javaScriptEngine;
-        public bool Running { get; private set; }
-
-        public virtual async Task<string> CreateFunction(string identifier, string methodName)
-        {
-            var event_call = $"{identifier}.{methodName}{argsString}";
-            var id = $"{identifier}{methodName}";
-            string func = $"function {id} {argsString} {{ {event_call}; }}";
-            await javaScriptEngine?.Execute(func);
-            return id;
-        }
-      
+        public bool Running { get; set; }
+        
+        public void ForceDispose() => onDispose?.Invoke();
         public virtual void HeavyWorkerLoop()
         {
             Running = true;
-            while (Running)
+            while (Running && javaScriptEngine?.Disposing == false)
             {
                 try
                 {
-                    if (javaScriptEngine.m_engine_internal.HasVariable(functionHandle))
+                    if (javaScriptEngine?.Disposing == false && javaScriptEngine.m_engine_internal.HasVariable(functionHandle))
                         InvokeEventImmediate(null, null);
                 }
                 catch (Exception e1)
@@ -81,11 +68,13 @@ namespace Lemur.JS
                 Notifications.Now("Attempted to call a javascript function that didn't exist");
             }
         }
-
-        public void Dispose()
+        public virtual async Task<string> CreateFunction(string identifier, string methodName)
         {
-            Running = false;
-            executionThread?.Join();
+            var event_call = $"{identifier}.{methodName}{argsString}";
+            var id = $"{identifier}{methodName}";
+            string func = $"function {id} {argsString} {{ {event_call}; }}";
+            await javaScriptEngine?.Execute(func);
+            return id;
         }
     }
 }

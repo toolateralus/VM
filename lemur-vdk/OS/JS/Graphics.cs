@@ -50,6 +50,15 @@ namespace Lemur.JS
             }
             ctx.ClearColor(color);
         }
+        public void clearColorIndexed(int gfx_ctx, int index)
+        {
+            if (!gfxContext.TryGetValue(gfx_ctx, out var ctx))
+            {
+                Notifications.Now($"Couldn't find graphics context for id : {gfx_ctx}");
+                return;
+            }
+            ctx.ClearColorIndex(index);
+        }
         public bool flushCtx(int gfx_ctx, bool exception = false)
         {
             if (!gfxContext.TryGetValue(gfx_ctx, out var context))

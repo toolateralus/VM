@@ -20,7 +20,6 @@ class game2 {
 
         const gfx_ctx = gfx.createCtx(this.id, 'renderTarget', 512, 512);
 
-
         this.renderer = new Renderer(512, gfx_ctx);
 
         var gameObjects = [];
@@ -33,8 +32,6 @@ class game2 {
             const scale = new Point(5 * i, 5 * i);
             // start position
             const pos = new Point(half_width + i, half_width + i);
-
-            this.player = new GameObject(verts, scale, pos);
 
             let gO = new GameObject(verts, scale, pos);
 

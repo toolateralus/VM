@@ -91,9 +91,12 @@ namespace Lemur.JS
 
             // the basic modules that are auto-included with each context.
             LoadModules(FileSystem.GetResourcePath("do_not_delete"));
+
             InteropModule.OnModuleExported = (path, obj) => {
                 Modules[path] = obj;
             };
+
+
         }
         public void EmbedObject(string name, object? obj)
         {
@@ -109,6 +112,7 @@ namespace Lemur.JS
                 m_engine_internal.EmbedHostObject(item.Key, item.Value);
         }
         // Resource intensive loops
+        
         private async void ExecuteAsync()
         {
             while (!Disposing)
@@ -195,7 +199,7 @@ namespace Lemur.JS
 
             CodeDictionary.TryAdd(handle, (jsCode, callback));
 
-            while (CodeDictionary.TryGetValue(handle, out _) && !token.IsCancellationRequested)
+            while (!Disposing && CodeDictionary.TryGetValue(handle, out _) && !token.IsCancellationRequested)
                 await Task.Delay(1, token);
 
             if (token.IsCancellationRequested)
@@ -285,7 +289,7 @@ namespace Lemur.JS
                 // this does the real creation of the event.
                 var eh = new InteropEvent(element, (XAML_EVENTS)type, this, identifier, methodName);
 
-                if (!Computer.UserWindows.TryGetValue(identifier, out var app))
+                if (!Computer. UserWindows.TryGetValue(identifier, out var app))
                 {
                     Notifications.Exception(new NullReferenceException("Creating an event handler failed : this is an engine bug. report it on github if you'd like"));
                     return;
@@ -335,15 +339,9 @@ namespace Lemur.JS
 
         public void Dispose()
         {
+            Disposing = true;
             m_engine_internal.Dispose();
             executionThread.Join();
-
-            for (int i = 0; i < EventHandlers.Count; i++)
-            {
-                InteropFunction? eventHandler = EventHandlers[i];
-                eventHandler?.Dispose();
-            }
-            EventHandlers.Clear();
         }
     }
 }
