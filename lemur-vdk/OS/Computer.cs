@@ -33,7 +33,6 @@ namespace Lemur
         internal Engine JavaScript { get; set; }
         internal CommandLine CmdLine { get; set; }
         internal JObject Config { get; set; }
-        internal Theme Theme { get; set; } = new();
 
         internal static Dictionary<string, List<string>> ProcessLookupTable = new();
         internal readonly Dictionary<string, UserWindow> UserWindows = new();

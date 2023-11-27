@@ -14,11 +14,11 @@
             <RowDefinition Height="*"/>
             <RowDefinition Height="25"/>
         </Grid.RowDefinitions>
-        <StackPanel Grid.Row="1" Orientation="Horizontal" HorizontalAlignment="Stretch">
-            <Button MinWidth="150" Content="Boot" Click="NewComputerButton" FontFamily="Consolas"/>
-            <Button MinWidth="150" Grid.Row="1" Content="Install" Click="ReinstallComputerButton" FontFamily="Consolas"/>
+        <StackPanel Style="{StaticResource StackPanelStyle}" Grid.Row="1" Orientation="Horizontal" HorizontalAlignment="Stretch">
+            <Button Style="{StaticResource ButtonStyle}" MinWidth="150" Content="Boot" Click="NewComputerButton" FontFamily="Consolas"/>
+            <Button Style="{StaticResource ButtonStyle}" MinWidth="150" Grid.Row="1" Content="Install" Click="ReinstallComputerButton" FontFamily="Consolas"/>
         </StackPanel>
-        <Label Background="SlateGray" Foreground="White" FontFamily="Consolas">Enter a computer id below.</Label>
+        <Label Style="{StaticResource LabelStyle}" Background="SlateGray" Foreground="White" FontFamily="Consolas">Enter a computer id below.</Label>
         <TextBox x:Name="IDBox" Grid.Row="2" FontFamily="Consolas" Text="0"/>
     </Grid>
 </Window>

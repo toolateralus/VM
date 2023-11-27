@@ -28,20 +28,20 @@
             <WrapPanel x:Name="DesktopIconPanel" Orientation="Vertical" />
         </gui:WindowManager>
 
-        <StackPanel  x:Name="NotificationStackPanel" Grid.Column="1" VerticalAlignment="Bottom" CanVerticallyScroll="True" CanHorizontallyScroll="True" ScrollViewer.VerticalScrollBarVisibility="Visible" ScrollViewer.CanContentScroll="True"/>
+        <StackPanel Style="{StaticResource StackPanelStyle}"  x:Name="NotificationStackPanel" Grid.Column="1" Orientation="Vertical" VerticalAlignment="Bottom" CanVerticallyScroll="True" CanHorizontallyScroll="True" ScrollViewer.VerticalScrollBarVisibility="Visible" ScrollViewer.CanContentScroll="True"/>
         <Grid x:Name="Taskbar" Grid.Row="1" Grid.Column="0" Grid.ColumnSpan="2">
             <Grid.ColumnDefinitions>
                 <ColumnDefinition  Width="*"/>
                 <ColumnDefinition  Width="auto"/>
             </Grid.ColumnDefinitions>
 
-            <StackPanel x:Name="TaskbarStackPanel" Orientation="Horizontal" Width="Auto" Height="25" Background="#FF1B4B5B">
-                <Label  Foreground="White" x:Name="TimeLabel" Content="no time or date."/>
-                <Button x:Name="ShutdownBtn" Click="ShutdownClick" Background="#FF1B4B5B" Width="66" FontFamily="Consolas" FontSize="10" Foreground="White" Content="Shut down"/>
+            <StackPanel Style="{StaticResource StackPanelStyle}" x:Name="TaskbarStackPanel" Orientation="Horizontal" Width="Auto" Height="25">
+                <Label Style="{StaticResource LabelStyle}" x:Name="TimeLabel" Content="no time or date."/>
+                <Button Style="{StaticResource ButtonStyle}" x:Name="ShutdownBtn" Click="ShutdownClick" Content="Shut down"/>
             </StackPanel>
 
-            <StackPanel Grid.Row="1" Grid.Column="2" x:Name="RightSideTaskbarPanel" Background="#FF1B4B5B">
-                <Button Content="Clear Notifications" Click="ClearNotificaionsClicked"/>
+            <StackPanel Style="{StaticResource StackPanelStyle}" Grid.Row="1" Grid.Column="2" x:Name="RightSideTaskbarPanel">
+                <Button Style="{StaticResource ButtonStyle}" Content="Clear Notifications" Click="ClearNotificaionsClicked"/>
             </StackPanel>
         </Grid>
     </Grid>

@@ -12,20 +12,20 @@
                   <RowDefinition Height="35" />
             </Grid.RowDefinitions>
 
-            <StackPanel Grid.Row="1" x:Name="ProfilerPanel" Orientation="Horizontal">      
-                  <Label x:Name="framerateLabel" FontFamily="Consolas MS Bold" FontSize="20"
+            <StackPanel Style="{StaticResource StackPanelStyle}" Grid.Row="1" x:Name="ProfilerPanel" Orientation="Horizontal">      
+                  <Label Style="{StaticResource LabelStyle}" x:Name="framerateLabel" FontFamily="Consolas MS Bold" FontSize="20"
                         Foreground="Cyan" Background="#474354" Content="fps"/>
                         
-                  <Label x:Name="rendering" FontFamily="Consolas MS Bold" FontSize="20"
+                  <Label Style="{StaticResource LabelStyle}" x:Name="rendering" FontFamily="Consolas MS Bold" FontSize="20"
                         Foreground="Black" Background="DarkCyan" Content="rendering"/>
 
-                  <Label x:Name="uploading" FontFamily="Consolas MS Bold" FontSize="20"
+                  <Label Style="{StaticResource LabelStyle}" x:Name="uploading" FontFamily="Consolas MS Bold" FontSize="20"
                         Foreground="Cyan" Background="Green" Content="upload"/>
 
-                  <Label x:Name="collision" FontFamily="Consolas MS Bold" FontSize="20"
+                  <Label Style="{StaticResource LabelStyle}" x:Name="collision" FontFamily="Consolas MS Bold" FontSize="20"
                         Foreground="Cyan" Background="Violet" Content="collision"/>
 
-                  <Label x:Name="other" FontFamily="Consolas MS Bold" FontSize="20"
+                  <Label Style="{StaticResource LabelStyle}" x:Name="other" FontFamily="Consolas MS Bold" FontSize="20"
                         Foreground="Cyan" Background="Black" Content="other"/>
             </StackPanel>
 

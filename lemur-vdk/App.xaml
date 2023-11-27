@@ -1,9 +1,19 @@
 ﻿<Application x:Class="Lemur.App"
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-             xmlns:local="clr-namespace:Lemur"
              StartupUri="GUI/Runtime.xaml">
     <Application.Resources>
-         
+        <ResourceDictionary>
+            <ResourceDictionary.MergedDictionaries>
+                <ResourceDictionary Source="GUI/Styles.xaml"/>
+            </ResourceDictionary.MergedDictionaries>
+
+        <Style TargetType="Button" BasedOn="{StaticResource ButtonStyle}" />
+        <Style TargetType="Label" BasedOn="{StaticResource LabelStyle}" />
+        <Style TargetType="TextBox" BasedOn="{StaticResource TextBoxStyle}" />
+        <Style TargetType="StackPanel" BasedOn="{StaticResource StackPanelStyle}" />
+        <Style TargetType="Border" BasedOn="{StaticResource BorderStyle}" />
+        </ResourceDictionary>
+
     </Application.Resources>
 </Application>

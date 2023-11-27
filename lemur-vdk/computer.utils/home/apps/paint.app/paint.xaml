@@ -10,8 +10,8 @@
                VerticalAlignment="Stretch"
                Stretch="Fill" 
                RenderOptions.BitmapScalingMode="NearestNeighbor"/>
-        <StackPanel HorizontalAlignment="Left" x:Name="colorPickerPanel">
-            <Label Height="25" Foreground="Black" Content="Ctrl + C to show/hide this menu" Margin="5" FontSize="16" Width="200" Opacity="0.75" BorderBrush="Black">
+        <StackPanel Style="{StaticResource StackPanelStyle}" HorizontalAlignment="Left" x:Name="colorPickerPanel">
+            <Label Style="{StaticResource LabelStyle}" Height="25" Foreground="Black" Content="Ctrl + C to show/hide this menu" Margin="5" FontSize="16" Width="200" Opacity="0.75" BorderBrush="Black">
                 <Label.Background>
                     <ImageBrush/>
                 </Label.Background>
@@ -19,7 +19,7 @@
                     <DropShadowEffect/>
                 </Label.Effect>
             </Label>
-            <Label Height="25" Foreground="Black" Content="Brush Color | Brush Size" FontSize="16" Width="200" Opacity="0.75" BorderBrush="Black">
+            <Label Style="{StaticResource LabelStyle}" Height="25" Foreground="Black" Content="Brush Color | Brush Size" FontSize="16" Width="200" Opacity="0.75" BorderBrush="Black">
                 <Label.Background>
                     <ImageBrush/>
                 </Label.Background>
@@ -32,7 +32,7 @@
                     <DropShadowEffect/>
                 </ComboBox.Effect>
                 <ComboBoxItem>
-                    <StackPanel Orientation="Horizontal">
+                    <StackPanel Style="{StaticResource StackPanelStyle}" Orientation="Horizontal">
                         <Rectangle Width="20" Height="10" Margin="5">
                             <Rectangle.Fill>
                                 <SolidColorBrush Color="Red" />
@@ -42,7 +42,7 @@
                     </StackPanel>
                 </ComboBoxItem>
                 <ComboBoxItem>
-                    <StackPanel Orientation="Horizontal">
+                    <StackPanel Style="{StaticResource StackPanelStyle}" Orientation="Horizontal">
                         <Rectangle Width="20" Height="10" Margin="5">
                             <Rectangle.Fill>
                                 <SolidColorBrush Color="Orange" />
@@ -52,7 +52,7 @@
                     </StackPanel>
                 </ComboBoxItem>
                 <ComboBoxItem>
-                    <StackPanel Orientation="Horizontal">
+                    <StackPanel Style="{StaticResource StackPanelStyle}" Orientation="Horizontal">
                         <Rectangle Width="20" Height="10" Margin="5">
                             <Rectangle.Fill>
                                 <SolidColorBrush Color="Yellow" />
@@ -62,7 +62,7 @@
                     </StackPanel>
                 </ComboBoxItem>
                 <ComboBoxItem>
-                    <StackPanel Orientation="Horizontal">
+                    <StackPanel Style="{StaticResource StackPanelStyle}" Orientation="Horizontal">
                         <Rectangle Width="20" Height="10" Margin="5">
                             <Rectangle.Fill>
                                 <SolidColorBrush Color="LimeGreen" />
@@ -72,7 +72,7 @@
                     </StackPanel>
                 </ComboBoxItem>
                 <ComboBoxItem>
-                    <StackPanel Orientation="Horizontal">
+                    <StackPanel Style="{StaticResource StackPanelStyle}" Orientation="Horizontal">
                         <Rectangle Width="20" Height="10" Margin="5">
                             <Rectangle.Fill>
                                 <SolidColorBrush Color="Green" />
@@ -82,7 +82,7 @@
                     </StackPanel>
                 </ComboBoxItem>
                 <ComboBoxItem>
-                    <StackPanel Orientation="Horizontal">
+                    <StackPanel Style="{StaticResource StackPanelStyle}" Orientation="Horizontal">
                         <Rectangle Width="20" Height="10" Margin="5">
                             <Rectangle.Fill>
                                 <SolidColorBrush Color="SpringGreen" />
@@ -92,7 +92,7 @@
                     </StackPanel>
                 </ComboBoxItem>
                 <ComboBoxItem>
-                    <StackPanel Orientation="Horizontal">
+                    <StackPanel Style="{StaticResource StackPanelStyle}" Orientation="Horizontal">
                         <Rectangle Width="20" Height="10" Margin="5">
                             <Rectangle.Fill>
                                 <SolidColorBrush Color="Cyan" />
@@ -102,7 +102,7 @@
                     </StackPanel>
                 </ComboBoxItem>
                 <ComboBoxItem>
-                    <StackPanel Orientation="Horizontal">
+                    <StackPanel Style="{StaticResource StackPanelStyle}" Orientation="Horizontal">
                         <Rectangle Width="20" Height="10" Margin="5">
                             <Rectangle.Fill>
                                 <SolidColorBrush Color="SkyBlue" />
@@ -112,7 +112,7 @@
                     </StackPanel>
                 </ComboBoxItem>
                 <ComboBoxItem>
-                    <StackPanel Orientation="Horizontal">
+                    <StackPanel Style="{StaticResource StackPanelStyle}" Orientation="Horizontal">
                         <Rectangle Width="20" Height="10" Margin="5">
                             <Rectangle.Fill>
                                 <SolidColorBrush Color="Blue" />
@@ -122,7 +122,7 @@
                     </StackPanel>
                 </ComboBoxItem>
                 <ComboBoxItem>
-                    <StackPanel Orientation="Horizontal">
+                    <StackPanel Style="{StaticResource StackPanelStyle}" Orientation="Horizontal">
                         <Rectangle Width="20" Height="10" Margin="5">
                             <Rectangle.Fill>
                                 <SolidColorBrush Color="Purple" />
@@ -132,7 +132,7 @@
                     </StackPanel>
                 </ComboBoxItem>
                 <ComboBoxItem>
-                    <StackPanel Orientation="Horizontal">
+                    <StackPanel Style="{StaticResource StackPanelStyle}" Orientation="Horizontal">
                         <Rectangle Width="20" Height="10" Margin="5">
                             <Rectangle.Fill>
                                 <SolidColorBrush Color="Magenta" />
@@ -142,7 +142,7 @@
                     </StackPanel>
                 </ComboBoxItem>
                 <ComboBoxItem>
-                    <StackPanel Orientation="Horizontal">
+                    <StackPanel Style="{StaticResource StackPanelStyle}" Orientation="Horizontal">
                         <Rectangle Width="20" Height="10" Margin="5">
                             <Rectangle.Fill>
                                 <SolidColorBrush Color="Pink" />
@@ -152,7 +152,7 @@
                     </StackPanel>
                 </ComboBoxItem>
                 <ComboBoxItem>
-                    <StackPanel Orientation="Horizontal">
+                    <StackPanel Style="{StaticResource StackPanelStyle}" Orientation="Horizontal">
                         <Rectangle Width="20" Height="10" Margin="5">
                             <Rectangle.Fill>
                                 <SolidColorBrush Color="LightGray" />
@@ -162,7 +162,7 @@
                     </StackPanel>
                 </ComboBoxItem>
                 <ComboBoxItem>
-                    <StackPanel Orientation="Horizontal">
+                    <StackPanel Style="{StaticResource StackPanelStyle}" Orientation="Horizontal">
                         <Rectangle Width="20" Height="10" Margin="5">
                             <Rectangle.Fill>
                                 <SolidColorBrush Color="LightGray" />
@@ -172,7 +172,7 @@
                     </StackPanel>
                 </ComboBoxItem>
                 <ComboBoxItem>
-                    <StackPanel Orientation="Horizontal">
+                    <StackPanel Style="{StaticResource StackPanelStyle}" Orientation="Horizontal">
                         <Rectangle Width="20" Height="10" Margin="5">
                             <Rectangle.Fill>
                                 <SolidColorBrush Color="DarkGray" />
@@ -182,7 +182,7 @@
                     </StackPanel>
                 </ComboBoxItem>
                 <ComboBoxItem>
-                    <StackPanel Orientation="Horizontal">
+                    <StackPanel Style="{StaticResource StackPanelStyle}" Orientation="Horizontal">
                         <Rectangle Width="20" Height="10" Margin="5">
                             <Rectangle.Fill>
                                 <SolidColorBrush Color="Black" />
@@ -192,7 +192,7 @@
                     </StackPanel>
                 </ComboBoxItem>
                 <ComboBoxItem>
-                    <StackPanel Orientation="Horizontal">
+                    <StackPanel Style="{StaticResource StackPanelStyle}" Orientation="Horizontal">
                         <Rectangle Width="20" Height="10" Margin="5">
                             <Rectangle.Fill>
                                 <SolidColorBrush Color="White" />
@@ -202,7 +202,7 @@
                     </StackPanel>
                 </ComboBoxItem>
                 <ComboBoxItem>
-                    <StackPanel Orientation="Horizontal">
+                    <StackPanel Style="{StaticResource StackPanelStyle}" Orientation="Horizontal">
                         <Rectangle Width="20" Height="10" Margin="5">
                             <Rectangle.Fill>
                                 <SolidColorBrush Color="OrangeRed" />
@@ -212,7 +212,7 @@
                     </StackPanel>
                 </ComboBoxItem>
                 <ComboBoxItem>
-                    <StackPanel Orientation="Horizontal">
+                    <StackPanel Style="{StaticResource StackPanelStyle}" Orientation="Horizontal">
                         <Rectangle Width="20" Height="10" Margin="5">
                             <Rectangle.Fill>
                                 <SolidColorBrush Color="Gold" />
@@ -222,7 +222,7 @@
                     </StackPanel>
                 </ComboBoxItem>
                 <ComboBoxItem>
-                    <StackPanel Orientation="Horizontal">
+                    <StackPanel Style="{StaticResource StackPanelStyle}" Orientation="Horizontal">
                         <Rectangle Width="20" Height="10" Margin="5">
                             <Rectangle.Fill>
                                 <SolidColorBrush Color="DarkGreen" />
@@ -232,7 +232,7 @@
                     </StackPanel>
                 </ComboBoxItem>
                 <ComboBoxItem>
-                    <StackPanel Orientation="Horizontal">
+                    <StackPanel Style="{StaticResource StackPanelStyle}" Orientation="Horizontal">
                         <Rectangle Width="20" Height="10" Margin="5">
                             <Rectangle.Fill>
                                 <SolidColorBrush Color="Teal" />
@@ -242,7 +242,7 @@
                     </StackPanel>
                 </ComboBoxItem>
                 <ComboBoxItem>
-                    <StackPanel Orientation="Horizontal">
+                    <StackPanel Style="{StaticResource StackPanelStyle}" Orientation="Horizontal">
                         <Rectangle Width="20" Height="10" Margin="5">
                             <Rectangle.Fill>
                                 <SolidColorBrush Color="Navy" />
@@ -252,7 +252,7 @@
                     </StackPanel>
                 </ComboBoxItem>
                 <ComboBoxItem>
-                    <StackPanel Orientation="Horizontal">
+                    <StackPanel Style="{StaticResource StackPanelStyle}" Orientation="Horizontal">
                         <Rectangle Width="20" Height="10" Margin="5">
                             <Rectangle.Fill>
                                 <SolidColorBrush Color="DeepPink" />
@@ -262,7 +262,7 @@
                     </StackPanel>
                 </ComboBoxItem>
                 <ComboBoxItem>
-                    <StackPanel Orientation="Horizontal">
+                    <StackPanel Style="{StaticResource StackPanelStyle}" Orientation="Horizontal">
                         <Rectangle Width="20" Height="10" Margin="5">
                             <Rectangle.Fill>
                                 <SolidColorBrush Color="MediumSpringGreen" />
@@ -280,7 +280,7 @@
                     <DropShadowEffect/>
                 </Slider.Effect>
             </Slider>
-            <Button x:Name="ClearButton" Foreground="Black" Content="Clear" FontSize="16" Width="200" Height="25" Opacity="0.75" BorderBrush="{x:Null}">
+            <Button Style="{StaticResource ButtonStyle}" x:Name="ClearButton" Foreground="Black" Content="Clear" FontSize="16" Width="200" Height="25" Opacity="0.75" BorderBrush="{x:Null}">
                 <Button.Background>
                     <ImageBrush/>
                 </Button.Background>
@@ -288,7 +288,7 @@
                     <DropShadowEffect/>
                 </Button.Effect>
             </Button>
-            <Button x:Name="FillButton" Foreground="Black" Content="Fill" FontSize="16" Width="200" Height="25" Opacity="0.75" BorderBrush="{x:Null}">
+            <Button Style="{StaticResource ButtonStyle}" x:Name="FillButton" Foreground="Black" Content="Fill" FontSize="16" Width="200" Height="25" Opacity="0.75" BorderBrush="{x:Null}">
                 <Button.Background>
                     <ImageBrush/>
                 </Button.Background>
@@ -296,7 +296,7 @@
                     <DropShadowEffect/>
                 </Button.Effect>
             </Button>
-            <Label Foreground="Black" Content="Saving | Loading" Margin="5" FontSize="16" Width="200" Height="25" Opacity="0.75" BorderBrush="Black">
+            <Label Style="{StaticResource LabelStyle}" Foreground="Black" Content="Saving | Loading" Margin="5" FontSize="16" Width="200" Height="25" Opacity="0.75" BorderBrush="Black">
                 <Label.Background>
                     <ImageBrush/>
                 </Label.Background>
@@ -304,7 +304,7 @@
                     <DropShadowEffect/>
                 </Label.Effect>
             </Label>
-            <Button x:Name="LoadButton" Foreground="Black" Content="Load image" FontSize="16" Width="200" Height="25" Opacity="0.75" BorderBrush="{x:Null}">
+            <Button Style="{StaticResource ButtonStyle}" x:Name="LoadButton" Foreground="Black" Content="Load image" FontSize="16" Width="200" Height="25" Opacity="0.75" BorderBrush="{x:Null}">
                 <Button.Background>
                     <ImageBrush/>
                 </Button.Background>
@@ -312,7 +312,7 @@
                     <DropShadowEffect/>
                 </Button.Effect>
             </Button>
-            <Button x:Name="SaveButton" Foreground="Black" Content="Save current image" FontSize="16" Width="200" Height="25" Opacity="0.75" BorderBrush="{x:Null}">
+            <Button Style="{StaticResource ButtonStyle}" x:Name="SaveButton" Foreground="Black" Content="Save current image" FontSize="16" Width="200" Height="25" Opacity="0.75" BorderBrush="{x:Null}">
                 <Button.Background>
                     <ImageBrush/>
                 </Button.Background>

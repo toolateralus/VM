@@ -7,7 +7,7 @@
       xmlns:s="clr-namespace:System;assembly=mscorlib"
       xmlns:gui="clr-namespace:Lemur.GUI"
       mc:Ignorable="d" 
-      FontFamily="Cascadia Mono SemiLight">
+      >
     <UserControl.Resources>
         <s:Double x:Key="resizeEdgeMargin">10</s:Double>
     </UserControl.Resources>
@@ -28,10 +28,10 @@
                 <RowDefinition Height="25"/>
                 <RowDefinition Height="*"/>
             </Grid.RowDefinitions>
-            <StackPanel Background="#FF1F1F1F" Grid.Row="0" MinHeight="25" x:Name="Toolbar" Orientation="Horizontal">
-                <Button MinWidth="25" MinHeight="15" Margin="5" BorderBrush="DarkCyan" Foreground="White" Background="#FF5F36A9" x:Name="xBtn" Width="35" FontFamily="Consolas" FontSize="10" Content="X"/>
-                <Button MinWidth="25" MinHeight="15" Margin="5" BorderBrush="DarkCyan" Foreground="White" Background="#FF5F36A9" x:Name="minimizeBtn" Width="35" FontFamily="Consolas" FontSize="10" Content="MIN"/>
-                <Button MinWidth="25" MinHeight="15" Margin="5" BorderBrush="DarkCyan" Foreground="White" Background="#FF5F36A9" x:Name="maximizeBtn" Width="35" FontFamily="Consolas" FontSize="10" Content="MAX"/>
+            <StackPanel Style="{StaticResource StackPanelStyle}" Background="#FF1F1F1F" Grid.Row="0" MinHeight="25" x:Name="Toolbar" Orientation="Horizontal">
+                <Button Style="{StaticResource ButtonStyle}" MinWidth="25" MinHeight="15" Margin="5" BorderBrush="DarkCyan" Foreground="White" Background="#FF5F36A9" x:Name="xBtn" Width="35" FontFamily="Consolas" FontSize="10" Content="X"/>
+                <Button Style="{StaticResource ButtonStyle}" MinWidth="25" MinHeight="15" Margin="5" BorderBrush="DarkCyan" Foreground="White" Background="#FF5F36A9" x:Name="minimizeBtn" Width="35" FontFamily="Consolas" FontSize="10" Content="MIN"/>
+                <Button Style="{StaticResource ButtonStyle}" MinWidth="25" MinHeight="15" Margin="5" BorderBrush="DarkCyan" Foreground="White" Background="#FF5F36A9" x:Name="maximizeBtn" Width="35" FontFamily="Consolas" FontSize="10" Content="MAX"/>
             </StackPanel>
             <Frame Grid.Row="1" x:Name="ContentsFrame" />
         </Grid>

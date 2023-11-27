@@ -42,7 +42,6 @@ namespace Lemur.GUI
 
             DataContext = this;
 
-            TextBox.FontFamily = Computer.Current.Theme.Font;
 
             fadeOutTimer = new DispatcherTimer
             {

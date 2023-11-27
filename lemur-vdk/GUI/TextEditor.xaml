@@ -13,11 +13,11 @@
             <RowDefinition Height="*"/>
         </Grid.RowDefinitions>
 
-        <StackPanel Orientation="Horizontal" Grid.Row="0">
-            <Button FontFamily="Consolas" Click="LoadButton_Click" Name="LoadButton" TextBlock.TextAlignment="Center" Height="20" Width="80" Content="load" />
-            <Button FontFamily="Consolas" Click="SaveButton_Click"  Name="SaveButton" TextBlock.TextAlignment="Center" Height="20" Width="80" Content="save" />
-            <Button FontFamily="Consolas" Click="RunButton_Click"  Name="RunButton" TextBlock.TextAlignment="Center" Height="20" Width="80" Content="run .js" />
-            <Button FontFamily="Consolas" Click="RenderMD_Click"  Name="RenderMDButton" TextBlock.TextAlignment="Center" Height="20" Width="80" Content="render .md" />
+        <StackPanel Style="{StaticResource StackPanelStyle}" Orientation="Horizontal" Grid.Row="0">
+            <Button Style="{StaticResource ButtonStyle}" FontFamily="Consolas" Click="LoadButton_Click" Name="LoadButton" TextBlock.TextAlignment="Center" Height="20" Width="80" Content="load" />
+            <Button Style="{StaticResource ButtonStyle}" FontFamily="Consolas" Click="SaveButton_Click"  Name="SaveButton" TextBlock.TextAlignment="Center" Height="20" Width="80" Content="save" />
+            <Button Style="{StaticResource ButtonStyle}" FontFamily="Consolas" Click="RunButton_Click"  Name="RunButton" TextBlock.TextAlignment="Center" Height="20" Width="80" Content="run .js" />
+            <Button Style="{StaticResource ButtonStyle}" FontFamily="Consolas" Click="RenderMD_Click"  Name="RenderMDButton" TextBlock.TextAlignment="Center" Height="20" Width="80" Content="render .md" />
         </StackPanel>
         <avalonEdit:TextEditor x:Name="textEditor" Grid.Row="1"
             WordWrap="True"

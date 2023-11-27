@@ -83,13 +83,13 @@ Just for ease of use here, these are the provided xaml / js files.
              d:DesignHeight="450" d:DesignWidth="800" Background="#474354" BorderBrush="White" BorderThickness="5">
     <Grid>
         <!-- We use a StackPanel for easy allignment -->
-        <StackPanel Orientation="Vertical">
+        <StackPanel Style="{StaticResource StackPanelStyle}" Orientation="Vertical">
             <!-- Js will write to this label -->
             <TextBlock  Margin="2,2,2,2" Foreground="Wheat" Background="#52525e" x:Name="textBlock" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Text=""/>
             <!-- This is an input box we can fetch the contents of in JS -->
             <TextBox BorderBrush="Black" Margin="2,2,2,2" x:Name="textBox" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Text="C://>.."/>
             <!-- Js hooks into the event to handle it -->
-            <Button BorderBrush="Black" Margin="2,2,2,2" x:Name="showImageBtn" HorizontalAlignment="Left" VerticalAlignment="Top" Content="Load Image"/>
+            <Button Style="{StaticResource ButtonStyle}" BorderBrush="Black" Margin="2,2,2,2" x:Name="showImageBtn" HorizontalAlignment="Left" VerticalAlignment="Top" Content="Load Image"/>
             <!-- We use this to draw / render the image. can also be used for game development, see `game2.app` -->
             <Image Margin="10,10,10,10" x:Name="renderTarget" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Stretch="Fill"/>
         </StackPanel>

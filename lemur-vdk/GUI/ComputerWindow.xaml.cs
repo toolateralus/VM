@@ -40,11 +40,6 @@ namespace Lemur.GUI
         {
             var btn = new Button()
             {
-                Background = Computer.Theme.Background,
-                BorderBrush = Computer.Theme.Border,
-                BorderThickness = Computer.Theme.BorderThickness,
-                FontFamily = Computer.Theme.Font,
-                FontSize = Computer.Theme.FontSize,
                 Width = width,
                 Height = height,
             };
@@ -133,7 +128,6 @@ namespace Lemur.GUI
 
         public static void SetupIcon(string name, Button btn)
         {
-            var theme = Computer.Current.Theme;
             
             if (Runtime.GetAppIcon(name) is BitmapImage img)
             {
@@ -150,7 +144,6 @@ namespace Lemur.GUI
                 btn.Content = name;
             }
 
-            btn.Margin = theme.BorderThickness;
         }
 
         public static void SetupIcon(string name, Button btn, Type type) 
@@ -172,7 +165,6 @@ namespace Lemur.GUI
                 Notifications.Now("Failed to get image for native app : make sure you have a 'public static string? DesktopIcon => FileSystem.GetResourcePath(\"commandprompt.png\"); type/name/accessible field' in your .xaml.cs class");
             }
 
-            btn.Margin = Computer.Current.Theme.BorderThickness;
 
         }
         public static BitmapImage LoadImage(string path)
@@ -236,16 +228,9 @@ namespace Lemur.GUI
         {
             TopMostZIndex++;
 
-            background ??= Computer.Theme.Background;
-            foreground ??= Computer.Theme.Foreground;
-
-            // hosts the user content and it's utilities
             var window = new UserWindow
             {
                 Foreground = foreground,
-                FontFamily = Computer.Theme.Font,
-                FontSize = Computer.Theme.FontSize,
-                BorderThickness = Computer.Theme.BorderThickness,
             };
 
             // TODO: add a way for users to add buttons and toolbars easily through
@@ -259,10 +244,6 @@ namespace Lemur.GUI
                 Height=200,
                 Margin = window.Margin,
                 Foreground = foreground,
-
-                FontFamily = Computer.Theme.Font,
-                FontSize = Computer.Theme.FontSize,
-                BorderThickness = Computer.Theme.BorderThickness,
             };
 
             // hacky ::
