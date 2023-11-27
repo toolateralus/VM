@@ -21,9 +21,12 @@ class paint {
 
             for (let x = -radius; x < radius; ++x) {
                 for (let y = -radius; y < radius; ++y) {
-                    const pxX = Math.floor(x + msX);
-                    const pxY = Math.floor(y + msY);
+                    const cosx = Math.cos(x);
+                    const cosy = Math.sin(y);
+                    const pxX = Math.floor(x + cosx + msX);
+                    const pxY = Math.floor(x + cosy + msY);
                     gfx.writePixelIndexed(ctx, pxX, pxY, brush);
+
                 }
             }
 

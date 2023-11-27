@@ -85,7 +85,7 @@ namespace Lemur.JS
         public void Dispose()
         {
             Running = false;
-            executionThread.Join();
+            executionThread?.Join();
         }
     }
 }
