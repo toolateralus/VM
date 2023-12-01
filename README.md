@@ -40,8 +40,6 @@ Once the project is cloned:
 2. In Visual Studio, select 'Release' mode.
 3. Right click on `lemur` in the Solution Explorer and click Build, or Build the project using the `Ctrl + Shift + B` shortcut.
 
-**Important**: If using Ctrl+Shift+B, An expected error will occur : `Program does not contain a static 'Main' method suitable for an entry point`. This error is a known issue and should not affect the build process. This is from a deprecated and not yet removed dependency.
-
 ### Running Lemur VDK
 After building:
 
