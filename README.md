@@ -1,14 +1,11 @@
 
 # Welcome to Lemur VDK 
-_If you experience any problems... create a github issue, I'm very often available._
-## Micro tutorial :
-
+## Micro tutorial 
 #### for windowing
-( the latest commit broke windowing. use ctrl + shift and rmb + dragging the mouse to resize. )
-- hold left alt and use left click / right click to either drag or resize windows. It is really hard to use and needs to be replaced very badly.
-- desktop icons launch 'applications'
+- simply hover over the edge of a window to resize, you'll see different button bars appear when you're in the right spot. click and drag to resize.
+- to drag, left click & drag. you can grab anywhere that doesn't handle a click event, which on a fresh app is anywhere, or on any app, the title bar.
 #### for making applications
-- make sure you check out the in-app documentation, just click navigate with the file explorer, double click a .md file, and click 'render .md'
+- make sure you check out the in-app documentation, just click navigate with the file explorer, double click a .md file, and click 'render .md' to view docs in-app. theyre rough & unfinished.
 #### user data location
 - computers get created in User/Appdata/Roaming/Lemur/..., this is your virtual file system.
 ### notes
@@ -42,8 +39,6 @@ Once the project is cloned:
 1. Ensure the repository structure is intact after cloning.
 2. In Visual Studio, select 'Release' mode.
 3. Right click on `lemur` in the Solution Explorer and click Build, or Build the project using the `Ctrl + Shift + B` shortcut.
-
-**Important**: If using Ctrl+Shift+B, An expected error will occur : `Program does not contain a static 'Main' method suitable for an entry point`. This error is a known issue and should not affect the build process. This is from a deprecated and not yet removed dependency.
 
 ### Running Lemur VDK
 After building:
