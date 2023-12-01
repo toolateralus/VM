@@ -1,8 +1,6 @@
 
 # Welcome to Lemur VDK 
-_If you experience any problems... create a github issue, I'm very often available._
-## Micro tutorial :
-
+## Micro tutorial 
 #### for windowing
 - simply hover over the edge of a window to resize, you'll see different button bars appear when you're in the right spot. click and drag to resize.
 - to drag, left click & drag. you can grab anywhere that doesn't handle a click event, which on a fresh app is anywhere, or on any app, the title bar.
