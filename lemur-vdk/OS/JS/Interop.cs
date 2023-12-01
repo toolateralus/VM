@@ -14,7 +14,7 @@ namespace Lemur.JS
         internal Action<string, object?>? OnModuleExported;
         internal Action<string>? OnModuleImported;
 
-        public static double random(double  max)
+        public double random(double  max)
         {
             return Random.Shared.NextDouble() * max;
         }

@@ -115,7 +115,7 @@ namespace Lemur
         {
             // the resizable is the container that hosts the user app.
             // this is made seperate to eliminate annoying and complex boiler plate.
-            UserWindow window = Window.OpenAppUI(title, ref background, ref foreground, out var resizable_window);
+            UserWindow window = Window.OpenAppUI(title, out var resizable_window);
             UserWindows[title] = window;
 
          

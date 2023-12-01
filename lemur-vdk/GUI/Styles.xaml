@@ -5,6 +5,7 @@
         <Setter Property="Foreground" Value="#FFCFCFCF"/>
         <Setter Property="FontSize" Value="14"/>
         <Setter Property="FontFamily" Value="Consolas"/>
+        <Setter Property="BorderBrush" Value="Transparent"/>
     </Style>
 
     <Style x:Key="LabelStyle" TargetType="Label">
@@ -32,9 +33,9 @@
         <Setter Property="Background" Value="Transparent"/>
     </Style>
     
-    <Style x:Key="BorderStyle" TargetType="Border">
+    <!--<Style x:Key="BorderStyle" TargetType="Border">
         <Setter Property="BorderBrush" Value="White"/>
         <Setter Property="BorderThickness" Value="5"/>
-    </Style>
+    </Style>-->
     
 </ResourceDictionary>

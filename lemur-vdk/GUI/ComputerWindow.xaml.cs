@@ -5,6 +5,7 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
 using System.Windows.Media;
+using System.Windows.Media.Effects;
 using System.Windows.Media.Imaging;
 using Lemur.FS;
 using Lemur.JS;
@@ -224,14 +225,11 @@ namespace Lemur.GUI
             }
             return false;
         }
-        internal UserWindow OpenAppUI(string title, ref Brush? background, ref Brush? foreground, out ResizableWindow resizableWindow)
+        internal UserWindow OpenAppUI(string title, out ResizableWindow resizableWindow)
         {
             TopMostZIndex++;
 
-            var window = new UserWindow
-            {
-                Foreground = foreground,
-            };
+            var window = new UserWindow();
 
             // TODO: add a way for users to add buttons and toolbars easily through
             // their js code, that would be very helpful.
@@ -243,7 +241,6 @@ namespace Lemur.GUI
                 Width=200,
                 Height=200,
                 Margin = window.Margin,
-                Foreground = foreground,
             };
 
             // hacky ::
@@ -288,7 +285,7 @@ namespace Lemur.GUI
                 }
             }
         }
-        public void InstallIcon(AppType type, string name, Type? runtime_type = null)
+        public void InstallIcon(AppType type, string appName, Type? runtime_type = null)
         {
             void InstallJSWPFIcon(string type)
             {
@@ -296,8 +293,29 @@ namespace Lemur.GUI
 
                 btn.MouseDoubleClick += OnDesktopIconPressed;
 
+                var contextMenu = new ContextMenu();
+
+                MenuItem jsSource = new() {
+                    Header="view source : JavaScript",
+                };
+
+                jsSource.Click += (sender, @event) => JsSource_Click(sender, @event, appName);
+
+                MenuItem xamlSource = new() {
+                   Header = "view source : XAML",
+                };
+
+                xamlSource.Click += (sender, @event) => XamlSource_Click(sender, @event, appName);
+
+
+                contextMenu.Items.Add(jsSource);
+                contextMenu.Items.Add(xamlSource);
+
+                btn.ContextMenu = contextMenu;
+
                 async void OnDesktopIconPressed(object? sender, RoutedEventArgs e)
-                 => await Computer.OpenCustom(type);
+                  => await Computer.OpenCustom(type)
+                            .ConfigureAwait(false);
 
                 SetupIcon(type, btn);
 
@@ -350,19 +368,33 @@ namespace Lemur.GUI
                 switch (type)
                 {
                     case AppType.JAVASCRIPT_XAML_WPF:
-                        InstallJSWPFIcon(name);
+                        InstallJSWPFIcon(appName);
                         break;
                     case AppType.CSHARP_XAML_WPF_NATIVE:
                         if (runtime_type != null)
-                        InstallDesktopIconNative(name, runtime_type);
+                        InstallDesktopIconNative(appName, runtime_type);
                         break;
                     case AppType.JS_HTML_WEB_APPLET:
-                        WebAppDesktopIcon(name);
+                        WebAppDesktopIcon(appName);
                         break;
                 }
 
                 DesktopIconPanel.UpdateLayout();
             });
+        }
+
+        private void XamlSource_Click(object sender, RoutedEventArgs e, string appName)
+        {
+            var name = appName.Replace(".app", ".xaml");
+            var editor = new TextEditor(name);
+            Computer.OpenApp(editor, $"{appName}.xaml");
+        }
+
+        private void JsSource_Click(object sender, RoutedEventArgs e, string appName)
+        {
+            var name = appName.Replace(".app", ".xaml.js");
+            var editor = new TextEditor(name);
+            Computer.OpenApp(editor, $"{appName}.xaml.js");
         }
         protected virtual void Dispose(bool disposing)
         {

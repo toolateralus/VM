@@ -62,27 +62,21 @@ class paint {
 
         gfx.flushCtx(this.gfx_ctx);
     }
-
-
     onMouseDown(left, right) {
         this.mouseState.right = right;
         this.mouseState.left = left;
         this.draw();
     }
-
     onMouseLeave() {
         this.mouseState.right = false;
         this.mouseState.left = false;
     }
-
-
     onKeyDown() {
         if (Key.isDown('C')) {
             this.pickerOpen = 1 - this.pickerOpen;
             app.setProperty(this.id, 'colorPickerPanel', 'Visibility', this.pickerOpen)
         }
     }
-
     onSelectionChanged(index) {
         this.brushIndex = index;
     }
@@ -97,13 +91,12 @@ class paint {
         gfx.clearColorIndexed(this.gfx_ctx, Color.WHITE);
         gfx.flushCtx(this.gfx_ctx);
     }
-    onFillPressed() {
-        gfx.clearColorIndexed(this.gfx_ctx, this.brushIndex);
+    onFillPressed() { 
+        gfx.clearColor(this.gfx_ctx, palette_indexed[this.brushIndex]);
         gfx.flushCtx(this.gfx_ctx);
     }
     constructor(id) {
         this.id = id;
-
 
         this.pickerOpen = 0;
 
@@ -123,8 +116,8 @@ class paint {
 
         this.indexMap = [[]];
 
-        for (let i = 0; i < 256; ++i)
-            for (let j = 0; j < 256; ++j) {
+        for (let i = 0; i < this.resolution; ++i)
+            for (let j = 0; j < this.resolution; ++j) {
                 this.indexMap[i, j] = Color.WHITE;
             }
 

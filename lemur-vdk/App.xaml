@@ -12,7 +12,7 @@
         <Style TargetType="Label" BasedOn="{StaticResource LabelStyle}" />
         <Style TargetType="TextBox" BasedOn="{StaticResource TextBoxStyle}" />
         <Style TargetType="StackPanel" BasedOn="{StaticResource StackPanelStyle}" />
-        <Style TargetType="Border" BasedOn="{StaticResource BorderStyle}" />
+        <!--<Style TargetType="Border" BasedOn="{StaticResource BorderStyle}" />-->
         </ResourceDictionary>
 
     </Application.Resources>

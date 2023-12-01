@@ -22,21 +22,14 @@ class game2 {
 
         this.renderer = new Renderer(512, gfx_ctx);
 
-        var gameObjects = [];
-
-        const half_width = 512 / 2;
+        const gameObjects = [];
 
         for (let i = 0; i < palette.length; ++i) {
             const verts = create_square();
-            // obj scale.
-            const scale = new Point(5 * i, 5 * i);
-            // start position
-            const pos = new Point(half_width + i, half_width + i);
-
+            const scale = new Point(20, 20);
+            const pos = new Point(i * i, i * i);
             let gO = new GameObject(verts, scale, pos);
-
             verts.forEach(v => v.color = i);
-
             gameObjects.push(gO);
         }
 
@@ -44,12 +37,8 @@ class game2 {
 
         // setup events (including render/physics loops)
         this.setupUIEvents();
-
         this.profiler = new Profiler();
         this.profiler.start();
-
-        // start drawing, the Renderer only draws when it's marked as dirty.
-        this.renderer.isDirty = true;
 
     }
 

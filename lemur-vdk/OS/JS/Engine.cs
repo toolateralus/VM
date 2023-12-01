@@ -129,7 +129,6 @@ namespace Lemur.JS
                     catch (Exception e)
                     {
                         Notifications.Exception(e);
-                        
                     }
                     finally
                     {
