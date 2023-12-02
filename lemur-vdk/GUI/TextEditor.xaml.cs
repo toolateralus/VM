@@ -9,6 +9,8 @@ using Lemur.FS;
 using System.Linq;
 using Lemur.JS;
 using System.Windows.Input;
+using Microsoft.Web.WebView2.Core;
+using System.Collections.Generic;
 
 namespace Lemur.GUI
 {
@@ -23,12 +25,11 @@ namespace Lemur.GUI
 
         public MarkdownViewer? mdViewer;
 
-        public TextEditor(string path)
+        
+
+        public TextEditor(string path) : this()
         {
-            InitializeComponent();
-           
             LoadFile(path);
-            // change the highlighting based on file extension that's opened
         }
         public void LateInit(Computer c)
         {
@@ -103,7 +104,6 @@ namespace Lemur.GUI
             Save();
         }
 
-
         private void Save()
         {
             if (!File.Exists(LoadedFile))
@@ -144,6 +144,7 @@ namespace Lemur.GUI
         private async void RunButton_Click(object sender, RoutedEventArgs e)
         {
             var cmd = new CommandPrompt();
+
             cmd.LateInit(Computer.Current);
 
             var jsEngine = new Engine(Computer.Current);
@@ -151,6 +152,17 @@ namespace Lemur.GUI
             Computer.Current.OpenApp(cmd, engine: jsEngine);
 
             await jsEngine.Execute(string.IsNullOrEmpty(textEditor.Text) ? "print('You must provide some javascript to execute...')" : textEditor.Text);
+        }
+
+        private void Preferences_Click(object sender, RoutedEventArgs e)
+        {
+            textEditor.Visibility ^= Visibility.Hidden;
+            prefsWindow.Visibility ^= Visibility.Hidden;
+        }
+
+        private void DocTypeBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        {
+
         }
     }
 }

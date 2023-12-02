@@ -1,6 +1,8 @@
 ﻿using System;
+using System.Diagnostics;
 using System.Linq;
 using System.Reflection;
+using System.Threading;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
@@ -15,16 +17,17 @@ namespace Lemur.GUI
 {
     public enum AppType
     {
-        JAVASCRIPT_XAML_WPF,
-        CSHARP_XAML_WPF_NATIVE,
-        JS_HTML_WEB_APPLET,
+        JsXaml,
+        NativeCs,
+        JsHtml,
     }
     public partial class ComputerWindow : Window, IDisposable
     {
         public Computer Computer;
+        private Timer clock;
         public bool Disposing;
 
-        public int TopMostZIndex { get; internal set; } = 0;
+        public int TopMostZIndex { get; internal set; }
         public ComputerWindow(Computer pc)
         {
             InitializeComponent();
@@ -34,9 +37,30 @@ namespace Lemur.GUI
             Keyboard.AddKeyDownHandler(this, Computer_KeyDown);
             
             Computer = pc;
-            
-            CompositionTarget.Rendering += (e, o) => UpdateComputerTime();
+
+            clock = new Timer(delegate {
+                Dispatcher.Invoke(this.UpdateComputerTime);
+            });
+
+            clock.Change(0, TimeSpan.FromSeconds(10).Milliseconds);
+
+            ContextMenu = new ContextMenu();
+
+            var menuItem = new MenuItem
+            {
+                Header = "create new app",
+            };
+
+            menuItem.Click += NewAppMenuItemClicked;
+
+            ContextMenu.Items.Add(menuItem);
         }
+
+        private void NewAppMenuItemClicked(object sender, RoutedEventArgs e)
+        {
+            
+        }
+
         public Button MakeButton(double width = double.NaN, double height = double.NaN)
         {
             var btn = new Button()
@@ -367,14 +391,14 @@ namespace Lemur.GUI
 
                 switch (type)
                 {
-                    case AppType.JAVASCRIPT_XAML_WPF:
+                    case AppType.JsXaml:
                         InstallJSWPFIcon(appName);
                         break;
-                    case AppType.CSHARP_XAML_WPF_NATIVE:
+                    case AppType.NativeCs:
                         if (runtime_type != null)
                         InstallDesktopIconNative(appName, runtime_type);
                         break;
-                    case AppType.JS_HTML_WEB_APPLET:
+                    case AppType.JsHtml:
                         WebAppDesktopIcon(appName);
                         break;
                 }
@@ -406,6 +430,7 @@ namespace Lemur.GUI
                     DesktopIconPanel.Children.Clear();
                     Taskbar.Children.Clear();
                     TaskbarStackPanel.Children.Clear();
+                    clock.Dispose();
                     Content = null;
                     Computer = null!;
                     this.Close();
