@@ -1,22 +1,12 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
-using System.Diagnostics;
 using System.IO;
 using System.Linq;
-using System.Security.Cryptography.X509Certificates;
 using System.Text;
-using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
-using System.Windows.Data;
-using System.Windows.Documents;
 using System.Windows.Input;
-using System.Windows.Media;
-using System.Windows.Media.Imaging;
-using System.Windows.Navigation;
-using System.Windows.Shapes;
-using Lemur;
 using Lemur.FS;
 
 namespace Lemur.GUI
@@ -60,6 +50,8 @@ namespace Lemur.GUI
             if (FileBox.SelectedItem is string Path && OriginalPaths.TryGetValue(Path, out var AbsolutePath))
             {
                 var x = FileSystem.Root + "\\";
+                if (AbsolutePath == FileSystem.Root)
+                    AbsolutePath = "";
                 SearchBar.Text = AbsolutePath.Replace(x, "");
             }
         }
@@ -89,11 +81,16 @@ namespace Lemur.GUI
             const string FolderIcon = "📁 ";
             const string FileIcon =   "📄 ";
 
-            var parentAddr = ".. back";
-
-            FileViewerData.Add(parentAddr);
-
-            OriginalPaths[parentAddr] = Directory.GetParent(FileSystem.CurrentDirectory)?.FullName ?? throw new InvalidOperationException("Invalid file structure");
+            if (SearchBar.Text != FileSystem.Root)
+            {
+                var parentAddr = ".. back";
+                FileViewerData.Add(parentAddr);
+                OriginalPaths[parentAddr] = Directory.GetParent(FileSystem.CurrentDirectory)?.FullName ?? throw new InvalidOperationException("Invalid file structure");
+            }
+            else
+            {
+                SearchBar.Text = "";
+            }
 
             foreach (var file in fileNames)
             {
@@ -111,17 +108,44 @@ namespace Lemur.GUI
             }
 
         }
+
+        private static string GetUniquePath(string dir, string name, string extension)
+        {
+            string path = $"{dir}{name}{extension}";
+            if (FileSystem.FileExists(path) ||
+                FileSystem.DirectoryExists(path))
+            {
+                int fileCount = 1;
+                path = $"{dir}{name}{fileCount}{extension}";
+                while (FileSystem.FileExists(path) ||
+                    FileSystem.DirectoryExists(path))
+                {
+                    fileCount++;
+                    path = $"{dir}{name}{fileCount}{extension}";
+                }
+            }
+
+            return path;
+        }
+
         private void AddFile_Click(object sender, RoutedEventArgs e)
         {
-            FileSystem.NewFile(SearchBar.Text);
+            var dir = FileSystem.CurrentDirectory.Replace(FileSystem.Root, "");
+            if (dir.Length != 0)
+                dir += "\\";
+            string path = GetUniquePath(dir, "newfile", ".txt");
+            FileSystem.NewFile(path);
             UpdateView();
-
         }
+
         private void AddDirectory_Click(object sender, RoutedEventArgs e)
         {
-            FileSystem.NewFile(SearchBar.Text, true);
+            var dir = FileSystem.CurrentDirectory.Replace(FileSystem.Root, "");
+            if (dir.Length != 0)
+                dir += "\\";
+            string path = GetUniquePath(dir, "newfolder", "");
+            FileSystem.NewFile(path, true);
             UpdateView();
-
         }
         private void Delete_Click(object sender, RoutedEventArgs e)
         {

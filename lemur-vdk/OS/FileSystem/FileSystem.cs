@@ -35,7 +35,8 @@ namespace Lemur.FS
             get { return currentDirectory; }
             set
             {
-                if (Directory.Exists(value))
+                if (Directory.Exists(value) &&
+                    WithinFileSystemBounds(value))
                 {
                     currentDirectory = value;
                 }
@@ -100,7 +101,7 @@ namespace Lemur.FS
             return "";
             //throw new NullReferenceException("Failed to get resource " + name);
         }
-        private static bool WithinFileSystemBounds(string name) => name.StartsWith(Root);
+        private static bool WithinFileSystemBounds(string? name) => name?.StartsWith(Root) is bool b && b;
         internal static void VerifyOrCreateAppdataDir(string path)
         {
             if (!Directory.Exists(path))
@@ -128,7 +129,7 @@ namespace Lemur.FS
         {
             if (path == "..")
             {
-                string currentDirectory = FileSystem.CurrentDirectory;
+                string currentDirectory = CurrentDirectory;
 
                 string[] components = currentDirectory.Split('\\');
 
@@ -138,7 +139,7 @@ namespace Lemur.FS
 
                     string parentDirectory = string.Join("\\", parentComponents);
 
-                    FileSystem.ChangeDirectory(parentDirectory);
+                    ChangeDirectory(parentDirectory);
                 }
                 return;
             }
@@ -147,8 +148,9 @@ namespace Lemur.FS
 
             if (Directory.Exists(path) && WithinFileSystemBounds(path))
             {
-                History.Push(currentDirectory);
-                currentDirectory = path;
+                if (!string.IsNullOrEmpty(CurrentDirectory)) 
+                    History.Push(CurrentDirectory);
+                CurrentDirectory = path;
             }
             else if (!File.Exists(path))
             {
