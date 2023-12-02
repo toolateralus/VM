@@ -19,9 +19,7 @@ namespace Lemur.JS
     public class app
     {
         public delegate bool SetPropertyHandler(PropertyInfo? propertyInfo, object target, object? value);
-        public delegate object? AppEvent(string ID, string target, object? value);
-
-
+        public delegate object? AppEvent(string target, object? value);
         public static Dictionary<string, AppEvent> ExposedEvents = new();
         public static Dictionary<string, SetPropertyHandler> SetPropertyHandlers = new()
         {
@@ -35,6 +33,7 @@ namespace Lemur.JS
             }},
 
         };
+        private string id;
         public app()
         {
             ExposedEvents["draw_pixels"] = DrawPixelsEvent; // somewhat deprecated, use the dedicated graphics module instead.
@@ -84,13 +83,13 @@ namespace Lemur.JS
 
             return propertyInfo?.GetValue(target);
         }
-        private object? GetContent(string id, string controlName, object? value)
+        private object? GetContent(string controlName, object? value)
         {
             object? output = null;
 
             Computer.Current.Window?.Dispatcher.Invoke(() =>
             {
-                var userControl = GetUserContent(id, Computer.Current);
+                var userControl = GetUserContent(Computer.Current);
                 var control = FindControl(userControl, controlName);
 
                 if (control is null)
@@ -108,7 +107,7 @@ namespace Lemur.JS
 
             return output;
         }
-        public static UserControl? GetUserContent(string id, Computer computer)
+        public UserControl? GetUserContent(Computer computer)
         {
             var window = computer?.Window;
 
@@ -169,7 +168,7 @@ namespace Lemur.JS
 
             return null;
         }
-        private object? SetContent(string id, string control, object? value)
+        private object? SetContent(string control, object? value)
         {
             object? output = null;
 
@@ -177,7 +176,7 @@ namespace Lemur.JS
 
             wnd?.Dispatcher.Invoke(() =>
             {
-                var userControl = GetUserContent(id, Computer.Current);
+                var userControl = GetUserContent(Computer.Current);
 
                 if (userControl == null)
                     return;
@@ -221,14 +220,14 @@ namespace Lemur.JS
                 return null;
             }
         }
-        public object? DrawImageEvent(string id, string target_control, object? value)
+        public object? DrawImageEvent(string target_control, object? value)
         {
             if (value is null)
                 return null;
 
             Computer.Current.Window?.Dispatcher.Invoke(() =>
             {
-                var control = GetUserContent(id, Computer.Current);
+                var control = GetUserContent(Computer.Current);
 
                 var image = FindControl(control, target_control);
 
@@ -242,7 +241,7 @@ namespace Lemur.JS
             });
             return null;
         }
-        public object? DrawPixelsEvent(string id, string target_control, object? value)
+        public object? DrawPixelsEvent(string target_control, object? value)
         {
             if (value is null || value.ToString().Contains("undefined"))
                 return null;
@@ -254,7 +253,7 @@ namespace Lemur.JS
 
             Computer.Current.Window?.Dispatcher.Invoke(() =>
             {
-                var control = GetUserContent(id, Computer.Current);
+                var control = GetUserContent(Computer.Current);
                 if (control?.Content is Grid grid)
                 {
                     if (grid != null)
@@ -305,13 +304,13 @@ namespace Lemur.JS
 
             image.Source = bitmap;
         }
-        public object? getProperty(string id, string controlName, object? property)
+        public object? getProperty(string controlName, object? property)
         {
             object? output = null;
 
             Computer.Current.Window?.Dispatcher.Invoke(() =>
             {
-                var userControl = GetUserContent(id, Computer.Current);
+                var userControl = GetUserContent(Computer.Current);
                 var control = FindControl(userControl, controlName);
 
                 if (control is null)
@@ -322,13 +321,13 @@ namespace Lemur.JS
 
             return output;
         }
-        public void setProperty(string id, string controlName, object? property, object? value)
+        public void setProperty(string controlName, object? property, object? value)
         {
             object? output = null;
 
             Computer.Current.Window?.Dispatcher.Invoke((Delegate)(() =>
             {
-                var userControl = GetUserContent(id, Computer.Current);
+                var userControl = GetUserContent(Computer.Current);
                 var control = FindControl(userControl, controlName);
 
                 if (control is null)
@@ -338,11 +337,11 @@ namespace Lemur.JS
             }));
 
         }
-        public object? pushEvent(string id, string targetControl, string eventType, object? data)
+        public object? pushEvent(string targetControl, string eventType, object? data)
         {
             if (ExposedEvents.TryGetValue(eventType, out var handler))
             {
-                return handler.Invoke(id, targetControl, data);
+                return handler.Invoke(targetControl, data);
             }
             return null;
         }
@@ -407,6 +406,11 @@ namespace Lemur.JS
 
             Notifications.Now("Incorrect path for uninstall");
 
+        }
+
+        internal void __SetId(string id)
+        {
+            this.id = id;
         }
     }
 }

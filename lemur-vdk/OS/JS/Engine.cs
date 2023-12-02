@@ -259,8 +259,7 @@ namespace Lemur.JS
 
             wnd.Dispatcher.Invoke(() =>
             {
-                // gets the requested ui control for the event to be attached to.
-                var content = Lemur.JS.app.GetUserContent(identifier, Computer);
+                var content  = Computer.Current.UserWindows[identifier].JavaScriptEngine.AppModule.GetUserContent(Computer);
 
                 if (content == null)
                 {

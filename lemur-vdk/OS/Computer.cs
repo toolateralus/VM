@@ -34,6 +34,9 @@ namespace Lemur
         internal CommandLine CmdLine { get; set; }
         internal JObject Config { get; set; }
 
+        /// <summary>
+        /// app name keys, list of process id's values
+        /// </summary>
         internal static Dictionary<string, List<string>> ProcessLookupTable = new();
         internal readonly Dictionary<string, UserWindow> UserWindows = new();
         internal readonly Dictionary<string, Type> csApps = new();
@@ -334,6 +337,8 @@ namespace Lemur
             _ = await engine.Execute(JS);
 
             var instance_name = "p" + (processCount++).ToString();
+
+            engine.AppModule.__SetId(instance_name);
 
             string instantiation_code = $"const {instance_name} = new {name}('{instance_name}')";
 

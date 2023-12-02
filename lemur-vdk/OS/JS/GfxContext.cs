@@ -13,12 +13,14 @@ namespace Lemur.JS
 {
     public class GfxContext
     {
-        public GfxContext(string InstanceID, string TargetControl, int PixelFormatBpp) {
+        public GfxContext(string pid, string TargetControl, int PixelFormatBpp) {
 
             Image image = null;
             Computer.Current.Window.Dispatcher.Invoke(() =>
             {
-                var control = JS.app.GetUserContent(InstanceID, Computer.Current);
+                var content = Computer.Current.UserWindows[pid];
+                var app = content.JavaScriptEngine.AppModule;
+                var control = app.GetUserContent(Computer.Current);
                 image = JS.app.FindControl(control, TargetControl) as Image ?? throw new InvalidCastException(nameof(control));
             });
             this.image = new(image);
