@@ -345,10 +345,10 @@ namespace Lemur.JS
             }
             return null;
         }
-        public async void eventHandler(string identifier, string targetControl, string methodName, int type)
+        public async void eventHandler(string targetControl, string methodName, int type)
         {
-            if (Computer.Current.UserWindows.TryGetValue(identifier, out var app))
-                await app.JavaScriptEngine?.CreateEventHandler(identifier, targetControl, methodName, type);
+            if (Computer.Current.UserWindows.TryGetValue(id, out var app))
+                await app.JavaScriptEngine?.CreateEventHandler(id, targetControl, methodName, type);
         }
         public async void start(string path)
             {
