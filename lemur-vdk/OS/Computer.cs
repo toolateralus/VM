@@ -114,7 +114,7 @@ namespace Lemur
             }
             Dispose();
         }
-        public void OpenApp(UserControl control, string title = "window", Brush? background = null, Brush? foreground = null, Engine engine = null)
+        public void OpenApp(UserControl control, string title = "window", Engine engine = null)
         {
             // the resizable is the container that hosts the user app.
             // this is made seperate to eliminate annoying and complex boiler plate.

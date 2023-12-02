@@ -47,7 +47,14 @@
         <ListBox x:Name="FileBox" Margin="10,35,10,10" ContextMenu="{StaticResource ExplorerContextMenu}" Foreground="White" Background="#FF333030">
             <ListBox.ItemTemplate>
                 <DataTemplate>
-                    <TextBlock Text="{Binding}" ContextMenu="{StaticResource ItemContextMenu}"/>
+                    <Grid ContextMenu="{Binding Menu}">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="32"/>
+                            <ColumnDefinition Width="*"/>
+                        </Grid.ColumnDefinitions>
+                        <TextBlock Text="{Binding Icon}" Grid.Column="0"/>
+                        <TextBlock Text="{Binding Name}" Grid.Column="1"/>
+                    </Grid>
                 </DataTemplate>
             </ListBox.ItemTemplate>
         </ListBox>
