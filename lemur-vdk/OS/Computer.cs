@@ -182,7 +182,7 @@ namespace Lemur
         }
         
 
-        public async Task OpenCustom(string type)
+        public async Task OpenCustom(string type, params object[] cmdLineArgs)
         {
             var data = Runtime.GetAppDefinition(type);
             
@@ -196,7 +196,7 @@ namespace Lemur
 
             Engine engine = new(this);
             
-            var (id, code) = await InstantiateWindowClass(type, data, engine);
+            var (id, code) = await InstantiateWindowClass(type, cmdLineArgs, data, engine);
 
             OpenApp(control, title: id, engine: engine);
 
@@ -328,7 +328,7 @@ namespace Lemur
             return content!;
         }
     
-        private static async Task<(string id, string code)> InstantiateWindowClass(string type, (string XAML, string JS) data, Engine engine)
+        private static async Task<(string id, string code)> InstantiateWindowClass(string type, object[] cmdLineArgs, (string XAML, string JS) data, Engine engine)
         {
             var name = type.Split('.')[0];
 
@@ -340,7 +340,17 @@ namespace Lemur
 
             engine.AppModule.__SetId(instance_name);
 
-            string instantiation_code = $"const {instance_name} = new {name}('{instance_name}')";
+            string instantiation_code = "";
+
+            if (cmdLineArgs.Length != 0)
+            {
+                var args = string.Join(", ", cmdLineArgs);
+                instantiation_code = $"const {instance_name} = new {name}('{instance_name}, {args}')";
+            }
+            else
+                instantiation_code = $"const {instance_name} = new {name}('{instance_name}')";
+
+
 
             return (instance_name, instantiation_code);
         }

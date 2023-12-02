@@ -5,11 +5,20 @@ using System.Threading;
 using Lemur.GUI;
 using Lemur.FS;
 using System.Text.RegularExpressions;
+using System.Threading.Tasks;
 
 namespace Lemur.JS
 {
     public class term
     {
+        public void call (string command)
+        {
+            Task.Run(() =>
+            {
+                if (!Computer.Current.CmdLine.TryCommand(command))
+                    Notifications.Now($"Couldn't 'call' {command}");
+            });
+        }
         public void print(object message)
         {
             try

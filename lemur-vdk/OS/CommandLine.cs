@@ -275,8 +275,8 @@ namespace Lemur.OS
                         FontName += $" {fontName}";
                 }
 
-
                 System.Windows.Media.FontFamily font = null;
+
                 try
                 {
                     font = new System.Windows.Media.FontFamily(FontName);

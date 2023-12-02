@@ -50,16 +50,8 @@ namespace Lemur.GUI
             {
                 Header = "create new app",
             };
-
-            menuItem.Click += NewAppMenuItemClicked;
-
-            ContextMenu.Items.Add(menuItem);
         }
 
-        private void NewAppMenuItemClicked(object sender, RoutedEventArgs e)
-        {
-            
-        }
 
         public Button MakeButton(double width = double.NaN, double height = double.NaN)
         {

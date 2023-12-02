@@ -3,7 +3,8 @@
 # Making an app :
 ### _In this tutorial we're going to :_
 
-- learn how to create, open, and edit text files.
+- learn how to create, open, and 
+text files.
 - learn the requirements for a '.app' application, setup our directories and files to create a valid .app project. 
 - create a 'hello world' GUI app that runs when our computer starts.
 

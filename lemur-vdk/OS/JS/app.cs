@@ -350,10 +350,10 @@ namespace Lemur.JS
             if (Computer.Current.UserWindows.TryGetValue(id, out var app))
                 await app.JavaScriptEngine?.CreateEventHandler(id, targetControl, methodName, type);
         }
-        public async void start(string path)
-            {
-                _ = Computer.Current.Window.Dispatcher.Invoke(async () => await Computer.Current.OpenCustom(path));
-            }
+        public async void start(string path, params object[] args)
+        {
+            await Computer.Current.Window.Dispatcher.InvokeAsync(async () => await Computer.Current.OpenCustom(path, args));
+        }
         public void loadApps(object? path)
         {
             string directory = FileSystem.Root;
