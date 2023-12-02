@@ -75,6 +75,7 @@ namespace Lemur.GUI
                 Navigate();
                 UpdateView();
             }
+
             
         }
 

@@ -19,7 +19,7 @@ class paint {
             const brush = this.brushIndex;
             const ctx = this.gfx_ctx;
 
-            const sqrRad = radius * radius
+            const sqrRad = radius * radius;
 
             for (let x = -radius; x <= radius; ++x) {
                 for (let y = -radius; y < radius; ++y) {

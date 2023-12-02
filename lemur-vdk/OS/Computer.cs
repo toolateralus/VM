@@ -154,19 +154,19 @@ namespace Lemur
             
             jsApps.Add(type);
 
-            Window.InstallIcon(AppType.JAVASCRIPT_XAML_WPF, type);
+            Window.InstallIcon(AppType.JsXaml, type);
         }
         public void InstallJSHTML(string type)
         {
             if (disposing)
                 return;
             jsApps.Add(type);
-            Window.InstallIcon(AppType.JS_HTML_WEB_APPLET, type);
+            Window.InstallIcon(AppType.JsHtml, type);
         }
         public void InstallCSWPF(string exePath, Type type)
         {
             var name = exePath.Split('.')[0];
-            Window.InstallIcon(AppType.CSHARP_XAML_WPF_NATIVE, exePath, type);
+            Window.InstallIcon(AppType.NativeCs, exePath, type);
         }
        
         public void Uninstall(string name)
