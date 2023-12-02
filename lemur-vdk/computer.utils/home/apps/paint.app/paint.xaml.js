@@ -30,7 +30,7 @@ class paint {
                         const pxX = Math.floor(x + msX);
                         const pxY = Math.floor(y + msY);
 
-                        this.indexMap[pxX, pxY] = brush;
+                        this.indexMap[pxX][pxY] = brush;
 
                         if (brush > palette.length) print(brush);
 
@@ -46,17 +46,12 @@ class paint {
     drawCached() {
         const width = app.getProperty(this.id, 'renderTarget', 'ActualWidth');
         const height = app.getProperty(this.id, 'renderTarget', 'ActualHeight');
-
-        const msX = this.mouseState.x / width * this.resolution;
-        const msY = this.mouseState.y / height * this.resolution;
         const ctx = this.gfx_ctx;
 
         for (let x = 0; x < this.resolution; ++x) {
             for (let y = 0; y < this.resolution; ++y) {
-                const pxX = Math.floor(x + msX);
-                const pxY = Math.floor(y + msY);
-                const index = this.indexMap[pxX, pxY];
-                gfx.writePixelIndexed(ctx, pxX, pxY, index);
+                const index = this.indexMap[x][y];
+                gfx.writePixelIndexed(ctx, x, y, index);
             }
         }
 
@@ -81,7 +76,9 @@ class paint {
         this.brushIndex = index;
     }
     onSavePressed() {
-        file.write('test.id', JSON.stringify(this.indexMap));
+    	let filname = 'test.id';
+        file.write(filname, JSON.stringify(this.indexMap));
+        print(`Saved to "${filname}"`);
     }
     onLoadPressed() {
         this.indexMap = JSON.parse(file.read('test.id'));
@@ -116,10 +113,12 @@ class paint {
 
         this.indexMap = [[]];
 
-        for (let i = 0; i < this.resolution; ++i)
+        for (let i = 0; i < this.resolution; ++i) {
+        	this.indexMap[i] = [];
             for (let j = 0; j < this.resolution; ++j) {
-                this.indexMap[i, j] = Color.WHITE;
+                this.indexMap[i][j] = Color.WHITE;
             }
+        }
 
         this.gfx_ctx = gfx.createCtx(this.id, 'renderTarget', this.resolution, this.resolution);
 
