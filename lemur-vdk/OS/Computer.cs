@@ -113,6 +113,7 @@ namespace Lemur
                 Notifications.Now($"Computer {ID} has exited, most likely due to an error. code:{exitCode}");
             }
             Dispose();
+
         }
         public void OpenApp(UserControl control, string title = "window", Engine engine = null)
         {
