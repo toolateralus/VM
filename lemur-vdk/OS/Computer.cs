@@ -128,8 +128,8 @@ namespace Lemur
             resizable_window.BringToTopOfDesktop();
 
             // todo : change this
-            resizable_window.Width = 650;
-            resizable_window.Height = 650;
+            resizable_window.Width = 900;
+            resizable_window.Height = 700;
             Canvas.SetTop(resizable_window, 200);
             Canvas.SetLeft(resizable_window, 200);
         }

@@ -8,3 +8,5 @@
 - Dropdown menu for document type, maybe one for theme?
 - Unify running documents, hotkey?
 - Context menus
+## Window Manager
+- Bring window to front on any click
