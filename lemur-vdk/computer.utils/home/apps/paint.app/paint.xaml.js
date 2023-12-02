@@ -8,11 +8,11 @@ class paint {
     }
 
     draw() {
-        const width = app.getProperty(this.id, 'renderTarget', 'ActualWidth');
-        const height = app.getProperty(this.id, 'renderTarget', 'ActualHeight');
+        const width = app.getProperty('renderTarget', 'ActualWidth');
+        const height = app.getProperty('renderTarget', 'ActualHeight');
 
         if (this.mouseState.right === true) {
-            const radius = Math.floor(app.getProperty(this.id, 'thicknessSlider', 'Value') ?? 3);
+            const radius = Math.floor(app.getProperty('thicknessSlider', 'Value') ?? 3);
 
             const msX = this.mouseState.x / width  * this.resolution;
             const msY = this.mouseState.y / height * this.resolution;
@@ -44,8 +44,8 @@ class paint {
     }
 
     drawCached() {
-        const width = app.getProperty(this.id, 'renderTarget', 'ActualWidth');
-        const height = app.getProperty(this.id, 'renderTarget', 'ActualHeight');
+        const width = app.getProperty('renderTarget', 'ActualWidth');
+        const height = app.getProperty('renderTarget', 'ActualHeight');
         const ctx = this.gfx_ctx;
 
         for (let x = 0; x < this.resolution; ++x) {
@@ -69,7 +69,7 @@ class paint {
     onKeyDown() {
         if (Key.isDown('C')) {
             this.pickerOpen = 1 - this.pickerOpen;
-            app.setProperty(this.id, 'colorPickerPanel', 'Visibility', this.pickerOpen)
+            app.setProperty('colorPickerPanel', 'Visibility', this.pickerOpen)
         }
     }
     onSelectionChanged(index) {
@@ -105,7 +105,7 @@ class paint {
             right : false
         }
 
-        app.setProperty(this.id, 'colorPickerPanel', 'Visibility', 0)
+        app.setProperty('colorPickerPanel', 'Visibility', 0)
 
         this.brushIndex = 0;
 
@@ -124,20 +124,20 @@ class paint {
 
         gfx.flushCtx(this.gfx_ctx);
 
-        app.eventHandler(this.id, 'renderTarget', 'onMouseDown', XAML_EVENTS.MOUSE_DOWN);
-        app.eventHandler(this.id, 'renderTarget', 'onMouseDown', XAML_EVENTS.MOUSE_UP);
+        app.eventHandler('renderTarget', 'onMouseDown', XAML_EVENTS.MOUSE_DOWN);
+        app.eventHandler('renderTarget', 'onMouseDown', XAML_EVENTS.MOUSE_UP);
 
-        app.eventHandler(this.id, 'SaveButton', 'onSavePressed', XAML_EVENTS.MOUSE_DOWN);
-        app.eventHandler(this.id, 'LoadButton', 'onLoadPressed', XAML_EVENTS.MOUSE_DOWN);
-        app.eventHandler(this.id, 'ClearButton', 'onClearPressed', XAML_EVENTS.MOUSE_DOWN);
-        app.eventHandler(this.id, 'FillButton', 'onFillPressed', XAML_EVENTS.MOUSE_DOWN);
+        app.eventHandler('SaveButton', 'onSavePressed', XAML_EVENTS.MOUSE_DOWN);
+        app.eventHandler('LoadButton', 'onLoadPressed', XAML_EVENTS.MOUSE_DOWN);
+        app.eventHandler('ClearButton', 'onClearPressed', XAML_EVENTS.MOUSE_DOWN);
+        app.eventHandler('FillButton', 'onFillPressed', XAML_EVENTS.MOUSE_DOWN);
 
-        app.eventHandler(this.id, 'renderTarget', 'onMouseLeave', XAML_EVENTS.MOUSE_LEAVE);
-        app.eventHandler(this.id, 'renderTarget', 'onMouseMoved', XAML_EVENTS.MOUSE_MOVE);
+        app.eventHandler('renderTarget', 'onMouseLeave', XAML_EVENTS.MOUSE_LEAVE);
+        app.eventHandler('renderTarget', 'onMouseMoved', XAML_EVENTS.MOUSE_MOVE);
 
-        app.eventHandler(this.id, 'this', 'onKeyDown', XAML_EVENTS.KEY_DOWN);
+        app.eventHandler('this', 'onKeyDown', XAML_EVENTS.KEY_DOWN);
 
-        app.eventHandler(this.id, 'colorPickerBox', 'onSelectionChanged', XAML_EVENTS.SELECTION_CHANGED);
+        app.eventHandler('colorPickerBox', 'onSelectionChanged', XAML_EVENTS.SELECTION_CHANGED);
 
     }
 }

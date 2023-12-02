@@ -43,7 +43,7 @@ class game2 {
     }
 
     setupUIEvents() {
-        app.eventHandler(this.id, 'this', 'm_render', XAML_EVENTS.RENDER);
+        app.eventHandler('this', 'm_render', XAML_EVENTS.RENDER);
     }
   
     fpsCounterFrame(start) {
@@ -63,7 +63,7 @@ class game2 {
         if (this.frameCt % (25 * 2) == 0) {
             let time = this.fpsCounterFrame(false);
             const elapsed = time - this.captureBeginTime;
-            app.setProperty(this.id, 'framerateLabel', 'Content', `fps:${Math.floor(1 / elapsed * 1000)}`);
+            app.setProperty('framerateLabel', 'Content', `fps:${Math.floor(1 / elapsed * 1000)}`);
             this.captureBeginTime = 0;
             this.drawProfile();
         } else {
@@ -97,8 +97,8 @@ class game2 {
     drawProfile() {
         const results = this.profiler.sample_average();
 
-        const profilerWidth = app.getProperty(this.id, 'ProfilerPanel', 'ActualWidth') / 2;
-        const fpsWidth = app.getProperty(this.id, 'framerateLabel', 'ActualWidth');
+        const profilerWidth = app.getProperty('ProfilerPanel', 'ActualWidth') / 2;
+        const fpsWidth = app.getProperty('framerateLabel', 'ActualWidth');
 
         const actualWidth = profilerWidth - fpsWidth;
         
@@ -111,8 +111,8 @@ class game2 {
 
         for (const label in results) {
             const time = results[label];
-            app.setProperty(this.id, label, 'Content', `${time / 10_000} ms ${label}`);
-            app.setProperty(this.id, label, 'Width', time * xFactor);
+            app.setProperty(label, 'Content', `${time / 10_000} ms ${label}`);
+            app.setProperty(label, 'Width', time * xFactor);
         }
     }
     
