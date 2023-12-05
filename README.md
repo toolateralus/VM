@@ -16,14 +16,11 @@ Before you begin, ensure you have the following prerequisites:
 
 - **Operating System**: Windows 7 - Windows 11
 - **IDE**: Visual Studio 2019 or newer for optimal WPF and C# support
-- **.NET**: SDK and Runtime 6.0 or higher (7.0+ is also supported)
-
-## For Linux Users
-A Linux version is currently under development with AvaloniaUI. The UI is still basic, and contributions are highly appreciated.
+- **.NET**: SDK and Runtime 8.0+
 
 ## Recommended Tools
 - **Visual Studio Code**: Any version is suitable
-
+- **Visual Studio Community 2022**: this is very nice for creating complex XAML front ends, it's editor is hard to beat.
 ## Getting Started
 
 ### Cloning the Repository
