@@ -40,10 +40,10 @@ Once the project is cloned:
 ### Running Lemur VDK
 After building:
 
-1. Navigate to `lemur/lemur-vdk/bin/Release/net6.0/`.
+1. Navigate to `lemur/lemur-vdk/bin/Release/net8.0/`.
 2. Locate `lemur.exe`, right-click, and create a shortcut on your desktop for easy access.
 
-**Note**: Replace `net6.0` with the correct .NET version if you are using a different one.
+**Note**: Replace `net8.0` with the correct .NET version if you are using a different one.
 
 ### First Run and Installation
 On the first launch, the application will automatically install necessary JavaScript, JSON, and other configuration dependencies.
