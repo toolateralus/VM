@@ -7,7 +7,7 @@ const {
 } = require('game.js');
 const { Profiler } = require('profiler.js');
 
-class game2 {
+class bouncy_cubes {
     constructor(id) {
 
         this.captureBeginTime = 0;
