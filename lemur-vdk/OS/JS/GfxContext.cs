@@ -193,14 +193,26 @@ namespace Lemur.JS
             double cosR = Math.Cos(r);
             double sinR = Math.Sin(r);
 
+            // Adjust the coordinates to rotate around the center
+            int centerX = x + w / 2;
+            int centerY = y + h / 2;
+
             for (int i = x; i < x + w; i++)
             {
+                // Calculate the relative position from the center
+                int relativeX = i - centerX;
+
                 for (int j = y; j < y + h; j++)
                 {
-                    int rotatedX = (int)Math.Round((i - x) * cosR - (j - y) * sinR) + x;
-                    int rotatedY = (int)Math.Round((i - x) * sinR + (j - y) * cosR) + y;
+                    int relativeY = j - centerY;
 
-                    WritePixelIndexed(rotatedX, rotatedY, colorIndex);
+                    int rotatedX = (int)(relativeX * cosR - relativeY * sinR);
+                    int rotatedY = (int)(relativeX * sinR + relativeY * cosR);
+
+                    int finalX = rotatedX + centerX;
+                    int finalY = rotatedY + centerY;
+
+                    WritePixelIndexed(finalX, finalY, colorIndex);
                 }
             }
         }
@@ -234,19 +246,36 @@ namespace Lemur.JS
             double cosR = Math.Cos(r);
             double sinR = Math.Sin(r);
 
+            int centerX = x + w / 2;
+            int centerY = y + h / 2;
+
             for (int i = x; i < x + w; i++)
             {
                 for (int j = y; j < y + h; j++)
                 {
-                    int rotatedX = (int)Math.Round((i - x) * cosR - (j - y) * sinR) + x;
-                    int rotatedY = (int)Math.Round((i - x) * sinR + (j - y) * cosR) + y;
+                    int relativeX = i - centerX;
+                    int relativeY = j - centerY;
 
-                    if (rotatedY <= y + (rotatedX - x) * h / w)
+                    int rotatedX = (int)(relativeX * cosR - relativeY * sinR) + centerX;
+                    int rotatedY = (int)(relativeX * sinR + relativeY * cosR) + centerY;
+
+                    if (IsPointInsideTriangle(rotatedX, rotatedY, x, y, x + w, y, x + w / 2, y + h))
                     {
                         WritePixelIndexed(rotatedX, rotatedY, colorIndex);
                     }
                 }
             }
+        }
+
+
+        private bool IsPointInsideTriangle(int x, int y, int x1, int y1, int x2, int y2, int x3, int y3)
+        {
+            int denominator = (y2 - y3) * (x1 - x3) + (x3 - x2) * (y1 - y3);
+            int a = ((y2 - y3) * (x - x3) + (x3 - x2) * (y - y3)) / denominator;
+            int b = ((y3 - y1) * (x - x3) + (x1 - x3) * (y - y3)) / denominator;
+            int c = 1 - a - b;
+
+            return a >= 0 && a <= 1 && b >= 0 && b <= 1 && c >= 0 && c <= 1;
         }
     }
 }

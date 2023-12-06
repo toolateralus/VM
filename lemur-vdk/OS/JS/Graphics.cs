@@ -19,7 +19,6 @@ namespace Lemur.JS
             ctx.WritePixelPacked(x, y, color);
             return true;
         }
-        // mainly to allow flexibility and allow for testing of code.. not neccesarily the best method XD
         public bool writePixelRGBA(int gfx_ctx, int x, int y, byte r, byte g, byte b, byte a)
         {
             if (!gfxContext.TryGetValue(gfx_ctx, out var ctx))

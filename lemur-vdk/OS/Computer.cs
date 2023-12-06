@@ -331,7 +331,7 @@ namespace Lemur
 
             _ = await engine.Execute(JS);
 
-            var instance_name = "p" + (processCount++).ToString();
+            var instance_name = "p" + processCount++.ToString();
 
             engine.AppModule.__SetId(instance_name);
 

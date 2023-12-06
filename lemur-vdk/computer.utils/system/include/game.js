@@ -85,6 +85,9 @@ class GameObject {
         this.edges = this.createEdges(this.points);
         this.velocity = new Point(0, 0);
         this._cachedColorRatio = undefined;
+        this.rotation = 0;
+        this.angular = 0;
+        this.drag = 0.95;
     }
     confine_to_screen_space(width) {
         const min_x = 1, min_y = 1, max_x = width - 1, max_y = width - 1;
@@ -156,11 +159,15 @@ class GameObject {
     }
     update_physics() {
 
+		this.rotation += this.angular;
+		
         this.pos.x += this.velocity.x;
         this.pos.y += this.velocity.y;
 
-        this.velocity.x *= 0.95;
-        this.velocity.y *= 0.95;
+		
+		this.angular *= this.drag;
+        this.velocity.x *= this.drag;
+        this.velocity.y *= this.drag;
     }
     rotate(angle) {
         const cosAngle = Math.cos(angle);
