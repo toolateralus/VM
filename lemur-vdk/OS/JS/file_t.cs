@@ -4,7 +4,7 @@ using Lemur.FS;
 
 namespace Lemur.JS
 {
-    public class file
+    public class file_t
     {
         public object? read(string path)
         {

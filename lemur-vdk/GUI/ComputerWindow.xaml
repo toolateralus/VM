@@ -9,7 +9,8 @@
         Background="Black"
         WindowStartupLocation="CenterScreen"
         WindowStyle="None"
-        WindowState="Maximized">
+        WindowState="Maximized"
+        Focusable="False">
 
     <Grid>
         <Grid.ColumnDefinitions>
@@ -22,26 +23,26 @@
         </Grid.RowDefinitions>
 
 
-        <Image Grid.ColumnSpan="2" x:Name="desktopBackground" Stretch="UniformToFill"/>
-        
-        <gui:WindowManager x:Name="Desktop" Grid.Row="0" Grid.Column="0" Grid.ColumnSpan="2" Background="Transparent">
-            <WrapPanel x:Name="DesktopIconPanel" Orientation="Vertical" />
+        <Image Focusable="False" Grid.ColumnSpan="2" x:Name="desktopBackground" Stretch="UniformToFill"/>
+
+        <gui:WindowManager Focusable="False" x:Name="Desktop" Grid.Row="0" Grid.Column="0" Grid.ColumnSpan="2" Background="Transparent">
+            <WrapPanel Focusable="False" x:Name="DesktopIconPanel" Orientation="Vertical" />
         </gui:WindowManager>
 
-        <StackPanel Style="{StaticResource StackPanelStyle}"  x:Name="NotificationStackPanel" Grid.Column="1" Orientation="Vertical" VerticalAlignment="Bottom" CanVerticallyScroll="True" CanHorizontallyScroll="True" ScrollViewer.VerticalScrollBarVisibility="Visible" ScrollViewer.CanContentScroll="True"/>
-        <Grid x:Name="Taskbar" Grid.Row="1" Grid.Column="0" Grid.ColumnSpan="2">
+        <StackPanel Focusable="False" Style="{StaticResource StackPanelStyle}"  x:Name="NotificationStackPanel" Grid.Column="1" Orientation="Vertical" VerticalAlignment="Bottom" CanVerticallyScroll="True" CanHorizontallyScroll="True" ScrollViewer.VerticalScrollBarVisibility="Visible" ScrollViewer.CanContentScroll="True"/>
+        <Grid Focusable="False" x:Name="Taskbar" Grid.Row="1" Grid.Column="0" Grid.ColumnSpan="2">
             <Grid.ColumnDefinitions>
                 <ColumnDefinition  Width="*"/>
                 <ColumnDefinition  Width="auto"/>
             </Grid.ColumnDefinitions>
 
-            <StackPanel Style="{StaticResource StackPanelStyle}" x:Name="TaskbarStackPanel" Orientation="Horizontal" Width="Auto" Height="25">
-                <Label Style="{StaticResource LabelStyle}" x:Name="TimeLabel" Content="no time or date."/>
-                <Button Style="{StaticResource ButtonStyle}" x:Name="ShutdownBtn" Click="ShutdownClick" Content="Shut down"/>
+            <StackPanel Focusable="False" Style="{StaticResource StackPanelStyle}" x:Name="TaskbarStackPanel" Orientation="Horizontal" Width="Auto" Height="25">
+                <Label Focusable="False" Style="{StaticResource LabelStyle}" x:Name="TimeLabel" Content="no time or date."/>
+                <Button Focusable="False" Style="{StaticResource ButtonStyle}" x:Name="ShutdownBtn" Click="ShutdownClick" Content="Shut down"/>
             </StackPanel>
 
-            <StackPanel Style="{StaticResource StackPanelStyle}" Grid.Row="1" Grid.Column="2" x:Name="RightSideTaskbarPanel">
-                <Button Style="{StaticResource ButtonStyle}" Content="Clear Notifications" Click="ClearNotificaionsClicked"/>
+            <StackPanel Focusable="False" Style="{StaticResource StackPanelStyle}" Grid.Row="1" Grid.Column="2" x:Name="RightSideTaskbarPanel">
+                <Button Focusable="False" Style="{StaticResource ButtonStyle}" Content="Clear Notifications" Click="ClearNotificaionsClicked"/>
             </StackPanel>
         </Grid>
     </Grid>

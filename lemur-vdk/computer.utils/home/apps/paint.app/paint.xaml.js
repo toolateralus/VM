@@ -135,7 +135,7 @@ class paint {
         app.eventHandler('renderTarget', 'onMouseLeave', XAML_EVENTS.MOUSE_LEAVE);
         app.eventHandler('renderTarget', 'onMouseMoved', XAML_EVENTS.MOUSE_MOVE);
 
-        app.eventHandler('this', 'onKeyDown', XAML_EVENTS.KEY_DOWN);
+        app.eventHandler('renderTarget', 'onKeyDown', XAML_EVENTS.KEY_DOWN);
 
         app.eventHandler('colorPickerBox', 'onSelectionChanged', XAML_EVENTS.SELECTION_CHANGED);
 

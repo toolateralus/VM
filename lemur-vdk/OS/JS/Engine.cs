@@ -49,7 +49,7 @@ namespace Lemur.JS
         public graphics GraphicsModule { get; }
         public conv ConvModule { get; }
         public app AppModule { get; }
-        public file FileModule { get; }
+        public file_t FileModule { get; }
         public term TermModule { get; }
         public key KeyModule { get; }
 
@@ -70,7 +70,7 @@ namespace Lemur.JS
             GraphicsModule = new graphics();
             ConvModule = new conv();
             AppModule = new app();
-            FileModule = new file();
+            FileModule = new file_t();
             TermModule = new term();
             KeyModule = new key();
 
@@ -141,7 +141,7 @@ namespace Lemur.JS
             }
             if (!Disposing)
             {
-                throw new JsEngineException("Something happened");
+                throw new JsEngineException("JavaScript execution thread died unexpectedly.");
             }
         }
         public string IncludedFiles = "";

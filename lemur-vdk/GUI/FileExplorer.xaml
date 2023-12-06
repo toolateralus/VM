@@ -7,15 +7,16 @@
              d:DesignHeight="450" d:DesignWidth="800"
               FontFamily="Cascadia Mono SemiLight" Foreground="White">
     <UserControl.Resources>
-        <ContextMenu x:Key="ItemContextMenu">
+        <ContextMenu x:Key="ExplorerContextMenu">
             <MenuItem Header="Add File" Click="AddFile_Click"/>
             <MenuItem Header="Add Directory" Click="AddDirectory_Click"/>
+        </ContextMenu>
+        <ContextMenu x:Key="ItemContextMenu">
             <MenuItem Header="Delete" Click="Delete_Click"/>
             <MenuItem Header="Properties" Click="Properties_Click"/>
         </ContextMenu>
     </UserControl.Resources>
     <Grid>
-        <ListBox x:Name="FileBox" Margin="10,35,10,10" ContextMenu="{StaticResource ItemContextMenu}" Foreground="White" Background="#FF333030"/>
         <StackPanel Style="{StaticResource StackPanelStyle}" Orientation="Horizontal" VerticalAlignment="Top" Background="#FF373738" Margin="10,0,10,0">
             <Button Style="{StaticResource ButtonStyle}" MinWidth="25" Margin="5" BorderBrush="DarkCyan" Foreground="White" Background="#FF5F36A9" Click="BackPressed" Height="20" Content="Back" >
                 <Button.Effect>
@@ -43,5 +44,19 @@
                 </TextBox.Effect>
             </TextBox>
         </StackPanel>
+        <ListBox x:Name="FileBox" Margin="10,35,10,10" ContextMenu="{StaticResource ExplorerContextMenu}" Foreground="White" Background="#FF333030">
+            <ListBox.ItemTemplate>
+                <DataTemplate>
+                    <Grid ContextMenu="{Binding Menu}">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="32"/>
+                            <ColumnDefinition Width="*"/>
+                        </Grid.ColumnDefinitions>
+                        <TextBlock Text="{Binding Icon}" Grid.Column="0"/>
+                        <TextBlock Text="{Binding Name}" Grid.Column="1"/>
+                    </Grid>
+                </DataTemplate>
+            </ListBox.ItemTemplate>
+        </ListBox>
     </Grid>
 </UserControl>

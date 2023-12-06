@@ -19,7 +19,7 @@ namespace Lemur.Network.Server
 {
     class Host
     {
-        public int OPEN_PORT { get; internal set; } = 8080;
+        public int openPort { get; internal set; } = 8080;
         public static IPAddress GetLocalIPAddress()
         {
             IPAddress localIP = null;
@@ -36,7 +36,7 @@ namespace Lemur.Network.Server
 
                     foreach (UnicastIPAddressInformation ipInformation in ipProperties.UnicastAddresses)
                     {
-                        if (ipInformation.Address.AddressFamily == System.Net.Sockets.AddressFamily.InterNetwork &&
+                        if (ipInformation.Address.AddressFamily == AddressFamily.InterNetwork &&
                             !IPAddress.IsLoopback(ipInformation.Address))
                         {
                             localIP = ipInformation.Address;
@@ -57,15 +57,15 @@ namespace Lemur.Network.Server
         TcpListener? SERVER;
         public async Task Open(int port)
         {
-            this.OPEN_PORT = port;
+            this.openPort = port;
 
             Running = true;
 
             List<TcpClient> CLIENTS = new();
 
-            Notifications.Now($"SERVER : Starting on :: {{'ip':{GetLocalIPAddress().MapToIPv4()}, port':{OPEN_PORT}}}. Waiting for connections...");
+            Notifications.Now($"SERVER : Starting on :: {{'ip':{GetLocalIPAddress().MapToIPv4()}, port':{openPort}}}. Waiting for connections...");
 
-            SERVER = new TcpListener(IPAddress.Any, OPEN_PORT);
+            SERVER = new TcpListener(IPAddress.Any, openPort);
 
             SERVER.Start();
 
@@ -84,48 +84,40 @@ namespace Lemur.Network.Server
         }
     }
 
-    public class Packet
+    public class Packet(JObject header, byte[] message, TcpClient client, NetworkStream stream)
     {
-        public JObject Metadata;
-        public byte[] Data = Array.Empty<byte>();
-        public TcpClient Client = default!;
-        public NetworkStream Stream = default!;
-        public Packet(JObject header, byte[] message, TcpClient client, NetworkStream stream)
-        {
-            this.Metadata = header;
-            this.Data = message;
-            this.Client = client;
-            this.Stream = stream;
-        }
+        public JObject Metadata = header;
+        public byte[] Data = message;
+        public TcpClient Client = client;
+        public NetworkStream Stream = stream;
     }
     public enum TransmissionType
-        {
-            Path,
-            Data,
-            Message,
-            Download,
-            Request,
-        }
+    {
+        Path,
+        Data,
+        Message,
+        Download,
+        Request,
+    }
 
     public class Server
     {
-        public const int REQUEST_REPLY_CHANNEL = 6996;
-        public const int DOWNLOAD_REPLY_CHANNEL = 6997;
-        private Dictionary<byte[], Func<Packet, Task<Packet>>> ServerTasks = new();
-        private string UPLOAD_DIR = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData) + "\\Lemur_SERVER_DATA";
-        private Dictionary<string, TcpClient> IncomingFileTransfersPending = new();
-        private List<string> AvailableForDownload = new();
+        public const int RequestReplyChannel = 6996;
+        public const int DownloadReplyChannel = 6997;
+        private readonly string UploadDirectory = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData) + "\\Lemur_SERVER_DATA";
+        private readonly Dictionary<string, TcpClient> IncomingFileTransfersPending = [];
+        private readonly List<string> AvailableForDownload = [];
 
         public Server()
         {
-            if (!Directory.Exists(UPLOAD_DIR))
-                Directory.CreateDirectory(UPLOAD_DIR);
-
-            foreach (var item in Directory.EnumerateFileSystemEntries(UPLOAD_DIR))
+            Task.Run(() =>
             {
-                AvailableForDownload.Add(item.Split('\\').Last());
-            }
-
+                if (!Directory.Exists(UploadDirectory))
+                    Directory.CreateDirectory(UploadDirectory);
+                // this could take awhile, do it in the background.
+                foreach (var item in Directory.EnumerateFileSystemEntries(UploadDirectory))
+                    AvailableForDownload.Add(item.Split('\\').Last());
+            });
         }
         public static Packet RecieveMessage(NetworkStream stream, TcpClient client, bool isServer)
         {
@@ -142,7 +134,7 @@ namespace Lemur.Network.Server
 
             byte[] metaData = new byte[metadataLength];
 
-            // metadata file, json object with infos and the actual data for the xfer
+            // metadata file, json object with info's and the actual data for the xfer
             if (stream.Read(metaData, 0, metadataLength) <= 0)
                 return default;
 
@@ -154,11 +146,12 @@ namespace Lemur.Network.Server
             int messageLength = metadata.Value<int>("size");
 
             // sender channel
-            int sender_ch = metadata.Value<int>("ch");
-            // reply channel
-            int reciever_ch = metadata.Value<int>("reply");
+            int senderCh = metadata.Value<int>("ch");
 
-            // Base64 string represnetation of data
+            // reply channel
+            int listenerCh = metadata.Value<int>("reply");
+
+            // base64 string representation of data
             string dataString = metadata.Value<string>("data") ?? $"{ID()} : Data not found! something has gone wrong with the other's json construction";
 
             // byte representation of data, original.
@@ -167,7 +160,7 @@ namespace Lemur.Network.Server
             // sizeof data.
             var bytesLength = dataBytes.Length;
             
-            Notifications.Now($"{ID()} Received {FormatBytes(bytesLength)} from {client.GetHashCode()}: CH {{{sender_ch}}} -->> CH{{{reciever_ch}}}");
+            Notifications.Now($"{ID()} Received {FormatBytes(bytesLength)} from { client.GetHashCode()}: CH {{{senderCh}}} -->> CH{{{listenerCh}}}");
 
             return new(metadata, dataBytes, client, stream);
         }
@@ -251,16 +244,16 @@ namespace Lemur.Network.Server
             {
                 string path = file;
                 
-                if (!file.Contains(UPLOAD_DIR))
-                    path = UPLOAD_DIR + "\\" + file;
+                if (!file.Contains(UploadDirectory))
+                    path = UploadDirectory + "\\" + file;
 
-                file = file.Replace(UPLOAD_DIR + "\\", "");
+                file = file.Replace(UploadDirectory + "\\", "");
 
                 if (File.Exists(path))
                 {
                     var fileName = Encoding.UTF8.GetBytes(file);
                     var fileContents = File.ReadAllBytes(path);
-                    var metadata = ToJson(fileContents.Length, fileContents, TransmissionType.Download, DOWNLOAD_REPLY_CHANNEL, -1, false, fileName);
+                    var metadata = ToJson(fileContents.Length, fileContents, TransmissionType.Download, DownloadReplyChannel, -1, false, fileName);
                     await SendJsonToClient(packet.Client, JObject.Parse(metadata));
                 }
                 else if (Directory.Exists(path))
@@ -284,7 +277,7 @@ namespace Lemur.Network.Server
             // message signaling the end of the download.
             var message = Encoding.UTF8.GetBytes(Message);
             var length = message.Length;
-            JObject endPacket = JObject.Parse(ToJson(length, message, TransmissionType.Download, DOWNLOAD_REPLY_CHANNEL, -1));
+            JObject endPacket = JObject.Parse(ToJson(length, message, TransmissionType.Download, DownloadReplyChannel, -1));
             await SendJsonToClient(packet.Client, endPacket);
         }
         private static async Task HandleMessageTransmission(Packet packet, List<TcpClient> clients)
@@ -302,7 +295,7 @@ namespace Lemur.Network.Server
                 {
                     if (packet.Metadata.Value<bool>("isDir"))
                     {
-                        Directory.CreateDirectory(UPLOAD_DIR + "\\" + Encoding.UTF8.GetString(packet.Data));
+                        Directory.CreateDirectory(UploadDirectory + "\\" + Encoding.UTF8.GetString(packet.Data));
                     }
                     else
                     {
@@ -311,7 +304,7 @@ namespace Lemur.Network.Server
                         if (item.Key.StartsWith('\\'))
                             path = item.Key.Remove(0, 1);
 
-                        path = UPLOAD_DIR + "\\" + item.Key;
+                        path = UploadDirectory + "\\" + item.Key;
 
                         File.WriteAllBytes(path, packet.Data);
                     }
@@ -330,7 +323,7 @@ namespace Lemur.Network.Server
                 // write the dir, or we wait for file data.
                 if (packet.Metadata.Value<bool>("isDir"))
                 {
-                    Directory.CreateDirectory(UPLOAD_DIR + "\\" + Path);
+                    Directory.CreateDirectory(UploadDirectory + "\\" + Path);
                 }
                 else
                 {
@@ -364,7 +357,7 @@ namespace Lemur.Network.Server
                     var names = string.Join(",\n", AvailableForDownload);
                     var bytes = Encoding.UTF8.GetBytes(names);
 
-                    JObject metadata = JObject.Parse(ToJson(bytes.Length, bytes, TransmissionType.Request, REQUEST_REPLY_CHANNEL, -1, false));
+                    JObject metadata = JObject.Parse(ToJson(bytes.Length, bytes, TransmissionType.Request, RequestReplyChannel, -1, false));
                     await SendJsonToClient(packet.Client, metadata);
 
                     Notifications.Now($"SERVER:Responding with {names}");

@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Diagnostics;
 using System.Linq;
 using System.Reflection;
 using System.Threading;
@@ -7,10 +6,8 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
 using System.Windows.Media;
-using System.Windows.Media.Effects;
 using System.Windows.Media.Imaging;
 using Lemur.FS;
-using Lemur.JS;
 using Key = System.Windows.Input.Key;
 
 namespace Lemur.GUI
@@ -31,25 +28,20 @@ namespace Lemur.GUI
         public ComputerWindow(Computer pc)
         {
             InitializeComponent();
-            
+
             desktopBackground.Source = LoadImage(FileSystem.GetResourcePath("Background.png") ?? "background.png");
-            
+
             Keyboard.AddKeyDownHandler(this, Computer_KeyDown);
-            
+
             Computer = pc;
 
-            clock = new Timer(delegate {
+            clock = new Timer(delegate
+            {
                 Dispatcher.Invoke(this.UpdateComputerTime);
             });
 
             clock.Change(0, TimeSpan.FromSeconds(10).Milliseconds);
 
-            ContextMenu = new ContextMenu();
-
-            var menuItem = new MenuItem
-            {
-                Header = "create new app",
-            };
         }
 
 
@@ -79,22 +71,9 @@ namespace Lemur.GUI
             btn.Click += (_,_) => Toggle?.Invoke();
             return btn;
         }
+        private int ctrlTabIndex;
         public void Computer_KeyDown(object sender, KeyEventArgs e)
         {
-            foreach (var userWindow in Computer.UserWindows)
-            {
-                var handlers = userWindow.Value?.JavaScriptEngine?.EventHandlers;
-
-                if (handlers == null || !handlers.Any())
-                    continue;
-
-                var js_handlers = handlers.OfType<InteropEvent>();
-
-                foreach (var eventHandler in js_handlers)
-                    InvokeKeyEvent(sender, e, eventHandler);
-
-            }
-
             switch (e.Key)
             {
                 case Key.OemTilde:
@@ -105,19 +84,26 @@ namespace Lemur.GUI
                         cmd.LateInit(Computer);
                     }
                     break;
+
+                case Key.Tab:
+                    if (Keyboard.IsKeyDown(Key.LeftCtrl))
+                    {
+                        ctrlTabIndex = Math.Clamp(ctrlTabIndex, 0, Computer.UserWindows.Count - 1);
+                        
+                        var windowElement = Computer.UserWindows.ElementAt(ctrlTabIndex);
+                        
+                        ctrlTabIndex += 1;
+
+                        if (ctrlTabIndex > Computer.UserWindows.Count - 1)
+                            ctrlTabIndex = 0;
+
+                        var ownerWindow = windowElement.Value?.Owner;
+                        ownerWindow?.BringToTopOfDesktop();
+                    }
+                    break;
             }
         }
-        public static void InvokeKeyEvent(object sender, KeyEventArgs e, InteropEvent eventHandler)
-        {
-            if (eventHandler.Event == XAML_EVENTS.KEY_DOWN)
-            {
-                eventHandler.OnKeyDown?.Invoke(sender, e);
-            }
-            if (eventHandler.Event == XAML_EVENTS.KEY_UP)
-            {
-                eventHandler.OnKeyUp?.Invoke(sender, e);
-            }
-        }
+        
         public void ShutdownClick(object sender, RoutedEventArgs e)
         {
             App.Current.Shutdown();
@@ -312,13 +298,13 @@ namespace Lemur.GUI
                 var contextMenu = new ContextMenu();
 
                 MenuItem jsSource = new() {
-                    Header="view source : JavaScript",
+                    Header = "view source : JavaScript",
                 };
 
                 jsSource.Click += (sender, @event) => JsSource_Click(sender, @event, appName);
 
                 MenuItem xamlSource = new() {
-                   Header = "view source : XAML",
+                    Header = "view source : XAML",
                 };
 
                 xamlSource.Click += (sender, @event) => XamlSource_Click(sender, @event, appName);
@@ -330,8 +316,7 @@ namespace Lemur.GUI
                 btn.ContextMenu = contextMenu;
 
                 async void OnDesktopIconPressed(object? sender, RoutedEventArgs e)
-                  => await Computer.OpenCustom(type)
-                            .ConfigureAwait(false);
+                  => await Computer.OpenCustom(type);
 
                 SetupIcon(type, btn);
 

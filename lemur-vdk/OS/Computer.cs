@@ -17,6 +17,7 @@ using Microsoft.ClearScript.JavaScript;
 using Lemur.OS;
 using Lemur.Graphics;
 using Newtonsoft.Json;
+using System.Threading;
 
 namespace Lemur
 {
@@ -113,8 +114,9 @@ namespace Lemur
                 Notifications.Now($"Computer {ID} has exited, most likely due to an error. code:{exitCode}");
             }
             Dispose();
+
         }
-        public void OpenApp(UserControl control, string title = "window", Brush? background = null, Brush? foreground = null, Engine engine = null)
+        public void OpenApp(UserControl control, string title = "window", Engine engine = null)
         {
             // the resizable is the container that hosts the user app.
             // this is made seperate to eliminate annoying and complex boiler plate.
@@ -132,7 +134,6 @@ namespace Lemur
             Canvas.SetTop(resizable_window, 200);
             Canvas.SetLeft(resizable_window, 200);
         }
-
         public void InstallCSharpApp(string exePath, Type type)
         {
             if (csApps.TryGetValue(exePath, out _))
@@ -168,35 +169,30 @@ namespace Lemur
             var name = exePath.Split('.')[0];
             Window.InstallIcon(AppType.NativeCs, exePath, type);
         }
-       
         public void Uninstall(string name)
         {
             jsApps.Remove(name);
             Window.Dispatcher.Invoke(() => { Window.RemoveDesktopIcon(name); });
         }
-
         private static void LoadBackground(Computer pc, ComputerWindow wnd)
         {
             string backgroundPath = pc?.Config?.Value<string>("BACKGROUND") ?? "background.png";
             wnd.desktopBackground.Source = ComputerWindow.LoadImage(FileSystem.GetResourcePath(backgroundPath) ?? "background.png");
         }
-        
-
         public async Task OpenCustom(string type, params object[] cmdLineArgs)
         {
             var data = Runtime.GetAppDefinition(type);
-            
-            var control = XamlHelper.ParseUserControl(data.XAML);
 
-            if (control == null)
-            {
-                Notifications.Now($"Error : either the app was not found or there was an error parsing xaml or js for {type}.");
-                return;
-            }
+                var control = XamlHelper.ParseUserControl(data.XAML);
 
-            Engine engine = new(this);
-            
-            var (id, code) = await InstantiateWindowClass(type, cmdLineArgs, data, engine);
+                if (control == null)
+                {
+                    Notifications.Now($"Error : either the app was not found or there was an error parsing xaml or js for {type}.");
+                    return;
+                }
+
+                Engine engine = new(this);
+                var (id, code) = await InstantiateWindowClass(type, cmdLineArgs, data, engine);
 
             OpenApp(control, title: id, engine: engine);
 
@@ -231,9 +227,11 @@ namespace Lemur
                         processClass = proc.Key;
             return processClass;
         }
-
         #region Application
         private static Computer? current;
+
+        private int startupTimeoutMs = 20_000;
+
         public static Computer Current => current ?? throw new InvalidOperationException("No computer was active when accessed."); 
         /// <summary>
         /// This just causes crashes.
@@ -278,7 +276,6 @@ namespace Lemur
 
             Runtime.LoadCustomSyntaxHighlighting();
         }
-
         public static IReadOnlyCollection<T> TryGetAllProcessesOfType<T>() where T : UserControl
         {
             List<T> contents = new();
@@ -300,7 +297,6 @@ namespace Lemur
             }
             return contents;
         }
-
         public static T TryGetProcessOfType<T>() where T : UserControl
         {
             T content = null;
@@ -327,7 +323,6 @@ namespace Lemur
             }
             return content!;
         }
-    
         private static async Task<(string id, string code)> InstantiateWindowClass(string type, object[] cmdLineArgs, (string XAML, string JS) data, Engine engine)
         {
             var name = type.Split('.')[0];
@@ -354,7 +349,6 @@ namespace Lemur
 
             return (instance_name, instantiation_code);
         }
-
         #endregion
 
         protected virtual void Dispose(bool disposing)
@@ -365,7 +359,8 @@ namespace Lemur
                 {
                     JavaScript?.Dispose();
                     Window?.Dispose();
-                    Network?.Dispose();
+                    Network?.StopHosting();
+                    Network?.StopClient();
                     CmdLine?.Dispose();
 
                     foreach (var item in UserWindows)

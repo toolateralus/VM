@@ -13,6 +13,7 @@ using Lemur.FS;
 using Image = System.Windows.Controls.Image;
 using System.Security.Permissions;
 using System.Reflection;
+using System.Threading.Tasks;
 
 namespace Lemur.JS
 {
@@ -345,14 +346,14 @@ namespace Lemur.JS
             }
             return null;
         }
-        public async void eventHandler(string targetControl, string methodName, int type)
+        public void eventHandler(string targetControl, string methodName, int type)
         {
             if (Computer.Current.UserWindows.TryGetValue(id, out var app))
-                await app.JavaScriptEngine?.CreateEventHandler(id, targetControl, methodName, type);
+                Task.Run(async () => await app.JavaScriptEngine?.CreateEventHandler(id, targetControl, methodName, type));
         }
-        public async void start(string path, params object[] args)
+        public void start(string path, params object[] args)
         {
-            await Computer.Current.Window.Dispatcher.InvokeAsync(async () => await Computer.Current.OpenCustom(path, args));
+            Computer.Current.Window.Dispatcher.InvokeAsync(async () => await Computer.Current.OpenCustom(path, args));
         }
         public void loadApps(object? path)
         {

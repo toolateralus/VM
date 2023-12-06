@@ -1,22 +1,12 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
-using System.Diagnostics;
 using System.IO;
 using System.Linq;
-using System.Security.Cryptography.X509Certificates;
 using System.Text;
-using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
-using System.Windows.Data;
-using System.Windows.Documents;
 using System.Windows.Input;
-using System.Windows.Media;
-using System.Windows.Media.Imaging;
-using System.Windows.Navigation;
-using System.Windows.Shapes;
-using Lemur;
 using Lemur.FS;
 
 namespace Lemur.GUI
@@ -29,8 +19,38 @@ namespace Lemur.GUI
         public static string? DesktopIcon => FileSystem.GetResourcePath("folder.png");
         internal Action<string>? OnNavigated;
 
-        private readonly ObservableCollection<string> FileViewerData = new();
+        private readonly ObservableCollection<FileSystemEntry> FileViewerData = new();
         private readonly Dictionary<string, string> OriginalPaths = new();
+        private ContextMenu CreateMenu(string extension)
+        {
+            var menu = new ContextMenu();
+            switch (extension)
+            {
+                case ".js":
+                case ".md":
+                case ".txt":
+                case ".html":
+                case ".xaml":
+                case ".json":
+                    var editItem = new MenuItem { Header = "Edit" };
+                    editItem.Click += OnEditClicked;
+                    //menu.Items.Add(editItem);
+                    break;
+                default:
+                    break;
+            }
+            var deleteItem = new MenuItem() { Header = "Delete" };
+            deleteItem.Click += Delete_Click;
+            var propertiesItem = new MenuItem() { Header = "Properties" };
+            propertiesItem.Click += Properties_Click;
+            var renameItem = new MenuItem() { Header = "Rename" };
+
+            renameItem.Click += OnRenameClicked;
+            //menu.Items.Add(renameItem);
+            menu.Items.Add(deleteItem);
+            menu.Items.Add(propertiesItem);
+            return menu;
+        }
         public FileExplorer()
         {
             InitializeComponent();
@@ -43,23 +63,29 @@ namespace Lemur.GUI
                 Navigate();
                 UpdateView();
 
-            }; 
+            };
 
             Computer.Current.Window.KeyDown += FileExplorer_KeyDown;
 
             UpdateView();
 
         }
-
-        public void LateInit(Computer c)
+        private void OnRenameClicked(object sender, RoutedEventArgs e)
         {
-            // neccesary
+            throw new NotImplementedException();
+        }
+
+        private void OnEditClicked(object sender, RoutedEventArgs e)
+        {
+            throw new NotImplementedException();
         }
         private void PreviewPath(object sender, SelectionChangedEventArgs e)
         {
-            if (FileBox.SelectedItem is string Path && OriginalPaths.TryGetValue(Path, out var AbsolutePath))
+            if (FileBox.SelectedItem is FileSystemEntry entry && OriginalPaths.TryGetValue(entry.Name, out var AbsolutePath))
             {
                 var x = FileSystem.Root + "\\";
+                if (AbsolutePath == FileSystem.Root)
+                    AbsolutePath = "";
                 SearchBar.Text = AbsolutePath.Replace(x, "");
             }
         }
@@ -87,42 +113,73 @@ namespace Lemur.GUI
             
             var fileNames = Computer.Current.FileSystem.DirectoryListing();
 
-            const string FolderIcon = "📁 ";
-            const string FileIcon =   "📄 ";
+            const string FolderIcon = "📁";
+            const string FileIcon =   "📄";
 
-            var parentAddr = ".. back";
-
-            FileViewerData.Add(parentAddr);
-
-            OriginalPaths[parentAddr] = Directory.GetParent(FileSystem.CurrentDirectory)?.FullName ?? throw new InvalidOperationException("Invalid file structure");
+            if (SearchBar.Text != FileSystem.Root)
+            {
+                var parentAddr = ".. back";
+                var entry = new FileSystemEntry("", parentAddr, new());
+                FileViewerData.Add(entry);
+                OriginalPaths[parentAddr] = Directory.GetParent(FileSystem.CurrentDirectory)?.FullName ?? throw new InvalidOperationException("Invalid file structure");
+            }
+            else
+            {
+                SearchBar.Text = "";
+            }
 
             foreach (var file in fileNames)
             {
                 StringBuilder visualPath = new(file.Split('\\').LastOrDefault("???"));
 
                 var isDir = Directory.Exists(file) && !File.Exists(file);
+                ContextMenu menu = CreateMenu(Path.GetExtension(file));
+                string name = visualPath.ToString();
+                var entry = new FileSystemEntry(isDir ? FolderIcon : FileIcon, name, menu);
+                FileViewerData.Add(entry);
 
-                visualPath.Insert(0, isDir ? FolderIcon : FileIcon);
-
-                var finalVisualPath = visualPath.ToString();
-
-                FileViewerData.Add(finalVisualPath);
-
-                OriginalPaths[finalVisualPath] = file;
+                OriginalPaths[name] = file;
             }
 
         }
+
+        private static string GetUniquePath(string dir, string name, string extension)
+        {
+            string path = $"{dir}{name}{extension}";
+            if (FileSystem.FileExists(path) ||
+                FileSystem.DirectoryExists(path))
+            {
+                int fileCount = 1;
+                path = $"{dir}{name}{fileCount}{extension}";
+                while (FileSystem.FileExists(path) ||
+                    FileSystem.DirectoryExists(path))
+                {
+                    fileCount++;
+                    path = $"{dir}{name}{fileCount}{extension}";
+                }
+            }
+
+            return path;
+        }
+
         private void AddFile_Click(object sender, RoutedEventArgs e)
         {
-            FileSystem.NewFile(SearchBar.Text);
+            var dir = FileSystem.CurrentDirectory.Replace(FileSystem.Root, "");
+            if (dir.Length != 0)
+                dir += "\\";
+            string path = GetUniquePath(dir, "newfile", ".txt");
+            FileSystem.NewFile(path);
             UpdateView();
-
         }
+
         private void AddDirectory_Click(object sender, RoutedEventArgs e)
         {
-            FileSystem.NewFile(SearchBar.Text, true);
+            var dir = FileSystem.CurrentDirectory.Replace(FileSystem.Root, "");
+            if (dir.Length != 0)
+                dir += "\\";
+            string path = GetUniquePath(dir, "newfolder", "");
+            FileSystem.NewFile(path, true);
             UpdateView();
-
         }
         private void Delete_Click(object sender, RoutedEventArgs e)
         {
@@ -183,3 +240,4 @@ namespace Lemur.GUI
         }
     }
 }
+public record class FileSystemEntry(string Icon, string Name, ContextMenu Menu);

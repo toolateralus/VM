@@ -91,7 +91,7 @@ namespace Lemur.OS
             Task.Run(async () =>
             {
                 int? port = obj?[0] as int?;
-                if (await Computer.Current.Network.StartHosting(port ?? NetworkConfiguration.DEFAULT_PORT))
+                if (await Computer.Current.Network.StartHosting(port ?? NetworkConfiguration.defaultPort))
                 {
                     Notifications.Now($"Hosting on {Computer.Current.Network.GetIPPortString()}");
                     return;
@@ -437,6 +437,7 @@ namespace Lemur.OS
                 var jsCode = File.ReadAllText(alias);
 
                 const string ArgsArrayReplacement = "[/***/]";
+
                 var index = jsCode.IndexOf(ArgsArrayReplacement);
 
                 if (index != -1)
