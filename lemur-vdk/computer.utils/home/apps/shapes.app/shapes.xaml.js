@@ -30,9 +30,9 @@ class shapes {
     spawnScene() {
         const gameObjects = [];
 
-        const ctOfEach = 120; 
+        const countOfEach = 5; 
 
-        for (let z = 0; z < ctOfEach; ++z)
+        for (let z = 0; z < countOfEach; ++z)
             for (let i = 0; i < palette.length; ++i) {
                 const verts = create_square();
                 const scale = new Point(25, 25);
@@ -114,24 +114,24 @@ class shapes {
         gfx.flushCtx(this.gfx_ctx);
         this.profiler.set_marker('uploading');
 
-        gos.forEach(gO => {
 
-        	gO.velocity.y += 0.181; 
-        	gO.update_physics();
-        	gO.confine_to_screen_space(this.width);
+        if (this.frameCt % 16 == 0) {
+            gos.forEach(gO => {
+        	    gO.velocity.y += 0.181; 
+        	    gO.update_physics();
+        	    gO.confine_to_screen_space(this.width);
         	
-        	if (gO.pos.y > (this.width - 15)) {
-        		gO.velocity.y = random() * -20;
-        		gO.velocity.x = (1 - random());
-        	}
+        	    if (gO.pos.y > (this.width - 15)) {
+        		    gO.velocity.y = random() * -20;
+        		    gO.velocity.x = (1 - random());
+        	    }
         	
-        	if (gO.pos.x < 15 || gO.pos.x > this.width - 15) {
-        		gO.velocity.x = -(gO.velocity.x * 2);
-        	}
-
+        	    if (gO.pos.x < 15 || gO.pos.x > this.width - 15) {
+        		    gO.velocity.x = -(gO.velocity.x * 2);
+        	    }
         	
-        });
-        
+            });
+        }
 		
         this.profiler.set_marker('collision');
     }

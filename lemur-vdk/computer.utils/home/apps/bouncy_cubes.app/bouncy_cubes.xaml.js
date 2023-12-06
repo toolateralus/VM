@@ -17,7 +17,7 @@ class bouncy_cubes {
         this.frameCt = 0;
 
 		// right now we just use a square resolution.
-		this.width = 512;
+		this.width = 256;
 
         const gfx_ctx = gfx.createCtx(this.id, 'renderTarget', this.width, this.width);
 
@@ -26,9 +26,9 @@ class bouncy_cubes {
         const gameObjects = [];
 
 		// creates a square for each color in the indexed palette, 24.
+		const countOfEach = 5;
 		
-		
-		for (let z = 0; z < 6; ++z)
+		for (let z = 0; z < countOfEach; ++z)
         for (let i = 0; i < palette.length; ++i) {
             const verts = create_square();
             const scale = new Point(25, 25);

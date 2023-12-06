@@ -170,37 +170,46 @@ namespace Lemur.JS
             Circle,
         }
 
-        internal void DrawFilledShape(int x, int y, int h, int w, int colorIndex, PrimitiveShape primitiveShape)
+        internal void DrawFilledShape(int x, int y, int h, int w, double r, int colorIndex, PrimitiveShape primitiveShape)
         {
             switch (primitiveShape)
             {
                 case PrimitiveShape.Rectangle:
-                    WriteFilledRectangle(x, y, h, w, colorIndex);
+                    WriteFilledRectangle(x, y, h, w, r, colorIndex);
                     break;
                 case PrimitiveShape.Circle:
-                    WriteFilledCircle(x, y, h, w, colorIndex);
+                    WriteFilledCircle(x, y, h, w, r, colorIndex);
                     break;
                 case PrimitiveShape.Triangle:
-                    WriteFilledTriangle(x, y, h, w, colorIndex);
+                    WriteFilledTriangle(x, y, h, w, r, colorIndex);
                     break;
                 default:
                     throw new NotSupportedException($"The shape {primitiveShape} is not supported");
             }
         }
 
-        private void WriteFilledRectangle(int x, int y, int h, int w, int colorIndex)
+        private void WriteFilledRectangle(int x, int y, int h, int w, double r, int colorIndex)
         {
+            double cosR = Math.Cos(r);
+            double sinR = Math.Sin(r);
+
             for (int i = x; i < x + w; i++)
             {
                 for (int j = y; j < y + h; j++)
                 {
-                    WritePixelIndexed(i, j, colorIndex);
+                    int rotatedX = (int)Math.Round((i - x) * cosR - (j - y) * sinR) + x;
+                    int rotatedY = (int)Math.Round((i - x) * sinR + (j - y) * cosR) + y;
+
+                    WritePixelIndexed(rotatedX, rotatedY, colorIndex);
                 }
             }
         }
 
-        private void WriteFilledCircle(int x, int y, int h, int w, int colorIndex)
+        private void WriteFilledCircle(int x, int y, int h, int w, double r, int colorIndex)
         {
+            double cosR = Math.Cos(r);
+            double sinR = Math.Sin(r);
+
             int radius = Math.Min(h, w) / 2;
             int centerX = x + w / 2;
             int centerY = y + h / 2;
@@ -209,23 +218,32 @@ namespace Lemur.JS
             {
                 for (int j = centerY - radius; j <= centerY + radius; j++)
                 {
-                    if (Math.Sqrt((i - centerX) * (i - centerX) + (j - centerY) * (j - centerY)) <= radius)
+                    int rotatedX = (int)Math.Round((i - centerX) * cosR - (j - centerY) * sinR) + centerX;
+                    int rotatedY = (int)Math.Round((i - centerX) * sinR + (j - centerY) * cosR) + centerY;
+
+                    if (Math.Sqrt((rotatedX - centerX) * (rotatedX - centerX) + (rotatedY - centerY) * (rotatedY - centerY)) <= radius)
                     {
-                        WritePixelIndexed(i, j, colorIndex);
+                        WritePixelIndexed(rotatedX, rotatedY, colorIndex);
                     }
                 }
             }
         }
 
-        private void WriteFilledTriangle(int x, int y, int h, int w, int colorIndex)
+        private void WriteFilledTriangle(int x, int y, int h, int w, double r, int colorIndex)
         {
+            double cosR = Math.Cos(r);
+            double sinR = Math.Sin(r);
+
             for (int i = x; i < x + w; i++)
             {
                 for (int j = y; j < y + h; j++)
                 {
-                    if (j <= y + (i - x) * h / w)
+                    int rotatedX = (int)Math.Round((i - x) * cosR - (j - y) * sinR) + x;
+                    int rotatedY = (int)Math.Round((i - x) * sinR + (j - y) * cosR) + y;
+
+                    if (rotatedY <= y + (rotatedX - x) * h / w)
                     {
-                        WritePixelIndexed(i, j, colorIndex);
+                        WritePixelIndexed(rotatedX, rotatedY, colorIndex);
                     }
                 }
             }
