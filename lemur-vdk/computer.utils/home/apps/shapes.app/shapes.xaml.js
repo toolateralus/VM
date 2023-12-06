@@ -41,7 +41,7 @@ class shapes {
                 
                 gO.colorIndex = i;
                 gO.isMesh = true;
-                gO.primitveIndex = i % 3;
+                gO.primitveIndex = Primitive.Triangle;
 
                 gameObjects.push(gO);
             }

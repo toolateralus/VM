@@ -2,7 +2,7 @@
 ---
 # Making an app :
 ### _In this tutorial we're going to :_
-
+#### note: this is rather out of date. most of it is accurate, but a lot of the API has changed, thus the example code needs modifications.
 - learn how to create, open, and 
 text files.
 - learn the requirements for a '.app' application, setup our directories and files to create a valid .app project. 
