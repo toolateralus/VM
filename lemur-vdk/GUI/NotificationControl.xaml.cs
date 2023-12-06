@@ -43,10 +43,11 @@ namespace Lemur.GUI
             DataContext = this;
 
 
-            fadeOutTimer = new DispatcherTimer
+            fadeOutTimer =  new DispatcherTimer
             {
-                Interval = TimeSpan.FromSeconds(10)
+                Interval = TimeSpan.FromSeconds(5)
             };
+
             fadeOutTimer.Tick += OnFadeOutTimerTick;
             MouseDoubleClick += NotificationControl_MouseDoubleClick;
 

@@ -18,11 +18,6 @@ namespace Lemur.JS
         public XAML_EVENTS Event = XAML_EVENTS.RENDER;
         FrameworkElement element;
 
-        public Action<object?, KeyEventArgs> OnKeyUp;
-
-        public Action<object?, KeyEventArgs> OnKeyDown;
-        private bool executionThreadAlive;
-
         public InteropEvent(FrameworkElement control, XAML_EVENTS @event, Engine js, string id, string method)
         {
             Event = @event;
@@ -67,14 +62,10 @@ namespace Lemur.JS
                     break;
                 case XAML_EVENTS.KEY_DOWN:
                     {
-                        OnKeyDown += InvokeKeyboard;
-                        onDispose += () => OnKeyDown -= InvokeKeyboard;
                     }
                     break;
                 case XAML_EVENTS.KEY_UP:
                     {
-                        OnKeyUp += InvokeKeyboard;
-                        onDispose += () => OnKeyUp -= InvokeKeyboard;
                     }
                     break;
                 case XAML_EVENTS.LOADED:

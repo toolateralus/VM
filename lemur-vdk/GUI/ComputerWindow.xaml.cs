@@ -23,7 +23,7 @@ namespace Lemur.GUI
         public Computer Computer;
         private Timer clock;
         public bool Disposing;
-
+        public static event Action<Key, bool> OnKeyDown;
         public int TopMostZIndex { get; internal set; }
         public ComputerWindow(Computer pc)
         {
@@ -74,6 +74,11 @@ namespace Lemur.GUI
         private int ctrlTabIndex;
         public void Computer_KeyDown(object sender, KeyEventArgs e)
         {
+            OnKeyDown?.Invoke(e.Key, e.IsDown);
+
+            // -- to users: --
+            // add any global hotkeys here.
+            // js already has support for fetching them though.
             switch (e.Key)
             {
                 case Key.OemTilde:

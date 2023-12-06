@@ -81,8 +81,8 @@ class GameObject {
     constructor(Points, scale, pos) {
         this.scale = scale ?? new Point(1, 1);
         this.pos = pos ?? new Point(0, 0);
-        this.Points = Points ?? [];
-        this.edges = this.createEdges(this.Points);
+        this.points = Points ?? [];
+        this.edges = this.createEdges(this.points);
         this.velocity = new Point(0, 0);
         this._cachedColorRatio = undefined;
     }
@@ -166,7 +166,7 @@ class GameObject {
         const cosAngle = Math.cos(angle);
         const sinAngle = Math.sin(angle);
 
-        for (const Point of this.Points) {
+        for (const Point of this.points) {
             const x = Point.x - this.pos.x;
             const y = Point.y - this.pos.y;
 

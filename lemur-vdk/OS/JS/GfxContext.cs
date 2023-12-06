@@ -166,11 +166,11 @@ namespace Lemur.JS
         public enum PrimitiveShape
         {
             Rectangle,
+            Triangle,
             Circle,
-            Triangle
         }
 
-        internal void WriteFilledShape(int x, int y, int h, int w, int colorIndex, PrimitiveShape primitiveShape)
+        internal void DrawFilledShape(int x, int y, int h, int w, int colorIndex, PrimitiveShape primitiveShape)
         {
             switch (primitiveShape)
             {
