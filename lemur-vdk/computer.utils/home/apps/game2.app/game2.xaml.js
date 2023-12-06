@@ -7,8 +7,6 @@ const {
 } = require('game.js');
 const { Profiler } = require('profiler.js');
 
-
-// THIS IS THE WPF CLASS! (it chooses the file name associated class.)
 class game2 {
     constructor(id) {
 
@@ -18,16 +16,23 @@ class game2 {
         this.id = id;
         this.frameCt = 0;
 
-        const gfx_ctx = gfx.createCtx(this.id, 'renderTarget', 512, 512);
+		// right now we just use a square resolution.
+		this.width = 512;
 
-        this.renderer = new Renderer(512, gfx_ctx);
+        const gfx_ctx = gfx.createCtx(this.id, 'renderTarget', this.width, this.width);
+
+        this.renderer = new Renderer(this.width, gfx_ctx);
 
         const gameObjects = [];
 
+		// creates a square for each color in the indexed palette, 24.
+		
+		
+		for (let z = 0; z < 6; ++z)
         for (let i = 0; i < palette.length; ++i) {
             const verts = create_square();
-            const scale = new Point(20, 20);
-            const pos = new Point(i * i, i * i);
+            const scale = new Point(25, 25);
+            const pos = new Point(i * i, this.renderer.width - z);
             let gO = new GameObject(verts, scale, pos);
             verts.forEach(v => v.color = i);
             gameObjects.push(gO);
@@ -81,10 +86,25 @@ class game2 {
         gfx.flushCtx(this.renderer.gfx_ctx);
         this.profiler.set_marker('uploading');
 
-        this.scene.GameObjects().forEach(gO => { gO.velocity.y += 0.01; gO.update_physics();});
-        this.scene.GameObjects().forEach(gO => { gO.confine_to_screen_space(this.renderer.width); });
-        this.scene.GameObjects().forEach(gO => { this.scene.GameObjects().forEach(gO1 => { this.collisionRes(gO, gO1); }) });
+		const gos = this.scene.GameObjects();
 
+        gos.forEach(gO => {
+        	gO.velocity.y += 0.181; 
+        	gO.update_physics();
+        	gO.confine_to_screen_space(this.renderer.width);
+        	
+        	if (gO.pos.y > (this.renderer.width - 15)) {
+        		gO.velocity.y = random() * -20;
+        		gO.velocity.x = (1 - random());
+        	}
+        	
+        	if (gO.pos.x < 15 || gO.pos.x > this.renderer.width - 15) {
+        		gO.velocity.x = -(gO.velocity.x * 2);
+        	}
+        	
+        });
+        
+		
         this.profiler.set_marker('collision');
     }
 

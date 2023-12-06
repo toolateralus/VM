@@ -183,16 +183,16 @@ namespace Lemur
         {
             var data = Runtime.GetAppDefinition(type);
 
-                var control = XamlHelper.ParseUserControl(data.XAML);
+            var control = XamlHelper.ParseUserControl(data.XAML);
 
-                if (control == null)
-                {
-                    Notifications.Now($"Error : either the app was not found or there was an error parsing xaml or js for {type}.");
-                    return;
-                }
+            if (control == null)
+            {
+                Notifications.Now($"Error : either the app was not found or there was an error parsing xaml or js for {type}.");
+                return;
+            }
 
-                Engine engine = new(this);
-                var (id, code) = await InstantiateWindowClass(type, cmdLineArgs, data, engine);
+            Engine engine = new(this);
+            var (id, code) = await InstantiateWindowClass(type, cmdLineArgs, data, engine);
 
             OpenApp(control, title: id, engine: engine);
 
@@ -335,7 +335,7 @@ namespace Lemur
 
             engine.AppModule.__SetId(instance_name);
 
-            string instantiation_code = "";
+            string instantiation_code;
 
             if (cmdLineArgs.Length != 0)
             {

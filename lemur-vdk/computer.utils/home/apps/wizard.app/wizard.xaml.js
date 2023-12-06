@@ -12,8 +12,6 @@ class wizard
         if (!appDirName.includes('.app'))
             appDirName += '.app';
 
-        call(`mkdir ${appDirName}`);
-        
         const xamlPath = 'home/apps/' + appDirName + '/' + appName + '.xaml';
         const xamljsPath =  xamlPath + '.js';
 
@@ -41,6 +39,6 @@ d:DesignHeight="450" d:DesignWidth="800" Background="#474354" BorderBrush="White
         file.write(xamljsPath, xamljsCode)
         file.write(xamlPath, xamlCode)
 
-        call(`install ${appDirName}`);
+        call(`install '${appDirName}'`);
     }
 }

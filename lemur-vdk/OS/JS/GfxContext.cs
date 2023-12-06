@@ -13,7 +13,8 @@ namespace Lemur.JS
 {
     public class GfxContext
     {
-        public GfxContext(string pid, string TargetControl, int PixelFormatBpp) {
+        public GfxContext(string pid, string TargetControl, int PixelFormatBpp)
+        {
 
             Image image = null;
             Computer.Current.Window.Dispatcher.Invoke(() =>
@@ -25,13 +26,13 @@ namespace Lemur.JS
             });
             this.image = new(image);
             this.PixelFormatBpp = PixelFormatBpp;
-        } 
+        }
 
         internal int PixelFormatBpp;
         internal int Width, Height;
 
         private byte[] renderTexture = Array.Empty<byte>();
-        
+
         private WriteableBitmap bitmap;
         internal readonly WeakReference<System.Windows.Controls.Image> image;
         public static readonly List<byte[]> palette = new()
@@ -78,7 +79,7 @@ namespace Lemur.JS
                 bitmap = new WriteableBitmap(Width, Height, 1, 1, PixelFormats.Bgra32, null);
             });
         }
-         
+
 
 
         public void WritePixelIndexed(int x, int y, int index)
@@ -102,7 +103,7 @@ namespace Lemur.JS
         {
             byte r, g, b, a;
             ExtractColor(color, out r, out g, out b, out a);
-            WritePixel(x,y, r, g, b, a);
+            WritePixel(x, y, r, g, b, a);
         }
         public static void ExtractColor(int color, out byte r, out byte g, out byte b, out byte a)
         {
@@ -148,7 +149,7 @@ namespace Lemur.JS
         {
             ExtractColorToCache(color);
             for (int i = 0; i < Width * Height; i++)
-                fixed (byte *ptr = renderTexture)
+                fixed (byte* ptr = renderTexture)
                     Marshal.Copy(cached_color, 0, (nint)ptr + i * PixelFormatBpp, PixelFormatBpp);
         }
 
@@ -160,6 +161,74 @@ namespace Lemur.JS
             for (int i = 0; i < Width * Height; i++)
                 fixed (byte* ptr = renderTexture)
                     Marshal.Copy(cached_color, 0, (nint)ptr + i * PixelFormatBpp, PixelFormatBpp);
+        }
+
+        public enum PrimitiveShape
+        {
+            Rectangle,
+            Circle,
+            Triangle
+        }
+
+        internal void WriteFilledShape(int x, int y, int h, int w, int colorIndex, PrimitiveShape primitiveShape)
+        {
+            switch (primitiveShape)
+            {
+                case PrimitiveShape.Rectangle:
+                    WriteFilledRectangle(x, y, h, w, colorIndex);
+                    break;
+                case PrimitiveShape.Circle:
+                    WriteFilledCircle(x, y, h, w, colorIndex);
+                    break;
+                case PrimitiveShape.Triangle:
+                    WriteFilledTriangle(x, y, h, w, colorIndex);
+                    break;
+                default:
+                    throw new NotSupportedException($"The shape {primitiveShape} is not supported");
+            }
+        }
+
+        private void WriteFilledRectangle(int x, int y, int h, int w, int colorIndex)
+        {
+            for (int i = x; i < x + w; i++)
+            {
+                for (int j = y; j < y + h; j++)
+                {
+                    WritePixelIndexed(i, j, colorIndex);
+                }
+            }
+        }
+
+        private void WriteFilledCircle(int x, int y, int h, int w, int colorIndex)
+        {
+            int radius = Math.Min(h, w) / 2;
+            int centerX = x + w / 2;
+            int centerY = y + h / 2;
+
+            for (int i = centerX - radius; i <= centerX + radius; i++)
+            {
+                for (int j = centerY - radius; j <= centerY + radius; j++)
+                {
+                    if (Math.Sqrt((i - centerX) * (i - centerX) + (j - centerY) * (j - centerY)) <= radius)
+                    {
+                        WritePixelIndexed(i, j, colorIndex);
+                    }
+                }
+            }
+        }
+
+        private void WriteFilledTriangle(int x, int y, int h, int w, int colorIndex)
+        {
+            for (int i = x; i < x + w; i++)
+            {
+                for (int j = y; j < y + h; j++)
+                {
+                    if (j <= y + (i - x) * h / w)
+                    {
+                        WritePixelIndexed(i, j, colorIndex);
+                    }
+                }
+            }
         }
     }
 }

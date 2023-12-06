@@ -31,6 +31,16 @@ namespace Lemur.JS
             ctx.WritePixel(x, y, r, g, b, a);
             return true;
         }
+        public bool writeFilledShape(int gfx_ctx, int x, int y, int w, int h,  int colorIndex, int primitveIndex)
+        {
+            if (!gfxContext.TryGetValue(gfx_ctx, out var ctx))
+            {
+                Notifications.Now($"Couldn't find graphics context for id : {gfx_ctx}");
+                return false;
+            }
+            ctx.WriteFilledShape(x, y, h, w, colorIndex, (GfxContext.PrimitiveShape)primitveIndex);
+            return true;
+        }
         public bool writePixelIndexed(int gfx_ctx, int x, int y, int index)
         {
             if (!gfxContext.TryGetValue(gfx_ctx, out var ctx))
