@@ -11,6 +11,7 @@ using Lemur.JS;
 using System.Windows.Input;
 using Microsoft.Web.WebView2.Core;
 using System.Collections.Generic;
+using OpenTK.Platform.Windows;
 
 namespace Lemur.GUI
 {
@@ -21,15 +22,66 @@ namespace Lemur.GUI
     {
         public string LoadedFile;
         internal string Contents;
+        
+        public Dictionary<string, string> LanguageOptions = new()
+        {
+            { "MarkDown", ".md" },
+            { "JavaScript", ".js" },
+            { "C#", ".cs" },
+            { "HTML", ".html" },
+            { "ASP/XHTML", ".aspx" },
+            { "XmlDoc", ".xml" },
+            { "Boo", ".boo" },
+            { "Coco", ".coco" },
+            { "CSS", ".css" },
+            { "C++", ".cpp" },
+            { "Java", ".java" },
+            { "Patch", ".patch" },
+            { "PowerShell", ".ps1" },
+            { "PHP", ".php" },
+            { "Python", ".py" },
+            { "TeX", ".tex" },
+            { "TSQL", ".tsql" },
+            { "VB", ".vb" },
+            { "XML", ".xml" },
+            { "Json", ".json" },
+        };
+
+        // reflection grabs this later.
         public static string? DesktopIcon => FileSystem.GetResourcePath("texteditor.png");
 
         public MarkdownViewer? mdViewer;
 
-        
-
+        /// <summary>
+        /// Loads a file from path and opens a new text editor for that file.
+        /// </summary>
+        /// <param name="path"></param>
         public TextEditor(string path) : this()
         {
             LoadFile(path);
+        }
+        /// <summary>
+        /// Base constructor, you probably do not want to use this.
+        /// </summary>
+        public TextEditor()
+        {
+            Contents = "Load a file";
+            LoadedFile = "newfile.txt";
+            InitializeComponent();
+            SearchPanel.Install(textEditor);
+
+
+            shTypeBox.ItemsSource = LanguageOptions;
+            themeBox.ItemsSource = new List<string>() { "Light", "Dark" };
+
+            var config = Computer.Current.Config;
+
+            if (config.ContainsKey("TEXT_EDITOR_THEME"))
+                themeBox.SelectedIndex = (int)config["TEXT_EDITOR_THEME"]!;
+            else themeBox.SelectedIndex = 1;
+
+
+            shTypeBox.SelectedIndex = 1;
         }
         public void LateInit(Computer c)
         {
@@ -45,7 +97,10 @@ namespace Lemur.GUI
                 textEditor.FontSize += 1;
             else if (ctrl && e.Key == Key.OemMinus && textEditor.FontSize > 0)
                 textEditor.FontSize -= 1;
-
+            else if (e.Key == Key.F5)
+            {
+                RunButton_Click(null!, null!);
+            }
             Contents = textEditor.Text;
         }
         private void LoadFile(string path)
@@ -58,28 +113,21 @@ namespace Lemur.GUI
 
                 if (extension == null)
                     return;
-                
-                textEditor.SyntaxHighlighting = HighlightingManager.Instance.GetDefinitionByExtension(extension);
+
+                SetSyntaxHighlighting(extension);
 
                 Contents = File.ReadAllText(path);
                 textEditor.Text = Contents;
             }
         }
 
-        private void RunMarkdownViewer(string path)
+        private void SetSyntaxHighlighting(string? extension)
         {
-            var wnd = Computer.Current.Window;
-            mdViewer = new MarkdownViewer();
-            Contents = File.ReadAllText(path);
-            mdViewer.RenderMarkdown(Contents);
-            Computer.Current?.OpenApp(mdViewer, "Markdown Renderer");
-        }
+            var highlighter = HighlightingManager.Instance.GetDefinitionByExtension(extension);
 
-
-        public TextEditor()
-        {
-            InitializeComponent();
-            SearchPanel.Install(textEditor);
+            if (highlighter != null)
+                textEditor.SyntaxHighlighting = highlighter;
+            else Notifications.Now($"No syntax highlighting found for {extension}");
         }
 
         private void LoadButton_Click(object sender, RoutedEventArgs e)
@@ -92,12 +140,6 @@ namespace Lemur.GUI
             {
                 LoadFile(file);
             };
-        }
-        private void RenderMD_Click(object sender, RoutedEventArgs e)
-        {
-            mdViewer = new MarkdownViewer();
-            mdViewer.RenderMarkdown(Contents);
-            Computer.Current.OpenApp(mdViewer, "Markdown Renderer");
         }
         private void SaveButton_Click(object sender, RoutedEventArgs e)
         {
@@ -143,15 +185,28 @@ namespace Lemur.GUI
 
         private async void RunButton_Click(object sender, RoutedEventArgs e)
         {
-            var cmd = new CommandPrompt();
+            var element = LanguageOptions.ElementAt(shTypeBox.SelectedIndex);
+            if (element.Value == ".md")
+            {
+                mdViewer = new MarkdownViewer();
+                mdViewer.RenderMarkdown(Contents);
+                Computer.Current.OpenApp(mdViewer, "Markdown Renderer");
+            }
+            else if (element.Value == ".js") { 
+                var cmd = new CommandPrompt();
 
-            cmd.LateInit(Computer.Current);
+                cmd.LateInit(Computer.Current);
 
-            var jsEngine = new Engine(Computer.Current);
+                var jsEngine = new Engine(Computer.Current);
 
-            Computer.Current.OpenApp(cmd, engine: jsEngine);
+                Computer.Current.OpenApp(cmd, engine: jsEngine);
 
-            await jsEngine.Execute(string.IsNullOrEmpty(textEditor.Text) ? "print('You must provide some javascript to execute...')" : textEditor.Text);
+                await jsEngine.Execute(string.IsNullOrEmpty(textEditor.Text) ? "print('You must provide some javascript to execute...')" : textEditor.Text);
+
+            } else
+            {
+                Notifications.Now($"Can't run {element.Value}");
+            }
         }
 
         private void Preferences_Click(object sender, RoutedEventArgs e)
@@ -162,7 +217,30 @@ namespace Lemur.GUI
 
         private void DocTypeBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
+            if (sender is ComboBox cB)
+            {
 
+                var selected = cB.SelectedItem.ToString();
+                var extension = selected[selected.IndexOf(',')..].Replace(",","").Replace("]","").Replace(" ", "");
+                SetSyntaxHighlighting(extension);
+            }
+        }
+
+        private void ThemeBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        {
+            if (sender is ComboBox cB)
+            {
+                if (cB.SelectedIndex == 0)
+                {
+                    textEditor.Background = System.Windows.Media.Brushes.White;
+                    textEditor.Foreground = System.Windows.Media.Brushes.Black;
+                }
+                else
+                {
+                    textEditor.Background = System.Windows.Media.Brushes.Black;
+                    textEditor.Foreground = System.Windows.Media.Brushes.White;
+                }
+            }
         }
     }
 }
