@@ -1,10 +1,9 @@
 const {
     Point,
-    Line, 
     GameObject,
     Scene,
-    Renderer,
 } = require('game.js');
+
 const { Profiler } = require('profiler.js');
 
 class shapes {
@@ -166,6 +165,4 @@ class shapes {
             app.setProperty(label, 'Width', time * xFactor);
         }
     }
-    
-    
 }
