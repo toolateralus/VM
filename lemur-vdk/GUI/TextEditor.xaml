@@ -6,7 +6,7 @@
              xmlns:local="clr-namespace:Lemur.GUI"
              mc:Ignorable="d" 
               xmlns:avalonEdit="http://icsharpcode.net/sharpdevelop/avalonedit"
-             d:DesignHeight="450" d:DesignWidth="800" Background="Teal" BorderBrush="#28291F" BorderThickness="4">
+             d:DesignHeight="450" d:DesignWidth="800" BorderBrush="#28291F" BorderThickness="4">
     <Grid>
         <Grid.RowDefinitions>
             <RowDefinition Height="25"/>
@@ -14,10 +14,10 @@
         </Grid.RowDefinitions>
 
         <StackPanel Orientation="Horizontal" Grid.Row="0">
-            <Button Click="RunButton_Click" Name="RunButton" TextBlock.TextAlignment="Center" Height="20" Width="120" Content="build / run" />
-            <ToggleButton Click="Preferences_Click" Height="20" Width="120" Content="preferences"/>
-            <Button Click="LoadButton_Click" Name="LoadButton" TextBlock.TextAlignment="Center" Height="20" Width="80" Content="load" />
-            <Button Click="SaveButton_Click" Name="SaveButton" TextBlock.TextAlignment="Center" Height="20" Width="80" Content="save" />
+            <Button       Background="#333333" Foreground="Cyan" Click="RunButton_Click" Name="RunButton" TextBlock.TextAlignment="Center" Height="20" Width="120" Content="run (F5)" />
+            <ToggleButton Background="#333333" Foreground="Cyan" Click="Preferences_Click" Height="20" Width="120" Content="preferences"/>
+            <Button       Background="#333333" Foreground="Cyan" Click="LoadButton_Click" Name="LoadButton" TextBlock.TextAlignment="Center" Height="20" Width="100" Content="load" />
+            <Button       Background="#333333" Foreground="Cyan" Click="SaveButton_Click" Name="SaveButton" TextBlock.TextAlignment="Center" Height="20" Width="100" Content="save (ctrl + s)" />
         </StackPanel>
         <StackPanel Visibility="Hidden" Grid.Row="1" x:Name="prefsWindow" Orientation="Vertical">
             <ComboBox x:Name="shTypeBox" SelectionChanged="DocTypeBox_SelectionChanged"/>
