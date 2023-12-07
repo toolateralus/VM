@@ -14,6 +14,7 @@ using Image = System.Windows.Controls.Image;
 using System.Security.Permissions;
 using System.Reflection;
 using System.Threading.Tasks;
+using System.DirectoryServices.ActiveDirectory;
 
 namespace Lemur.JS
 {
@@ -295,7 +296,7 @@ namespace Lemur.JS
                     byte g = colorData[pixelIndex + 2];
                     byte b = colorData[pixelIndex + 3];
 
-                    byte[] pixelData = new byte[] { b, g, r, a };
+                    byte[] pixelData = [b, g, r, a];
                     Marshal.Copy(pixelData, 0, bitmap.BackBuffer + pixelIndex, bytesPerPixel);
                 }
             }
@@ -359,8 +360,9 @@ namespace Lemur.JS
         {
             string directory = FileSystem.Root;
 
-            if (path is string dir && !string.IsNullOrEmpty(dir))
-                directory = dir;
+            // search from provided path or if null, search from root
+            if (path is string pathString && !string.IsNullOrEmpty(pathString))
+                directory = pathString;
 
             if (FileSystem.GetResourcePath(directory) is string AbsPath && Directory.Exists(AbsPath))
             {

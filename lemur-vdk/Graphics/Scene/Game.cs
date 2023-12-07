@@ -58,26 +58,6 @@ namespace Lemur.Game
         public Node() { }
         
     }
-    public class Scene
-    {
-        public Scene(string id)
-        {
-            //var content =  JS.app.GetUserContent(Computer.Current);
-        }
-        internal GL4Renderer renderer;
-
-        public List<Node> nodes = new();
-
-        internal void Draw()
-        {
-            // jobs are executed at the first safe opportunity.
-            // directly modifying vertices could behave poorly
-            renderer.EnqueueJob(() => {
-                IEnumerable<MeshRenderer> meshes = nodes.OfType<MeshRenderer>();
-                renderer.meshes = meshes.ToList();
-            });
-        }
-    }
     public class MeshRenderer : Node
     {
         public List<LemurShape> shapes = new();

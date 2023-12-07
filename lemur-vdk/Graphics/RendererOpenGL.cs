@@ -17,19 +17,48 @@ using Quaternion = OpenTK.Mathematics.Quaternion;
 
 namespace Lemur.Graphics
 {
-    
-    public class GL4Renderer : IDisposable
+    public class SceneOpenGL
+    {
+        public OpenGL2Window Window { get; }
+        public IEnumerable<MeshRenderer> Meshes { get; set; }
+        public SceneOpenGL(OpenGL2Window window) {
+            Window = window;
+            Meshes = new List<MeshRenderer>();
+            Window.Rendering += Draw;
+        }
+        public void Draw(TimeSpan timeSpan)
+        {
+            foreach (var mesh in Meshes)
+            {
+                Window.Renderer.Jobs.Enqueue(() =>
+                {
+                    var vertices = mesh.shapes.SelectMany(i => i.Vertices).ToArray();
+                    var size = Marshal.SizeOf<Vertex>() * vertices.Length;
+
+                    var mvpLocation = GL.GetUniformLocation(Window.Renderer.Shader(), "mvp");
+
+                    var mvp = Window.Renderer.GetModelViewProjection(mesh.Transform);
+
+                    GL.UniformMatrix4(mvpLocation, false, ref mvp);
+
+                    GL.BufferData(BufferTarget.ArrayBuffer, size, vertices, BufferUsageHint.DynamicDraw);
+
+                    GL.DrawArrays(PrimitiveType.TriangleFan, 0, vertices.Length);
+                });
+            }
+        }
+    }
+    public class RendererOpenGL : IDisposable
     {
         // vertex buffer object, vertex array object.
         private int vbo, vao;
         private int shader;
-        internal List<MeshRenderer> meshes = new();
         private bool disposedValue;
         internal Matrix4 viewProjection;
 
         public Queue<Action> Jobs { get; private set; } = new();
 
-        public GL4Renderer()
+        public RendererOpenGL()
         {
             Jobs.Enqueue(() =>
             {
@@ -71,21 +100,21 @@ namespace Lemur.Graphics
                     pass_Color = inColor;
                     pass_Normal = inNormal;
                 }
-            ";
+                ";
 
-                var fragShaderSource = @"
-                #version 400 core
-                in vec3 pass_Color;
-                in vec3 pass_Normal;
+                    var fragShaderSource = @"
+                    #version 400 core
+                    in vec3 pass_Color;
+                    in vec3 pass_Normal;
                 
-                uniform mat4 mvp;
-                out vec4 fragColor;
+                    uniform mat4 mvp;
+                    out vec4 fragColor;
 
-                void main()
-                {
-                    fragColor = vec4(pass_Color, 1.0);
-                }
-            ";
+                    void main()
+                    {
+                        fragColor = vec4(pass_Color, 1.0);
+                    }
+                ";
 
                 // Compile and link shaders to create a shader program
                 int vertShader = GL.CreateShader(ShaderType.VertexShader);
@@ -105,12 +134,9 @@ namespace Lemur.Graphics
                 GL.DeleteShader(vertShader);
                 GL.DeleteShader(fragShader);
             });
-
-
             Jobs.Enqueue(() => {
                 var shape = Cube.Unit();
                 var mesh = new MeshRenderer(Vector3.One, Vector3.One, Vector3.One, shape);
-                meshes.Add(mesh);
             });
 
             Game.Camera cam = new(60f);
@@ -121,32 +147,13 @@ namespace Lemur.Graphics
             viewProjection = view * proj;
         }
 
-        public void Render(TimeSpan span)
+        public void Render()
         {
-
             while (Jobs.Count > 0)
             {
                 Jobs.Dequeue()?.Invoke();
                 ThrowGLError();
             }
-
-            Matrix4 mvp = Matrix4.Identity;
-            foreach(var mesh in meshes)
-            {
-                var vertices = mesh.shapes.SelectMany(i => i.Vertices).ToArray();
-                var size = Marshal.SizeOf<Vertex>() * vertices.Length;
-
-                var mvpLocation = GL.GetUniformLocation(shader, "mvp");
-
-                mvp = viewProjection * mesh.Transform;
-
-                GL.UniformMatrix4(mvpLocation, false, ref mvp);
-
-                GL.BufferData(BufferTarget.ArrayBuffer, size, vertices, BufferUsageHint.DynamicDraw);
-
-                GL.DrawArrays(PrimitiveType.TriangleFan, 0, vertices.Length);
-            }
-
         }
 
         private static void ThrowGLError()
@@ -171,7 +178,7 @@ namespace Lemur.Graphics
                 disposedValue = true;
             }
         }
-        ~GL4Renderer()
+        ~RendererOpenGL()
         {
             // Do not change this code. Put cleanup code in 'Dispose(bool disposing)' method
             Dispose(disposing: false);
@@ -186,6 +193,15 @@ namespace Lemur.Graphics
         internal void EnqueueJob(Action value)
         {
             Jobs.Enqueue(value);
+        }
+
+        internal int Shader()
+        {
+            return shader;
+        }
+        internal Matrix4 GetModelViewProjection(Matrix4 model)
+        {
+            return viewProjection * model;
         }
     }
 }
