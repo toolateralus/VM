@@ -12,8 +12,9 @@ term.setAliasDirectory('commands');
 
 app.loadApps('');
 
-if (config['welcome_read']) {
+if (config['welcome_read'] === true) {
     app.uninstall('welcome.app');
 } else {
+    config['welcome_read'] = true;
     app.start('welcome.app');
 }
