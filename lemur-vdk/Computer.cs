@@ -316,31 +316,27 @@ namespace Lemur
             }
             return contents;
         }
-        public static T TryGetProcessOfType<T>() where T : UserControl
+        public static T? TryGetProcessOfTypeUnsafe<T>() where T : UserControl
         {
-            T content = null;
-            foreach (var window in Current.UserWindows)
+            var matchingWindow = Current.UserWindows.Values.FirstOrDefault(window =>
             {
-                window.Value.Dispatcher.Invoke(() => { 
-                
-                    if (window.Value is not UserWindow userWindow)
-                        return;
+                return window is UserWindow userWindow &&
+                       userWindow.ContentsFrame is Frame frame &&
+                       frame.Content is T;
+            });
 
-                    if (userWindow.ContentsFrame is not Frame frame)
-                        return;
+            return matchingWindow?.ContentsFrame.Content as T;
+        }
+        public static T? TryGetProcessOfType<T>() where T : UserControl
+        {
+            T? content = default(T);
 
-                    if (frame.Content is not T instance)
-                        return;
+            Current.Window.Dispatcher.Invoke(() =>
+            {
+                content = TryGetProcessOfTypeUnsafe<T>();
+            });
 
-                    content = instance;
-                });
-                
-                if (content != null)
-                {
-                    return content;
-                }
-            }
-            return content!;
+            return content;
         }
         private static async Task<(string id, string code)> InstantiateWindowClass(string type, object[] cmdLineArgs, (string XAML, string JS) data, Engine engine)
         {

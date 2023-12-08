@@ -4,55 +4,41 @@ using System.Linq;
 using System.Text;
 using Lemur;
 using Lemur.GUI;
+using Lemur.OS;
 
 namespace lemur.Windowing
 {
     public static class Notifications
     {
+
         public static void Now(string message)
         {
+
             var cw = Computer.Current.Window;
 
-
-            // closing the app.
             if (cw.Disposing || cw is null || cw.Dispatcher is null)
                 return;
 
-            cw.Dispatcher.Invoke(() =>
+            void send_notification_ui()
             {
+                var cmd = Computer.TryGetProcessOfTypeUnsafe<CommandPrompt>();
+
                 var children = cw.NotificationStackPanel.Children;
 
                 if (children.Count > 10)
                     children.RemoveAt(0);
 
-                var cmd = Computer.TryGetProcessOfType<CommandPrompt>();
                 cmd?.output?.AppendText("\n" + message);
 
-                StringBuilder sb = new();
+                // todo: pool these notification objects.
+                var notification = new NotificationControl() { Message = message };
 
+                cw.NotificationStackPanel.Children.Add(notification);
 
-                // Todo : make this an event you can subscribe to so we don't have to add so many special cases here.
-                // just like the UI stuff.
+                notification.Start();
+            }
 
-                // Todo: really we should have a set of system calls and more structured things, not just a loose spread out linkage.
-
-                sb.AppendLine($"let message = {{body : {message}, type : stdout}}");
-
-                // selects all the process id's 
-                foreach (var pid in Computer.ProcessLookupTable.Values.Select(i => i.Select(i => i)))
-                {
-                    sb.AppendLine($"if ({pid}.OS_MSG != undefined) {{");
-                    sb.AppendLine($"{pid}.OS_MSG({message})");
-                    sb.AppendLine($"}}");
-                }
-
-
-                var notif = new NotificationControl() { Message = message };
-
-
-                cw.NotificationStackPanel.Children.Add(notif);
-                notif.Start();
-            });
+            cw.Dispatcher.Invoke(send_notification_ui);
         }
 
         internal static void Clear()
@@ -61,8 +47,8 @@ namespace lemur.Windowing
 
             foreach (var control in Computer.Current.Window.NotificationStackPanel.Children)
             {
-                if (control is NotificationControl notif)
-                    stopped.Add(notif);
+                if (control is NotificationControl notification)
+                    stopped.Add(notification);
             }
 
             foreach (var control in stopped)
