@@ -83,7 +83,7 @@ namespace Lemur.GUI
                     if (Keyboard.IsKeyDown(Key.LeftCtrl))
                     {
                         var cmd = new CommandPrompt();
-                        Computer.Current.OpenApp(cmd, "Cmd");
+                        Computer.Current.OpenApp(cmd, "Cmd", Computer.GetNextProcessID());
                     }
                     break;
 
@@ -241,7 +241,7 @@ namespace Lemur.GUI
             }
             return false;
         }
-        internal UserWindow OpenAppUI(string title, out ResizableWindow resizableWindow)
+        internal UserWindow OpenAppUI(string appdotapp, out ResizableWindow resizableWindow)
         {
             TopMostZIndex++;
 
@@ -265,18 +265,11 @@ namespace Lemur.GUI
             var rsz_win_capture = resizableWindow;
             // hack ::
 
-            Button btn = MakeTaskbarButton(title, resizableWindow.ToggleVisibility);
+            Button btn = MakeTaskbarButton(appdotapp, resizableWindow.ToggleVisibility);
 
             TaskbarStackPanel.Children.Add(btn);
             Desktop.Children.Add(resizableWindow);
 
-            window.OnClosed += () =>
-            {
-                Desktop.Children.Remove(rsz_win_capture);
-                Computer.Current?.UserWindows.Remove(title);
-                rsz_win_capture.Content = null;
-                RemoveTaskbarButton(title);
-            };
             return window;
         }
 
@@ -347,7 +340,7 @@ namespace Lemur.GUI
                     {
                         Path = type.Replace(".web", "")
                     };
-                    Computer.Current.OpenApp(app);
+                    Computer.Current.OpenApp(app, type, Computer.GetNextProcessID());
                 }
 
                 SetupIcon(type, btn);
@@ -364,7 +357,7 @@ namespace Lemur.GUI
                 {
                     if (Activator.CreateInstance(type) is object instance && instance is UserControl userControl)
                     {
-                        Computer.Current.OpenApp(userControl, name);
+                        Computer.Current.OpenApp(userControl, name, Computer.GetNextProcessID());
                     } else
                     {
                         Notifications.Now("Failed to create instance of native application. the app is likely misconfigured");
@@ -399,14 +392,14 @@ namespace Lemur.GUI
         {
             var name = appName.Replace(".app", ".xaml");
             var editor = new TextEditor(name);
-            Computer.Current.OpenApp(editor, $"{appName}.xaml");
+            Computer.Current.OpenApp(editor, $"{appName}.xaml", Computer.GetNextProcessID());
         }
 
         private void JsSource_Click(object sender, RoutedEventArgs e, string appName)
         {
             var name = appName.Replace(".app", ".xaml.js");
             var editor = new TextEditor(name);
-            Computer.Current.OpenApp(editor, $"{appName}.xaml.js");
+            Computer.Current.OpenApp(editor, $"{appName}.xaml.js", Computer.GetNextProcessID());
         }
         protected virtual void Dispose(bool disposing)
         {
@@ -420,7 +413,7 @@ namespace Lemur.GUI
                     TaskbarStackPanel.Children.Clear();
                     clock.Dispose();
                     Content = null;
-                    this.Close();
+                    Close();
                 }
 
                 Disposing = true;

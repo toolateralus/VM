@@ -44,23 +44,23 @@ namespace Lemur.JavaScript.Api
                         if (control is Button button)
                         {
                             button.Click += InvokeGeneric;
-                            onDispose += () => button.Click -= InvokeGeneric;
+                            OnEventDisposed += () => button.Click -= InvokeGeneric;
                             break;
                         }
                         control.MouseDown += InvokeGeneric;
-                        onDispose += () => control.MouseDown -= InvokeGeneric;
+                        OnEventDisposed += () => control.MouseDown -= InvokeGeneric;
                     }
                     break;
                 case XAML_EVENTS.MOUSE_UP:
                     {
                         control.MouseUp += InvokeGeneric;
-                        onDispose += () => control.MouseUp -= InvokeGeneric;
+                        OnEventDisposed += () => control.MouseUp -= InvokeGeneric;
                     }
                     break;
                 case XAML_EVENTS.MOUSE_MOVE:
                     {
                         control.MouseMove += InvokeMouse;
-                        onDispose += () => control.MouseMove -= InvokeMouse;
+                        OnEventDisposed += () => control.MouseMove -= InvokeMouse;
                     }
                     break;
                 case XAML_EVENTS.KEY_DOWN:
@@ -74,13 +74,13 @@ namespace Lemur.JavaScript.Api
                 case XAML_EVENTS.LOADED:
                     {
                         control.Loaded += InvokeGeneric;
-                        onDispose += () => control.Loaded -= InvokeGeneric;
+                        OnEventDisposed += () => control.Loaded -= InvokeGeneric;
                     }
                     break;
                 case XAML_EVENTS.WINDOW_CLOSE:
                     {
                         control.Unloaded += InvokeGeneric;
-                        onDispose += () => control.Unloaded -= InvokeGeneric;
+                        OnEventDisposed += () => control.Unloaded -= InvokeGeneric;
                     }
                     break;
                 case XAML_EVENTS.SELECTION_CHANGED:
@@ -93,7 +93,7 @@ namespace Lemur.JavaScript.Api
                                 InvokeGeneric(sender, lb.SelectedIndex);
                             }
                             lb.SelectionChanged += selectorevent;
-                            onDispose += () => lb.SelectionChanged -= selectorevent;
+                            OnEventDisposed += () => lb.SelectionChanged -= selectorevent;
                         }
                         else
                         {
@@ -104,16 +104,16 @@ namespace Lemur.JavaScript.Api
                 case XAML_EVENTS.MOUSE_LEAVE:
                     {
                         control.MouseLeave += InvokeGeneric;
-                        onDispose += () => control.MouseLeave -= InvokeGeneric;
+                        OnEventDisposed += () => control.MouseLeave -= InvokeGeneric;
                     }
                     break;
 
                 case XAML_EVENTS.PHYSICS: /// deprecated, use RENDER instead.
                 case XAML_EVENTS.RENDER:
-                    executionThread = new(HeavyWorkerLoop);
+                    executionThread = new(RenderLoop);
                     executionThread.Start();
 
-                    onDispose += () =>
+                    OnEventDisposed += () =>
                     {
                         Running = false;
                         Task.Run(() => executionThread.Join());

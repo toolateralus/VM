@@ -140,7 +140,7 @@ namespace Lemur.GUI
         {
             FileExplorer fileExplorer = new FileExplorer();
 
-            Computer.Current.OpenApp(fileExplorer);
+            Computer.Current.OpenApp(fileExplorer, "fileexplorer.app", Computer.GetNextProcessID());
 
             fileExplorer.OnNavigated += (file) =>
             {
@@ -197,7 +197,7 @@ namespace Lemur.GUI
             {
                 mdViewer = new MarkdownViewer();
                 mdViewer.RenderMarkdown(Contents);
-                Computer.Current.OpenApp(mdViewer, "Markdown Renderer");
+                Computer.Current.OpenApp(mdViewer, "md.app", Computer.GetNextProcessID());
             }
             else if (element.Value == ".js") {
 
@@ -205,7 +205,7 @@ namespace Lemur.GUI
                     commandPrompt = new CommandPrompt();
                     
                     var jsEngine = new Engine();
-                    Computer.Current.OpenApp(commandPrompt, engine: jsEngine);
+                    Computer.Current.OpenApp(commandPrompt, "cmd.app", Computer.GetNextProcessID(), engine: jsEngine);
                 }
 
                 await commandPrompt.Engine.Execute(string.IsNullOrEmpty(textEditor.Text) ? "print('You must provide some javascript to execute...')" : textEditor.Text);

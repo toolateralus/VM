@@ -20,13 +20,16 @@ namespace Lemur.JavaScript.Api
         /// this is the handle relative to the object, we don't call this
         /// </summary>
         public readonly string? m_MethodHandle;
-        protected Action? onDispose;
+        internal protected Action? OnEventDisposed;
         public Thread? executionThread = null;
         public Engine? javaScriptEngine;
         public bool Running { get; set; }
 
-        public void ForceDispose() => onDispose?.Invoke();
-        public virtual void HeavyWorkerLoop()
+        private int ErrorCount;
+        private const int MaxErrorsBeforeTermination = 10;
+
+        public void ForceDispose() => OnEventDisposed?.Invoke();
+        public virtual void RenderLoop()
         {
             Running = true;
             while (Running && javaScriptEngine?.Disposing == false)
@@ -36,9 +39,9 @@ namespace Lemur.JavaScript.Api
                     if (javaScriptEngine?.Disposing == false && javaScriptEngine.m_engine_internal.HasVariable(functionHandle))
                         InvokeEventImmediate(null, null);
                 }
-                catch (Exception e1)
+                catch (Exception e)
                 {
-                    Notifications.Exception(e1);
+                    Throw(e);
                 }
             }
         }
@@ -58,9 +61,23 @@ namespace Lemur.JavaScript.Api
             }
             catch (Exception e)
             {
+                Throw(e);
+            }
+        }
+
+        private void Throw(Exception e)
+        {
+            ErrorCount++;
+            if (ErrorCount > MaxErrorsBeforeTermination)
+            {
+                ForceDispose();
+            }
+            else
+            {
                 Notifications.Exception(e);
             }
         }
+
         public virtual void InvokeEventImmediate(object? arg1 = null, object? arg2 = null)
         {
             try
@@ -69,13 +86,13 @@ namespace Lemur.JavaScript.Api
             }
             catch (Exception e)
             {
-                Notifications.Exception(e);
+                Throw(e);
             }
         }
-        public virtual async Task<string> CreateFunction(string identifier, string methodName)
+        public virtual async Task<string> CreateFunction(string procID, string methodName)
         {
-            var event_call = $"{identifier}.{methodName}{argsString}";
-            var id = $"{identifier}{methodName}";
+            var event_call = $"{procID}.{methodName}{argsString}";
+            var id = $"{procID}{methodName}";
             string func = $"function {id} {argsString} {{ {event_call}; }}";
             await javaScriptEngine?.Execute(func);
             return id;

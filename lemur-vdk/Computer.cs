@@ -117,38 +117,72 @@ namespace Lemur
             Dispose();
 
         }
-        public void OpenApp(UserControl control, string title = "window", Engine engine = null)
+
+        record Process(string ID, string Type, string Title, string Version)
         {
-            // update config before we start apps. cheap & easy way to make sure the config is up to date, though it could be more frequent.
-            Computer.LoadConfig();
 
+        }
+        public void OpenApp(UserControl control, string type, string processID, Engine? engine = null)
+        {
 
-            if (UserWindows.ContainsKey(title))
+            LoadConfig();
+
+            if (UserWindows.ContainsKey(type))
             {
-                if (char.IsDigit(title.Last()))
+                if (char.IsDigit(type.Last()))
                 {
-                    var i = int.Parse(title.Last().ToString()) + 1;
-                    title.Replace(title.Last(), i.ToString()[0]);
+                    int i = int.Parse(type.Last().ToString()) + 1;
+                    type.Replace(type.Last(), i.ToString()[0]);
                 }
                 else
                 {
-                    title += "1";
+                    type += "1";
                 }
             }
 
             // the resizable is the container that hosts the user app.
-            // this is made seperate to eliminate annoying and complex boiler plate.
-            UserWindow window = Window.OpenAppUI(title, out var resizable_window);
+            // this is made separate to eliminate annoying and complex boiler plate.
+            UserWindow window = Window.OpenAppUI(type, out var resizable_window);
 
-            UserWindows[title] = window;
+            UserWindows[processID] = window;
 
             if (ComputerWindow.IsValidType(control.GetType().GetMembers()))
                 ComputerWindow.AssignComputer(control, resizable_window);
 
             window.InitializeUserContent(resizable_window, control, engine);
 
-            resizable_window.BringToTopOfDesktop();
+            if (!ProcessLookupTable.TryGetValue(type, out var array))
+            {
+                array = new();
+                ProcessLookupTable[type] = array;
+            }
 
+            ProcessLookupTable[type].Add(processID);
+
+            void OnWindowClosed()
+            {
+                Window.Desktop.Children.Remove(resizable_window);
+                
+                Current?.UserWindows.Remove(processID);
+                
+                // probably unneccesary.
+                //resizable_window.Content = null;
+                
+                // todo: make this taskbar button less important.
+                Window.RemoveTaskbarButton(processID);
+
+                if (!ProcessLookupTable.TryGetValue(processID, out var procList))
+                    return;
+
+                procList.Remove(processID);
+
+                if (procList.Count == 0)
+                    ProcessLookupTable.Remove(type);
+            }
+
+            window.OnAppClosed += OnWindowClosed;
+
+            resizable_window.BringToTopOfDesktop();
 
 
             // todo : change this
@@ -202,7 +236,7 @@ namespace Lemur
             string backgroundPath = pc?.Config?.Value<string>("BACKGROUND") ?? "background.png";
             wnd.desktopBackground.Source = ComputerWindow.LoadImage(FileSystem.GetResourcePath(backgroundPath) ?? "background.png");
         }
-        public async Task OpenCustom(string type, params object[] cmdLineArgs)
+        public async Task OpenCustom(string type,  params object[] cmdLineArgs)
         {
             var data = Runtime.GetAppDefinition(type);
 
@@ -213,33 +247,24 @@ namespace Lemur
                 Notifications.Now($"Error : either the app was not found or there was an error parsing xaml or js for {type}.");
                 return;
             }
+            string processID = GetNextProcessID();
 
             Engine engine = new();
-            var (id, code) = await InstantiateWindowClass(type, cmdLineArgs, data, engine);
 
-            OpenApp(control, title: id, engine: engine);
+            engine.AppModule.__SetId(processID);
 
-            if (!ProcessLookupTable.TryGetValue(type, out var array))
-            {
-                array = new();
-                ProcessLookupTable[type] = array;
-            }
+            var code = await InstantiateWindowClass(type, processID, cmdLineArgs, data, engine).ConfigureAwait(true);
 
-            ProcessLookupTable[type].Add(id);
-
-            UserWindows[id].OnClosed += delegate 
-            {
-                if (!ProcessLookupTable.ContainsKey(type))
-                    throw new Exception("The application became detached from the operating system, or is unknown.");
-
-                ProcessLookupTable[type].Remove(id);
-
-                if (ProcessLookupTable[type].Count == 0)
-                    ProcessLookupTable.Remove(type);
-            };
+            OpenApp(control, type, processID, engine);
 
             await engine.Execute(code);
         }
+
+        internal static string GetNextProcessID()
+        {
+            return $"p{processCount++}";
+        }
+
         public static string GetProcessClass(string identifier)
         {
             var processClass = "Unknown process";
@@ -336,7 +361,7 @@ namespace Lemur
 
             return content;
         }
-        private static async Task<(string id, string code)> InstantiateWindowClass(string type, object[] cmdLineArgs, (string XAML, string JS) data, Engine engine)
+        private static async Task<string> InstantiateWindowClass(string type, string processID, object[] cmdLineArgs, (string XAML, string JS) data, Engine engine)
         {
             var name = type.Split('.')[0];
 
@@ -344,23 +369,20 @@ namespace Lemur
 
             _ = await engine.Execute(JS);
 
-            var instance_name = "p" + processCount++.ToString();
-
-            engine.AppModule.__SetId(instance_name);
-
             string instantiation_code;
 
+            
             if (cmdLineArgs.Length != 0)
             {
                 var args = string.Join(", ", cmdLineArgs);
-                instantiation_code = $"const {instance_name} = new {name}('{instance_name}, {args}')";
+                instantiation_code = $"const {processID} = new {name}('{processID}, {args}')";
             }
             else
-                instantiation_code = $"const {instance_name} = new {name}('{instance_name}')";
+                instantiation_code = $"const {processID} = new {name}('{processID}')";
 
 
 
-            return (instance_name, instantiation_code);
+            return instantiation_code;
         }
         #endregion
 

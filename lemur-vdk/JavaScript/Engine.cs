@@ -293,46 +293,32 @@ namespace Lemur.JS
                     return;
                 }
 
-                EventHandlers.Add(eh);
-            });
-        }
+                var disposed = false;
 
-        
+                /// this was an attempt to force close the app on too many errors
+                /// stack overflow, trying to finally decouple UI.
+                //eh.OnEventDisposed += () => {
+                //    if (disposed)
+                //        return; 
 
-        internal async Task CreateNetworkEventHandler(string identifier, string methodName)
-        {
-            var wnd = Computer.Current.Window;
+                //    App.Current.Dispatcher.Invoke(app.Close);
+                //    disposed = true;
+                //};
 
-            var result = await Execute($"{identifier} != null");
-
-            if (result is not bool ID_EXISTS || !ID_EXISTS)
-            {
-                Notifications.Now($"Failed to create network event handler, {identifier} one already existed.");
-                return;
-            }
-
-            result = await Execute($"{identifier}.{methodName} != null");
-
-            if (result is not bool METHOD_EXISTS || !METHOD_EXISTS)
-            {
-                Notifications.Now($"Failed to create network event handler, {identifier}.{methodName} one already existed.");
-                return;
-            }
-
-            var eh = new NetworkEvent(this, identifier, methodName);
-
-            if (Computer.Current.UserWindows.TryGetValue(identifier, out var app))
-            {
-                app.OnClosed += () =>
+                app.OnAppClosed += () =>
                 {
+                    if (disposed)
+                        return;
+
                     if (EventHandlers.Contains(eh))
                         EventHandlers.Remove(eh);
 
                     eh.ForceDispose();
+                    disposed = true;
                 };
-            }
 
-            EventHandlers.Add(eh);
+                EventHandlers.Add(eh);
+            });
         }
 
         public void Dispose()

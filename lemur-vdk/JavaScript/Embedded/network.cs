@@ -268,10 +268,5 @@ namespace Lemur.JavaScript.Embedded
 
             return @event.value;
         }
-        public void eventHandler(string identifier, string methodName)
-        {
-            if (Computer.Current.UserWindows.TryGetValue(identifier, out var app))
-                app.JavaScriptEngine?.CreateNetworkEventHandler(identifier, methodName);
-        }
     }
 }

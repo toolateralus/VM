@@ -221,7 +221,7 @@ namespace Lemur.GUI
             {
                 if (FileSystem.FileExists(path))
                 {
-                    Computer.Current.OpenApp(new TextEditor(path));
+                    Computer.Current.OpenApp(new TextEditor(path), "texteditor.app", Computer.GetNextProcessID());
                     OnNavigated?.Invoke(path);
                 }
 

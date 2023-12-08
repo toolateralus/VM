@@ -151,7 +151,7 @@ namespace Lemur.OS
                     }
                     var wnd = Computer.Current.Window;
                     var tEdit = new TextEditor(AbsPath);
-                    Computer.Current.OpenApp(tEdit);
+                    Computer.Current.OpenApp(tEdit, "texteditor.app", Computer.GetNextProcessID());
                 }
             }
             else

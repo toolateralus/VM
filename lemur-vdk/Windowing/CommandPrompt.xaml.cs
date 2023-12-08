@@ -118,7 +118,7 @@ namespace Lemur.GUI
 
                 var textEditor = new TextEditor(path);
 
-                Computer.Current.OpenApp(textEditor, "temp.js");
+                Computer.Current.OpenApp(textEditor, "temp.js", Computer.GetNextProcessID());
             }
 
             if (e.Key == Key.Enter || e.Key == Key.F5)

@@ -16,7 +16,12 @@ namespace Lemur.GUI
     public partial class UserWindow : UserControl
     {
         public ResizableWindow Owner;
-        internal Action? OnClosed;
+        
+        /// <summary>
+        /// Called by the UI thread to clean up any resources.
+        /// </summary>
+        internal event Action? OnAppClosed;
+
         public Engine JavaScriptEngine;
         public UserWindow()
         {
@@ -60,7 +65,7 @@ namespace Lemur.GUI
         internal void Close()
         {
             JavaScriptEngine?.Dispose();
-            OnClosed?.Invoke();
+            OnAppClosed?.Invoke();
         }
         /// <summary>
         /// Wrapper for the button
