@@ -20,6 +20,10 @@
   </ItemGroup>
 
   <ItemGroup>
+    <None Remove="Computer.cs~RF11b0212c.TMP" />
+  </ItemGroup>
+
+  <ItemGroup>
     <PackageReference Include="AvalonEdit" Version="6.3.0.90" />
     
 	<PackageReference Include="JavaScriptEngineSwitcher.Core" Version="3.21.0" />
