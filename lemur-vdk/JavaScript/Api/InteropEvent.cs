@@ -65,10 +65,14 @@ namespace Lemur.JavaScript.Api
                     break;
                 case XAML_EVENTS.KEY_DOWN:
                     {
+                        control.KeyDown += InvokeKeyboard;
+                        OnEventDisposed += () => control.KeyDown -= InvokeKeyboard;
                     }
                     break;
                 case XAML_EVENTS.KEY_UP:
                     {
+                        control.KeyUp += InvokeKeyboard;
+                        OnEventDisposed += () => control.KeyUp -= InvokeKeyboard;
                     }
                     break;
                 case XAML_EVENTS.LOADED:

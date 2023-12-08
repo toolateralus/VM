@@ -170,7 +170,7 @@ namespace Lemur
                 
                 Window.RemoveTaskbarButton(type);
 
-                if (!ProcessLookupTable.TryGetValue(processID, out var procList))
+                if (!ProcessLookupTable.TryGetValue(type, out var procList))
                     return;
 
                 procList.Remove(processID);
