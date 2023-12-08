@@ -279,21 +279,20 @@ namespace Lemur.GUI
         {
             System.Collections.IList list = DesktopIconPanel.Children;
 
-            for (int i = 0; i < list.Count; i++)
+            Dispatcher.Invoke(() =>
             {
-                object? item = list[i];
 
-                if (item is Button btn)
+                foreach (var item in list)
                 {
-                    btn.Dispatcher.Invoke(() =>
+                    if (item is Button btn 
+                        && btn.Name == name.Replace(".app", "")
+                            .Replace(".web", ""))
                     {
-                        if (btn.Name == name.Replace(".app", "").Replace(".web", ""))
-                        {
-                            DesktopIconPanel.Children.Remove(btn);
-                        }
-                    });
+                        DesktopIconPanel.Children.Remove(btn);
+                    }
                 }
-            }
+
+           });
         }
         public void InstallIcon(AppType type, string appName, Type? runtime_type = null)
         {

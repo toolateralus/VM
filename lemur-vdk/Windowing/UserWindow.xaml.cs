@@ -53,12 +53,12 @@ namespace Lemur.GUI
             Owner?.BringToTopOfDesktop();
         }
 
-        internal void InitializeUserContent(ResizableWindow frame, UserControl actualUserContent, Engine? engine)
+        internal void InitializeContent(ResizableWindow frame, UserControl actualUserContent, Engine? engine)
         {
             Owner = frame;
 
             ContentsFrame.Content = actualUserContent;
-            
+
             if (engine != null)
                 JavaScriptEngine = engine;
         }
