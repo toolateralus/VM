@@ -76,9 +76,14 @@ namespace Lemur.GUI
 
             var config = Computer.Current.Config;
 
+            // dark is 1, light is 0;
             if (config.ContainsKey("TEXT_EDITOR_THEME"))
-                themeBox.SelectedIndex = (int)config["TEXT_EDITOR_THEME"]!;
-            else themeBox.SelectedIndex = 1;
+                themeBox.SelectedIndex = config.Value<string>("TEXT_EDITOR_THEME") == "Dark" ? 1 : 0;
+            else
+            {
+                config["TEXT_EDITOR_THEME"] = "Light";
+                themeBox.SelectedIndex = 0;
+            }
 
 
             shTypeBox.SelectedIndex = 1;
@@ -235,11 +240,13 @@ namespace Lemur.GUI
                 {
                     textEditor.Background = System.Windows.Media.Brushes.White;
                     textEditor.Foreground = System.Windows.Media.Brushes.Black;
+                    Computer.Current.Config["TEXT_EDITOR_THEME"] = "Light";
                 }
                 else
                 {
                     textEditor.Background = System.Windows.Media.Brushes.Black;
                     textEditor.Foreground = System.Windows.Media.Brushes.White;
+                    Computer.Current.Config["TEXT_EDITOR_THEME"] = "Dark";
                 }
             }
         }

@@ -4,6 +4,7 @@
   "NAME": "Default VDK", // the name of this pc.
   "ALIAS_PATH": "/commands", // where to load commands from
   "BACKGROUND": "epic_background.png", // desktop background image path.
+  "TEXT_EDITOR_THEME": "Dark", // the theme to use for the text editor. 'Dark' or 'Light'
   "CMD_LINE_TIMEOUT": "50_000",
   "DOWNLOAD_PATH": "/home/downloads",
   "DEFAULT_SERVER_IP": "192.168.0.138", // if provided, a server can be started with the 'host' command with no arguments, as well as 'connect'

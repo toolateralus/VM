@@ -118,6 +118,9 @@ namespace Lemur
         }
         public void OpenApp(UserControl control, string title = "window", Engine engine = null)
         {
+            // update config before we start apps. cheap & easy way to make sure the config is up to date, though it could be more frequent.
+            Computer.LoadConfig();
+
             // the resizable is the container that hosts the user app.
             // this is made seperate to eliminate annoying and complex boiler plate.
             UserWindow window = Window.OpenAppUI(title, out var resizable_window);
