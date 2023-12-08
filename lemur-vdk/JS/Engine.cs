@@ -12,6 +12,7 @@ using Lemur.GUI;
 using Lemur.FS;
 using System.Diagnostics;
 using System.Windows.Input;
+using lemur.JS.Embedded;
 
 namespace Lemur.JS
 {
@@ -272,7 +273,7 @@ namespace Lemur.JS
                 if (targetControl.ToLower().Trim() == "this")
                     element = content;
                 else
-                    element = Lemur.JS.app.FindControl(content, targetControl)!;
+                    element = lemur.JS.Embedded.app.FindControl(content, targetControl)!;
 
 
                 // failed to get the actual element the user requested.

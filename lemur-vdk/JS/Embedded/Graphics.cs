@@ -1,9 +1,10 @@
 ﻿using System.Collections.Generic;
+using Lemur;
 using Image = System.Windows.Controls.Image;
 
-namespace Lemur.JS
+namespace lemur.JS.Embedded
 {
-    public class graphics 
+    public class graphics
     {
         private int ctxIndex;
 
@@ -72,14 +73,15 @@ namespace Lemur.JS
         {
             if (!gfxContext.TryGetValue(gfx_ctx, out var context))
             {
-                if (exception) 
+                if (exception)
                     Notifications.Now($"Couldn't find graphics context for id : {gfx_ctx}");
 
                 return false;
             }
 
-            Computer.Current?.Window?.Dispatcher?.Invoke(() => { 
-              
+            Computer.Current?.Window?.Dispatcher?.Invoke(() =>
+            {
+
                 if (context.image.TryGetTarget(out var image))
                     context.Draw(image);
             });
@@ -89,12 +91,12 @@ namespace Lemur.JS
         public int createCtx(string id, string target, int width, int height)
         {
             int bpp = 4;
-            
+
 
             var ctx = new GfxContext(id, target, bpp);
 
             ctx.Resize(width, height);
-            
+
             int i = 0;
 
             while (gfxContext.ContainsKey(ctxIndex))

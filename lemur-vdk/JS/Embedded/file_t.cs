@@ -1,8 +1,9 @@
 ﻿using System;
 using System.IO;
+using Lemur;
 using Lemur.FS;
 
-namespace Lemur.JS
+namespace lemur.JS.Embedded
 {
     public class file_t
     {

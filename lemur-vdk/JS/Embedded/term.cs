@@ -6,12 +6,13 @@ using Lemur.GUI;
 using Lemur.FS;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
+using Lemur;
 
-namespace Lemur.JS
+namespace lemur.JS.Embedded
 {
     public class term
     {
-        public void call (string command)
+        public void call(string command)
         {
             Task.Run(() =>
             {

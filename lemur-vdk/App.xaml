@@ -1,11 +1,11 @@
 ﻿<Application x:Class="Lemur.App"
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-             StartupUri="GUI/Runtime.xaml">
+             StartupUri="Windowing/Runtime.xaml">
     <Application.Resources>
         <ResourceDictionary>
             <ResourceDictionary.MergedDictionaries>
-                <ResourceDictionary Source="GUI/Styles.xaml"/>
+                <ResourceDictionary Source="Windowing/Styles.xaml"/>
             </ResourceDictionary.MergedDictionaries>
 
         <Style TargetType="Button" BasedOn="{StaticResource ButtonStyle}" />

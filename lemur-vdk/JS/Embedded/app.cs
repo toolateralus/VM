@@ -15,8 +15,10 @@ using System.Security.Permissions;
 using System.Reflection;
 using System.Threading.Tasks;
 using System.DirectoryServices.ActiveDirectory;
+using Lemur;
+using Lemur.JS;
 
-namespace Lemur.JS
+namespace lemur.JS.Embedded
 {
     public class app
     {
@@ -272,7 +274,7 @@ namespace Lemur.JS
 
             return null;
         }
-        public static void Draw(List<byte> colorData, System.Windows.Controls.Image image)
+        public static void Draw(List<byte> colorData, Image image)
         {
             var bytesPerPixel = 4;
             var pixelCount = colorData.Count / bytesPerPixel;
@@ -366,7 +368,8 @@ namespace Lemur.JS
 
             if (FileSystem.GetResourcePath(directory) is string AbsPath && Directory.Exists(AbsPath))
             {
-                Action<string, string> procDir = (root, file) => {
+                Action<string, string> procDir = (root, file) =>
+                {
                     if (Path.GetExtension(file) is string ext && ext == ".app")
                         Computer.Current.InstallJSWPF(Path.GetFileName(file));
                     if (Path.GetExtension(file) is string _ext && _ext == ".web")

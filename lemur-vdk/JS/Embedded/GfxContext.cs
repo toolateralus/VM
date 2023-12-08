@@ -7,9 +7,10 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
+using Lemur;
 using Image = System.Windows.Controls.Image;
 
-namespace Lemur.JS
+namespace lemur.JS.Embedded
 {
     public class GfxContext
     {
@@ -22,7 +23,7 @@ namespace Lemur.JS
                 var content = Computer.Current.UserWindows[pid];
                 var app = content.JavaScriptEngine.AppModule;
                 var control = app.GetUserContent(Computer.Current);
-                image = JS.app.FindControl(control, TargetControl) as Image ?? throw new InvalidCastException(nameof(control));
+                image = Embedded.app.FindControl(control, TargetControl) as Image ?? throw new InvalidCastException(nameof(control));
             });
             this.image = new(image);
             this.PixelFormatBpp = PixelFormatBpp;
@@ -34,7 +35,7 @@ namespace Lemur.JS
         private byte[] renderTexture = Array.Empty<byte>();
 
         private WriteableBitmap bitmap;
-        internal readonly WeakReference<System.Windows.Controls.Image> image;
+        internal readonly WeakReference<Image> image;
         public static readonly List<byte[]> palette = new()
         {
             new byte[]{255, 0, 0, 255}, // Red 0
@@ -107,19 +108,19 @@ namespace Lemur.JS
         }
         public static void ExtractColor(int color, out byte r, out byte g, out byte b, out byte a)
         {
-            r = (byte)((color >> 24) & 0xFF);
-            g = (byte)((color >> 16) & 0xFF);
-            b = (byte)((color >> 8) & 0xFF);
+            r = (byte)(color >> 24 & 0xFF);
+            g = (byte)(color >> 16 & 0xFF);
+            b = (byte)(color >> 8 & 0xFF);
             a = (byte)(color & 0xFF);
         }
         public void ExtractColorToCache(int color)
         {
-            cached_color[0 + 0] = (byte)((color >> 24) & 0xFF);
-            cached_color[0 + 1] = (byte)((color >> 16) & 0xFF);
-            cached_color[0 + 2] = (byte)((color >> 8) & 0xFF);
+            cached_color[0 + 0] = (byte)(color >> 24 & 0xFF);
+            cached_color[0 + 1] = (byte)(color >> 16 & 0xFF);
+            cached_color[0 + 2] = (byte)(color >> 8 & 0xFF);
             cached_color[0 + 3] = (byte)(color & 0xFF);
         }
-        public void Draw(System.Windows.Controls.Image image)
+        public void Draw(Image image)
         {
             if (image == null)
                 return;
@@ -134,7 +135,7 @@ namespace Lemur.JS
 
             if (renderTexture.Length == stride * Height)
             {
-                IntPtr pBackBuffer = bitmap.BackBuffer;
+                nint pBackBuffer = bitmap.BackBuffer;
 
                 Marshal.Copy(renderTexture, 0, pBackBuffer, renderTexture.Length);
 

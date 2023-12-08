@@ -3,8 +3,9 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using Lemur.FS;
+using Lemur.JS;
 
-namespace Lemur.JS
+namespace lemur.JS.Embedded
 {
     public class conv
     {
