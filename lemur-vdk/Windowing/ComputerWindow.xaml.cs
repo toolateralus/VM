@@ -13,6 +13,7 @@ using Key = System.Windows.Input.Key;
 using System.Xml.Linq;
 using System.Text.RegularExpressions;
 using System.Collections.Generic;
+using System.Security.Cryptography;
 
 namespace Lemur.GUI
 {
@@ -36,8 +37,12 @@ namespace Lemur.GUI
 
             desktopBackground.Source = LoadImage(FileSystem.GetResourcePath("Background.png") ?? "background.png");
 
-            Keyboard.AddKeyDownHandler(this, Computer_KeyDown);
+            Keyboard.AddPreviewKeyDownHandler(this, Computer_KeyDown);
 
+            // what a horrible hack, i have no idea why this is needed
+            // we can't get events for the desktop
+            Keyboard.AddPreviewKeyDownHandler(Desktop, Computer_KeyDown);
+            
             clock = new Timer(delegate
             {
                 Dispatcher.Invoke(this.UpdateComputerTime);
@@ -125,7 +130,7 @@ namespace Lemur.GUI
         private int ctrlTabIndex;
         public void Computer_KeyDown(object sender, KeyEventArgs e)
         {
-            //OnKeyDown?.Invoke(e.Key, e.IsDown);
+            OnKeyDown?.Invoke(e.Key, e.IsDown);
 
             // -- to users: --
             // add any global hotkeys here.
@@ -143,6 +148,9 @@ namespace Lemur.GUI
                 case Key.Tab:
                     if (Keyboard.IsKeyDown(Key.LeftCtrl))
                     {
+                        if (Computer.Current.UserWindows.Count == 0)
+                            return;
+
                         ctrlTabIndex = Math.Clamp(ctrlTabIndex, 0, Computer.Current.UserWindows.Count - 1);
                         
                         var windowElement = Computer.Current.UserWindows.ElementAt(ctrlTabIndex);
@@ -347,11 +355,19 @@ namespace Lemur.GUI
                     if (item is not Button btn)
                         continue;
 
-                    var id = btn.Content ?? btn.Name
-                                .Replace(".app", "")
-                                .Replace(".web", "");
+                    string id = "_not_an_app_name";
 
-                    if (id == name)
+                    if (btn.Content is string nam)
+                        id = nam;
+                    else
+                        id = btn.Name;
+
+
+                    name = name.Replace(".app", "").Replace(".web", "").ToLower();
+
+                    id = id.Replace(".app", "").Replace(".web", "").ToLower();
+
+                    if (name == id)
                         toRemove.Add(btn);
                 }
 
@@ -380,22 +396,10 @@ namespace Lemur.GUI
 
                 xamlSource.Click += (sender, @event) => XamlSource_Click(sender, @event, appName);
 
-                MenuItem uninstall = new()
-                {
-                    Header = "uninstall app"
-                };
-
-                uninstall.Click += (sender, @event) =>
-                {
-                    var answer = MessageBox.Show($"are you sure you want to uninstall {appName}?", "uninstall?", MessageBoxButton.YesNo);
-                    
-                    if (answer == MessageBoxResult.Yes)
-                        Computer.Current.Uninstall(appName);
-                };
+                
 
                 contextMenu.Items.Add(jsSource);
                 contextMenu.Items.Add(xamlSource);
-                contextMenu.Items.Add(uninstall);
 
                 btn.ContextMenu = contextMenu;
 
@@ -454,7 +458,20 @@ namespace Lemur.GUI
                         break;
                 }
 
+                MenuItem uninstall = new()
+                {
+                    Header = "uninstall app"
+                };
 
+                uninstall.Click += (sender, @event) =>
+                {
+                    var answer = MessageBox.Show($"are you sure you want to uninstall {appName}?", "uninstall?", MessageBoxButton.YesNo);
+
+                    if (answer == MessageBoxResult.Yes)
+                        Computer.Current.Uninstall(appName);
+                };
+                btn.ContextMenu ??= new();
+                btn.ContextMenu.Items.Add(uninstall);
 
                 DesktopIconPanel.UpdateLayout();
                 DesktopIconPanel.Children.Add(btn);

@@ -23,7 +23,7 @@
         </Grid.RowDefinitions>
 
 
-        <Image Focusable="False" Grid.ColumnSpan="2" x:Name="desktopBackground" Stretch="UniformToFill"/>
+        <Image Grid.ColumnSpan="2" x:Name="desktopBackground" Stretch="UniformToFill"/>
 
         <gui:WindowManager Focusable="False" x:Name="Desktop" Grid.Row="0" Grid.Column="0" Grid.ColumnSpan="2" Background="Transparent">
             <WrapPanel Focusable="False" x:Name="DesktopIconPanel" Orientation="Vertical"/>

@@ -9,7 +9,7 @@ namespace Lemur.JS.Embedded
     {
         private int ctxIndex;
 
-        public Dictionary<int, gfx_context> gfxContext = new();
+        public Dictionary<int, gfx_context> gfxContext = [];
         public bool writePixel(int gfx_ctx, int x, int y, int color)
         {
             if (!gfxContext.TryGetValue(gfx_ctx, out var ctx))

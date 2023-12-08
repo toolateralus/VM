@@ -226,7 +226,8 @@ namespace Lemur
         public void Uninstall(string name)
         {
             jsApps.Remove(name);
-            Window.Dispatcher.Invoke(() => { Window.RemoveDesktopIcon(name); });
+            Window.Dispatcher.Invoke(() => { 
+                Window.RemoveDesktopIcon(name); });
         }
         private static void LoadBackground(Computer pc, ComputerWindow wnd)
         {
