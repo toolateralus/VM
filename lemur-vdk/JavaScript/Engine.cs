@@ -16,6 +16,7 @@ using Lemur.JS.Embedded;
 using Lemur.Windowing;
 using Lemur.JavaScript.Api;
 using Lemur.JavaScript.Embedded;
+using System.Globalization;
 
 namespace Lemur.JS
 {
@@ -234,11 +235,10 @@ namespace Lemur.JS
         }
         internal async Task CreateEventHandler(string identifier, string targetControl, string methodName, int type)
         {
-
             var wnd = Computer.Current.Window;
             
             // check if this event already exists
-            var result = await Execute($"{identifier} != null");
+            var result = await Execute($"{identifier} != null").ConfigureAwait(true);
 
             if (result is not bool ID_EXISTS || !ID_EXISTS)
             {
@@ -247,9 +247,9 @@ namespace Lemur.JS
             }
 
             // check if this method already exists
-            result = await Execute($"{identifier}.{methodName} != null");
+            result = await Execute($"{identifier}.{methodName} != null").ConfigureAwait(true);
             
-            string processClass = Computer.GetProcessClass(identifier).Replace(".app", "");
+            string processClass = Computer.GetProcessClass(identifier).Replace(".app", "", StringComparison.CurrentCulture);
 
             if (result is not bool METHOD_EXISTS || !METHOD_EXISTS)
             {
@@ -257,68 +257,68 @@ namespace Lemur.JS
                 return;
             }
 
+            InteropEvent? eh = default;
+
             wnd.Dispatcher.Invoke(() =>
             {
                 var content  = Computer.Current.UserWindows[identifier].JavaScriptEngine.AppModule.GetUserContent();
 
                 if (content == null)
                 {
-                    Notifications.Exception(new NullReferenceException($"control {identifier} not found!"));
+                    Notifications.Now($"control {identifier} not found!");
                     return;
                 }
 
                 FrameworkElement? element = null;
 
-                if (targetControl.ToLower().Trim() == "this")
+                if (targetControl.ToLower(CultureInfo.CurrentCulture).Trim() == "this")
                     element = content;
                 else
-                    element = Lemur.JS.Embedded.app.FindControl(content, targetControl)!;
+                    element = Embedded.app.FindControl(content, targetControl)!;
 
 
-                // failed to get the actual element the user requested.
                 if (element == null)
                 {
-                    Notifications.Exception(new Exception($"control {targetControl} of {content.Name} not found."));
+                    Notifications.Now($"control {targetControl} of {content.Name} not found.");
                     return;
                 }
 
-                // create the actual handler, attach it to this engine,
-                // and create the hook method in the javascript environment.
-                // this does the real creation of the event.
-                var eh = new InteropEvent(element, (XAML_EVENTS)type, this, identifier, methodName);
+                eh = new InteropEvent(element, (XAML_EVENTS)type, this, identifier, methodName);
 
-                if (!Computer.Current.UserWindows.TryGetValue(identifier, out var app))
-                {
-                    Notifications.Exception(new NullReferenceException("Creating an event handler failed : this is an engine bug. report it on github if you'd like"));
-                    return;
-                }
-
-                var disposed = false;
-
-                /// this was an attempt to force close the app on too many errors
-                /// stack overflow, trying to finally decouple UI.
-                //eh.OnEventDisposed += () => {
-                //    if (disposed)
-                //        return; 
-
-                //    App.Current.Dispatcher.Invoke(app.Close);
-                //    disposed = true;
-                //};
-
-                app.OnAppClosed += () =>
-                {
-                    if (disposed)
-                        return;
-
-                    if (EventHandlers.Contains(eh))
-                        EventHandlers.Remove(eh);
-
-                    eh.ForceDispose();
-                    disposed = true;
-                };
-
-                EventHandlers.Add(eh);
             });
+
+            if (!Computer.Current.UserWindows.TryGetValue(identifier, out var app))
+            {
+                Notifications.Now("Creating an event handler failed : this is an engine bug. report it on GitHub if you'd like");
+                return;
+            }
+
+            var disposed = false;
+
+            /// this was an attempt to force close the app on too many errors
+            /// stack overflow, trying to finally decouple UI.
+            /// 
+            //eh.OnEventDisposed += () => {
+            //    if (disposed)
+            //        return; 
+
+            //    App.Current.Dispatcher.Invoke(app.Close);
+            //    disposed = true;
+            //};
+
+            app.OnAppClosed += () =>
+            {
+                if (disposed)
+                    return;
+
+                if (EventHandlers.Contains(eh))
+                    EventHandlers.Remove(eh);
+
+                eh.ForceDispose();
+                disposed = true;
+            };
+
+            EventHandlers.Add(eh);
         }
 
         public void Dispose()
