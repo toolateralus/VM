@@ -162,8 +162,7 @@ namespace Lemur
 
             Process? process = null;
 
-            if (engine == null)
-                process = new Process(userWindow, processID, type);
+            process = new Process(userWindow, processID, type);
 
             RegisterNewProcess(process, out var procList);
 

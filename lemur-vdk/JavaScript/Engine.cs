@@ -328,6 +328,7 @@ namespace Lemur.JS
             Disposing = true;
             m_engine_internal.Dispose();
             executionThread.Join();
+            AppModule.ReleaseThread();
         }
     }
 }

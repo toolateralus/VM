@@ -9,12 +9,14 @@ using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Runtime.InteropServices;
+using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using static Lemur.Computer;
+using static System.Runtime.InteropServices.JavaScript.JSType;
 using Image = System.Windows.Controls.Image;
 
 namespace Lemur.JS.Embedded
@@ -37,14 +39,82 @@ namespace Lemur.JS.Embedded
 
         };
         private string id;
+        internal Thread bgThread;
+        private Queue<Action> deferredJobs = [];
+
+        private bool Disposing { get;  set; }
+
+        public void ReleaseThread()
+        {
+            if (!Disposing)
+            {
+                Disposing = true;
+                bgThread.Join();
+            }
+        }
         public app()
         {
             ExposedEvents["draw_pixels"] = DrawPixelsEvent; // somewhat deprecated, use the dedicated graphics module instead.
             ExposedEvents["draw_image"] = DrawImageEvent;
             ExposedEvents["set_content"] = SetContent;
             ExposedEvents["get_content"] = GetContent;
+
+            bgThread = new(__bg_threadLoop);
+            bgThread.Start();
         }
 
+        private void __bg_threadLoop()
+        {
+            while (!Disposing)
+            {
+                if (deferredJobs.TryDequeue(out var job))
+                {
+                    job?.Invoke();
+                } 
+                else
+                {
+                    // avoid busy wait.
+                    Thread.Sleep(16);
+                }
+            }
+        }
+        public void defer(string methodName, int delayMs, params object[]? args)
+        {
+            deferredJobs.Enqueue(async () =>
+            {
+                await Task.Delay(delayMs).ConfigureAwait(true);
+
+                if (GetProcess(id) is not Process p)
+                {
+                    Notifications.Now($"Failed to defer {methodName} because the process was not found.");  
+                    return;
+                }
+
+                var engine = p.UI?.JavaScriptEngine;
+
+                var callHandle = $"{id}.{methodName}";
+
+                if (engine is null)
+                {
+                    Notifications.Now($"Failed to defer {methodName} because the engine was null.");
+                    return;
+                }
+
+                if (await engine.Execute($"{callHandle} === undefined") is bool exists && exists)
+                {
+                    Notifications.Now($"Failed to defer {methodName} because it was not found.");
+                    return;
+                }
+
+                if (args.Length > 0) { 
+                    var argsString = string.Join(", ", args);
+                    await engine.Execute($"{callHandle}({argsString})");
+                }else
+                {
+                    await engine.Execute($"{callHandle}()");
+                }
+            });
+        }
         internal static void SetProperty(object target, string propertyName, object? value)
         {
             if (target == null)
