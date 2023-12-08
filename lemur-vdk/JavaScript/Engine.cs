@@ -289,7 +289,7 @@ namespace Lemur.JS
 
             });
 
-            if (Computer.GetProcess(identifier) is not Process p)
+            if (GetProcess(identifier) is not Process p)
             {
                 Notifications.Now("Creating an event handler failed : this is an engine bug. report it on GitHub if you'd like");
                 return;

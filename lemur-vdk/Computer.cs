@@ -7,6 +7,7 @@ using Lemur.OS;
 using Lemur.Windowing;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
+using OpenTK.Graphics.ES11;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
@@ -18,6 +19,10 @@ using System.Windows.Controls;
 
 namespace Lemur
 {
+    public record Process(UserWindow UI, string ID, string Type)
+    {
+        public Action? OnProcessTermination;
+    }
     public class Computer : IDisposable
     {
         internal string WorkingDir { get; private set; }
@@ -32,7 +37,16 @@ namespace Lemur
         internal CommandLine CmdLine { get; set; }
         internal JObject Config { get; set; }
 
-        
+        private static Computer? current;
+        private int startupTimeoutMs = 20_000;
+        public static Computer Current => current;
+
+
+        public static IEnumerable<Process> AllProcesses()
+        {
+            return ProcessClassTable.Values.SelectMany(i => i);
+        }
+
         // type : process(es)
         internal static Dictionary<string, List<Process>> ProcessClassTable = [];
         internal readonly Dictionary<string, Type> csApps = [];
@@ -114,14 +128,7 @@ namespace Lemur
 
         }
 
-        internal record Process(UserWindow  UI, string ID, string Type)
-        {
-            public event Action OnProcessTermination;
-        }
-        internal record NativeProcess (UserWindow UI, string ID, string Type, Engine engine) : Process(UI, ID, Type)
-        {
-
-        }
+      
         public void OpenApp(UserControl control, string type, string processID, Engine? engine = null)
         {
 
@@ -157,22 +164,23 @@ namespace Lemur
 
             if (engine == null)
                 process = new Process(userWindow, processID, type);
-            else process = new NativeProcess(userWindow, processID, type, engine);
 
             RegisterNewProcess(process, out var procList);
 
             void OnWindowClosed()
             {
                 // for pesky calls that arent from the UI thread, from javascript etc.
-                if (Thread.CurrentThread.ApartmentState != ApartmentState.STA)
-                    App.Current.Dispatcher.Invoke(() => closeMethod(procList));
+                if (Thread.CurrentThread.GetApartmentState() != ApartmentState.STA)
+                    App.Current.Dispatcher.Invoke(() => closeMethod());
                 else
-                {
-                    closeMethod(procList);
-                }
+                    closeMethod();
 
-                void closeMethod(List<Process> array)
+                void closeMethod()
                 {
+                    List<Process> array = ProcessClassTable[type];
+
+                    process.OnProcessTermination?.Invoke();
+
                     Window.Desktop.Children.Remove(resizable_window);
 
                     resizable_window.Content = null;
@@ -277,6 +285,7 @@ namespace Lemur
             string backgroundPath = pc?.Config?.Value<string>("BACKGROUND") ?? "background.png";
             wnd.desktopBackground.Source = ComputerWindow.LoadImage(FileSystem.GetResourcePath(backgroundPath) ?? "background.png");
         }
+        #region Application
         public async Task OpenCustom(string type, params object[] cmdLineArgs)
         {
             var data = Runtime.GetAppDefinition(type);
@@ -308,12 +317,10 @@ namespace Lemur
 
             await engine.Execute(code).ConfigureAwait(true);
         }
-
         internal static string GetNextProcessID()
         {
             return $"p{processCount++}";
         }
-
         public static string GetProcessClass(string identifier)
         {
             var processClass = "Unknown process";
@@ -328,12 +335,7 @@ namespace Lemur
 
             return processClass;
         }
-        #region Application
-        private static Computer? current;
 
-        private int startupTimeoutMs = 20_000;
-
-        public static Computer Current => current;
         /// <summary>
         /// This just causes crashes.
         /// </summary>
