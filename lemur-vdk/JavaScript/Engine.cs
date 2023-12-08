@@ -329,6 +329,7 @@ namespace Lemur.JS
             m_engine_internal.Dispose();
             executionThread.Join();
             AppModule.ReleaseThread();
+            GC.Collect();
         }
     }
 }

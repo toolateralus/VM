@@ -63,28 +63,59 @@ namespace Lemur.JS.Embedded
            
         }
 
-        private void __bg_threadLoop()
+        private async void __bg_threadLoop()
         {
+            DateTime lastTime = DateTime.Now;
+
             while (!Disposing)
             {
                 if (deferredJobs.TryDequeue(out var job))
                 {
                     job?.Invoke();
+                    lastTime = DateTime.Now;
                 } 
                 else
                 {
-                    // avoid busy wait.
-                    Thread.Sleep(16);
+                    await Task.Delay(1).ConfigureAwait(false);
+
+                    // kill thread if no jobs for 30 seconds
+                    if (deferredJobs.IsEmpty && (DateTime.Now - lastTime).TotalSeconds > 10)
+                    {
+                        ReleaseThread();
+                        bgThread = null;
+                    }
+
+
                 }
             }
         }
+
+        public void deferEval(string code, int delay, string? identifier = null)
+        {
+            WakeUpBackgroundThread();
+
+            deferredJobs.Enqueue(async () =>
+            {
+                await Task.Delay(delay);
+
+                var proc = Computer.GetProcess(id);
+
+                var engine = proc?.UI?.JavaScriptEngine;
+
+                // for command line apps.
+                if (proc is null || engine is null)
+                    engine = Computer.Current.JavaScript;
+                
+                if (identifier != null)
+                    await engine.Execute($"{identifier} = {code}");
+                else
+                    _ = await engine.Execute(code);
+            });
+        }
+
         public void defer(string methodName, int delayMs, params object[]? args)
         {
-            if (bgThread == null)
-            {
-                bgThread = new(__bg_threadLoop);
-                bgThread.Start();
-            }
+            WakeUpBackgroundThread();
 
             deferredJobs.Enqueue(async () =>
             {
@@ -92,7 +123,7 @@ namespace Lemur.JS.Embedded
 
                 if (GetProcess(id) is not Process p)
                 {
-                    Notifications.Now($"Failed to defer {methodName} because the process was not found.");  
+                    Notifications.Now($"Failed to defer {methodName} because the process was not found.");
                     return;
                 }
 
@@ -106,21 +137,34 @@ namespace Lemur.JS.Embedded
                     return;
                 }
 
-                if (await engine.Execute($"{callHandle} === undefined") is bool exists && exists)
+                if (await engine.Execute($"{callHandle} === undefined") is bool doesNotExist && doesNotExist)
                 {
                     Notifications.Now($"Failed to defer {methodName} because it was not found.");
                     return;
                 }
 
-                if (args.Length > 0) { 
+                if (args.Length > 0)
+                {
                     var argsString = string.Join(", ", args);
                     await engine.Execute($"{callHandle}({argsString})");
-                }else
+                }
+                else
                 {
                     await engine.Execute($"{callHandle}()");
                 }
             });
         }
+
+        private void WakeUpBackgroundThread()
+        {
+            if (bgThread == null)
+            {
+                Disposing = false;
+                bgThread = new(__bg_threadLoop);
+                bgThread.Start();
+            }
+        }
+
         internal static void SetProperty(object target, string propertyName, object? value)
         {
             if (target == null)
