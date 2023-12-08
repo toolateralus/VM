@@ -188,7 +188,7 @@ namespace Lemur.GUI
 
             Notifications.Now($"Saved {textEditor.LineCount} lines and {textEditor.Text.Length} characters to ...\\{LoadedFile.Split('\\').LastOrDefault()}");
         }
-
+        public CommandPrompt? commandPrompt;
         private async void RunButton_Click(object sender, RoutedEventArgs e)
         {
             var element = LanguageOptions.ElementAt(shTypeBox.SelectedIndex);
@@ -198,16 +198,16 @@ namespace Lemur.GUI
                 mdViewer.RenderMarkdown(Contents);
                 Computer.Current.OpenApp(mdViewer, "Markdown Renderer");
             }
-            else if (element.Value == ".js") { 
-                var cmd = new CommandPrompt();
+            else if (element.Value == ".js") {
 
-                cmd.LateInit(Computer.Current);
+                if (commandPrompt == null) { 
+                    commandPrompt = new CommandPrompt();
+                    
+                    var jsEngine = new Engine(Computer.Current);
+                    Computer.Current.OpenApp(commandPrompt, engine: jsEngine);
+                }
 
-                var jsEngine = new Engine(Computer.Current);
-
-                Computer.Current.OpenApp(cmd, engine: jsEngine);
-
-                await jsEngine.Execute(string.IsNullOrEmpty(textEditor.Text) ? "print('You must provide some javascript to execute...')" : textEditor.Text);
+                await commandPrompt.Engine.Execute(string.IsNullOrEmpty(textEditor.Text) ? "print('You must provide some javascript to execute...')" : textEditor.Text);
 
             } else
             {

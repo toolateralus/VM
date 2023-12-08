@@ -121,15 +121,34 @@ namespace Lemur
             // update config before we start apps. cheap & easy way to make sure the config is up to date, though it could be more frequent.
             Computer.LoadConfig();
 
+
+            if (UserWindows.ContainsKey(title))
+            {
+                if (char.IsDigit(title.Last()))
+                {
+                    var i = int.Parse(title.Last().ToString()) + 1;
+                    title.Replace(title.Last(), i.ToString()[0]);
+                }
+                else
+                {
+                    title += "1";
+                }
+            }
+
             // the resizable is the container that hosts the user app.
             // this is made seperate to eliminate annoying and complex boiler plate.
             UserWindow window = Window.OpenAppUI(title, out var resizable_window);
+
             UserWindows[title] = window;
 
-         
+            if (ComputerWindow.IsValidType(control.GetType().GetMembers()))
+                ComputerWindow.AssignComputer(control, resizable_window);
+
             window.InitializeUserContent(resizable_window, control, engine);
 
             resizable_window.BringToTopOfDesktop();
+
+
 
             // todo : change this
             resizable_window.Width = 650;

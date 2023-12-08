@@ -86,7 +86,6 @@ namespace Lemur.GUI
                     {
                         var cmd = new CommandPrompt();
                         Computer.OpenApp(cmd, "Cmd");
-                        cmd.LateInit(Computer);
                     }
                     break;
 
@@ -206,14 +205,26 @@ namespace Lemur.GUI
         /// <typeparam name="T"></typeparam>
         /// <param name="instance"></param>
         /// <param name="computer"></param>
-        public static void AssignComputer(object instance, Computer computer)
+        public static void AssignComputer(object instance, ResizableWindow? resizableWindow = null)
         {
-            var method = instance.GetType().GetMethods().FirstOrDefault(method => method.Name.Contains("LateInit") &&
-                    method.GetParameters().Length == 1 &&
-                    method.GetParameters()[0].ParameterType == typeof(Computer));
+            var method = instance.GetType().GetMethods()
+             .FirstOrDefault(method =>
+                 method.Name.Contains("LateInit") &&
+                 
+                 ((method.GetParameters().Length > 0 && method.GetParameters()[0].ParameterType == typeof(Computer)) ||
 
-            if (method != null)
-                method.Invoke(instance, new[] { computer });
+                 method.GetParameters().Length > 1 &&
+                 method.GetParameters()[0].ParameterType == typeof(Computer) ||
+                 method.GetParameters()[1].ParameterType == typeof(ResizableWindow))
+             );
+
+            var parameters = method.GetParameters();
+
+            method?.Invoke(instance, parameters.Length == 1
+                ? new[] { Computer.Current }
+                : new object[] { Computer.Current, resizableWindow }
+            );
+
         }
         /// <summary>
         /// we rely on this <code>('public void LateInit(Computer pc){..}') </code>method being declared in the UserControl to attach the OS to the app
@@ -353,11 +364,8 @@ namespace Lemur.GUI
 
                 void OnDesktopIconPressed(object? sender, RoutedEventArgs e)
                 {
-                    var members = type.GetMethods();
                     if (Activator.CreateInstance(type) is object instance && instance is UserControl userControl)
                     {
-                        if (IsValidType(members))
-                            AssignComputer(instance, Computer);
                         Computer.OpenApp(userControl, name);
                     } else
                     {

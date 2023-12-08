@@ -16,14 +16,15 @@ namespace Lemur.GUI
 
     public partial class CommandPrompt : UserControl
     {
-        private Engine? Engine;
+        internal Engine? Engine;
         private List<string> commandHistory = new List<string>();
         private int historyIndex = -1; 
         private string tempInput = ""; 
-        public Computer computer;
         public static string? DesktopIcon => FileSystem.GetResourcePath("commandprompt.png");
 
         public Action<string> OnSend { get; internal set; }
+        public ResizableWindow Window { get; private set; }
+
         public static string? LastSentInput;
         string LastSentBuffer = "";
         public CommandPrompt()
@@ -94,16 +95,20 @@ namespace Lemur.GUI
             return text.PadLeft(padding + text.Length).PadRight(width);
         }
 
-        public void LateInit(Computer computer)
+        public void LateInit(Computer computer, ResizableWindow rsz)
         {
-            this.computer = computer;
             Engine ??= new(computer);
-
-            output.FontFamily = new(computer?.Config?.Value<string>("FONT") ?? "Consolas");
-            input.FontFamily = new(computer?.Config?.Value<string>("FONT") ?? "Consolas");
+            Window = rsz;
+            
         }
+
+
         private async void CommandPrompt_PreviewKeyDown(object sender, System.Windows.Input.KeyEventArgs e)
         {
+            if (Keyboard.IsKeyDown(Key.LeftCtrl) && Keyboard.IsKeyDown(Key.C))
+            {
+                (Window.Content as UserWindow)?.Close();
+            }
             if (Keyboard.IsKeyDown(Key.LeftCtrl) && Keyboard.IsKeyDown(Key.T))
             {
                 var text = input.Text;
@@ -185,10 +190,8 @@ namespace Lemur.GUI
 
         private async Task ExecuteJavaScript(string code, int timeout = int.MaxValue)
         {
-            if (computer.CmdLine.TryCommand(code))
+            if (Computer.Current.CmdLine.TryCommand(code))
                 return;
-
-      
 
             input.Clear();
 
