@@ -53,11 +53,8 @@ namespace Lemur.JavaScript.Api
         {
             try
             {
-                Task.Run(() =>
-                {
-                    if (javaScriptEngine.m_engine_internal.HasVariable(functionHandle))
-                        javaScriptEngine?.m_engine_internal?.CallFunction(functionHandle, arg1, arg2);
-                });
+                if (javaScriptEngine.m_engine_internal.HasVariable(functionHandle))
+                    javaScriptEngine?.m_engine_internal?.CallFunction(functionHandle, arg1, arg2);
             }
             catch (Exception e)
             {

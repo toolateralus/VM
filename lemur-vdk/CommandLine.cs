@@ -10,6 +10,7 @@ using Lemur.JS;
 using Lemur.FS;
 using Lemur.Windowing;
 using Lemur.JavaScript.Network;
+using System.Security.Cryptography;
 
 namespace Lemur.OS
 {
@@ -52,16 +53,29 @@ namespace Lemur.OS
         }
         private void KillAll(object[]? obj)
         {
-            if (obj != null && obj.Length == 1 && obj[0] is string name && Computer.ProcessLookupTable.TryGetValue(name, out var pids_arg))
+            List<string> toKill = [];
+
+            if (obj != null && obj.Length == 1)
             {
-                foreach (var pid in pids_arg)
-                    Computer.Current.UserWindows[pid].Close();
-                return;
+                if (obj[0] is string name && Computer.ProcessLookupTable.TryGetValue(name, out var pids_arg))
+                    toKill.AddRange(pids_arg);
+                else
+                {
+                    Notifications.Now($"No process with name { obj[0] } found.");
+                    return;
+                }
+            }
+            else
+            {
+                foreach (var pids in Computer.ProcessLookupTable.Values)
+                    toKill.AddRange(pids);
             }
 
-            foreach (var pids in Computer.ProcessLookupTable.Values)
-                foreach (var pid in pids)
-                    Computer.Current.UserWindows[pid].Close();
+
+
+            foreach (var pid in toKill)
+                Computer.Current.UserWindows[pid].Close();
+
         }
         private void DisposeJSEnv(object[]? obj)
         {

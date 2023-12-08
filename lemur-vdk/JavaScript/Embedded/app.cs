@@ -47,7 +47,7 @@ namespace Lemur.JS.Embedded
             ExposedEvents["get_content"] = GetContent;
         }
 
-        public static void SetProperty(object target, string propertyName, object? value)
+        internal static void SetProperty(object target, string propertyName, object? value)
         {
             if (target == null)
             {
@@ -76,7 +76,7 @@ namespace Lemur.JS.Embedded
                 return;
             }
         }
-        public static object? GetProperty(object target, string propertyName)
+        internal static object? GetProperty(object target, string propertyName)
         {
             if (target == null)
             {
@@ -128,7 +128,7 @@ namespace Lemur.JS.Embedded
 
             return null;
         }
-        public static FrameworkElement? FindControl(UserControl userControl, string controlName)
+        internal static FrameworkElement? FindControl(UserControl userControl, string controlName)
         {
 
             FrameworkElement element = null;
@@ -150,7 +150,7 @@ namespace Lemur.JS.Embedded
             }
             return element;
         }
-        public static FrameworkElement? SearchVisualTree(object element, string controlName)
+        internal static FrameworkElement? SearchVisualTree(object element, string controlName)
         {
             if (element is FrameworkElement frameworkElement && frameworkElement.Name == controlName)
             {
@@ -202,6 +202,7 @@ namespace Lemur.JS.Embedded
             });
             return output;
         }
+        
         public static BitmapImage BitmapImageFromBase64(string base64String)
         {
             try
@@ -309,6 +310,7 @@ namespace Lemur.JS.Embedded
 
             image.Source = bitmap;
         }
+
         public object? getProperty(string controlName, object? property)
         {
             object? output = null;
@@ -342,12 +344,11 @@ namespace Lemur.JS.Embedded
             }));
 
         }
+
         public object? pushEvent(string targetControl, string eventType, object? data)
         {
             if (ExposedEvents.TryGetValue(eventType, out var handler))
-            {
                 return handler.Invoke(targetControl, data);
-            }
             return null;
         }
         public void eventHandler(string targetControl, string methodName, int type)
@@ -355,9 +356,25 @@ namespace Lemur.JS.Embedded
             if (Computer.Current.UserWindows.TryGetValue(id, out var app))
                 Task.Run(async () => await app.JavaScriptEngine?.CreateEventHandler(id, targetControl, methodName, type));
         }
-        public void start(string path, params object[] args)
+        public void close(string pid)
         {
-            Computer.Current.Window.Dispatcher.InvokeAsync(async () => await Computer.Current.OpenCustom(path, args));
+            Computer.Current.CloseApp(pid);
+        }
+        public string start(string path, params object[] args)
+        {
+            string pid = "PROC_START_FAILURE";
+
+            Computer.Current.Window.Dispatcher.Invoke(start_app);
+
+            async void start_app()
+            {
+                await Computer.Current.OpenCustom(path, args).ConfigureAwait(true);
+
+                pid = $"p{Computer.processCount}"; // the last created process. 
+                // this way of fetching a pid is very presumptuous and bad.
+            }
+
+            return pid;
         }
         public void loadApps(object? path)
         {
@@ -422,7 +439,7 @@ namespace Lemur.JS.Embedded
 
         }
 
-        internal void __SetId(string id)
+        internal void __Attach__Process__ID(string id)
         {
             this.id = id;
         }

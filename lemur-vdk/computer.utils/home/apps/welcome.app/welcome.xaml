@@ -6,7 +6,18 @@
              mc:Ignorable="d" 
              d:DesignHeight="450" d:DesignWidth="800" Background="#AA3000a0" BorderBrush="White" BorderThickness="5" >
     <Grid>
-        <RichTextBox Background="#FF3A3838" Foreground="#FFC5C5C5" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Auto">
+    
+    	 <Grid.ColumnDefinitions>
+		     <ColumnDefinition Width="*"/>
+		     <ColumnDefinition Width="*"/>
+		 </Grid.ColumnDefinitions>
+		 
+       <StackPanel Grid.Column="0" Orientation="Vertical">
+       		<Label Style="{StaticResource LabelStyle}" Content="Tutorials &amp; Documentation"/>
+        	<Button Style="{StaticResource ButtonStyle}" x:Name="tut01" Content="Getting Started"/>
+    	</StackPanel>
+    
+        <RichTextBox Grid.Column="1" Background="#FF3A3838" Foreground="#FFC5C5C5" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Auto">
             <FlowDocument>
                 <Paragraph>
                     <Bold>Welcome to Lemur VDK</Bold>
@@ -20,5 +31,7 @@
                 </Paragraph>
             </FlowDocument>
         </RichTextBox>
+        
+     
     </Grid>
 </UserControl>

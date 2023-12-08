@@ -149,8 +149,8 @@
             <End>/</End>
         </Span>
         <Span color="String" multiline="true">
-            <Begin>"</Begin>
-            <End>"</End>
+            <Begin>"|`</Begin>
+            <End>"|`</End>
             <RuleSet>
                 <Span begin="\\" end="." />
             </RuleSet>

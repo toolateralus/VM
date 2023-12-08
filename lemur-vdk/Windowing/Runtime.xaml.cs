@@ -24,9 +24,9 @@ namespace Lemur.GUI
 
             OnWindowStateChanged += (ws) => WindowState = ws;
 
-
-            IDBox.Focus();
             IDBox.Text = "0";
+
+            BootButton.Focus();
 
             StartPerpetualColorAnimation();
         }

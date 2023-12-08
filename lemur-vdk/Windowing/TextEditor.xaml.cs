@@ -52,6 +52,16 @@ namespace Lemur.GUI
         public static string? DesktopIcon => FileSystem.GetResourcePath("texteditor.png");
 
         public MarkdownViewer? mdViewer;
+        
+        public TextEditor(string path, bool renderMarkdown) : this(path)
+        {
+            if (renderMarkdown)
+            {
+                mdViewer = new MarkdownViewer();
+                mdViewer.RenderMarkdown(Contents);
+                Computer.Current.OpenApp(mdViewer, "md.app", Computer.GetNextProcessID());
+            }
+        }
 
         /// <summary>
         /// Loads a file from path and opens a new text editor for that file.
@@ -89,9 +99,9 @@ namespace Lemur.GUI
 
             shTypeBox.SelectedIndex = 1;
         }
-        public void LateInit(Computer c)
+        public void LateInit(Computer c, ResizableWindow win)
         {
-            // neccesary, deprecated
+            
         }
         protected override void OnKeyUp(KeyEventArgs e)
         {

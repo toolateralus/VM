@@ -11,7 +11,7 @@ function call(command) {
     term.call(command);
 }
 function sleep(ms) {
-    return term.sleep(ms);
+    return interop.sleep(ms);
 }
 function read() {
     return term.read();

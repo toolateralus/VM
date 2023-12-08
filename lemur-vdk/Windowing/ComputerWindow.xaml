@@ -29,7 +29,7 @@
             <WrapPanel Focusable="False" x:Name="DesktopIconPanel" Orientation="Vertical"/>
         </gui:WindowManager>
 
-        <StackPanel Focusable="False" Style="{StaticResource StackPanelStyle}"  x:Name="NotificationStackPanel" Grid.Row="1" Orientation="Vertical" VerticalAlignment="Bottom" CanVerticallyScroll="True" CanHorizontallyScroll="True" ScrollViewer.VerticalScrollBarVisibility="Visible" ScrollViewer.CanContentScroll="True"/>
+        <StackPanel Focusable="False" Style="{StaticResource StackPanelStyle}"  x:Name="NotificationStackPanel" Grid.Column="1" Orientation="Vertical" VerticalAlignment="Bottom" CanVerticallyScroll="True" CanHorizontallyScroll="True" ScrollViewer.VerticalScrollBarVisibility="Visible" ScrollViewer.CanContentScroll="True"/>
         <Grid Focusable="False" x:Name="Taskbar" Grid.Row="1" Grid.Column="0" Grid.ColumnSpan="2">
             <Grid.ColumnDefinitions>
                 <ColumnDefinition  Width="*"/>

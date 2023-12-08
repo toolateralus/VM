@@ -24,7 +24,7 @@ namespace Lemur
     {
         internal string WorkingDir { get; private set; }
         internal uint ID { get; private set; }
-        private static uint processCount;
+        internal static uint processCount;
 
         [Obsolete("This is a (probably broken) tcp network implementation. It is not especially secure. Use at your own risk, but probably don't use this. it is unused by default")]
         internal NetworkConfiguration NetworkConfiguration { get; set; }
@@ -162,19 +162,30 @@ namespace Lemur
 
             void OnWindowClosed()
             {
-                Window.Desktop.Children.Remove(resizable_window);
-                
-                Current?.UserWindows.Remove(processID);
-                
-                resizable_window.Content = null;
-                
-                Window.RemoveTaskbarButton(type);
+                // for pesky calls that arent from the UI thread, from javascript etc.
+                if (Thread.CurrentThread.ApartmentState != ApartmentState.STA)
+                    App.Current.Dispatcher.Invoke(() => closeMethod(type, processID, resizable_window, array));
+                else
+                {
+                    closeMethod(type, processID, resizable_window, array);
+                }
 
-                // the array within the process lookup table
-                array.Remove(processID);
+                void closeMethod(string type, string processID, ResizableWindow resizable_window, List<string> array)
+                {
+                    Window.Desktop.Children.Remove(resizable_window);
 
-                if (array.Count == 0)
-                    ProcessLookupTable.Remove(type);
+                    Current?.UserWindows.Remove(processID);
+
+                    resizable_window.Content = null;
+
+                    Window.RemoveTaskbarButton(type);
+
+                    // the array within the process lookup table
+                    array.Remove(processID);
+
+                    if (array.Count == 0)
+                        ProcessLookupTable.Remove(type);
+                }
             }
 
             userWindow.OnAppClosed += OnWindowClosed;
@@ -240,22 +251,30 @@ namespace Lemur
 
             var control = XamlHelper.ParseUserControl(data.XAML);
 
+
             if (control == null)
             {
+                if (csApps.TryGetValue(type, out var csType))
+                {
+                    OpenApp((UserControl)Activator.CreateInstance(csType, cmdLineArgs)!, type, GetNextProcessID());
+                    return; 
+                }
+
                 Notifications.Now($"Error : either the app was not found or there was an error parsing xaml or js for {type}.");
                 return;
             }
+
             string processID = GetNextProcessID();
 
             Engine engine = new();
 
-            engine.AppModule.__SetId(processID);
+            engine.AppModule.__Attach__Process__ID(processID);
 
             var code = await InstantiateWindowClass(type, processID, cmdLineArgs, data, engine).ConfigureAwait(true);
 
             OpenApp(control, type, processID, engine);
 
-            await engine.Execute(code);
+            await engine.Execute(code).ConfigureAwait(false);
         }
 
         internal static string GetNextProcessID()
