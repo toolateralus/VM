@@ -42,6 +42,12 @@ namespace Lemur.GUI
                 e.Handled = true;
             };
         }
+
+        protected override void OnPreviewMouseLeftButtonDown(MouseButtonEventArgs e)
+        {
+            Owner?.BringToTopOfDesktop();
+        }
+
         internal void InitializeUserContent(ResizableWindow frame, UserControl actualUserContent, Engine? engine)
         {
             Owner = frame;
