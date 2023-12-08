@@ -38,11 +38,11 @@
 
             <StackPanel Focusable="False" Style="{StaticResource StackPanelStyle}" x:Name="TaskbarStackPanel" Orientation="Horizontal" Width="Auto" Height="25">
                 <Label Focusable="False" Style="{StaticResource LabelStyle}" x:Name="TimeLabel" Content="no time or date."/>
-                <Button Focusable="False" Style="{StaticResource ButtonStyle}" x:Name="ShutdownBtn" Click="ShutdownClick" Content="Shut down"/>
             </StackPanel>
 
-            <StackPanel Focusable="False" Style="{StaticResource StackPanelStyle}" Grid.Row="1" Grid.Column="2" x:Name="RightSideTaskbarPanel">
-                <Button Focusable="False" Style="{StaticResource ButtonStyle}" Content="Clear Notifications" Click="ClearNotificaionsClicked"/>
+            <StackPanel Focusable="False" Style="{StaticResource StackPanelStyle}" Grid.Row="1" Grid.Column="2" x:Name="RightSideTaskbarPanel" Orientation="Horizontal">
+                <Button Focusable="False" Style="{StaticResource ButtonStyle}" BorderBrush="Gray" Margin="0,0,5,0" x:Name="ShutdownBtn" Click="ShutdownClick" Content="Shut down"/>
+                <Button Focusable="False" Style="{StaticResource ButtonStyle}" BorderBrush="Gray" Margin="0,0,5,0" Content="Clear Notifications" Click="ClearNotificaionsClicked"/>
             </StackPanel>
         </Grid>
     </Grid>

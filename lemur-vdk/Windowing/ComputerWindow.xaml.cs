@@ -11,6 +11,8 @@ using Lemur.Windowing;
 using Lemur.FS;
 using Key = System.Windows.Input.Key;
 using System.Xml.Linq;
+using System.Text.RegularExpressions;
+using System.Collections.Generic;
 
 namespace Lemur.GUI
 {
@@ -59,7 +61,28 @@ namespace Lemur.GUI
             
             btn.Margin = new Thickness(15, 15, 15, 15);
             btn.Content = appName;
-            btn.Name = appName.Split(".")[0];
+
+            string regexPattern = @"[_a-zA-Z][_a-zA-Z0-9]*"; 
+
+            // Validate the input with the regex
+            string[] splitName = appName.Split(".");
+            if (splitName.Length > 0)
+            {
+                string validName = splitName[0];
+                if (Regex.IsMatch(validName, regexPattern))
+                {
+                    btn.Name = validName;
+                }
+                else
+                {
+                    Notifications.Now("Invalid application names");
+                }
+            }
+            else
+            {
+                Notifications.Now("Invalid application names");
+            }
+
             return btn;
         }
         public Button MakeTaskbarButton(string title, Action Toggle)
@@ -109,6 +132,20 @@ namespace Lemur.GUI
         
         public void ShutdownClick(object sender, RoutedEventArgs e)
         {
+            if (Computer.ProcessLookupTable.Count > 0)
+            {
+                var answer = MessageBox.Show("Are you sure you want to shut down? all unsaved changes will be lost.", 
+                                            "Shutdown", 
+                                            MessageBoxButton.YesNoCancel, 
+                                            MessageBoxImage.Warning);
+                if (answer == MessageBoxResult.Yes)
+                {
+                    App.Current.Shutdown();
+                    Close();
+                }
+                return;
+            }
+
             App.Current.Shutdown();
             Close();
         }
@@ -184,7 +221,7 @@ namespace Lemur.GUI
         public static BitmapImage? GetIcon(Type type) 
         {
             var properties = type.GetProperties();
-
+            
             foreach (var property in properties)
             {
                 if (property.Name.Contains("DesktopIcon") &&
@@ -277,20 +314,21 @@ namespace Lemur.GUI
         // Todo: we shouldn't be relying on the button being present to determine whether an app is installed or not lol.
         internal void RemoveDesktopIcon(string name)
         {
-            System.Collections.IList list = DesktopIconPanel.Children;
 
             Dispatcher.Invoke(() =>
             {
+                List<Button> toRemove = new();
 
-                foreach (var item in list)
+                foreach (var item in DesktopIconPanel.Children)
                 {
-                    if (item is Button btn 
+                    if (item is Button btn
                         && btn.Name == name.Replace(".app", "")
                             .Replace(".web", ""))
-                    {
-                        DesktopIconPanel.Children.Remove(btn);
-                    }
+                        toRemove.Add(btn);
                 }
+
+                foreach (var btn in toRemove)
+                    DesktopIconPanel.Children.Remove(btn);
 
            });
         }
@@ -314,7 +352,17 @@ namespace Lemur.GUI
 
                 xamlSource.Click += (sender, @event) => XamlSource_Click(sender, @event, appName);
 
+                MenuItem uninstall = new()
+                {
+                    Header = "uninstall app"
+                };
 
+                uninstall.Click += (sender, @event) =>
+                {
+                    Computer.Current.Uninstall(appName);
+                };
+
+                contextMenu.Items.Add(uninstall);
                 contextMenu.Items.Add(jsSource);
                 contextMenu.Items.Add(xamlSource);
 
@@ -381,6 +429,11 @@ namespace Lemur.GUI
                 DesktopIconPanel.Children.Add(btn);
             });
 
+        }
+
+        private void Uninstall_Click(object sender, RoutedEventArgs e)
+        {
+            throw new NotImplementedException();
         }
 
         private void XamlSource_Click(object sender, RoutedEventArgs e, string appName)
