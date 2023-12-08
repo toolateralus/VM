@@ -77,8 +77,8 @@ namespace Lemur.GUI
             lastPos = new(Canvas.GetLeft(this), Canvas.GetTop(this));
             Canvas.SetTop(this, 0);
             Canvas.SetLeft(this, 0);
-            Width = SystemParameters.PrimaryScreenWidth;
-            Height = SystemParameters.PrimaryScreenHeight;
+            Width = SystemParameters.PrimaryScreenWidth - 5;
+            Height = SystemParameters.PrimaryScreenHeight - 25;
             BringToTopOfDesktop();
 
         }

@@ -23,13 +23,13 @@
         </Grid.RowDefinitions>
 
 
-        <Image Grid.ColumnSpan="2" x:Name="desktopBackground" Stretch="UniformToFill"/>
+        <Image Grid.ColumnSpan="2" Grid.RowSpan="1" x:Name="desktopBackground" Stretch="UniformToFill"/>
 
-        <gui:WindowManager Focusable="False" x:Name="Desktop" Grid.Row="0" Grid.Column="0" Grid.ColumnSpan="2" Background="Transparent">
+        <gui:WindowManager ClipToBounds="True" Focusable="False" x:Name="Desktop" Grid.Row="0" Grid.Column="0" Grid.ColumnSpan="2" Grid.RowSpan="1" Background="Transparent">
             <WrapPanel Focusable="False" x:Name="DesktopIconPanel" Orientation="Vertical"/>
         </gui:WindowManager>
 
-        <StackPanel Focusable="False" Style="{StaticResource StackPanelStyle}"  x:Name="NotificationStackPanel" Grid.Column="1" Orientation="Vertical" VerticalAlignment="Bottom" CanVerticallyScroll="True" CanHorizontallyScroll="True" ScrollViewer.VerticalScrollBarVisibility="Visible" ScrollViewer.CanContentScroll="True"/>
+        <StackPanel Focusable="False" Style="{StaticResource StackPanelStyle}"  x:Name="NotificationStackPanel" Grid.Row="1" Orientation="Vertical" VerticalAlignment="Bottom" CanVerticallyScroll="True" CanHorizontallyScroll="True" ScrollViewer.VerticalScrollBarVisibility="Visible" ScrollViewer.CanContentScroll="True"/>
         <Grid Focusable="False" x:Name="Taskbar" Grid.Row="1" Grid.Column="0" Grid.ColumnSpan="2">
             <Grid.ColumnDefinitions>
                 <ColumnDefinition  Width="*"/>

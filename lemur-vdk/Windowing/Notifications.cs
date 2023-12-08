@@ -16,7 +16,7 @@ namespace Lemur.Windowing
 
             var cw = Computer.Current.Window;
 
-            if (cw.Disposing || cw is null || cw.Dispatcher is null)
+            if (cw is null || cw.Disposing != false || cw.Dispatcher is null)
                 return;
 
             void send_notification_ui()

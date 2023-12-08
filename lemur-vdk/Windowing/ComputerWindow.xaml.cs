@@ -94,7 +94,9 @@ namespace Lemur.GUI
         }
         public Button MakeTaskbarButton(string pID, string title, Action Toggle)
         {
-            var btn = MakeButton(width: 65);
+            var btn = MakeButton(width: Math.Max(100, 8 * title.Length));
+
+            btn.BorderBrush = Brushes.Gray;
 
             var ctx = new ContextMenu();
             btn.ContextMenu = ctx;

@@ -116,11 +116,12 @@ namespace Lemur.GUI
             if (File.Exists(path))
             {
                 string? extension = System.IO.Path.GetExtension(path)?.ToLower();
-                
 
                 if (extension == null)
                     return;
 
+                if (extension == ".xaml.js")
+                    extension = ".js";
 
                 SetSyntaxHighlighting(extension);
 

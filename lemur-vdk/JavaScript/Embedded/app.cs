@@ -371,10 +371,17 @@ namespace Lemur.JS.Embedded
             {
                 Action<string, string> procDir = (root, file) =>
                 {
-                    if (Path.GetExtension(file) is string ext && ext == ".app")
-                        Computer.Current.InstallJSWPF(Path.GetFileName(file));
-                    if (Path.GetExtension(file) is string _ext && _ext == ".web")
-                        Computer.Current.InstallJSHTML(Path.GetFileName(file));
+                    try
+                    {
+                        if (Path.GetExtension(file) is string ext && ext == ".app")
+                            Computer.Current.InstallJSWPF(Path.GetFileName(file));
+                        if (Path.GetExtension(file) is string _ext && _ext == ".web")
+                            Computer.Current.InstallJSHTML(Path.GetFileName(file));
+
+                    } catch
+                    {
+                        Notifications.Now($"Failed to install {file}");
+                    }
                 };
 
                 FileSystem.ProcessDirectoriesAndFilesRecursively(AbsPath, procDir, /* proc file */ (_, _) => { });
