@@ -9,6 +9,7 @@ using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.IO;
 using System.Linq;
 using System.Threading;
@@ -33,9 +34,8 @@ namespace Lemur
 
         
         // type : process(es)
-        internal static Dictionary<string, List<Process>> Processes = [];
-        internal readonly Dictionary<string, UserWindow> UserWindows = new();
-        internal readonly Dictionary<string, Type> csApps = new();
+        internal static Dictionary<string, List<Process>> ProcessClassTable = [];
+        internal readonly Dictionary<string, Type> csApps = [];
 
         internal readonly List<string> jsApps = new();
 
@@ -128,7 +128,9 @@ namespace Lemur
 
             LoadConfig();
 
-            if (UserWindows.ContainsKey(type))
+
+
+            if (ProcessClassTable.ContainsKey(type))
             {
                 if (char.IsDigit(type.Last()))
                 {
@@ -173,8 +175,6 @@ namespace Lemur
                 {
                     Window.Desktop.Children.Remove(resizable_window);
 
-                    Current?.UserWindows.Remove(processID);
-
                     resizable_window.Content = null;
 
                     Window.RemoveTaskbarButton(type);
@@ -182,9 +182,9 @@ namespace Lemur
                     array.Remove(process);
 
                     if (array.Count == 0)
-                        Processes.Remove(type);
+                        ProcessClassTable.Remove(type);
                     else
-                        Processes[type] = array;
+                        ProcessClassTable[type] = array;
                     
                 }
             }
@@ -201,25 +201,24 @@ namespace Lemur
             Canvas.SetLeft(resizable_window, 200);
         }
 
-        private void RegisterNewProcess(Process process, out List<Process> procList)
+        private static void RegisterNewProcess(Process process, out List<Process> procList)
         {
-            UserWindows[process.ID] = process.UI;
-
             GetProcessesOfType(process.Type, out procList);
 
             procList.Add(process);
 
-            Processes[process.Type] = procList;
+            ProcessClassTable[process.Type] = procList;
 
             process.OnProcessTermination += () =>
             {
-                var procList = Processes[process.Type];
+                var procList = ProcessClassTable[process.Type];
 
                 procList.Remove(process);
-                Processes[process.Type] = procList;
+
+                ProcessClassTable[process.Type] = procList;
                 
                 if (procList.Count == 0)
-                    Processes.Remove(process.Type);
+                    ProcessClassTable.Remove(process.Type);
 
             };
 
@@ -227,7 +226,7 @@ namespace Lemur
 
         private static void GetProcessesOfType(string name, out List<Process> processes)
         {
-            if (!Processes.TryGetValue(name, out processes!))
+            if (!ProcessClassTable.TryGetValue(name, out processes!))
                 processes= [];
         }
 
@@ -319,7 +318,7 @@ namespace Lemur
         {
             var processClass = "Unknown process";
 
-            foreach (var procList in Processes)
+            foreach (var procList in ProcessClassTable)
                 foreach (var proc in from proc in procList.Value
                                      where proc.ID == identifier
                                      select proc)
@@ -374,16 +373,12 @@ namespace Lemur
         }
         public static IReadOnlyCollection<T> TryGetAllProcessesOfType<T>() where T : UserControl
         {
-            List<T> contents = new();
-            foreach (var window in Current.UserWindows)
+            List<T> contents = [];
+            foreach (var process in ProcessClassTable.Values.SelectMany(i => i.Select(i => i))) // flatten array
             {
-                window.Value.Dispatcher.Invoke(() =>
+                process.UI.Dispatcher.Invoke(() =>
                 {
-
-                    if (window.Value is not UserWindow userWindow)
-                        return;
-
-                    if (userWindow.ContentsFrame is not Frame frame)
+                    if (process.UI.ContentsFrame is not Frame frame)
                         return;
 
                     if (frame.Content is not T instance)
@@ -396,14 +391,14 @@ namespace Lemur
         }
         public static T? TryGetProcessOfTypeUnsafe<T>() where T : UserControl
         {
-            var matchingWindow = Current.UserWindows.Values.FirstOrDefault(window =>
-            {
-                return window is UserWindow userWindow &&
-                       userWindow.ContentsFrame is Frame frame &&
-                       frame.Content is T;
-            });
+            T? matchingWindow = default(T);
 
-            return matchingWindow?.ContentsFrame.Content as T;
+            foreach (var pclass in ProcessClassTable)
+                foreach (var proc in pclass.Value)
+                    if (proc.UI.ContentsFrame is Frame frame && frame.Content is T instance)
+                        matchingWindow = instance;
+
+            return matchingWindow;
         }
         public static T? TryGetProcessOfType<T>() where T : UserControl
         {
@@ -453,9 +448,14 @@ namespace Lemur
                     NetworkConfiguration?.StopClient();
                     CmdLine?.Dispose();
 
-                    foreach (var item in UserWindows)
-                        item.Value.Close();
+                    List<Process> procs = [];
+                    foreach (var item in ProcessClassTable.Values.SelectMany(i => i))
+                        procs.Add(item);
+
+                    foreach (var item in procs)
+                        item.UI.Close();
                 }
+
 
                 JavaScript = null!;
                 Window = null!;
@@ -474,9 +474,17 @@ namespace Lemur
 
         internal void CloseApp(string pID)
         {
-            if (UserWindows.TryGetValue(pID, out var win))
-                win.Close();
+            if (GetProcess(pID) is Process p)
+                p.UI.Close();
             else Notifications.Now($"Could not find process {pID}");
+        }
+
+        internal static Process? GetProcess(string pid)
+        {
+            foreach (var pclass in ProcessClassTable)
+                if (pclass.Value.FirstOrDefault(p => p.ID == pid) is Process proc)
+                    return proc;
+            return null;
         }
     }
 }

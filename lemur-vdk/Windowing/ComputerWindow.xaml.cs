@@ -148,19 +148,22 @@ namespace Lemur.GUI
                 case Key.Tab:
                     if (Keyboard.IsKeyDown(Key.LeftCtrl))
                     {
-                        if (Computer.Current.UserWindows.Count == 0)
+
+                        var windows = Computer.ProcessClassTable.Values.SelectMany(i => i).ToList();
+
+                        if (windows.Count == 0)
                             return;
 
-                        ctrlTabIndex = Math.Clamp(ctrlTabIndex, 0, Computer.Current.UserWindows.Count - 1);
+                        ctrlTabIndex = Math.Clamp(ctrlTabIndex, 0, windows.Count - 1);
 
-                        var windowElement = Computer.Current.UserWindows.ElementAt(ctrlTabIndex);
+                        var windowElement = windows.ElementAt(ctrlTabIndex);
 
                         ctrlTabIndex += 1;
 
-                        if (ctrlTabIndex > Computer.Current.UserWindows.Count - 1)
+                        if (ctrlTabIndex > windows.Count - 1)
                             ctrlTabIndex = 0;
 
-                        var ownerWindow = windowElement.Value?.Owner;
+                        var ownerWindow = windowElement?.UI?.Owner;
                         ownerWindow?.BringToTopOfDesktop();
                     }
                     break;
@@ -169,7 +172,7 @@ namespace Lemur.GUI
 
         public void ShutdownClick(object sender, RoutedEventArgs e)
         {
-            if (Computer.Processes.Count > 0)
+            if (Computer.ProcessClassTable.Count > 0)
             {
                 var answer = MessageBox.Show("Are you sure you want to shut down? all unsaved changes will be lost.",
                                             "Shutdown",

@@ -14,6 +14,7 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
+using static Lemur.Computer;
 using Image = System.Windows.Controls.Image;
 
 namespace Lemur.JS.Embedded
@@ -111,14 +112,11 @@ namespace Lemur.JS.Embedded
         }
         public UserControl? GetUserContent()
         {
-            var window = Computer.Current?.Window;
+            var window = Computer.GetProcess(id)?.UI;
 
-            var resizableWins = Computer.Current.UserWindows?.Where(W => W.Key == id);
-
-            if (resizableWins != null && resizableWins.Any())
+            if (window != null)
             {
-                UserWindow win = resizableWins.First().Value;
-                var frame = win.ContentsFrame;
+                var frame = window.ContentsFrame;
                 if (frame.Content is UserControl userContent)
                     return userContent;
             }
@@ -350,8 +348,8 @@ namespace Lemur.JS.Embedded
         }
         public void eventHandler(string targetControl, string methodName, int type)
         {
-            if (Computer.Current.UserWindows.TryGetValue(id, out var app))
-                Task.Run(async () => await app.JavaScriptEngine?.CreateEventHandler(id, targetControl, methodName, type));
+            if (Computer.GetProcess(id) is Process p)
+                Task.Run(async () => await p.UI.JavaScriptEngine?.CreateEventHandler(id, targetControl, methodName, type));
         }
         public void close(string pid)
         {

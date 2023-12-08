@@ -16,7 +16,7 @@ namespace Lemur.JS.Embedded
             Image image = null;
             Computer.Current.Window.Dispatcher.Invoke(() =>
             {
-                var content = Computer.Current.UserWindows[pid];
+                var content = Computer.GetProcess(pid).UI;
                 var app = content.JavaScriptEngine.AppModule;
                 var control = app.GetUserContent();
                 image = Embedded.app.FindControl(control, TargetControl) as Image ?? throw new InvalidCastException(nameof(control));

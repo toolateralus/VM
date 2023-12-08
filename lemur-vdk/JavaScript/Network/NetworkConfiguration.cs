@@ -2,6 +2,7 @@
 using Lemur.Windowing;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Net;
 using System.Net.Sockets;
 using System.Runtime.CompilerServices;
@@ -83,12 +84,12 @@ namespace Lemur.JavaScript.Network
 
             NetworkEvents[outCh].Enqueue((msg, inCh));
 
-            foreach (var userWindow in Computer.Current.UserWindows.Values)
+            foreach (var userWindow in Computer.ProcessClassTable.SelectMany(i => i.Value.Select(i => i)))
             {
-                if (userWindow.JavaScriptEngine?.EventHandlers == null)
+                if (userWindow?.UI.JavaScriptEngine?.EventHandlers == null)
                     continue;
 
-                foreach (var eventHandler in userWindow.JavaScriptEngine.EventHandlers)
+                foreach (var eventHandler in userWindow?.UI?.JavaScriptEngine.EventHandlers)
                     if (eventHandler is NetworkEvent networkEventHandler)
                         networkEventHandler.InvokeEvent(outCh, inCh, msg);
             }

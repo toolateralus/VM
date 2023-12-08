@@ -9,7 +9,6 @@ using Lemur.Windowing;
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Globalization;
 using System.IO;
 using System.Linq;
@@ -17,6 +16,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Input;
+using static Lemur.Computer;
 
 namespace Lemur.JS
 {
@@ -86,7 +86,7 @@ namespace Lemur.JS
             EmbedObject("file", FileModule);
             EmbedObject("term", TermModule);
             EmbedObject("Key", KeyModule);
-            EmbedType("Stopwatch", typeof(Stopwatch));
+            EmbedType("Stopwatch", typeof(System.Diagnostics.Stopwatch));
             EmbedObject("config", Computer.Current.Config);
 
             EmbedAllObjects();
@@ -263,7 +263,7 @@ namespace Lemur.JS
 
             wnd.Dispatcher.Invoke(() =>
             {
-                var content = Computer.Current.UserWindows[identifier].JavaScriptEngine.AppModule.GetUserContent();
+                var content = Computer.GetProcess(identifier)?.UI?.JavaScriptEngine?.AppModule?.GetUserContent();
 
                 if (content == null)
                 {
@@ -289,7 +289,7 @@ namespace Lemur.JS
 
             });
 
-            if (!Computer.Current.UserWindows.TryGetValue(identifier, out var app))
+            if (Computer.GetProcess(identifier) is not Process p)
             {
                 Notifications.Now("Creating an event handler failed : this is an engine bug. report it on GitHub if you'd like");
                 return;
@@ -308,7 +308,7 @@ namespace Lemur.JS
             //    disposed = true;
             //};
 
-            app.OnAppClosed += () =>
+            p.OnProcessTermination += () =>
             {
                 if (disposed)
                     return;

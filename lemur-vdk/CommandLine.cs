@@ -56,8 +56,8 @@ namespace Lemur.OS
 
             if (obj != null && obj.Length == 1)
             {
-                if (obj[0] is string name && Computer.Processes.TryGetValue(name, out var pids_arg))
-                    toKill.AddRange(pids_arg.Select(i => i.ID));
+                if (obj[0] is string name && Computer.ProcessClassTable.TryGetValue(name, out var procClass))
+                    toKill.AddRange(procClass.Select(i => i.ID));
                 else
                 {
                     Notifications.Now($"No process with name {obj[0]} found.");
@@ -66,14 +66,15 @@ namespace Lemur.OS
             }
             else
             {
-                foreach (var pids in Computer.Processes.Values)
-                    toKill.AddRange(pids.Select(i => i.ID));
+                foreach (var procClass in Computer.ProcessClassTable.Values)
+                    toKill.AddRange(procClass.Select(i => i.ID));
             }
 
-
-
             foreach (var pid in toKill)
-                Computer.Current.UserWindows[pid].Close();
+            {
+                var proc = Computer.GetProcess(pid);
+                proc?.UI.Close();
+            }
 
         }
         private void DisposeJSEnv(object[]? obj)
@@ -128,9 +129,9 @@ namespace Lemur.OS
         }
         private void LP(object[]? obj)
         {
-            foreach (var item in Computer.Current.UserWindows)
+            foreach (var item in Computer.ProcessClassTable)
             {
-                Notifications.Now($"\n{item.Key}");
+                Notifications.Now($"Process: {item.Key} \n\t PIDs: {string.Join(",", item.Value.Select(i => i.ID))}");
             }
 
         }
