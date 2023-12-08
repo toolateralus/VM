@@ -6,10 +6,10 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using Lemur.GUI;
-using Lemur.Network;
 using Lemur.JS;
 using Lemur.FS;
-using lemur.Windowing;
+using Lemur.Windowing;
+using Lemur.JavaScript.Network;
 
 namespace Lemur.OS
 {
@@ -47,7 +47,7 @@ namespace Lemur.OS
                 new("dispose", DisposeJSEnv, "disposes of the current running javascript environment, and instantiates a new one."),
                 new("ip", getIP, "fetches the local ip address of wifi/ethernet"),
                 new("host", Host, "hosts a server on the provided <port>, none provided it will default to 8080"),
-                new("unhost", (_) => Computer.Current.Network.StopHosting(), "if a server is currently running on this machine this halts any active connections and closes the sever."),
+                new("unhost", (_) => Computer.Current.NetworkConfiguration.StopHosting(), "if a server is currently running on this machine this halts any active connections and closes the sever."),
             };
         }
         private void KillAll(object[]? obj)
@@ -74,7 +74,7 @@ namespace Lemur.OS
             var oldEngine = Computer.Current.JavaScript;
             oldEngine.Dispose();
 
-            Engine newEngine = new(Computer.Current);
+            Engine newEngine = new();
             
 
             Computer.Current.JavaScript = newEngine;
@@ -91,9 +91,9 @@ namespace Lemur.OS
             Task.Run(async () =>
             {
                 int? port = obj?[0] as int?;
-                if (await Computer.Current.Network.StartHosting(port ?? NetworkConfiguration.defaultPort))
+                if (await Computer.Current.NetworkConfiguration.StartHosting(port ?? NetworkConfiguration.defaultPort))
                 {
-                    Notifications.Now($"Hosting on {Computer.Current.Network.GetIPPortString()}");
+                    Notifications.Now($"Hosting on {Computer.Current.NetworkConfiguration.GetIPPortString()}");
                     return;
                 }
                 Notifications.Now($"Failed to begin hosting on {LANIPFetcher.GetLocalIPAddress().MapToIPv4()}:{port}");

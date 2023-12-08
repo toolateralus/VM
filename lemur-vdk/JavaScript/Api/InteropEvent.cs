@@ -10,9 +10,11 @@ using System.Threading;
 using System.ComponentModel;
 using System.Windows.Controls;
 using System.Windows.Controls.Primitives;
-using lemur.Windowing;
+using Lemur.Windowing;
+using Lemur;
+using Lemur.JS;
 
-namespace Lemur.JS
+namespace Lemur.JavaScript.Api
 {
     public class InteropEvent : InteropFunction
     {
@@ -22,12 +24,12 @@ namespace Lemur.JS
         public InteropEvent(FrameworkElement control, XAML_EVENTS @event, Engine js, string id, string method)
         {
             Event = @event;
-            this.javaScriptEngine = js;
+            javaScriptEngine = js;
             element = control;
 
             Computer.Current.Window.Dispatcher.Invoke(async delegate
             {
-                base.functionHandle = await CreateFunction(id, method);
+                functionHandle = await CreateFunction(id, method);
                 CreateHook(control, @event);
             });
         }
@@ -93,7 +95,8 @@ namespace Lemur.JS
                             lb.SelectionChanged += selectorevent;
                             onDispose += () => lb.SelectionChanged -= selectorevent;
                         }
-                        else {
+                        else
+                        {
                             Notifications.Now($"Invalid hook: {control.Name} did not have the 'SELECTION_CHANGED' event to hook into");
                         }
                     }
@@ -129,7 +132,7 @@ namespace Lemur.JS
             {
                 var mouseArgs = new object[] {
                     Mouse.LeftButton is MouseButtonState.Pressed,
-                    Mouse.RightButton is MouseButtonState.Pressed 
+                    Mouse.RightButton is MouseButtonState.Pressed
                 };
 
                 InvokeMouse(sender?.GetType()?.GetProperty("Name")?.GetValue(sender) ?? "unknown", mouseArgs);
@@ -153,7 +156,7 @@ namespace Lemur.JS
 
         }
 
-        public void InvokeKeyboard(object? sender, System.Windows.Input.KeyEventArgs e)
+        public void InvokeKeyboard(object? sender, KeyEventArgs e)
         {
             InvokeEventBackground(e.Key.ToString(), e.IsDown);
         }

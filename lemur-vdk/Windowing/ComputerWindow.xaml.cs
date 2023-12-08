@@ -7,7 +7,7 @@ using System.Windows.Controls;
 using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
-using lemur.Windowing;
+using Lemur.Windowing;
 using Lemur.FS;
 using Key = System.Windows.Input.Key;
 
@@ -21,20 +21,17 @@ namespace Lemur.GUI
     }
     public partial class ComputerWindow : Window, IDisposable
     {
-        public Computer Computer;
         private Timer clock;
         public bool Disposing;
         public static event Action<Key, bool> OnKeyDown;
         public int TopMostZIndex { get; internal set; }
-        public ComputerWindow(Computer pc)
+        public ComputerWindow()
         {
             InitializeComponent();
 
             desktopBackground.Source = LoadImage(FileSystem.GetResourcePath("Background.png") ?? "background.png");
 
             Keyboard.AddKeyDownHandler(this, Computer_KeyDown);
-
-            Computer = pc;
 
             clock = new Timer(delegate
             {
@@ -86,20 +83,20 @@ namespace Lemur.GUI
                     if (Keyboard.IsKeyDown(Key.LeftCtrl))
                     {
                         var cmd = new CommandPrompt();
-                        Computer.OpenApp(cmd, "Cmd");
+                        Computer.Current.OpenApp(cmd, "Cmd");
                     }
                     break;
 
                 case Key.Tab:
                     if (Keyboard.IsKeyDown(Key.LeftCtrl))
                     {
-                        ctrlTabIndex = Math.Clamp(ctrlTabIndex, 0, Computer.UserWindows.Count - 1);
+                        ctrlTabIndex = Math.Clamp(ctrlTabIndex, 0, Computer.Current.UserWindows.Count - 1);
                         
-                        var windowElement = Computer.UserWindows.ElementAt(ctrlTabIndex);
+                        var windowElement = Computer.Current.UserWindows.ElementAt(ctrlTabIndex);
                         
                         ctrlTabIndex += 1;
 
-                        if (ctrlTabIndex > Computer.UserWindows.Count - 1)
+                        if (ctrlTabIndex > Computer.Current.UserWindows.Count - 1)
                             ctrlTabIndex = 0;
 
                         var ownerWindow = windowElement.Value?.Owner;
@@ -276,7 +273,7 @@ namespace Lemur.GUI
             window.OnClosed += () =>
             {
                 Desktop.Children.Remove(rsz_win_capture);
-                Computer?.UserWindows.Remove(title);
+                Computer.Current?.UserWindows.Remove(title);
                 rsz_win_capture.Content = null;
                 RemoveTaskbarButton(title);
             };
@@ -333,7 +330,7 @@ namespace Lemur.GUI
                 btn.ContextMenu = contextMenu;
 
                 async void OnDesktopIconPressed(object? sender, RoutedEventArgs e)
-                  => await Computer.OpenCustom(type);
+                  => await Computer.Current.OpenCustom(type);
 
                 SetupIcon(type, btn);
 
@@ -350,7 +347,7 @@ namespace Lemur.GUI
                     {
                         Path = type.Replace(".web", "")
                     };
-                    Computer.OpenApp(app);
+                    Computer.Current.OpenApp(app);
                 }
 
                 SetupIcon(type, btn);
@@ -367,7 +364,7 @@ namespace Lemur.GUI
                 {
                     if (Activator.CreateInstance(type) is object instance && instance is UserControl userControl)
                     {
-                        Computer.OpenApp(userControl, name);
+                        Computer.Current.OpenApp(userControl, name);
                     } else
                     {
                         Notifications.Now("Failed to create instance of native application. the app is likely misconfigured");
@@ -402,14 +399,14 @@ namespace Lemur.GUI
         {
             var name = appName.Replace(".app", ".xaml");
             var editor = new TextEditor(name);
-            Computer.OpenApp(editor, $"{appName}.xaml");
+            Computer.Current.OpenApp(editor, $"{appName}.xaml");
         }
 
         private void JsSource_Click(object sender, RoutedEventArgs e, string appName)
         {
             var name = appName.Replace(".app", ".xaml.js");
             var editor = new TextEditor(name);
-            Computer.OpenApp(editor, $"{appName}.xaml.js");
+            Computer.Current.OpenApp(editor, $"{appName}.xaml.js");
         }
         protected virtual void Dispose(bool disposing)
         {
@@ -423,7 +420,6 @@ namespace Lemur.GUI
                     TaskbarStackPanel.Children.Clear();
                     clock.Dispose();
                     Content = null;
-                    Computer = null!;
                     this.Close();
                 }
 

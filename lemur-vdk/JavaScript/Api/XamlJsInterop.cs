@@ -6,9 +6,9 @@ using System.Reflection;
 using System.Windows.Controls;
 using System.Windows.Markup;
 using Lemur.JS;
-using lemur.Windowing;
+using Lemur.Windowing;
 
-namespace lemur.JS
+namespace Lemur.JavaScript.Api
 {
     public class XamlHelper
     {

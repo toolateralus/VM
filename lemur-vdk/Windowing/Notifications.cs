@@ -6,7 +6,7 @@ using Lemur;
 using Lemur.GUI;
 using Lemur.OS;
 
-namespace lemur.Windowing
+namespace Lemur.Windowing
 {
     public static class Notifications
     {

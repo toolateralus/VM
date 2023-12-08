@@ -7,9 +7,9 @@ using Lemur.FS;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using Lemur;
-using lemur.Windowing;
+using Lemur.Windowing;
 
-namespace lemur.JS.Embedded
+namespace Lemur.JS.Embedded
 {
     public class term
     {

@@ -6,9 +6,10 @@ using System.Reflection;
 using System.Threading.Tasks;
 using System.Drawing;
 using System.Collections.Concurrent;
-using lemur.Windowing;
+using Lemur.Windowing;
+using Lemur;
 
-namespace Lemur.JS
+namespace Lemur.JavaScript.Api
 {
     public class interop
     {

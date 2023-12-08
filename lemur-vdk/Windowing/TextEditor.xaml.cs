@@ -12,7 +12,7 @@ using System.Windows.Input;
 using Microsoft.Web.WebView2.Core;
 using System.Collections.Generic;
 using OpenTK.Platform.Windows;
-using lemur.Windowing;
+using Lemur.Windowing;
 
 namespace Lemur.GUI
 {
@@ -204,7 +204,7 @@ namespace Lemur.GUI
                 if (commandPrompt == null) { 
                     commandPrompt = new CommandPrompt();
                     
-                    var jsEngine = new Engine(Computer.Current);
+                    var jsEngine = new Engine();
                     Computer.Current.OpenApp(commandPrompt, engine: jsEngine);
                 }
 

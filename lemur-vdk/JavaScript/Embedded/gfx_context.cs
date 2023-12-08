@@ -10,11 +10,11 @@ using System.Windows.Media.Imaging;
 using Lemur;
 using Image = System.Windows.Controls.Image;
 
-namespace lemur.JS.Embedded
+namespace Lemur.JS.Embedded
 {
-    public class GfxContext
+    public class gfx_context
     {
-        public GfxContext(string pid, string TargetControl, int PixelFormatBpp)
+        public gfx_context(string pid, string TargetControl, int PixelFormatBpp)
         {
 
             Image image = null;
@@ -22,7 +22,7 @@ namespace lemur.JS.Embedded
             {
                 var content = Computer.Current.UserWindows[pid];
                 var app = content.JavaScriptEngine.AppModule;
-                var control = app.GetUserContent(Computer.Current);
+                var control = app.GetUserContent();
                 image = Embedded.app.FindControl(control, TargetControl) as Image ?? throw new InvalidCastException(nameof(control));
             });
             this.image = new(image);

@@ -7,32 +7,30 @@ using System.Text;
 using System.Threading.Tasks;
 using Lemur.FS;
 using Lemur.GUI;
-using Lemur.Network;
-using Lemur.Network.Server;
-using lemur.Windowing;
+using Lemur.Windowing;
+using Lemur;
+using Lemur.JavaScript.Network;
 
-namespace Lemur.JS
+namespace Lemur.JavaScript.Embedded
 {
     public delegate void TransmissionStream(byte[] data, TransmissionType type, int outCh, int replyCh, bool isDir);
-    public class Network
+    public class network
     {
         public event TransmissionStream OnTransmit;
-        Computer Computer;
         private int size;
 
-        public Network(Computer computer, TransmissionStream transmissionStream)
+        public network()
         {
-            OnTransmit = transmissionStream;
-            Computer = computer;
+            OnTransmit = Computer.Current.NetworkConfiguration.OnSendMessage;
         }
-        
+
         public string? ip()
         {
             return LANIPFetcher.GetLocalIPAddress().MapToIPv4().ToString();
         }
         public void disconnect()
         {
-            Computer.Network.StopClient();
+            Computer.Current.NetworkConfiguration.StopClient();
             Notifications.Now("Stopping connection to client");
         }
 
@@ -42,7 +40,7 @@ namespace Lemur.JS
 
             if (ip is string IPString && IPAddress.TryParse(IPString, out targetIP))
                 ConnectToIP(targetIP, IPString);
-            else if (Computer.Config?.Value<string>("DEFAULT_SERVER_IP") is string defaultIP && IPAddress.TryParse(defaultIP, out targetIP))
+            else if (Computer.Current.Config?.Value<string>("DEFAULT_SERVER_IP") is string defaultIP && IPAddress.TryParse(defaultIP, out targetIP))
                 ConnectToIP(targetIP, defaultIP);
             else
             {
@@ -53,13 +51,13 @@ namespace Lemur.JS
         {
             Notifications.Now($"Trying to connect to: {ipString}");
 
-            Computer?.Network?.StopClient();
+            Computer.Current?.NetworkConfiguration?.StopClient();
 
             try
             {
-                Computer?.Network?.StartClient(targetIP);
+                Computer.Current?.NetworkConfiguration?.StartClient(targetIP);
 
-                if (Computer.Network.IsConnected())
+                if (Computer.Current.NetworkConfiguration.IsConnected())
                 {
                     Notifications.Now($"Successfully connected to {ipString}.");
                 }
@@ -132,7 +130,7 @@ namespace Lemur.JS
         public async void check_for_downloadable_content()
         {
             OnTransmit?.Invoke(Encoding.UTF8.GetBytes("GET_DOWNLOADS"), TransmissionType.Request, -1, Server.RequestReplyChannel, false);
-            var response = await NetworkConfiguration.PullEventAsync(Server.RequestReplyChannel, Computer);
+            var response = await NetworkConfiguration.PullEventAsync(Server.RequestReplyChannel, Computer.Current);
             if (response.value is string rVal &&
                 JObject.Parse(rVal).Value<string>("data") is string data)
             {
@@ -143,7 +141,7 @@ namespace Lemur.JS
         public async void download(string path)
         {
 
-            if (!Computer.Network.IsConnected())
+            if (!Computer.Current.NetworkConfiguration.IsConnected())
             {
                 Notifications.Now("Not connected to network");
                 return;
@@ -153,8 +151,9 @@ namespace Lemur.JS
 
             string root;
 
-            if (Computer.Config.ContainsKey("DOWNLOAD_PATH")) {
-                root = Computer.Config.Value<string>("DOWNLOAD_PATH") ?? throw new InvalidDataException("invalid value as DOWNLOAD_PATH in config."); 
+            if (Computer.Current.Config.ContainsKey("DOWNLOAD_PATH"))
+            {
+                root = Computer.Current.Config.Value<string>("DOWNLOAD_PATH") ?? throw new InvalidDataException("invalid value as DOWNLOAD_PATH in config.");
             }
             else
                 root = FileSystem.Root + "/home/downloads";
@@ -166,9 +165,9 @@ namespace Lemur.JS
 
             OnTransmit?.Invoke(Encoding.UTF8.GetBytes(path), TransmissionType.Download, 0, Server.DownloadReplyChannel, false);
 
-            while (Computer.Network.IsConnected())
+            while (Computer.Current.NetworkConfiguration.IsConnected())
             {
-                (object? value, int reply) = await NetworkConfiguration.PullEventAsync(Server.DownloadReplyChannel, Computer);
+                (object? value, int reply) = await NetworkConfiguration.PullEventAsync(Server.DownloadReplyChannel, Computer.Current);
                 string pathString = null;
 
                 if (value is not JObject metadata)
@@ -220,8 +219,8 @@ namespace Lemur.JS
             }
             Notifications.Now("Not connected to network, or download failed");
         }
-      
-        public bool IsConnected => Computer.Network.IsConnected();
+
+        public bool IsConnected => Computer.Current.NetworkConfiguration.IsConnected();
         public void send(params object?[]? parameters)
         {
             if (parameters is null || parameters.Length <= 2)
@@ -245,7 +244,8 @@ namespace Lemur.JS
         {
             (object? value, int reply) @event = default;
 
-            Task get_task = new(async delegate { 
+            Task get_task = new(async delegate
+            {
                 if (parameters is null || parameters.Length == 0)
                 {
                     Notifications.Now("Insufficient parameters for a network connection");
@@ -253,11 +253,11 @@ namespace Lemur.JS
                 }
                 if (parameters[0] is string p1 && int.TryParse(p1, out int ch))
                 {
-                    @event = await NetworkConfiguration.PullEventAsync(ch, Computer);
+                    @event = await NetworkConfiguration.PullEventAsync(ch, Computer.Current);
                 }
                 else if (parameters[0] is int chInt)
                 {
-                    @event = await NetworkConfiguration.PullEventAsync(chInt, Computer);
+                    @event = await NetworkConfiguration.PullEventAsync(chInt, Computer.Current);
                 }
                 else
                 {
@@ -270,7 +270,7 @@ namespace Lemur.JS
         }
         public void eventHandler(string identifier, string methodName)
         {
-            if (Computer.UserWindows.TryGetValue(identifier, out var app))
+            if (Computer.Current.UserWindows.TryGetValue(identifier, out var app))
                 app.JavaScriptEngine?.CreateNetworkEventHandler(identifier, methodName);
         }
     }

@@ -4,9 +4,10 @@ using System.Data;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Media;
-using lemur.Windowing;
+using Lemur.Windowing;
+using Lemur.JS;
 
-namespace Lemur.JS
+namespace Lemur.JavaScript.Api
 {
     public class InteropFunction
     {
@@ -23,7 +24,7 @@ namespace Lemur.JS
         public Thread? executionThread = null;
         public Engine? javaScriptEngine;
         public bool Running { get; set; }
-        
+
         public void ForceDispose() => onDispose?.Invoke();
         public virtual void HeavyWorkerLoop()
         {
@@ -49,7 +50,8 @@ namespace Lemur.JS
         {
             try
             {
-                Task.Run(() => { 
+                Task.Run(() =>
+                {
                     if (javaScriptEngine.m_engine_internal.HasVariable(functionHandle))
                         javaScriptEngine?.m_engine_internal?.CallFunction(functionHandle, arg1, arg2);
                 });

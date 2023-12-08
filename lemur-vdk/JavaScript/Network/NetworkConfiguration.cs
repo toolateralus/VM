@@ -1,47 +1,44 @@
 ﻿using System.Net.Sockets;
 using System.Text;
 using System.Threading;
-using Microsoft.VisualBasic.Devices;
 using Newtonsoft.Json.Linq;
 using System;
 using System.Collections.Generic;
 using System.Net;
 using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
-using Lemur.JS;
-using static Lemur.Network.Server.Server;
-using Lemur.Network;
-using Lemur.GUI;
-using Lemur.Network.Server;
-using lemur.Windowing;
+using static Lemur.JavaScript.Network.Server;
+using Lemur.Windowing;
+using Lemur.JavaScript.Api;
+using Lemur;
 
-namespace Lemur.Network
+namespace Lemur.JavaScript.Network
 {
     public class NetworkConfiguration
     {
         private Host? host;
-        
+
         private TcpClient? client;
-        
+
         private Thread? listenerThread;
-        
+
         private NetworkStream? stream;
 
         public const int defaultPort = 8080;
-        
+
         internal Action<byte[]>? OnMessageReceived;
 
-        public static string ServerIP { get; set;  } = "192.168.0.138";
+        public static string ServerIP { get; set; } = "192.168.0.138";
         public static int ServerPort { get; set; }
         public static IPAddress Server => IPAddress.Parse(ServerIP);
 
         public static Dictionary<int, Queue<(object? val, int replyCh)>> NetworkEvents = new();
 
-        public NetworkConfiguration(Computer computer)
+        public NetworkConfiguration()
         {
-            if (computer?.Config?.Value<bool>("ALWAYS_CONNECT") is bool connect && connect)
+            if (Computer.Current?.Config?.Value<bool>("ALWAYS_CONNECT") is bool connect && connect)
             {
-                if (computer?.Config?.Value<string>("DEFAULT_SERVER_IP") is string ipString 
+                if (Computer.Current?.Config?.Value<string>("DEFAULT_SERVER_IP") is string ipString
                     && IPAddress.Parse(ipString) is IPAddress ip)
                     StartClient(ip);
                 else
@@ -104,15 +101,16 @@ namespace Lemur.Network
 
             var timeoutTask = Task.Delay(timeout);
 
-            CancellationTokenSource cts = new(); 
+            CancellationTokenSource cts = new();
 
-            Task<(object ? value, int reply)?> loop = new(delegate {
+            Task<(object? value, int reply)?> loop = new(delegate
+            {
 
                 while (!NetworkEvents.TryGetValue(channel, out queue)
                         || queue is null
-                        || (queue.Count == 0
+                        || queue.Count == 0
                         && !computer.disposing
-                        && computer.Network.IsConnected()))
+                        && computer.NetworkConfiguration.IsConnected())
                 {/* ----------------------------------------------- */
                     Task.Delay(16);
                 }
@@ -143,7 +141,7 @@ namespace Lemur.Network
             Task.Run(() => listenerThread?.Join());
             Notifications.Now($"Disconnected from {ServerIP}::{ServerPort}");
         }
-           
+
         public void StopHosting()
         {
             host?.Dispose();
@@ -179,7 +177,7 @@ namespace Lemur.Network
                     // this way implies you need to send formatted json in send message which is false, it formats your message for you.
                     if (path is null)
                         Broadcast(sender_ch, reciever_ch, packet.Metadata.ToString());
-                        
+
 
                     // downloads // file transfer
                     else

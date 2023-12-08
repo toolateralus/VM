@@ -12,8 +12,10 @@ using Lemur.GUI;
 using Lemur.FS;
 using System.Diagnostics;
 using System.Windows.Input;
-using lemur.JS.Embedded;
-using lemur.Windowing;
+using Lemur.JS.Embedded;
+using Lemur.Windowing;
+using Lemur.JavaScript.Api;
+using Lemur.JavaScript.Embedded;
 
 namespace Lemur.JS
 {
@@ -36,7 +38,6 @@ namespace Lemur.JS
     {
         internal IJsEngine m_engine_internal;
         IJsEngineSwitcher engineSwitcher;
-        private Computer Computer { get; set; }
 
         private readonly Thread executionThread;
         public readonly Dictionary<string, object?> Modules = new();
@@ -46,7 +47,7 @@ namespace Lemur.JS
         private readonly ConcurrentDictionary<int, (string code, Action<object?> output)> CodeDictionary = new();
         public bool Disposing { get; private set; }
 
-        public Network NetworkModule { get; }
+        public network NetworkModule { get; }
         public interop InteropModule { get; }
         public graphics GraphicsModule { get; }
         public conv ConvModule { get; }
@@ -55,16 +56,15 @@ namespace Lemur.JS
         public term TermModule { get; }
         public key KeyModule { get; }
 
-        public Engine(Computer computer)
+        public Engine()
         {
-            Computer = computer;
-
+           
             engineSwitcher = JsEngineSwitcher.Current;
             engineSwitcher.EngineFactories.AddV8();
             engineSwitcher.DefaultEngineName = V8JsEngine.EngineName;
             m_engine_internal = engineSwitcher.CreateDefaultEngine();
 
-            NetworkModule = new Network(computer, computer.Network.OnSendMessage);
+            NetworkModule = new network();
 
             InteropModule = new interop();
             InteropModule.OnModuleImported += ImportModule;
@@ -85,7 +85,7 @@ namespace Lemur.JS
             EmbedObject("term", TermModule);
             EmbedObject("Key", KeyModule);
             EmbedType("Stopwatch", typeof(Stopwatch));
-            EmbedObject("config", computer.Config);
+            EmbedObject("config", Computer.Current.Config);
 
             EmbedAllObjects();
             executionThread = new Thread(ExecuteAsync);
@@ -210,8 +210,6 @@ namespace Lemur.JS
                 return null;
             }
 
-            Thread.SpinWait(1);
-
             return result;
         }
 #pragma warning disable CA5394
@@ -237,7 +235,7 @@ namespace Lemur.JS
         internal async Task CreateEventHandler(string identifier, string targetControl, string methodName, int type)
         {
 
-            var wnd = Computer.Window;
+            var wnd = Computer.Current.Window;
             
             // check if this event already exists
             var result = await Execute($"{identifier} != null");
@@ -261,7 +259,7 @@ namespace Lemur.JS
 
             wnd.Dispatcher.Invoke(() =>
             {
-                var content  = Computer.Current.UserWindows[identifier].JavaScriptEngine.AppModule.GetUserContent(Computer);
+                var content  = Computer.Current.UserWindows[identifier].JavaScriptEngine.AppModule.GetUserContent();
 
                 if (content == null)
                 {
@@ -274,7 +272,7 @@ namespace Lemur.JS
                 if (targetControl.ToLower().Trim() == "this")
                     element = content;
                 else
-                    element = lemur.JS.Embedded.app.FindControl(content, targetControl)!;
+                    element = Lemur.JS.Embedded.app.FindControl(content, targetControl)!;
 
 
                 // failed to get the actual element the user requested.
@@ -289,7 +287,7 @@ namespace Lemur.JS
                 // this does the real creation of the event.
                 var eh = new InteropEvent(element, (XAML_EVENTS)type, this, identifier, methodName);
 
-                if (!Computer. UserWindows.TryGetValue(identifier, out var app))
+                if (!Computer.Current.UserWindows.TryGetValue(identifier, out var app))
                 {
                     Notifications.Exception(new NullReferenceException("Creating an event handler failed : this is an engine bug. report it on github if you'd like"));
                     return;
@@ -303,7 +301,7 @@ namespace Lemur.JS
 
         internal async Task CreateNetworkEventHandler(string identifier, string methodName)
         {
-            var wnd = Computer.Window;
+            var wnd = Computer.Current.Window;
 
             var result = await Execute($"{identifier} != null");
 
@@ -323,7 +321,7 @@ namespace Lemur.JS
 
             var eh = new NetworkEvent(this, identifier, methodName);
 
-            if (Computer.UserWindows.TryGetValue(identifier, out var app))
+            if (Computer.Current.UserWindows.TryGetValue(identifier, out var app))
             {
                 app.OnClosed += () =>
                 {

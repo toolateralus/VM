@@ -1,15 +1,15 @@
 ﻿using System.Collections.Generic;
-using lemur.Windowing;
+using Lemur.Windowing;
 using Lemur;
 using Image = System.Windows.Controls.Image;
 
-namespace lemur.JS.Embedded
+namespace Lemur.JS.Embedded
 {
     public class graphics
     {
         private int ctxIndex;
 
-        public Dictionary<int, GfxContext> gfxContext = new();
+        public Dictionary<int, gfx_context> gfxContext = new();
         public bool writePixel(int gfx_ctx, int x, int y, int color)
         {
             if (!gfxContext.TryGetValue(gfx_ctx, out var ctx))
@@ -39,7 +39,7 @@ namespace lemur.JS.Embedded
                 Notifications.Now($"Couldn't find graphics context for id : {gfx_ctx}");
                 return false;
             }
-            ctx.DrawFilledShape(x, y, h, w, r, colorIndex, (GfxContext.PrimitiveShape)primitveIndex);
+            ctx.DrawFilledShape(x, y, h, w, r, colorIndex, (gfx_context.PrimitiveShape)primitveIndex);
             return true;
         }
         public bool writePixelIndexed(int gfx_ctx, int x, int y, int index)
@@ -94,7 +94,7 @@ namespace lemur.JS.Embedded
             int bpp = 4;
 
 
-            var ctx = new GfxContext(id, target, bpp);
+            var ctx = new gfx_context(id, target, bpp);
 
             ctx.Resize(width, height);
 

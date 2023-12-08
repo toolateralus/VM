@@ -16,10 +16,10 @@ using System.Reflection;
 using System.Threading.Tasks;
 using System.DirectoryServices.ActiveDirectory;
 using Lemur;
-using Lemur.JS;
-using lemur.Windowing;
+using Lemur.Windowing;
+using Lemur.JavaScript.Api;
 
-namespace lemur.JS.Embedded
+namespace Lemur.JS.Embedded
 {
     public class app
     {
@@ -94,7 +94,7 @@ namespace lemur.JS.Embedded
 
             Computer.Current.Window?.Dispatcher.Invoke(() =>
             {
-                var userControl = GetUserContent(Computer.Current);
+                var userControl = GetUserContent();
                 var control = FindControl(userControl, controlName);
 
                 if (control is null)
@@ -112,11 +112,11 @@ namespace lemur.JS.Embedded
 
             return output;
         }
-        public UserControl? GetUserContent(Computer computer)
+        public UserControl? GetUserContent()
         {
-            var window = computer?.Window;
+            var window = Computer.Current?.Window;
 
-            var resizableWins = computer.UserWindows?.Where(W => W.Key == id);
+            var resizableWins = Computer.Current.UserWindows?.Where(W => W.Key == id);
 
             if (resizableWins != null && resizableWins.Any())
             {
@@ -181,7 +181,7 @@ namespace lemur.JS.Embedded
 
             wnd?.Dispatcher.Invoke(() =>
             {
-                var userControl = GetUserContent(Computer.Current);
+                var userControl = GetUserContent();
 
                 if (userControl == null)
                     return;
@@ -232,7 +232,7 @@ namespace lemur.JS.Embedded
 
             Computer.Current.Window?.Dispatcher.Invoke(() =>
             {
-                var control = GetUserContent(Computer.Current);
+                var control = GetUserContent();
 
                 var image = FindControl(control, target_control);
 
@@ -258,7 +258,7 @@ namespace lemur.JS.Embedded
 
             Computer.Current.Window?.Dispatcher.Invoke(() =>
             {
-                var control = GetUserContent(Computer.Current);
+                var control = GetUserContent();
                 if (control?.Content is Grid grid)
                 {
                     if (grid != null)
@@ -315,7 +315,7 @@ namespace lemur.JS.Embedded
 
             Computer.Current.Window?.Dispatcher.Invoke(() =>
             {
-                var userControl = GetUserContent(Computer.Current);
+                var userControl = GetUserContent();
                 var control = FindControl(userControl, controlName);
 
                 if (control is null)
@@ -332,7 +332,7 @@ namespace lemur.JS.Embedded
 
             Computer.Current.Window?.Dispatcher.Invoke((Delegate)(() =>
             {
-                var userControl = GetUserContent(Computer.Current);
+                var userControl = GetUserContent();
                 var control = FindControl(userControl, controlName);
 
                 if (control is null)

@@ -5,8 +5,6 @@ using System.Threading.Tasks;
 using System.Reflection;
 using Newtonsoft.Json.Linq;
 using System.Collections.Generic;
-
-using Lemur.Network;
 using Lemur.FS;
 using Lemur.JS;
 using System.Windows.Controls;
@@ -16,8 +14,9 @@ using Microsoft.ClearScript.JavaScript;
 using Lemur.OS;
 using Newtonsoft.Json;
 using System.Threading;
-using lemur.JS;
-using lemur.Windowing;
+using Lemur.Windowing;
+using Lemur.JavaScript.Api;
+using Lemur.JavaScript.Network;
 
 namespace Lemur
 {
@@ -28,7 +27,7 @@ namespace Lemur
         private static uint processCount;
 
         [Obsolete("This is a (probably broken) tcp network implementation. It is not especially secure. Use at your own risk, but probably don't use this. it is unused by default")]
-        internal NetworkConfiguration Network { get; set; }
+        internal NetworkConfiguration NetworkConfiguration { get; set; }
         internal ComputerWindow Window { get; set; }
         internal FileSystem FileSystem { get; set; }
         internal Engine JavaScript { get; set; }
@@ -47,7 +46,7 @@ namespace Lemur
         internal bool disposing;
         public void InitializeEngine(Computer computer)
         {
-            JavaScript = new(computer);
+            JavaScript = new();
 
             if (FileSystem.GetResourcePath("startup.js") is string AbsPath)
                 JavaScript.ExecuteScript(AbsPath);
@@ -55,11 +54,13 @@ namespace Lemur
        
         public Computer(FileSystem fs)
         {
-            this.FileSystem = fs;
+            current = this;
+
+            FileSystem = fs;
 
             CmdLine = new();
              
-            Network = new(this);
+            NetworkConfiguration = new();
 
             Config = LoadConfig();
 
@@ -213,7 +214,7 @@ namespace Lemur
                 return;
             }
 
-            Engine engine = new(this);
+            Engine engine = new();
             var (id, code) = await InstantiateWindowClass(type, cmdLineArgs, data, engine);
 
             OpenApp(control, title: id, engine: engine);
@@ -254,7 +255,7 @@ namespace Lemur
 
         private int startupTimeoutMs = 20_000;
 
-        public static Computer Current => current ?? throw new InvalidOperationException("No computer was active when accessed."); 
+        public static Computer Current => current;
         /// <summary>
         /// This just causes crashes.
         /// </summary>
@@ -270,14 +271,11 @@ namespace Lemur
             var workingDir = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData) + $"\\Lemur\\computer{cpu_id}";
             var FileSystem = new FileSystem(workingDir);
 
-            Computer pc = new(FileSystem);
-            ComputerWindow wnd = new(pc);
-            pc.Window = wnd;
+            Computer pc = new Computer(FileSystem);
+            
+            ComputerWindow wnd = new();
 
-            if (current != null)
-                throw new InvalidOperationException("you can't open several instances of the computer window anymore. just start a few instances of the app, and use TCP IPC. this can be modded in rather easily, if you need a lower latency or better performance solution.");
-
-            current = pc;
+            Current.Window = wnd;
 
             LoadBackground(pc, wnd);
 
@@ -374,8 +372,8 @@ namespace Lemur
                 {
                     JavaScript?.Dispose();
                     Window?.Dispose();
-                    Network?.StopHosting();
-                    Network?.StopClient();
+                    NetworkConfiguration?.StopHosting();
+                    NetworkConfiguration?.StopClient();
                     CmdLine?.Dispose();
 
                     foreach (var item in UserWindows)
@@ -384,7 +382,7 @@ namespace Lemur
 
                 JavaScript = null!;
                 Window = null!;
-                Network = null!;
+                NetworkConfiguration = null!;
                 FileSystem = null!;
                 CmdLine = null!;
 

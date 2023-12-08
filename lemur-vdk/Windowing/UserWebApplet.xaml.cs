@@ -31,11 +31,10 @@ namespace Lemur.GUI
             webViewInitialized = true;
         }
 
-        Computer computer;
         public string Path;
         public void LateInit(Computer computer)
         {
-            this.computer = computer;
+
         }
 
         public void Navigate(string appName)

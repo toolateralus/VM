@@ -1,8 +1,9 @@
 ﻿using System;
 using System.Threading.Tasks;
-using lemur.Windowing;
+using Lemur.Windowing;
+using Lemur.JS;
 
-namespace Lemur.JS
+namespace Lemur.JavaScript.Api
 {
     internal class NetworkEvent : InteropFunction
     {

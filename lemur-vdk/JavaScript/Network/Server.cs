@@ -7,11 +7,11 @@ using System.Net.NetworkInformation;
 using System.Net.Sockets;
 using System.Text;
 using System.Threading.Tasks;
-using lemur.Windowing;
+using Lemur.Windowing;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 
-namespace Lemur.Network.Server
+namespace Lemur.JavaScript.Network
 {
     class Host
     {
@@ -53,7 +53,7 @@ namespace Lemur.Network.Server
         TcpListener? SERVER;
         public async Task Open(int port)
         {
-            this.openPort = port;
+            openPort = port;
 
             Running = true;
 
@@ -134,7 +134,7 @@ namespace Lemur.Network.Server
             if (stream.Read(metaData, 0, metadataLength) <= 0)
                 return default;
 
-            var metadata = Server.ParseMetadata(metaData);
+            var metadata = ParseMetadata(metaData);
 
             // length of the data message, we don't use this now, but for doing fragmented transfers for larger files,
             // we'd want to know the full length of the incoming data for reconstruction.
@@ -155,8 +155,8 @@ namespace Lemur.Network.Server
 
             // sizeof data.
             var bytesLength = dataBytes.Length;
-            
-            Notifications.Now($"{ID()} Received {FormatBytes(bytesLength)} from { client.GetHashCode()}: CH {{{senderCh}}} -->> CH{{{listenerCh}}}");
+
+            Notifications.Now($"{ID()} Received {FormatBytes(bytesLength)} from {client.GetHashCode()}: CH {{{senderCh}}} -->> CH{{{listenerCh}}}");
 
             return new(metadata, dataBytes, client, stream);
         }
@@ -219,7 +219,7 @@ namespace Lemur.Network.Server
                         await HandleMessageTransmission(packet, clients);
                         break;
                     case TransmissionType.Download:
-                         await HandleDownloadRequest(packet);
+                        await HandleDownloadRequest(packet);
                         break;
                     case TransmissionType.Request:
                         HandleRequest(Encoding.UTF8.GetString(packet.Data), packet);
@@ -239,7 +239,7 @@ namespace Lemur.Network.Server
             async Task SendDataRecusive(string file)
             {
                 string path = file;
-                
+
                 if (!file.Contains(UploadDirectory))
                     path = UploadDirectory + "\\" + file;
 
@@ -334,11 +334,11 @@ namespace Lemur.Network.Server
                 size = dataSize,
                 data = Convert.ToBase64String(data),
                 type = type.ToString(),
-                ch = ch,
-                reply = reply,
-                isDir = isDir,
-                path = path,
-                
+                ch,
+                reply,
+                isDir,
+                path,
+
             };
 
             return JsonConvert.SerializeObject(json);
@@ -378,7 +378,7 @@ namespace Lemur.Network.Server
         {
             foreach (TcpClient connectedClient in connectedClients)
                 if (connectedClient != client)
-                    await Server.SendJsonToClient(connectedClient, header);
+                    await SendJsonToClient(connectedClient, header);
         }
         private static async Task SendJsonToClient(TcpClient client, JObject data)
         {

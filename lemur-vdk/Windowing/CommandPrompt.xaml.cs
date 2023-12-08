@@ -13,7 +13,7 @@ namespace Lemur.GUI
     using Lemur.FS;
     using Lemur;
     using System.IO;
-    using lemur.Windowing;
+    using Lemur.Windowing;
 
     public partial class CommandPrompt : UserControl
     {
@@ -98,7 +98,7 @@ namespace Lemur.GUI
 
         public void LateInit(Computer computer, ResizableWindow rsz)
         {
-            Engine ??= new(computer);
+            Engine ??= new();
             Window = rsz;
             
         }
