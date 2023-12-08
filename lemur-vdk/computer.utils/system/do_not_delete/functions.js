@@ -42,19 +42,19 @@ function random(max = 1) {
 function describe(obj) {
 
     if (obj === undefined) {
-        print('describe : undefined')
+        print('describe : cant print undefined')
         return;
     }
 
     if (obj === null) {
-        print('describe : null')
+        print('describe : cant print null')
         return;
     }
 
     var string = "";
 
     for (const property in obj) {
-        string += property + ": " + obj[property];
+        string += property + ": " + obj[property] + "\n";
     }
 
     print(string);

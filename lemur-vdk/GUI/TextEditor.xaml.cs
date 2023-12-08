@@ -146,8 +146,9 @@ namespace Lemur.GUI
             Save();
         }
 
-        private void Save()
+        internal void Save()
         {
+            Notifications.Now(LoadedFile);
             if (!File.Exists(LoadedFile))
             {
                 var dialog = new SaveFileDialog();
