@@ -116,9 +116,11 @@ namespace Lemur.GUI
             if (File.Exists(path))
             {
                 string? extension = System.IO.Path.GetExtension(path)?.ToLower();
+                
 
                 if (extension == null)
                     return;
+
 
                 SetSyntaxHighlighting(extension);
 
@@ -130,6 +132,15 @@ namespace Lemur.GUI
         private void SetSyntaxHighlighting(string? extension)
         {
             var highlighter = HighlightingManager.Instance.GetDefinitionByExtension(extension);
+                
+            // yes. this is a thing.
+            if (extension == ".xaml")
+                extension = ".xml";
+
+            var index = LanguageOptions.Values.ToList().IndexOf(LanguageOptions.Values.FirstOrDefault(value => value == extension));
+
+            if (index != -1)
+                shTypeBox.SelectedIndex = index;
 
             if (highlighter != null)
                 textEditor.SyntaxHighlighting = highlighter;
@@ -192,28 +203,49 @@ namespace Lemur.GUI
         public CommandPrompt? commandPrompt;
         private async void RunButton_Click(object sender, RoutedEventArgs e)
         {
-            var element = LanguageOptions.ElementAt(shTypeBox.SelectedIndex);
-            if (element.Value == ".md")
-            {
-                mdViewer = new MarkdownViewer();
-                mdViewer.RenderMarkdown(Contents);
-                Computer.Current.OpenApp(mdViewer, "md.app", Computer.GetNextProcessID());
-            }
-            else if (element.Value == ".js") {
+            var fileExt = LanguageOptions.ElementAt(shTypeBox.SelectedIndex).Value;
 
-                if (commandPrompt == null) { 
-                    commandPrompt = new CommandPrompt();
+            if (LoadedFile.Contains(".xaml.js"))
+                fileExt = ".xaml.js";
+
+            switch (fileExt) {
+                case ".md":
+                    mdViewer = new MarkdownViewer();
+                    mdViewer.RenderMarkdown(Contents);
+                    Computer.Current.OpenApp(mdViewer, "md.app", Computer.GetNextProcessID());
+                    break;
+
+                case ".xaml.js":
+                    var split = LoadedFile.Split('\\');
+                    var name = "";
                     
-                    var jsEngine = new Engine();
-                    Computer.Current.OpenApp(commandPrompt, "cmd.app", Computer.GetNextProcessID(), engine: jsEngine);
-                }
+                    foreach (var line in split)
+                        if (line.Contains(".app"))
+                        {
+                            name = line;
+                            break;
+                        }
 
-                await commandPrompt.Engine.Execute(string.IsNullOrEmpty(textEditor.Text) ? "print('You must provide some javascript to execute...')" : textEditor.Text);
+                    Computer.Current.JavaScript.Execute($"app.start('{name}')");
+                    break;
 
-            } else
-            {
-                Notifications.Now($"Can't run {element.Value}");
+                case ".js":
+                    if (commandPrompt == null)
+                    {
+                        commandPrompt = new CommandPrompt();
+
+                        var jsEngine = new Engine();
+                        Computer.Current.OpenApp(commandPrompt, "cmd.app", Computer.GetNextProcessID(), engine: jsEngine);
+                    }
+
+                    await commandPrompt.Engine.Execute(string.IsNullOrEmpty(textEditor.Text) ? "print('You must provide some javascript to execute...')" : textEditor.Text);
+                    break;
+
+                default:
+                    Notifications.Now($"Can't run {fileExt}");
+                    break;
             }
+                
         }
 
         private void Preferences_Click(object sender, RoutedEventArgs e)
