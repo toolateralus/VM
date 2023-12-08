@@ -4,6 +4,7 @@ using Lemur.JavaScript.Api;
 using Lemur.Windowing;
 using Microsoft.ClearScript.JavaScript;
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -40,7 +41,7 @@ namespace Lemur.JS.Embedded
         };
         private string id;
         internal Thread bgThread;
-        private Queue<Action> deferredJobs = [];
+        private ConcurrentQueue<Action> deferredJobs = [];
 
         private bool Disposing { get;  set; }
 
@@ -49,7 +50,7 @@ namespace Lemur.JS.Embedded
             if (!Disposing)
             {
                 Disposing = true;
-                bgThread.Join();
+                bgThread?.Join();
             }
         }
         public app()
@@ -59,8 +60,7 @@ namespace Lemur.JS.Embedded
             ExposedEvents["set_content"] = SetContent;
             ExposedEvents["get_content"] = GetContent;
 
-            bgThread = new(__bg_threadLoop);
-            bgThread.Start();
+           
         }
 
         private void __bg_threadLoop()
@@ -80,6 +80,12 @@ namespace Lemur.JS.Embedded
         }
         public void defer(string methodName, int delayMs, params object[]? args)
         {
+            if (bgThread == null)
+            {
+                bgThread = new(__bg_threadLoop);
+                bgThread.Start();
+            }
+
             deferredJobs.Enqueue(async () =>
             {
                 await Task.Delay(delayMs).ConfigureAwait(true);
