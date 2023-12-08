@@ -10,6 +10,7 @@ using System.Windows.Media.Imaging;
 using Lemur.Windowing;
 using Lemur.FS;
 using Key = System.Windows.Input.Key;
+using System.Xml.Linq;
 
 namespace Lemur.GUI
 {
@@ -296,10 +297,8 @@ namespace Lemur.GUI
         }
         public void InstallIcon(AppType type, string appName, Type? runtime_type = null)
         {
-            void InstallJSWPFIcon(string type)
+            void InstallJSWPFIcon(Button btn, string type)
             {
-                var btn = MakeDesktopButton(type);
-
                 btn.MouseDoubleClick += OnDesktopIconPressed;
 
                 var contextMenu = new ContextMenu();
@@ -326,12 +325,9 @@ namespace Lemur.GUI
                   => await Computer.Current.OpenCustom(type);
 
                 SetupIcon(type, btn);
-
-                DesktopIconPanel.Children.Add(btn);
             }
-            void WebAppDesktopIcon(string type)
+            void WebAppDesktopIcon(Button btn, string type)
             {
-                var btn = MakeDesktopButton(type);
                 btn.MouseDoubleClick += OnDesktopIconPressed;
 
                 void OnDesktopIconPressed(object? sender, RoutedEventArgs e)
@@ -344,14 +340,11 @@ namespace Lemur.GUI
                 }
 
                 SetupIcon(type, btn);
-
-                DesktopIconPanel.Children.Add(btn);
             }
-            void InstallDesktopIconNative(string name, Type type)
+            void InstallDesktopIconNative(Button btn, string name, Type type)
             {
-                var btn = MakeDesktopButton(name);
-
                 btn.MouseDoubleClick += OnDesktopIconPressed;
+                SetupIcon(appName, btn, type);
 
                 void OnDesktopIconPressed(object? sender, RoutedEventArgs e)
                 {
@@ -363,29 +356,32 @@ namespace Lemur.GUI
                         Notifications.Now("Failed to create instance of native application. the app is likely misconfigured");
                     }
                 }
-
-                SetupIcon(name, btn, type);
-                    
-                DesktopIconPanel.Children.Add(btn);
             }
-            Dispatcher?.Invoke(() => { 
+
+            Dispatcher?.Invoke(() => {
+
+                var btn = MakeDesktopButton(appName);
 
                 switch (type)
                 {
                     case AppType.JsXaml:
-                        InstallJSWPFIcon(appName);
+                        InstallJSWPFIcon(btn, appName);
                         break;
                     case AppType.NativeCs:
                         if (runtime_type != null)
-                        InstallDesktopIconNative(appName, runtime_type);
+                        InstallDesktopIconNative(btn, appName, runtime_type);
                         break;
                     case AppType.JsHtml:
-                        WebAppDesktopIcon(appName);
+                        WebAppDesktopIcon(btn, appName);
                         break;
                 }
 
+
+
                 DesktopIconPanel.UpdateLayout();
+                DesktopIconPanel.Children.Add(btn);
             });
+
         }
 
         private void XamlSource_Click(object sender, RoutedEventArgs e, string appName)
