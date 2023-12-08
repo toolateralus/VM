@@ -7,6 +7,8 @@ using OpenTK;
 using static OpenTK.Graphics.OpenGL4.GL;
 using Lemur.FS;
 using System.Threading.Tasks;
+using System.Collections.Generic;
+using Lemur.Game;
 
 namespace Lemur.Graphics
 {
@@ -15,8 +17,12 @@ namespace Lemur.Graphics
     /// </summary>
     public partial class OpenGL2Window : UserControl
     {
-        internal readonly GL4Renderer renderLib;
+        internal readonly RendererOpenGL Renderer;
+        internal readonly SceneOpenGL Scene;
         public static string? DesktopIcon => FileSystem.GetResourcePath("background.png");
+
+        public event Action<TimeSpan>? Rendering;
+
         public OpenGL2Window()
         {
             InitializeComponent();
@@ -28,15 +34,28 @@ namespace Lemur.Graphics
                 RenderContinuously = true,
             };
 
-            Renderer.Start(settings);
-            renderLib = new();
+            Scene = new(this);
+
+            List<MeshRenderer> meshes = new()
+            {
+                new MeshRenderer((0,0,0), (0,0,0), (1,1,1), Cube.Unit())
+            };
+
+            Scene.Meshes = meshes;
+
+            glRenderer.Start(settings);
+            Renderer = new();
         }
         private void Renderer_Render(TimeSpan span)
         {
             ClearColor(Color4.Black);
             Clear(ClearBufferMask.ColorBufferBit | ClearBufferMask.DepthBufferBit);
+            
+            // the gl pipeline
+            Renderer?.Render();
 
-            renderLib.Render(span);
+            // the scene
+            Rendering?.Invoke(span);
         }
     }
 }

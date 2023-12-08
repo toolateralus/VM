@@ -19,7 +19,6 @@ namespace Lemur.JS
             ctx.WritePixelPacked(x, y, color);
             return true;
         }
-        // mainly to allow flexibility and allow for testing of code.. not neccesarily the best method XD
         public bool writePixelRGBA(int gfx_ctx, int x, int y, byte r, byte g, byte b, byte a)
         {
             if (!gfxContext.TryGetValue(gfx_ctx, out var ctx))
@@ -29,6 +28,16 @@ namespace Lemur.JS
             }
 
             ctx.WritePixel(x, y, r, g, b, a);
+            return true;
+        }
+        public bool drawFilledShape(int gfx_ctx, int x, int y, int w, int h, double r, int colorIndex, int primitveIndex)
+        {
+            if (!gfxContext.TryGetValue(gfx_ctx, out var ctx))
+            {
+                Notifications.Now($"Couldn't find graphics context for id : {gfx_ctx}");
+                return false;
+            }
+            ctx.DrawFilledShape(x, y, h, w, r, colorIndex, (GfxContext.PrimitiveShape)primitveIndex);
             return true;
         }
         public bool writePixelIndexed(int gfx_ctx, int x, int y, int index)

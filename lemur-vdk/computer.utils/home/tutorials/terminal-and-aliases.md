@@ -1,5 +1,5 @@
 ### Terminal Aliases and Scripts
-
+##### this is old.
 ---
 
 Writing console commands can be helpful to make a non-gui task into a single command line call

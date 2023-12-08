@@ -16,75 +16,70 @@ using Lemur.Network.Server;
 
 namespace Lemur.Network
 {
-    public class NetworkConfiguration : IDisposable
+    public class NetworkConfiguration
     {
-        private Host? host = null;
+        private Host? host;
         
         private TcpClient? client;
         
-        public Thread? receiveThread;
+        private Thread? listenerThread;
         
         private NetworkStream? stream;
 
-        public const int DEFAULT_PORT = 8080;
+        public const int defaultPort = 8080;
         
-        public Action<byte[]>? OnMessageRecieved;
+        internal Action<byte[]>? OnMessageReceived;
 
-        public static string LAST_KNOWN_SERVER_IP => "192.168.0.138";
-        public static IPAddress SERVER_IP => IPAddress.Parse(LAST_KNOWN_SERVER_IP);
-        public static int LAST_KNOWN_SERVER_PORT { get; internal set; }
+        public static string ServerIP { get; set;  } = "192.168.0.138";
+        public static int ServerPort { get; set; }
+        public static IPAddress Server => IPAddress.Parse(ServerIP);
+
         public static Dictionary<int, Queue<(object? val, int replyCh)>> NetworkEvents = new();
 
         public NetworkConfiguration(Computer computer)
         {
             if (computer?.Config?.Value<bool>("ALWAYS_CONNECT") is bool connect && connect)
             {
-                if (computer?.Config?.Value<string>("DEFAULT_SERVER_IP") is string _IP && IPAddress.Parse(_IP) is IPAddress ip)
-                {
-                    _ = StartClient(ip);
-                }
+                if (computer?.Config?.Value<string>("DEFAULT_SERVER_IP") is string ipString 
+                    && IPAddress.Parse(ipString) is IPAddress ip)
+                    StartClient(ip);
                 else
-                {
-                    _ = StartClient(SERVER_IP);
-                }
+                    StartClient(Server);
             }
         }
-        public async Task StartClient(IPAddress ip)
+        public void StartClient(IPAddress ip)
         {
-            await Task.Run(() =>
+            ArgumentNullException.ThrowIfNull(ip);
+
+            try
             {
-                try
-                {
-                    var ip_str = ip.ToString();
-                    // for when we support any port
-                    var port = DEFAULT_PORT;
-                    LAST_KNOWN_SERVER_PORT = port;
+                var ip_str = ip.ToString();
+                var port = defaultPort;
+                ServerPort = port;
 
-                    client = new TcpClient(ip_str, port);
-                    stream = client.GetStream();
+                client = new TcpClient(ip_str, port);
+                stream = client.GetStream();
 
-                    receiveThread = new Thread(ReceiveMessages);
-                    receiveThread.Start();
-                }
-                catch (Exception e)
-                {
-                    Console.WriteLine("Error connecting to the server: " + e.Message + Environment.NewLine + e.InnerException);
-                }
-            });
+                listenerThread = new Thread(ReceiveMessages);
+                listenerThread.Start();
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine("Error connecting to the server: " + e.Message + Environment.NewLine + e.InnerException);
+            }
         }
         internal async Task<bool> StartHosting(int port)
         {
             if (host != null && host.Running)
-            {
                 return false;
-            }
 
             host ??= new();
 
-            await host.Open(port);
+            await host.Open(port).ConfigureAwait(false);
 
             return host.Running;
         }
+
         internal static void Broadcast(int outCh, int inCh, object? msg)
         {
             if (!NetworkEvents.TryGetValue(outCh, out _))
@@ -92,12 +87,12 @@ namespace Lemur.Network
 
             NetworkEvents[outCh].Enqueue((msg, inCh));
 
-            foreach (var userWindow in Computer.Current.UserWindows)
+            foreach (var userWindow in Computer.Current.UserWindows.Values)
             {
-                if (userWindow.Value.JavaScriptEngine?.EventHandlers == null)
+                if (userWindow.JavaScriptEngine?.EventHandlers == null)
                     continue;
 
-                foreach (var eventHandler in userWindow.Value.JavaScriptEngine.EventHandlers)
+                foreach (var eventHandler in userWindow.JavaScriptEngine.EventHandlers)
                     if (eventHandler is NetworkEvent networkEventHandler)
                         networkEventHandler.InvokeEvent(outCh, inCh, msg);
             }
@@ -129,6 +124,8 @@ namespace Lemur.Network
                 return val;
             }, cts);
 
+            var result = await loop;
+
             // did time out
             if (await Task.WhenAny(loop, timeoutTask) == timeoutTask)
             {
@@ -136,20 +133,17 @@ namespace Lemur.Network
                 Notifications.Now("Network timed out while polling an event");
             }
 
-            return loop.Result ?? default;
+            return result ?? ("Failed", -1);
         }
         internal void StopClient()
         {
-            Dispose();
-        }
-        public void Dispose()
-        {
             client?.Close();
             stream?.Close();
-            Task.Run(() => receiveThread?.Join());
-            Notifications.Now($"Disconnected from {LAST_KNOWN_SERVER_IP}::{LAST_KNOWN_SERVER_PORT}");
+            Task.Run(() => listenerThread?.Join());
+            Notifications.Now($"Disconnected from {ServerIP}::{ServerPort}");
         }
-        public void StopHosting(object?[] args)
+           
+        public void StopHosting()
         {
             host?.Dispose();
         }
@@ -159,7 +153,7 @@ namespace Lemur.Network
         }
         internal object GetIPPortString()
         {
-            return $"{LANIPFetcher.GetLocalIPAddress().MapToIPv4()}:{host?.OPEN_PORT}";
+            return $"{LANIPFetcher.GetLocalIPAddress().MapToIPv4()}:{host?.openPort}";
         }
         public void ReceiveMessages()
         {

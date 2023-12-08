@@ -1,22 +1,15 @@
 ﻿using ICSharpCode.AvalonEdit.Highlighting.Xshd;
 using ICSharpCode.AvalonEdit.Highlighting;
 using System;
-using System.Collections.Generic;
 using System.IO;
 using System.Windows;
 using System.Windows.Media;
 using System.Xml;
 using KeyEventArgs = System.Windows.Input.KeyEventArgs;
 using System.Threading.Tasks;
-using System.Threading;
 using System.Linq;
-using System.Windows.Controls;
-using System.Runtime.CompilerServices;
-using Lemur.JS;
 using Lemur.FS;
 using System.Windows.Media.Imaging;
-using System.Data.Common;
-using System.Security.Cryptography;
 
 namespace Lemur.GUI
 {

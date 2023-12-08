@@ -16,14 +16,11 @@ Before you begin, ensure you have the following prerequisites:
 
 - **Operating System**: Windows 7 - Windows 11
 - **IDE**: Visual Studio 2019 or newer for optimal WPF and C# support
-- **.NET**: SDK and Runtime 6.0 or higher (7.0+ is also supported)
-
-## For Linux Users
-A Linux version is currently under development with AvaloniaUI. The UI is still basic, and contributions are highly appreciated.
+- **.NET**: SDK and Runtime 8.0+
 
 ## Recommended Tools
 - **Visual Studio Code**: Any version is suitable
-
+- **Visual Studio Community 2022**: this is very nice for creating complex XAML front ends, it's editor is hard to beat.
 ## Getting Started
 
 ### Cloning the Repository
@@ -43,10 +40,10 @@ Once the project is cloned:
 ### Running Lemur VDK
 After building:
 
-1. Navigate to `lemur/lemur-vdk/bin/Release/net6.0/`.
+1. Navigate to `lemur/lemur-vdk/bin/Release/net8.0/`.
 2. Locate `lemur.exe`, right-click, and create a shortcut on your desktop for easy access.
 
-**Note**: Replace `net6.0` with the correct .NET version if you are using a different one.
+**Note**: Replace `net8.0` with the correct .NET version if you are using a different one.
 
 ### First Run and Installation
 On the first launch, the application will automatically install necessary JavaScript, JSON, and other configuration dependencies.

@@ -52,11 +52,11 @@ namespace Lemur.JS
         {
             Notifications.Now($"Trying to connect to: {ipString}");
 
-            Computer.Network.StopClient();
+            Computer?.Network?.StopClient();
 
             try
             {
-                await Computer.Network.StartClient(targetIP);
+                Computer?.Network?.StartClient(targetIP);
 
                 if (Computer.Network.IsConnected())
                 {
@@ -130,8 +130,8 @@ namespace Lemur.JS
         }
         public async void check_for_downloadable_content()
         {
-            OnTransmit?.Invoke(Encoding.UTF8.GetBytes("GET_DOWNLOADS"), TransmissionType.Request, -1, Server.REQUEST_REPLY_CHANNEL, false);
-            var response = await NetworkConfiguration.PullEventAsync(Server.REQUEST_REPLY_CHANNEL, Computer);
+            OnTransmit?.Invoke(Encoding.UTF8.GetBytes("GET_DOWNLOADS"), TransmissionType.Request, -1, Server.RequestReplyChannel, false);
+            var response = await NetworkConfiguration.PullEventAsync(Server.RequestReplyChannel, Computer);
             if (response.value is string rVal &&
                 JObject.Parse(rVal).Value<string>("data") is string data)
             {
@@ -150,18 +150,24 @@ namespace Lemur.JS
 
             Notifications.Now($"Downloading {path}..");
 
-            var root = FileSystem.Root + "\\downloads";
+            string root;
+
+            if (Computer.Config.ContainsKey("DOWNLOAD_PATH")) {
+                root = Computer.Config.Value<string>("DOWNLOAD_PATH") ?? throw new InvalidDataException("invalid value as DOWNLOAD_PATH in config."); 
+            }
+            else
+                root = FileSystem.Root + "/home/downloads";
 
             if (!Directory.Exists(root))
             {
                 Directory.CreateDirectory(root);
             }
 
-            OnTransmit?.Invoke(Encoding.UTF8.GetBytes(path), TransmissionType.Download, 0, Server.DOWNLOAD_REPLY_CHANNEL, false);
+            OnTransmit?.Invoke(Encoding.UTF8.GetBytes(path), TransmissionType.Download, 0, Server.DownloadReplyChannel, false);
 
             while (Computer.Network.IsConnected())
             {
-                (object? value, int reply) = await NetworkConfiguration.PullEventAsync(Server.DOWNLOAD_REPLY_CHANNEL, Computer);
+                (object? value, int reply) = await NetworkConfiguration.PullEventAsync(Server.DownloadReplyChannel, Computer);
                 string pathString = null;
 
                 if (value is not JObject metadata)

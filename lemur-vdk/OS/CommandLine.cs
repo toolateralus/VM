@@ -45,9 +45,9 @@ namespace Lemur.OS
                 new("move", Move, "moves a file/changes its name"),
                 new("lp", LP, "lists all the running proccesses"),
                 new("dispose", DisposeJSEnv, "disposes of the current running javascript environment, and instantiates a new one."),
-                //new("ip", getIP, "fetches the local ip address of wifi/ethernet"),
-                //new("host", Host, "hosts a server on the provided <port>, none provided it will default to 8080"),
-                //new("unhost", (_) => Computer.Current.Network.StopHosting(_), "if a server is currently running on this machine this halts any active connections and closes the sever."),
+                new("ip", getIP, "fetches the local ip address of wifi/ethernet"),
+                new("host", Host, "hosts a server on the provided <port>, none provided it will default to 8080"),
+                new("unhost", (_) => Computer.Current.Network.StopHosting(), "if a server is currently running on this machine this halts any active connections and closes the sever."),
             };
         }
         private void KillAll(object[]? obj)
@@ -91,7 +91,7 @@ namespace Lemur.OS
             Task.Run(async () =>
             {
                 int? port = obj?[0] as int?;
-                if (await Computer.Current.Network.StartHosting(port ?? NetworkConfiguration.DEFAULT_PORT))
+                if (await Computer.Current.Network.StartHosting(port ?? NetworkConfiguration.defaultPort))
                 {
                     Notifications.Now($"Hosting on {Computer.Current.Network.GetIPPortString()}");
                     return;
@@ -275,8 +275,8 @@ namespace Lemur.OS
                         FontName += $" {fontName}";
                 }
 
-
                 System.Windows.Media.FontFamily font = null;
+
                 try
                 {
                     font = new System.Windows.Media.FontFamily(FontName);
@@ -437,6 +437,7 @@ namespace Lemur.OS
                 var jsCode = File.ReadAllText(alias);
 
                 const string ArgsArrayReplacement = "[/***/]";
+
                 var index = jsCode.IndexOf(ArgsArrayReplacement);
 
                 if (index != -1)

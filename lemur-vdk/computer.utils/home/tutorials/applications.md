@@ -2,8 +2,9 @@
 ---
 # Making an app :
 ### _In this tutorial we're going to :_
-
-- learn how to create, open, and edit text files.
+#### note: this is rather out of date. most of it is accurate, but a lot of the API has changed, thus the example code needs modifications.
+- learn how to create, open, and 
+text files.
 - learn the requirements for a '.app' application, setup our directories and files to create a valid .app project. 
 - create a 'hello world' GUI app that runs when our computer starts.
 
@@ -90,7 +91,7 @@ Just for ease of use here, these are the provided xaml / js files.
             <TextBox BorderBrush="Black" Margin="2,2,2,2" x:Name="textBox" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Text="C://>.."/>
             <!-- Js hooks into the event to handle it -->
             <Button Style="{StaticResource ButtonStyle}" BorderBrush="Black" Margin="2,2,2,2" x:Name="showImageBtn" HorizontalAlignment="Left" VerticalAlignment="Top" Content="Load Image"/>
-            <!-- We use this to draw / render the image. can also be used for game development, see `game2.app` -->
+            <!-- We use this to draw / render the image. can also be used for game development, see `bouncy_cubes.app` -->
             <Image Margin="10,10,10,10" x:Name="renderTarget" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Stretch="Fill"/>
         </StackPanel>
     </Grid>

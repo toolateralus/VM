@@ -141,7 +141,7 @@ namespace Lemur.JS
             }
             if (!Disposing)
             {
-                throw new JsEngineException("Something happened");
+                throw new JsEngineException("JavaScript execution thread died unexpectedly.");
             }
         }
         public string IncludedFiles = "";

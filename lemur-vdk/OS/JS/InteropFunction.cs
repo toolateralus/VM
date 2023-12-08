@@ -46,26 +46,27 @@ namespace Lemur.JS
         }
         public virtual void InvokeEventBackground(object? arg1 = null, object? arg2 = null)
         {
-            Task.Run(() =>
+            try
             {
-                try
-                {
+                Task.Run(() => { 
                     if (javaScriptEngine.m_engine_internal.HasVariable(functionHandle))
                         javaScriptEngine?.m_engine_internal?.CallFunction(functionHandle, arg1, arg2);
-                }
-                catch (Exception e)
-                {
-                    Notifications.Exception(e);
-                }
-            });
+                });
+            }
+            catch (Exception e)
+            {
+                Notifications.Exception(e);
+            }
         }
         public virtual void InvokeEventImmediate(object? arg1 = null, object? arg2 = null)
         {
-            if (javaScriptEngine.m_engine_internal.HasVariable(functionHandle))
-                javaScriptEngine.m_engine_internal.CallFunction(functionHandle, arg1, arg2);
-            else
+            try
             {
-                Notifications.Now("Attempted to call a javascript function that didn't exist");
+                javaScriptEngine.m_engine_internal.CallFunction(functionHandle, arg1, arg2);
+            }
+            catch (Exception e)
+            {
+                Notifications.Exception(e);
             }
         }
         public virtual async Task<string> CreateFunction(string identifier, string methodName)

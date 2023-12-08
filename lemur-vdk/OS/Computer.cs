@@ -17,6 +17,7 @@ using Microsoft.ClearScript.JavaScript;
 using Lemur.OS;
 using Lemur.Graphics;
 using Newtonsoft.Json;
+using System.Threading;
 
 namespace Lemur
 {
@@ -117,15 +118,37 @@ namespace Lemur
         }
         public void OpenApp(UserControl control, string title = "window", Engine engine = null)
         {
+            // update config before we start apps. cheap & easy way to make sure the config is up to date, though it could be more frequent.
+            Computer.LoadConfig();
+
+
+            if (UserWindows.ContainsKey(title))
+            {
+                if (char.IsDigit(title.Last()))
+                {
+                    var i = int.Parse(title.Last().ToString()) + 1;
+                    title.Replace(title.Last(), i.ToString()[0]);
+                }
+                else
+                {
+                    title += "1";
+                }
+            }
+
             // the resizable is the container that hosts the user app.
             // this is made seperate to eliminate annoying and complex boiler plate.
             UserWindow window = Window.OpenAppUI(title, out var resizable_window);
+
             UserWindows[title] = window;
 
-         
+            if (ComputerWindow.IsValidType(control.GetType().GetMembers()))
+                ComputerWindow.AssignComputer(control, resizable_window);
+
             window.InitializeUserContent(resizable_window, control, engine);
 
             resizable_window.BringToTopOfDesktop();
+
+
 
             // todo : change this
             resizable_window.Width = 900;
@@ -133,7 +156,6 @@ namespace Lemur
             Canvas.SetTop(resizable_window, 200);
             Canvas.SetLeft(resizable_window, 200);
         }
-
         public void InstallCSharpApp(string exePath, Type type)
         {
             if (csApps.TryGetValue(exePath, out _))
@@ -169,24 +191,20 @@ namespace Lemur
             var name = exePath.Split('.')[0];
             Window.InstallIcon(AppType.NativeCs, exePath, type);
         }
-       
         public void Uninstall(string name)
         {
             jsApps.Remove(name);
             Window.Dispatcher.Invoke(() => { Window.RemoveDesktopIcon(name); });
         }
-
         private static void LoadBackground(Computer pc, ComputerWindow wnd)
         {
             string backgroundPath = pc?.Config?.Value<string>("BACKGROUND") ?? "background.png";
             wnd.desktopBackground.Source = ComputerWindow.LoadImage(FileSystem.GetResourcePath(backgroundPath) ?? "background.png");
         }
-        
-
-        public async Task OpenCustom(string type)
+        public async Task OpenCustom(string type, params object[] cmdLineArgs)
         {
             var data = Runtime.GetAppDefinition(type);
-            
+
             var control = XamlHelper.ParseUserControl(data.XAML);
 
             if (control == null)
@@ -196,8 +214,7 @@ namespace Lemur
             }
 
             Engine engine = new(this);
-            
-            var (id, code) = await InstantiateWindowClass(type, data, engine);
+            var (id, code) = await InstantiateWindowClass(type, cmdLineArgs, data, engine);
 
             OpenApp(control, title: id, engine: engine);
 
@@ -232,9 +249,11 @@ namespace Lemur
                         processClass = proc.Key;
             return processClass;
         }
-
         #region Application
         private static Computer? current;
+
+        private int startupTimeoutMs = 20_000;
+
         public static Computer Current => current ?? throw new InvalidOperationException("No computer was active when accessed."); 
         /// <summary>
         /// This just causes crashes.
@@ -279,7 +298,6 @@ namespace Lemur
 
             Runtime.LoadCustomSyntaxHighlighting();
         }
-
         public static IReadOnlyCollection<T> TryGetAllProcessesOfType<T>() where T : UserControl
         {
             List<T> contents = new();
@@ -301,7 +319,6 @@ namespace Lemur
             }
             return contents;
         }
-
         public static T TryGetProcessOfType<T>() where T : UserControl
         {
             T content = null;
@@ -328,8 +345,7 @@ namespace Lemur
             }
             return content!;
         }
-    
-        private static async Task<(string id, string code)> InstantiateWindowClass(string type, (string XAML, string JS) data, Engine engine)
+        private static async Task<(string id, string code)> InstantiateWindowClass(string type, object[] cmdLineArgs, (string XAML, string JS) data, Engine engine)
         {
             var name = type.Split('.')[0];
 
@@ -337,15 +353,24 @@ namespace Lemur
 
             _ = await engine.Execute(JS);
 
-            var instance_name = "p" + (processCount++).ToString();
+            var instance_name = "p" + processCount++.ToString();
 
             engine.AppModule.__SetId(instance_name);
 
-            string instantiation_code = $"const {instance_name} = new {name}('{instance_name}')";
+            string instantiation_code;
+
+            if (cmdLineArgs.Length != 0)
+            {
+                var args = string.Join(", ", cmdLineArgs);
+                instantiation_code = $"const {instance_name} = new {name}('{instance_name}, {args}')";
+            }
+            else
+                instantiation_code = $"const {instance_name} = new {name}('{instance_name}')";
+
+
 
             return (instance_name, instantiation_code);
         }
-
         #endregion
 
         protected virtual void Dispose(bool disposing)
@@ -356,7 +381,8 @@ namespace Lemur
                 {
                     JavaScript?.Dispose();
                     Window?.Dispose();
-                    Network?.Dispose();
+                    Network?.StopHosting();
+                    Network?.StopClient();
                     CmdLine?.Dispose();
 
                     foreach (var item in UserWindows)

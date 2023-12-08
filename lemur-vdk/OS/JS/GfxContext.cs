@@ -13,7 +13,8 @@ namespace Lemur.JS
 {
     public class GfxContext
     {
-        public GfxContext(string pid, string TargetControl, int PixelFormatBpp) {
+        public GfxContext(string pid, string TargetControl, int PixelFormatBpp)
+        {
 
             Image image = null;
             Computer.Current.Window.Dispatcher.Invoke(() =>
@@ -25,13 +26,13 @@ namespace Lemur.JS
             });
             this.image = new(image);
             this.PixelFormatBpp = PixelFormatBpp;
-        } 
+        }
 
         internal int PixelFormatBpp;
         internal int Width, Height;
 
         private byte[] renderTexture = Array.Empty<byte>();
-        
+
         private WriteableBitmap bitmap;
         internal readonly WeakReference<System.Windows.Controls.Image> image;
         public static readonly List<byte[]> palette = new()
@@ -78,7 +79,7 @@ namespace Lemur.JS
                 bitmap = new WriteableBitmap(Width, Height, 1, 1, PixelFormats.Bgra32, null);
             });
         }
-         
+
 
 
         public void WritePixelIndexed(int x, int y, int index)
@@ -102,7 +103,7 @@ namespace Lemur.JS
         {
             byte r, g, b, a;
             ExtractColor(color, out r, out g, out b, out a);
-            WritePixel(x,y, r, g, b, a);
+            WritePixel(x, y, r, g, b, a);
         }
         public static void ExtractColor(int color, out byte r, out byte g, out byte b, out byte a)
         {
@@ -148,7 +149,7 @@ namespace Lemur.JS
         {
             ExtractColorToCache(color);
             for (int i = 0; i < Width * Height; i++)
-                fixed (byte *ptr = renderTexture)
+                fixed (byte* ptr = renderTexture)
                     Marshal.Copy(cached_color, 0, (nint)ptr + i * PixelFormatBpp, PixelFormatBpp);
         }
 
@@ -160,6 +161,121 @@ namespace Lemur.JS
             for (int i = 0; i < Width * Height; i++)
                 fixed (byte* ptr = renderTexture)
                     Marshal.Copy(cached_color, 0, (nint)ptr + i * PixelFormatBpp, PixelFormatBpp);
+        }
+
+        public enum PrimitiveShape
+        {
+            Rectangle,
+            Triangle,
+            Circle,
+        }
+
+        internal void DrawFilledShape(int x, int y, int h, int w, double r, int colorIndex, PrimitiveShape primitiveShape)
+        {
+            switch (primitiveShape)
+            {
+                case PrimitiveShape.Rectangle:
+                    WriteFilledRectangle(x, y, h, w, r, colorIndex);
+                    break;
+                case PrimitiveShape.Circle:
+                    WriteFilledCircle(x, y, h, w, r, colorIndex);
+                    break;
+                case PrimitiveShape.Triangle:
+                    WriteFilledTriangle(x, y, h, w, r, colorIndex);
+                    break;
+                default:
+                    throw new NotSupportedException($"The shape {primitiveShape} is not supported");
+            }
+        }
+
+        private void WriteFilledRectangle(int x, int y, int h, int w, double r, int colorIndex)
+        {
+            double cosR = Math.Cos(r);
+            double sinR = Math.Sin(r);
+
+            // Adjust the coordinates to rotate around the center
+            int centerX = x + w / 2;
+            int centerY = y + h / 2;
+
+            for (int i = x; i < x + w; i++)
+            {
+                // Calculate the relative position from the center
+                int relativeX = i - centerX;
+
+                for (int j = y; j < y + h; j++)
+                {
+                    int relativeY = j - centerY;
+
+                    int rotatedX = (int)(relativeX * cosR - relativeY * sinR);
+                    int rotatedY = (int)(relativeX * sinR + relativeY * cosR);
+
+                    int finalX = rotatedX + centerX;
+                    int finalY = rotatedY + centerY;
+
+                    WritePixelIndexed(finalX, finalY, colorIndex);
+                }
+            }
+        }
+
+        private void WriteFilledCircle(int x, int y, int h, int w, double r, int colorIndex)
+        {
+            double cosR = Math.Cos(r);
+            double sinR = Math.Sin(r);
+
+            int radius = Math.Min(h, w) / 2;
+            int centerX = x + w / 2;
+            int centerY = y + h / 2;
+
+            for (int i = centerX - radius; i <= centerX + radius; i++)
+            {
+                for (int j = centerY - radius; j <= centerY + radius; j++)
+                {
+                    int rotatedX = (int)Math.Round((i - centerX) * cosR - (j - centerY) * sinR) + centerX;
+                    int rotatedY = (int)Math.Round((i - centerX) * sinR + (j - centerY) * cosR) + centerY;
+
+                    if (Math.Sqrt((rotatedX - centerX) * (rotatedX - centerX) + (rotatedY - centerY) * (rotatedY - centerY)) <= radius)
+                    {
+                        WritePixelIndexed(rotatedX, rotatedY, colorIndex);
+                    }
+                }
+            }
+        }
+
+        private void WriteFilledTriangle(int x, int y, int h, int w, double r, int colorIndex)
+        {
+            double cosR = Math.Cos(r);
+            double sinR = Math.Sin(r);
+
+            int centerX = x + w / 2;
+            int centerY = y + h / 2;
+
+            for (int i = x; i < x + w; i++)
+            {
+                for (int j = y; j < y + h; j++)
+                {
+                    int relativeX = i - centerX;
+                    int relativeY = j - centerY;
+
+                    int rotatedX = (int)(relativeX * cosR - relativeY * sinR) + centerX;
+                    int rotatedY = (int)(relativeX * sinR + relativeY * cosR) + centerY;
+
+                    if (IsPointInsideTriangle(rotatedX, rotatedY, x, y, x + w, y, x + w / 2, y + h))
+                    {
+                        WritePixelIndexed(rotatedX, rotatedY, colorIndex);
+                    }
+                }
+            }
+        }
+
+
+        private bool IsPointInsideTriangle(int x, int y, int x1, int y1, int x2, int y2, int x3, int y3)
+        {
+            int denominator = (y2 - y3) * (x1 - x3) + (x3 - x2) * (y1 - y3);
+            int a = ((y2 - y3) * (x - x3) + (x3 - x2) * (y - y3)) / denominator;
+            int b = ((y3 - y1) * (x - x3) + (x1 - x3) * (y - y3)) / denominator;
+            int c = 1 - a - b;
+
+            return a >= 0 && a <= 1 && b >= 0 && b <= 1 && c >= 0 && c <= 1;
         }
     }
 }

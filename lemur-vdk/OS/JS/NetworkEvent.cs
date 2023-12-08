@@ -20,6 +20,11 @@ namespace Lemur.JS
             Task.Run(() => javaScriptEngine?.Execute(func));
             return id;
         }
+        /// <summary>
+        /// This is intentionally hidden
+        /// </summary>
+        /// <param name="arg1"></param>
+        /// <param name="arg2"></param>
         private new void InvokeEvent(object? arg1 = null, object? arg2 = null) { }
         public void InvokeEvent(object? channel = null, object? replyChannel = null, object? data = null)
         {
