@@ -3,6 +3,7 @@ using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices;
 using System.Security.Cryptography.X509Certificates;
+using System.Windows;
 using System.Windows.Shapes;
 using lemur.Windowing;
 using Lemur.Types;
@@ -20,10 +21,18 @@ namespace Lemur.FS
                 throw new ArgumentException("Invalid root directory path.");
             }
 
-            if (!Directory.Exists(root))
+            try
             {
-                Directory.CreateDirectory(root);
-                Installer.Install(root);
+                if (!Directory.Exists(root))
+                {
+                    Directory.CreateDirectory(root);
+                    Installer.Install(root);
+                }
+            }
+            catch (Exception e)
+            {
+                MessageBox.Show(e.Message);
+                return;
             }
 
             Root = currentDirectory = root;
@@ -35,14 +44,20 @@ namespace Lemur.FS
             get { return currentDirectory; }
             set
             {
-                if (Directory.Exists(value) &&
-                    WithinFileSystemBounds(value))
+                try
                 {
-                    currentDirectory = value;
+                    if (Directory.Exists(value) &&
+                        WithinFileSystemBounds(value))
+                    {
+                        currentDirectory = value;
+                    }
+                    else
+                        throw new DirectoryNotFoundException($"Directory '{value}' not found.");
                 }
-                else
+                catch (Exception e)
                 {
-                    throw new DirectoryNotFoundException($"Directory '{value}' not found.");
+                    Notifications.Exception(e);
+                    return;
                 }
             }
         }
@@ -104,236 +119,350 @@ namespace Lemur.FS
         private static bool WithinFileSystemBounds(string? name) => name?.StartsWith(Root) is bool b && b;
         internal static void VerifyOrCreateAppdataDir(string path)
         {
-            if (!Directory.Exists(path))
+            try
             {
-                Directory.CreateDirectory(path);
+                if (!Directory.Exists(path))
+                {
+                    Directory.CreateDirectory(path);
+                }
+            }
+            catch (Exception e)
+            {
+                Notifications.Exception(e);
+                return;
             }
         }
         public static void ProcessDirectoriesAndFilesRecursively(string directory, Action<string, string> processDirAction, Action<string, string> processFileAction)
         {
-            foreach (string file in Directory.EnumerateFiles(directory))
+            try
             {
-                processFileAction(directory, file);
+
+                foreach (string file in Directory.EnumerateFiles(directory))
+                {
+                    processFileAction(directory, file);
+                }
+
+                // Process subdirectories in the current directory
+                foreach (string subDir in Directory.EnumerateDirectories(directory))
+                {
+                    processDirAction(directory, subDir);
+
+                    // Recursively process subdirectories
+                    ProcessDirectoriesAndFilesRecursively(subDir, processDirAction, processFileAction);
+                }
             }
-
-            // Process subdirectories in the current directory
-            foreach (string subDir in Directory.EnumerateDirectories(directory))
+            catch (Exception e)
             {
-                processDirAction(directory, subDir);
-
-                // Recursively process subdirectories
-                ProcessDirectoriesAndFilesRecursively(subDir, processDirAction, processFileAction);
+                Notifications.Exception(e);
+                return;
             }
         }
         public static void ChangeDirectory(string path)
         {
-            if (path == "..")
-            {
-                string currentDirectory = CurrentDirectory;
-
-                string[] components = currentDirectory.Split('\\');
-
-                if (components.Length > 1)
+            try { 
+                if (path == "..")
                 {
-                    string[] parentComponents = components.Take(components.Length - 1).ToArray();
+                    string currentDirectory = CurrentDirectory;
 
-                    string parentDirectory = string.Join("\\", parentComponents);
+                    string[] components = currentDirectory.Split('\\');
 
-                    ChangeDirectory(parentDirectory);
+                    if (components.Length > 1)
+                    {
+                        string[] parentComponents = components.Take(components.Length - 1).ToArray();
+
+                        string parentDirectory = string.Join("\\", parentComponents);
+
+                        ChangeDirectory(parentDirectory);
+                    }
+                    return;
                 }
+
+                path = GetRelativeOrAbsolute(path);
+
+                if (Directory.Exists(path) && WithinFileSystemBounds(path))
+                {
+                    if (!string.IsNullOrEmpty(CurrentDirectory)) 
+                        History.Push(CurrentDirectory);
+                    CurrentDirectory = path;
+                }
+                else if (!File.Exists(path))
+                {
+                    Notifications.Now($"Directory '{path}' not found in current path.");
+                }
+                else if (!WithinFileSystemBounds(path))
+                {
+                    Notifications.Now($"Directory '{path}' is inaccessible due to it being outside of the restricted file system");
+                }
+            }
+            catch (Exception e)
+            {
+                Notifications.Exception(e);
                 return;
-            }
-
-            path = GetRelativeOrAbsolute(path);
-
-            if (Directory.Exists(path) && WithinFileSystemBounds(path))
-            {
-                if (!string.IsNullOrEmpty(CurrentDirectory)) 
-                    History.Push(CurrentDirectory);
-                CurrentDirectory = path;
-            }
-            else if (!File.Exists(path))
-            {
-                Notifications.Now($"Directory '{path}' not found in current path.");
-            }
-            else if (!WithinFileSystemBounds(path))
-            {
-                Notifications.Now($"Directory '{path}' is inaccessible due to it being outside of the restricted file system");
             }
         }
         public static void NewFile(string fileName, bool isDirectory = false)
         {
-            string path = GetRelativeOrAbsolute(fileName);
+            try
+            {
+                string path = GetRelativeOrAbsolute(fileName);
 
-            if (isDirectory && !File.Exists(path) && !Directory.Exists(path))
-            {
-                Directory.CreateDirectory(path);
-            }
-            else
-            {
-                if (!File.Exists(path) && !Directory.Exists(path))
+                if (isDirectory && !File.Exists(path) && !Directory.Exists(path))
                 {
-                    File.Create(path).Close();
+                    Directory.CreateDirectory(path);
                 }
                 else
                 {
-                    Notifications.Now($"File '{fileName}' already exists.");
+                    if (!File.Exists(path) && !Directory.Exists(path))
+                    {
+                        File.Create(path).Close();
+                    }
+                    else
+                    {
+                        Notifications.Now($"File '{fileName}' already exists.");
+                    }
                 }
+            }
+            catch (Exception e)
+            {
+                Notifications.Exception(e);
+                return;
             }
         }
         public static void Delete(string fileName, bool isDirectory = false)
         {
-            string targetPath = GetRelativeOrAbsolute(fileName);
+            try
+            {
 
-            if (Directory.Exists(targetPath) && !File.Exists(targetPath))
-            {
-                Directory.Delete(targetPath, true);
-            }
-            else
-            {
-                if (File.Exists(targetPath))
+                string targetPath = GetRelativeOrAbsolute(fileName);
+
+                if (Directory.Exists(targetPath) && !File.Exists(targetPath))
                 {
-                    File.Delete(targetPath);
+                    Directory.Delete(targetPath, true);
                 }
                 else
                 {
-                    Notifications.Now($"File '{fileName}' not found in current path.");
+                    if (File.Exists(targetPath))
+                    {
+                        File.Delete(targetPath);
+                    }
+                    else
+                    {
+                        Notifications.Now($"File '{fileName}' not found in current path.");
+                    }
                 }
+            }
+            catch (Exception e)
+            {
+                Notifications.Exception(e);
+                return;
             }
         }
         private static string GetRelativeOrAbsolute(string fileName)
         {
-            var targetPath = fileName;
-
-            if (!Path.IsPathFullyQualified(targetPath))
+            try
             {
-                targetPath = Path.Combine(FileSystem.Root, fileName);
-            }
+                var targetPath = fileName;
 
-            return targetPath;
+                if (!Path.IsPathFullyQualified(targetPath))
+                {
+                    targetPath = Path.Combine(FileSystem.Root, fileName);
+                }
+
+                return targetPath;
+            }
+            catch (Exception e)
+            {
+                Notifications.Exception(e);
+                return "";
+            }
         }
         public static void Write(string fileName, string content)
         {
-            fileName = GetRelativeOrAbsolute(fileName);
-            File.WriteAllText(fileName, content);
+            try
+            {
+                fileName = GetRelativeOrAbsolute(fileName);
+                File.WriteAllText(fileName, content);
+            }
+            catch (Exception e)
+            {
+                Notifications.Exception(e);
+                return;
+            }
         }
         public static string Read(string fileName)
         {
-            fileName = GetRelativeOrAbsolute(fileName);
-            if (File.Exists(fileName))
+            try
             {
-                return File.ReadAllText(fileName);
+                fileName = GetRelativeOrAbsolute(fileName);
+                if (File.Exists(fileName))
+                {
+                    return File.ReadAllText(fileName);
+                }
+                else
+                {
+                    Notifications.Now($"File '{fileName}' not found in current path.");
+                    return "";
+                }
             }
-            else
+            catch (Exception e)
             {
-                Notifications.Now($"File '{fileName}' not found in current path.");
+                Notifications.Exception(e);
                 return "";
             }
         }
         public static bool FileExists(string fileName)
         {
-            fileName = GetRelativeOrAbsolute(fileName);
-            return File.Exists(fileName);
+            try
+            {
+                fileName = GetRelativeOrAbsolute(fileName);
+                return File.Exists(fileName);
+            }
+            catch (Exception e)
+            {
+                Notifications.Exception(e);
+                return false;
+            }
         }
         public static bool DirectoryExists(string directoryName)
         {
-            directoryName = GetRelativeOrAbsolute(directoryName);
-            return Directory.Exists(directoryName);
+            try
+            {
+                directoryName = GetRelativeOrAbsolute(directoryName);
+                return Directory.Exists(directoryName);
+            }
+            catch (Exception e)
+            {
+                Notifications.Exception(e);
+                return false;
+            }
         }
         public string[] DirectoryListing()
         {
-            string[] content = Directory.GetFileSystemEntries(currentDirectory);
-            return content;
+            try
+            {
+                string[] content = Directory.GetFileSystemEntries(currentDirectory);
+
+                return content;
+            }
+            catch (Exception e)
+            {
+                Notifications.Exception(e);
+                return [];
+            }
         }
         internal static void Copy(string sourcePath, string destinationPath)
         {
-            sourcePath = GetRelativeOrAbsolute(sourcePath);
-            destinationPath = GetRelativeOrAbsolute(destinationPath);
-
-            if (Directory.Exists(sourcePath))
+            try
             {
-                Directory.CreateDirectory(destinationPath);
+                sourcePath = GetRelativeOrAbsolute(sourcePath);
+                destinationPath = GetRelativeOrAbsolute(destinationPath);
 
-                string[] files = Directory.GetFiles(sourcePath);
-                string[] directories = Directory.GetDirectories(sourcePath);
-
-                foreach (string filePath in files)
+                if (Directory.Exists(sourcePath))
                 {
-                    string fileName = Path.GetFileName(filePath);
-                    string destinationFilePath = Path.Combine(destinationPath, fileName);
-                    File.Copy(filePath, destinationFilePath, true); // 'true' overwrites if the file already exists
-                }
+                    Directory.CreateDirectory(destinationPath);
 
-                foreach (string directoryPath in directories)
-                {
-                    string directoryName = Path.GetFileName(directoryPath);
-                    string destinationSubdirectoryPath = Path.Combine(destinationPath, directoryName);
-                    Copy(directoryPath, destinationSubdirectoryPath); 
+                    string[] files = Directory.GetFiles(sourcePath);
+                    string[] directories = Directory.GetDirectories(sourcePath);
+
+                    foreach (string filePath in files)
+                    {
+                        string fileName = Path.GetFileName(filePath);
+                        string destinationFilePath = Path.Combine(destinationPath, fileName);
+                        File.Copy(filePath, destinationFilePath, true); // 'true' overwrites if the file already exists
+                    }
+
+                    foreach (string directoryPath in directories)
+                    {
+                        string directoryName = Path.GetFileName(directoryPath);
+                        string destinationSubdirectoryPath = Path.Combine(destinationPath, directoryName);
+                        Copy(directoryPath, destinationSubdirectoryPath); 
+                    }
                 }
-            }
-            else if (File.Exists(sourcePath))
+                else if (File.Exists(sourcePath))
+                {
+                    File.Copy(sourcePath, destinationPath, true); // 'true' overwrites if the file already exists
+                }
+                else
+                {
+                    Notifications.Now("Source file or directory not found.. \n" + sourcePath);
+                }
+             }
+            catch (Exception e)
             {
-                File.Copy(sourcePath, destinationPath, true); // 'true' overwrites if the file already exists
+                Notifications.Exception(e);
+                return;
             }
-            else
-            {
-                Notifications.Now("Source file or directory not found.. \n" + sourcePath);
-            }
-        }
+}
         internal static void Move(string? path, string? dest)
         {
-            if (path != null && dest != null)
+            try
             {
-                path = GetRelativeOrAbsolute(path);
-                dest = GetRelativeOrAbsolute(dest);
-                if (File.Exists(path))
+                if (path != null && dest != null)
                 {
-                    if (!File.Exists(dest))
+                    path = GetRelativeOrAbsolute(path);
+                    dest = GetRelativeOrAbsolute(dest);
+                    if (File.Exists(path))
                     {
-                        File.Move(path, dest);
+                        if (!File.Exists(dest))
+                        {
+                            File.Move(path, dest);
+                        }
+                        else
+                        {
+                            Copy(path, dest);
+                            File.Delete(path);
+                        }
                     }
-                    else
+                    else if (Directory.Exists(path))
                     {
-                        Copy(path, dest);
-                        File.Delete(path);
+                        if (!Directory.Exists(dest))
+                        {
+                            Directory.Move(path, dest);
+                        }
+                        else
+                        {
+                            Copy(path, dest);
+                            Directory.Delete(path, true);
+                        }
                     }
                 }
-                else if (Directory.Exists(path))
-                {
-                    if (!Directory.Exists(dest))
-                    {
-                        Directory.Move(path, dest);
-                    }
-                    else
-                    {
-                        Copy(path, dest);
-                        Directory.Delete(path, true);
-                    }
-                }
+            }
+            catch (Exception e)
+            {
+                Notifications.Exception(e);
+                return;
             }
         }
 
         internal static async void NewDirectory(string path)
         {
-            path = GetRelativeOrAbsolute(path);
-            if (!File.Exists(path) && !Directory.Exists(path))
-                Directory.CreateDirectory(path);
-            else
+            try
             {
-                Notifications.Now("that directory or file already exists. do you want to overwrite? [y/n]");
-
-                var result = await Computer.Current.JavaScript.Execute($"read()");
-                
-                if (result is string answer && answer == "y")
-                {
-                    if (File.Exists(path)) 
-                        File.Delete(path);
-
-                    if (Directory.Exists(path)) 
-                        Directory.Delete(path);
-
+                path = GetRelativeOrAbsolute(path);
+                if (!File.Exists(path) && !Directory.Exists(path))
                     Directory.CreateDirectory(path);
+                else
+                {
+                    Notifications.Now("that directory or file already exists. do you want to overwrite? [y/n]");
+
+                    var result = await Computer.Current.JavaScript.Execute($"read()");
+                
+                    if (result is string answer && answer == "y")
+                    {
+                        if (File.Exists(path)) 
+                            File.Delete(path);
+
+                        if (Directory.Exists(path)) 
+                            Directory.Delete(path);
+
+                        Directory.CreateDirectory(path);
+                    }
                 }
+            }
+            catch (Exception e)
+            {
+                Notifications.Exception(e);
+                return;
             }
         }
     }
