@@ -142,7 +142,7 @@ namespace Lemur
 
             // the resizable is the container that hosts the user app.
             // this is made separate to eliminate annoying and complex boiler plate.
-            UserWindow userWindow = Window.OpenAppUI(type, out var resizable_window);
+            UserWindow userWindow = Window.OpenAppUI(processID, type, out var resizable_window);
 
             UserWindows[processID] = userWindow;
 
@@ -154,11 +154,11 @@ namespace Lemur
 
             if (!ProcessLookupTable.TryGetValue(type, out var array))
             {
-                array = new();
+                array = [];
                 ProcessLookupTable[type] = array;
             }
 
-            ProcessLookupTable[type].Add(processID);
+            array.Add(processID);
 
             void OnWindowClosed()
             {
@@ -170,12 +170,10 @@ namespace Lemur
                 
                 Window.RemoveTaskbarButton(type);
 
-                if (!ProcessLookupTable.TryGetValue(type, out var procList))
-                    return;
+                // the array within the process lookup table
+                array.Remove(processID);
 
-                procList.Remove(processID);
-
-                if (procList.Count == 0)
+                if (array.Count == 0)
                     ProcessLookupTable.Remove(type);
             }
 
@@ -414,6 +412,12 @@ namespace Lemur
         {
             Dispose(disposing: true);
             GC.SuppressFinalize(this);
+        }
+
+        internal void CloseApp(string pID)
+        {
+            var win = UserWindows[pID];
+            win.Close();
         }
     }
 }

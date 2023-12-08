@@ -87,14 +87,41 @@ namespace Lemur.GUI
 
             return btn;
         }
-        public Button MakeTaskbarButton(string title, Action Toggle)
+        public Button MakeTaskbarButton(string pID, string title, Action Toggle)
         {
             var btn = MakeButton(width: 65);
+
+            var ctx = new ContextMenu();
+            btn.ContextMenu = ctx;
+
+            MenuItem close = new()
+            {
+                Header = "close app"
+            };
+
+            close.Click += Close_Click;
+
+            MenuItem toggle = new()
+            {
+                Header = "Minimize/Maximize"
+            };
+            toggle.Click += (_, _) => Toggle?.Invoke();
+
+            void Close_Click(object sender, RoutedEventArgs e)
+            {
+                Computer.Current.CloseApp(pID);
+                TaskbarStackPanel.Children.Remove(btn);
+            }
+
+            ctx.Items.Add(close);
+            ctx.Items.Add(toggle);
 
             btn.Content = title;
             btn.Click += (_,_) => Toggle?.Invoke();
             return btn;
         }
+
+
         private int ctrlTabIndex;
         public void Computer_KeyDown(object sender, KeyEventArgs e)
         {
@@ -281,7 +308,7 @@ namespace Lemur.GUI
             }
             return false;
         }
-        internal UserWindow OpenAppUI(string appdotapp, out ResizableWindow resizableWindow)
+        internal UserWindow OpenAppUI(string pID, string appdotapp, out ResizableWindow resizableWindow)
         {
             TopMostZIndex++;
 
@@ -299,13 +326,7 @@ namespace Lemur.GUI
                 Margin = window.Margin,
             };
 
-            // hacky ::
-            // declaring this field as a hack, to capture the object in the lambda function below.
-            // cant capture an out var, but it's ok here, actually crucial to prevent a leak.
-            var rsz_win_capture = resizableWindow;
-            // hack ::
-
-            Button btn = MakeTaskbarButton(appdotapp, resizableWindow.ToggleVisibility);
+            Button btn = MakeTaskbarButton(pID, appdotapp, resizableWindow.ToggleVisibility);
 
             TaskbarStackPanel.Children.Add(btn);
             Desktop.Children.Add(resizableWindow);
@@ -323,9 +344,14 @@ namespace Lemur.GUI
 
                 foreach (var item in DesktopIconPanel.Children)
                 {
-                    if (item is Button btn
-                        && btn.Name == name.Replace(".app", "")
-                            .Replace(".web", ""))
+                    if (item is not Button btn)
+                        continue;
+
+                    var id = btn.Content ?? btn.Name
+                                .Replace(".app", "")
+                                .Replace(".web", "");
+
+                    if (id == name)
                         toRemove.Add(btn);
                 }
 
@@ -361,12 +387,15 @@ namespace Lemur.GUI
 
                 uninstall.Click += (sender, @event) =>
                 {
-                    Computer.Current.Uninstall(appName);
+                    var answer = MessageBox.Show($"are you sure you want to uninstall {appName}?", "uninstall?", MessageBoxButton.YesNo);
+                    
+                    if (answer == MessageBoxResult.Yes)
+                        Computer.Current.Uninstall(appName);
                 };
 
-                contextMenu.Items.Add(uninstall);
                 contextMenu.Items.Add(jsSource);
                 contextMenu.Items.Add(xamlSource);
+                contextMenu.Items.Add(uninstall);
 
                 btn.ContextMenu = contextMenu;
 
