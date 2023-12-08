@@ -150,7 +150,13 @@ namespace Lemur.JS
 
             Notifications.Now($"Downloading {path}..");
 
-            var root = FileSystem.Root + "\\downloads";
+            string root;
+
+            if (Computer.Config.ContainsKey("DOWNLOAD_PATH")) {
+                root = Computer.Config.Value<string>("DOWNLOAD_PATH") ?? throw new InvalidDataException("invalid value as DOWNLOAD_PATH in config."); 
+            }
+            else
+                root = FileSystem.Root + "/home/downloads";
 
             if (!Directory.Exists(root))
             {

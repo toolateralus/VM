@@ -2,9 +2,10 @@
   // A config file for the VDK. 'config' identifier in any javascript environment will refer to this object.
   // you may add any properties you like to this object, and they will be accessible in the VDK as 'config.property_name'
   "NAME": "Default VDK", // the name of this pc.
-  "ALIAS_PATH": "C:\\Users\\Josh\\AppData\\Roaming\\Lemur\\computer0\\home\\commands", // where to load commands from
+  "ALIAS_PATH": "/commands", // where to load commands from
   "BACKGROUND": "epic_background.png", // desktop background image path.
   "CMD_LINE_TIMEOUT": "50_000",
+  "DOWNLOAD_PATH": "/home/downloads",
   "DEFAULT_SERVER_IP": "192.168.0.138", // if provided, a server can be started with the 'host' command with no arguments, as well as 'connect'
   "ALWAYS_CONNECT": false // switch this to true if you'd like the computer to auto-host & auto-connect to default server as listed above.
   // right now, only 'download', 'upload', 'fetch' are the only true commands that work with the server, which allow you to copy
