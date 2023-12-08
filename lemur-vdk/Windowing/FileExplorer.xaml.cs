@@ -7,6 +7,7 @@ using System.Text;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
+using lemur.Windowing;
 using Lemur.FS;
 
 namespace Lemur.GUI

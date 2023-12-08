@@ -6,9 +6,9 @@ using System.Reflection;
 using System.Windows.Controls;
 using System.Windows.Markup;
 using Lemur.JS;
-using Lemur;
+using lemur.Windowing;
 
-namespace Lemur.UserInterface
+namespace lemur.JS
 {
     public class XamlHelper
     {
@@ -20,7 +20,8 @@ namespace Lemur.UserInterface
             if (xaml == "Not found!")
                 return null;
 
-            App.Current.Dispatcher.Invoke(delegate { 
+            System.Windows.Application.Current.Dispatcher.Invoke(delegate
+            {
                 try
                 {
                     object parsedObject = XamlReader.Parse(xaml);
@@ -43,6 +44,6 @@ namespace Lemur.UserInterface
             return product;
         }
 
-       
+
     }
 }

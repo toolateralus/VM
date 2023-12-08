@@ -7,6 +7,7 @@ using Lemur.FS;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using Lemur;
+using lemur.Windowing;
 
 namespace lemur.JS.Embedded
 {

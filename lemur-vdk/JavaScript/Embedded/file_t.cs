@@ -1,6 +1,6 @@
 ﻿using System;
 using System.IO;
-using Lemur;
+using lemur.Windowing;
 using Lemur.FS;
 
 namespace lemur.JS.Embedded

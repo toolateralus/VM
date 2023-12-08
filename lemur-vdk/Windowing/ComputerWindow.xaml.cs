@@ -7,6 +7,7 @@ using System.Windows.Controls;
 using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
+using lemur.Windowing;
 using Lemur.FS;
 using Key = System.Windows.Input.Key;
 

@@ -8,8 +8,8 @@ using System.Threading.Tasks;
 using Lemur.GUI;
 using Lemur.Network;
 using Lemur.JS;
-using Lemur;
 using Lemur.FS;
+using lemur.Windowing;
 
 namespace Lemur.OS
 {

@@ -9,6 +9,7 @@ using Lemur.FS;
 using Lemur.GUI;
 using Lemur.Network;
 using Lemur.Network.Server;
+using lemur.Windowing;
 
 namespace Lemur.JS
 {

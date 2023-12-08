@@ -13,6 +13,7 @@ namespace Lemur.GUI
     using Lemur.FS;
     using Lemur;
     using System.IO;
+    using lemur.Windowing;
 
     public partial class CommandPrompt : UserControl
     {

@@ -12,6 +12,7 @@ using System.Windows.Input;
 using Microsoft.Web.WebView2.Core;
 using System.Collections.Generic;
 using OpenTK.Platform.Windows;
+using lemur.Windowing;
 
 namespace Lemur.GUI
 {

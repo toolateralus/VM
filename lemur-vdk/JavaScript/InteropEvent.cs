@@ -10,6 +10,7 @@ using System.Threading;
 using System.ComponentModel;
 using System.Windows.Controls;
 using System.Windows.Controls.Primitives;
+using lemur.Windowing;
 
 namespace Lemur.JS
 {

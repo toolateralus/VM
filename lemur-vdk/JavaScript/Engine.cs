@@ -13,6 +13,7 @@ using Lemur.FS;
 using System.Diagnostics;
 using System.Windows.Input;
 using lemur.JS.Embedded;
+using lemur.Windowing;
 
 namespace Lemur.JS
 {

@@ -10,6 +10,7 @@ using System.Threading.Tasks;
 using System.Linq;
 using Lemur.FS;
 using System.Windows.Media.Imaging;
+using lemur.Windowing;
 
 namespace Lemur.GUI
 {

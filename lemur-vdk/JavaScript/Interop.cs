@@ -6,6 +6,7 @@ using System.Reflection;
 using System.Threading.Tasks;
 using System.Drawing;
 using System.Collections.Concurrent;
+using lemur.Windowing;
 
 namespace Lemur.JS
 {

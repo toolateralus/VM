@@ -4,7 +4,7 @@ using System.Linq;
 using System.Runtime.InteropServices;
 using System.Security.Cryptography.X509Certificates;
 using System.Windows.Shapes;
-using Lemur;
+using lemur.Windowing;
 using Lemur.Types;
 using Path = System.IO.Path;
 

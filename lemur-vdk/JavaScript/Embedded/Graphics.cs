@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using lemur.Windowing;
 using Lemur;
 using Image = System.Windows.Controls.Image;
 

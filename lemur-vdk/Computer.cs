@@ -9,7 +9,6 @@ using System.Collections.Generic;
 using Lemur.Network;
 using Lemur.FS;
 using Lemur.JS;
-using Lemur.UserInterface;
 using System.Windows.Controls;
 using System.Linq;
 using System.Windows.Media;
@@ -17,6 +16,8 @@ using Microsoft.ClearScript.JavaScript;
 using Lemur.OS;
 using Newtonsoft.Json;
 using System.Threading;
+using lemur.JS;
+using lemur.Windowing;
 
 namespace Lemur
 {

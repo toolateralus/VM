@@ -2,9 +2,10 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using Lemur;
 using Lemur.GUI;
 
-namespace Lemur
+namespace lemur.Windowing
 {
     public static class Notifications
     {
@@ -38,13 +39,13 @@ namespace Lemur
                 sb.AppendLine($"let message = {{body : {message}, type : stdout}}");
 
                 // selects all the process id's 
-                foreach(var pid in Computer.ProcessLookupTable.Values.Select(i => i.Select(i => i)))
+                foreach (var pid in Computer.ProcessLookupTable.Values.Select(i => i.Select(i => i)))
                 {
                     sb.AppendLine($"if ({pid}.OS_MSG != undefined) {{");
                     sb.AppendLine($"{pid}.OS_MSG({message})");
                     sb.AppendLine($"}}");
                 }
-               
+
 
                 var notif = new NotificationControl() { Message = message };
 
@@ -58,13 +59,13 @@ namespace Lemur
         {
             var stopped = new List<NotificationControl>();
 
-            foreach (var control in Computer.Current.Window.NotificationStackPanel.Children) 
+            foreach (var control in Computer.Current.Window.NotificationStackPanel.Children)
             {
                 if (control is NotificationControl notif)
                     stopped.Add(notif);
             }
 
-            foreach(var control in stopped)
+            foreach (var control in stopped)
                 control.Stop();
         }
 

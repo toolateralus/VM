@@ -17,6 +17,7 @@ using System.Threading.Tasks;
 using System.DirectoryServices.ActiveDirectory;
 using Lemur;
 using Lemur.JS;
+using lemur.Windowing;
 
 namespace lemur.JS.Embedded
 {
