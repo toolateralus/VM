@@ -368,7 +368,7 @@ namespace Lemur.JS.Embedded
                 await Computer.Current.OpenCustom(path, args).ConfigureAwait(true);
 
                 // this way of fetching a pid is very presumptuous and bad.
-                pid = $"p{Computer.processCount}"; // the last created process. 
+                pid = $"p{Computer.processCount - 2}"; // the last created process. 
             }
 
             return pid;

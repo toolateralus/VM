@@ -56,8 +56,8 @@ namespace Lemur.OS
 
             if (obj != null && obj.Length == 1)
             {
-                if (obj[0] is string name && Computer.ProcessLookupTable.TryGetValue(name, out var pids_arg))
-                    toKill.AddRange(pids_arg);
+                if (obj[0] is string name && Computer.Processes.TryGetValue(name, out var pids_arg))
+                    toKill.AddRange(pids_arg.Select(i => i.ID));
                 else
                 {
                     Notifications.Now($"No process with name {obj[0]} found.");
@@ -66,8 +66,8 @@ namespace Lemur.OS
             }
             else
             {
-                foreach (var pids in Computer.ProcessLookupTable.Values)
-                    toKill.AddRange(pids);
+                foreach (var pids in Computer.Processes.Values)
+                    toKill.AddRange(pids.Select(i => i.ID));
             }
 
 

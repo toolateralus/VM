@@ -31,10 +31,9 @@ namespace Lemur
         internal CommandLine CmdLine { get; set; }
         internal JObject Config { get; set; }
 
-        /// <summary>
-        /// app name keys, list of process id's values
-        /// </summary>
-        internal static Dictionary<string, List<string>> ProcessLookupTable = new();
+        
+        // type : process(es)
+        internal static Dictionary<string, List<Process>> Processes = [];
         internal readonly Dictionary<string, UserWindow> UserWindows = new();
         internal readonly Dictionary<string, Type> csApps = new();
 
@@ -115,12 +114,17 @@ namespace Lemur
 
         }
 
-        record Process(string ID, string Type, string Title, string Version)
+        internal record Process(UserWindow  UI, string ID, string Type)
+        {
+            public event Action OnProcessTermination;
+        }
+        internal record NativeProcess (UserWindow UI, string ID, string Type, Engine engine) : Process(UI, ID, Type)
         {
 
         }
         public void OpenApp(UserControl control, string type, string processID, Engine? engine = null)
         {
+
 
             LoadConfig();
 
@@ -141,35 +145,31 @@ namespace Lemur
             // this is made separate to eliminate annoying and complex boiler plate.
             UserWindow userWindow = Window.OpenAppUI(processID, type, out var resizable_window);
 
-            UserWindows[processID] = userWindow;
-
             // 
             if (ComputerWindow.IsValidType(control.GetType().GetMembers()))
                 ComputerWindow.AssignComputer(control, resizable_window);
 
             userWindow.InitializeContent(resizable_window, control, engine);
 
-            if (!ProcessLookupTable.TryGetValue(type, out var array))
-            {
-                array = [];
-                ProcessLookupTable[type] = array;
-            }
+            Process? process = null;
 
-            array.Add(processID);
+            if (engine == null)
+                process = new Process(userWindow, processID, type);
+            else process = new NativeProcess(userWindow, processID, type, engine);
 
-            ProcessLookupTable[type] = array; 
+            RegisterNewProcess(process, out var procList);
 
             void OnWindowClosed()
             {
                 // for pesky calls that arent from the UI thread, from javascript etc.
                 if (Thread.CurrentThread.ApartmentState != ApartmentState.STA)
-                    App.Current.Dispatcher.Invoke(() => closeMethod(type, processID, resizable_window, array));
+                    App.Current.Dispatcher.Invoke(() => closeMethod(procList));
                 else
                 {
-                    closeMethod(type, processID, resizable_window, array);
+                    closeMethod(procList);
                 }
 
-                void closeMethod(string type, string processID, ResizableWindow resizable_window, List<string> array)
+                void closeMethod(List<Process> array)
                 {
                     Window.Desktop.Children.Remove(resizable_window);
 
@@ -179,11 +179,13 @@ namespace Lemur
 
                     Window.RemoveTaskbarButton(type);
 
-                    // the array within the process lookup table
-                    array.Remove(processID);
+                    array.Remove(process);
 
                     if (array.Count == 0)
-                        ProcessLookupTable.Remove(type);
+                        Processes.Remove(type);
+                    else
+                        Processes[type] = array;
+                    
                 }
             }
 
@@ -198,6 +200,37 @@ namespace Lemur
             Canvas.SetTop(resizable_window, 200);
             Canvas.SetLeft(resizable_window, 200);
         }
+
+        private void RegisterNewProcess(Process process, out List<Process> procList)
+        {
+            UserWindows[process.ID] = process.UI;
+
+            GetProcessesOfType(process.Type, out procList);
+
+            procList.Add(process);
+
+            Processes[process.Type] = procList;
+
+            process.OnProcessTermination += () =>
+            {
+                var procList = Processes[process.Type];
+
+                procList.Remove(process);
+                Processes[process.Type] = procList;
+                
+                if (procList.Count == 0)
+                    Processes.Remove(process.Type);
+
+            };
+
+        }
+
+        private static void GetProcessesOfType(string name, out List<Process> processes)
+        {
+            if (!Processes.TryGetValue(name, out processes!))
+                processes= [];
+        }
+
         public void InstallCSharpApp(string exePath, Type type)
         {
             if (csApps.TryGetValue(exePath, out _))
@@ -286,10 +319,14 @@ namespace Lemur
         {
             var processClass = "Unknown process";
 
-            foreach (var proc in Computer.ProcessLookupTable)
-                foreach (var pid in proc.Value)
-                    if (pid == identifier)
-                        processClass = proc.Key;
+            foreach (var procList in Processes)
+                foreach (var proc in from proc in procList.Value
+                                     where proc.ID == identifier
+                                     select proc)
+                {
+                    processClass = proc.Type;
+                }
+
             return processClass;
         }
         #region Application

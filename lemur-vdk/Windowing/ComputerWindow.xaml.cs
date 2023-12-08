@@ -169,7 +169,7 @@ namespace Lemur.GUI
 
         public void ShutdownClick(object sender, RoutedEventArgs e)
         {
-            if (Computer.ProcessLookupTable.Count > 0)
+            if (Computer.Processes.Count > 0)
             {
                 var answer = MessageBox.Show("Are you sure you want to shut down? all unsaved changes will be lost.",
                                             "Shutdown",
