@@ -1,26 +1,25 @@
-﻿using System;
-using System.Windows.Controls;
-using System.Threading.Tasks;
+﻿using Lemur.JS;
+using System;
 using System.Collections.Generic;
-using Lemur.JS;
-using System.Windows;
 using System.Linq;
-using System.Windows.Input;
 using System.Threading;
+using System.Threading.Tasks;
+using System.Windows.Controls;
+using System.Windows.Input;
+using Lemur;
+using Lemur.FS;
+using Lemur.Windowing;
+using System.IO;
 
 namespace Lemur.GUI
 {
-    using Lemur.FS;
-    using Lemur;
-    using System.IO;
-    using Lemur.Windowing;
 
     public partial class CommandPrompt : UserControl
     {
         internal Engine? Engine;
         private List<string> commandHistory = new List<string>();
-        private int historyIndex = -1; 
-        private string tempInput = ""; 
+        private int historyIndex = -1;
+        private string tempInput = "";
         public static string? DesktopIcon => FileSystem.GetResourcePath("commandprompt.png");
 
         public Action<string> OnSend { get; internal set; }
@@ -36,9 +35,9 @@ namespace Lemur.GUI
             input.Focus();
 
             output.TextChanged += Output_TextChanged;
-            
+
         }
-  
+
         private void Output_TextChanged(object? sender, EventArgs e)
         {
             output.ScrollToLine(output.Text.Length);
@@ -100,7 +99,7 @@ namespace Lemur.GUI
         {
             Engine ??= new();
             Window = rsz;
-            
+
         }
 
 
@@ -149,9 +148,9 @@ namespace Lemur.GUI
                 return;
             }
 
-            await ExecuteJavaScript(code : input.Text, timeout :  50_000);
+            await ExecuteJavaScript(code: input.Text, timeout: 50_000);
 
-            if (output.Text == text) 
+            if (output.Text == text)
                 output.AppendText("\n done.");
 
             input.Clear();

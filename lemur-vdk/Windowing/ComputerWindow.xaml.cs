@@ -1,19 +1,17 @@
-﻿using System;
+﻿using Lemur.FS;
+using Lemur.Windowing;
+using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
+using System.Text.RegularExpressions;
 using System.Threading;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
-using Lemur.Windowing;
-using Lemur.FS;
 using Key = System.Windows.Input.Key;
-using System.Xml.Linq;
-using System.Text.RegularExpressions;
-using System.Collections.Generic;
-using System.Security.Cryptography;
 
 namespace Lemur.GUI
 {
@@ -42,7 +40,7 @@ namespace Lemur.GUI
             // what a horrible hack, i have no idea why this is needed
             // we can't get events for the desktop
             Keyboard.AddPreviewKeyDownHandler(Desktop, Computer_KeyDown);
-            
+
             clock = new Timer(delegate
             {
                 Dispatcher.Invoke(this.UpdateComputerTime);
@@ -65,11 +63,11 @@ namespace Lemur.GUI
         public Button MakeDesktopButton(string appName)
         {
             var btn = MakeButton(width: 60, height: 60);
-            
+
             btn.Margin = new Thickness(15, 15, 15, 15);
             btn.Content = appName;
 
-            string regexPattern = @"[_a-zA-Z][_a-zA-Z0-9]*"; 
+            string regexPattern = @"[_a-zA-Z][_a-zA-Z0-9]*";
 
             // Validate the input with the regex
             string[] splitName = appName.Split(".");
@@ -124,7 +122,7 @@ namespace Lemur.GUI
             ctx.Items.Add(toggle);
 
             btn.Content = title;
-            btn.Click += (_,_) => Toggle?.Invoke();
+            btn.Click += (_, _) => Toggle?.Invoke();
             return btn;
         }
 
@@ -154,9 +152,9 @@ namespace Lemur.GUI
                             return;
 
                         ctrlTabIndex = Math.Clamp(ctrlTabIndex, 0, Computer.Current.UserWindows.Count - 1);
-                        
+
                         var windowElement = Computer.Current.UserWindows.ElementAt(ctrlTabIndex);
-                        
+
                         ctrlTabIndex += 1;
 
                         if (ctrlTabIndex > Computer.Current.UserWindows.Count - 1)
@@ -168,14 +166,14 @@ namespace Lemur.GUI
                     break;
             }
         }
-        
+
         public void ShutdownClick(object sender, RoutedEventArgs e)
         {
             if (Computer.ProcessLookupTable.Count > 0)
             {
-                var answer = MessageBox.Show("Are you sure you want to shut down? all unsaved changes will be lost.", 
-                                            "Shutdown", 
-                                            MessageBoxButton.YesNoCancel, 
+                var answer = MessageBox.Show("Are you sure you want to shut down? all unsaved changes will be lost.",
+                                            "Shutdown",
+                                            MessageBoxButton.YesNoCancel,
                                             MessageBoxImage.Warning);
                 if (answer == MessageBoxResult.Yes)
                 {
@@ -210,7 +208,7 @@ namespace Lemur.GUI
 
         public static void SetupIcon(string name, Button btn)
         {
-            
+
             if (Runtime.GetAppIcon(name) is BitmapImage img)
             {
                 btn.Background = new ImageBrush(img);
@@ -219,7 +217,7 @@ namespace Lemur.GUI
                     CornerRadius = new CornerRadius(10),
                     ToolTip = name,
                 };
-                btn.Content = contentBorder;    
+                btn.Content = contentBorder;
             }
             else
             {
@@ -228,7 +226,7 @@ namespace Lemur.GUI
 
         }
 
-        public static void SetupIcon(string name, Button btn, Type type) 
+        public static void SetupIcon(string name, Button btn, Type type)
         {
             if (GetIcon(type) is BitmapImage img)
             {
@@ -241,7 +239,7 @@ namespace Lemur.GUI
                 };
 
                 btn.Content = contentBorder;
-            } 
+            }
             else
             {
                 Notifications.Now("Failed to get image for native app : make sure you have a 'public static string? DesktopIcon => FileSystem.GetResourcePath(\"commandprompt.png\"); type/name/accessible field' in your .xaml.cs class");
@@ -257,10 +255,10 @@ namespace Lemur.GUI
             bitmapImage.EndInit();
             return bitmapImage;
         }
-        public static BitmapImage? GetIcon(Type type) 
+        public static BitmapImage? GetIcon(Type type)
         {
             var properties = type.GetProperties();
-            
+
             foreach (var property in properties)
             {
                 if (property.Name.Contains("DesktopIcon") &&
@@ -285,7 +283,7 @@ namespace Lemur.GUI
             var method = instance.GetType().GetMethods()
              .FirstOrDefault(method =>
                  method.Name.Contains("LateInit") &&
-                 
+
                  ((method.GetParameters().Length > 0 && method.GetParameters()[0].ParameterType == typeof(Computer)) ||
 
                  method.GetParameters().Length > 1 &&
@@ -331,8 +329,8 @@ namespace Lemur.GUI
             resizableWindow = new ResizableWindow()
             {
                 Content = window,
-                Width=200,
-                Height=200,
+                Width = 200,
+                Height = 200,
                 Margin = window.Margin,
             };
 
@@ -376,7 +374,7 @@ namespace Lemur.GUI
                 foreach (var btn in toRemove)
                     DesktopIconPanel.Children.Remove(btn);
 
-           });
+            });
         }
         public void InstallIcon(AppType type, string appName, Type? runtime_type = null)
         {
@@ -386,19 +384,21 @@ namespace Lemur.GUI
 
                 var contextMenu = new ContextMenu();
 
-                MenuItem jsSource = new() {
+                MenuItem jsSource = new()
+                {
                     Header = "view source : JavaScript",
                 };
 
                 jsSource.Click += (sender, @event) => JsSource_Click(sender, @event, appName);
 
-                MenuItem xamlSource = new() {
+                MenuItem xamlSource = new()
+                {
                     Header = "view source : XAML",
                 };
 
                 xamlSource.Click += (sender, @event) => XamlSource_Click(sender, @event, appName);
 
-                
+
 
                 contextMenu.Items.Add(jsSource);
                 contextMenu.Items.Add(xamlSource);
@@ -435,14 +435,16 @@ namespace Lemur.GUI
                     if (Activator.CreateInstance(type) is object instance && instance is UserControl userControl)
                     {
                         Computer.Current.OpenApp(userControl, name, Computer.GetNextProcessID());
-                    } else
+                    }
+                    else
                     {
                         Notifications.Now("Failed to create instance of native application. the app is likely misconfigured");
                     }
                 }
             }
 
-            Dispatcher?.Invoke(() => {
+            Dispatcher?.Invoke(() =>
+            {
 
                 var btn = MakeDesktopButton(appName);
 
@@ -453,7 +455,7 @@ namespace Lemur.GUI
                         break;
                     case AppType.NativeCs:
                         if (runtime_type != null)
-                        InstallDesktopIconNative(btn, appName, runtime_type);
+                            InstallDesktopIconNative(btn, appName, runtime_type);
                         break;
                     case AppType.JsHtml:
                         WebAppDesktopIcon(btn, appName);

@@ -1,16 +1,15 @@
-﻿using Newtonsoft.Json.Linq;
+﻿using Lemur.FS;
+using Lemur.GUI;
+using Lemur.JavaScript.Network;
+using Lemur.JS;
+using Lemur.Windowing;
+using Newtonsoft.Json.Linq;
 using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using Lemur.GUI;
-using Lemur.JS;
-using Lemur.FS;
-using Lemur.Windowing;
-using Lemur.JavaScript.Network;
-using System.Security.Cryptography;
 
 namespace Lemur.OS
 {
@@ -61,7 +60,7 @@ namespace Lemur.OS
                     toKill.AddRange(pids_arg);
                 else
                 {
-                    Notifications.Now($"No process with name { obj[0] } found.");
+                    Notifications.Now($"No process with name {obj[0]} found.");
                     return;
                 }
             }
@@ -89,7 +88,7 @@ namespace Lemur.OS
             oldEngine.Dispose();
 
             Engine newEngine = new();
-            
+
 
             Computer.Current.JavaScript = newEngine;
 

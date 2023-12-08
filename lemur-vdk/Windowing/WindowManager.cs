@@ -1,6 +1,4 @@
-﻿using Lemur.GUI;
-using System;
-using System.Linq;
+﻿using System;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
@@ -31,7 +29,7 @@ namespace Lemur.GUI
         }
         protected override void OnPreviewMouseMove(MouseEventArgs e)
         {
-             if (e is null)
+            if (e is null)
                 throw new ArgumentNullException(nameof(e));
 
             if (targetWindow == null || (!isResizing && !isDragging))

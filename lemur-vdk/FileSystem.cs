@@ -1,12 +1,9 @@
-﻿using System;
+﻿using Lemur.Types;
+using Lemur.Windowing;
+using System;
 using System.IO;
 using System.Linq;
-using System.Runtime.InteropServices;
-using System.Security.Cryptography.X509Certificates;
 using System.Windows;
-using System.Windows.Shapes;
-using Lemur.Windowing;
-using Lemur.Types;
 using Path = System.IO.Path;
 
 namespace Lemur.FS
@@ -159,7 +156,8 @@ namespace Lemur.FS
         }
         public static void ChangeDirectory(string path)
         {
-            try { 
+            try
+            {
                 if (path == "..")
                 {
                     string currentDirectory = CurrentDirectory;
@@ -181,7 +179,7 @@ namespace Lemur.FS
 
                 if (Directory.Exists(path) && WithinFileSystemBounds(path))
                 {
-                    if (!string.IsNullOrEmpty(CurrentDirectory)) 
+                    if (!string.IsNullOrEmpty(CurrentDirectory))
                         History.Push(CurrentDirectory);
                     CurrentDirectory = path;
                 }
@@ -375,7 +373,7 @@ namespace Lemur.FS
                     {
                         string directoryName = Path.GetFileName(directoryPath);
                         string destinationSubdirectoryPath = Path.Combine(destinationPath, directoryName);
-                        Copy(directoryPath, destinationSubdirectoryPath); 
+                        Copy(directoryPath, destinationSubdirectoryPath);
                     }
                 }
                 else if (File.Exists(sourcePath))
@@ -386,13 +384,13 @@ namespace Lemur.FS
                 {
                     Notifications.Now("Source file or directory not found.. \n" + sourcePath);
                 }
-             }
+            }
             catch (Exception e)
             {
                 Notifications.Exception(e);
                 return;
             }
-}
+        }
         internal static void Move(string? path, string? dest)
         {
             try
@@ -446,13 +444,13 @@ namespace Lemur.FS
                     Notifications.Now("that directory or file already exists. do you want to overwrite? [y/n]");
 
                     var result = await Computer.Current.JavaScript.Execute($"read()");
-                
+
                     if (result is string answer && answer == "y")
                     {
-                        if (File.Exists(path)) 
+                        if (File.Exists(path))
                             File.Delete(path);
 
-                        if (Directory.Exists(path)) 
+                        if (Directory.Exists(path))
                             Directory.Delete(path);
 
                         Directory.CreateDirectory(path);

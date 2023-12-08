@@ -1,16 +1,16 @@
-﻿using ICSharpCode.AvalonEdit.Highlighting.Xshd;
-using ICSharpCode.AvalonEdit.Highlighting;
+﻿using ICSharpCode.AvalonEdit.Highlighting;
+using ICSharpCode.AvalonEdit.Highlighting.Xshd;
+using Lemur.FS;
+using Lemur.Windowing;
 using System;
 using System.IO;
+using System.Linq;
+using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Media;
+using System.Windows.Media.Imaging;
 using System.Xml;
 using KeyEventArgs = System.Windows.Input.KeyEventArgs;
-using System.Threading.Tasks;
-using System.Linq;
-using Lemur.FS;
-using System.Windows.Media.Imaging;
-using Lemur.Windowing;
 
 namespace Lemur.GUI
 {
@@ -59,7 +59,7 @@ namespace Lemur.GUI
         public static Action<WindowState>? OnWindowStateChanged;
         private void IDBox_KeyDown(object sender, KeyEventArgs e)
         {
-            
+
         }
         private void ReinstallComputerButton(object sender, RoutedEventArgs e)
         {
@@ -159,7 +159,7 @@ namespace Lemur.GUI
                 }
 
                 string xamlFile = Path.Combine(absPath, name + xamlExt);
-                string jsFile = Path.Combine(absPath, dir.Split('.')[0]  + xamlJsExt);
+                string jsFile = Path.Combine(absPath, dir.Split('.')[0] + xamlJsExt);
 
                 if (File.Exists(xamlFile) && File.Exists(jsFile))
                 {
@@ -175,7 +175,7 @@ namespace Lemur.GUI
 
             return failmsg;
         }
-       
+
         private readonly Color StartColor = Colors.MediumBlue;
         private readonly Color EndColor = Colors.MediumSlateBlue;
         private readonly TimeSpan AnimationDuration = TimeSpan.FromSeconds(5);

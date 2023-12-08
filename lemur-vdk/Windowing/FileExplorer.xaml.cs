@@ -1,4 +1,6 @@
-﻿using System;
+﻿using Lemur.FS;
+using Lemur.Windowing;
+using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.IO;
@@ -7,8 +9,6 @@ using System.Text;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
-using Lemur.Windowing;
-using Lemur.FS;
 
 namespace Lemur.GUI
 {
@@ -103,7 +103,7 @@ namespace Lemur.GUI
                 UpdateView();
             }
 
-            
+
         }
 
         private void UpdateView()
@@ -111,11 +111,11 @@ namespace Lemur.GUI
             SearchBar.Text = FileSystem.CurrentDirectory.Replace(FileSystem.Root + "\\", "");
 
             FileViewerData.Clear();
-            
+
             var fileNames = Computer.Current.FileSystem.DirectoryListing();
 
             const string FolderIcon = "📁";
-            const string FileIcon =   "📄";
+            const string FileIcon = "📄";
 
             if (SearchBar.Text != FileSystem.Root)
             {

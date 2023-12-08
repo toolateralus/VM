@@ -1,18 +1,16 @@
 ﻿using ICSharpCode.AvalonEdit.Highlighting;
+using ICSharpCode.AvalonEdit.Search;
+using Lemur.FS;
+using Lemur.JS;
+using Lemur.Windowing;
 using Microsoft.Win32;
+using System;
+using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Windows;
 using System.Windows.Controls;
-using ICSharpCode.AvalonEdit.Search;
-using System;
-using Lemur.FS;
-using System.Linq;
-using Lemur.JS;
 using System.Windows.Input;
-using Microsoft.Web.WebView2.Core;
-using System.Collections.Generic;
-using OpenTK.Platform.Windows;
-using Lemur.Windowing;
 
 namespace Lemur.GUI
 {
@@ -23,7 +21,7 @@ namespace Lemur.GUI
     {
         public string LoadedFile;
         internal string Contents;
-        
+
         public Dictionary<string, string> LanguageOptions = new()
         {
             { "MarkDown", ".md" },
@@ -52,7 +50,7 @@ namespace Lemur.GUI
         public static string? DesktopIcon => FileSystem.GetResourcePath("texteditor.png");
 
         public MarkdownViewer? mdViewer;
-        
+
         public TextEditor(string path, bool renderMarkdown) : this(path)
         {
             if (renderMarkdown)
@@ -101,7 +99,7 @@ namespace Lemur.GUI
         }
         public void LateInit(Computer c, ResizableWindow win)
         {
-            
+
         }
         protected override void OnKeyUp(KeyEventArgs e)
         {
@@ -143,7 +141,7 @@ namespace Lemur.GUI
         private void SetSyntaxHighlighting(string? extension)
         {
             var highlighter = HighlightingManager.Instance.GetDefinitionByExtension(extension);
-                
+
             // yes. this is a thing.
             if (extension == ".xaml")
                 extension = ".xml";
@@ -219,7 +217,8 @@ namespace Lemur.GUI
             if (LoadedFile.Contains(".xaml.js"))
                 fileExt = ".xaml.js";
 
-            switch (fileExt) {
+            switch (fileExt)
+            {
                 case ".md":
                     mdViewer = new MarkdownViewer();
                     mdViewer.RenderMarkdown(Contents);
@@ -229,7 +228,7 @@ namespace Lemur.GUI
                 case ".xaml.js":
                     var split = LoadedFile.Split('\\');
                     var name = "";
-                    
+
                     foreach (var line in split)
                         if (line.Contains(".app"))
                         {
@@ -256,7 +255,7 @@ namespace Lemur.GUI
                     Notifications.Now($"Can't run {fileExt}");
                     break;
             }
-                
+
         }
 
         private void Preferences_Click(object sender, RoutedEventArgs e)
@@ -271,7 +270,7 @@ namespace Lemur.GUI
             {
 
                 var selected = cB.SelectedItem.ToString();
-                var extension = selected[selected.IndexOf(',')..].Replace(",","").Replace("]","").Replace(" ", "");
+                var extension = selected[selected.IndexOf(',')..].Replace(",", "").Replace("]", "").Replace(" ", "");
                 SetSyntaxHighlighting(extension);
             }
         }

@@ -1,11 +1,8 @@
-﻿using System;
-using System.ComponentModel;
-using System.Data;
+﻿using Lemur.JS;
+using Lemur.Windowing;
+using System;
 using System.Threading;
 using System.Threading.Tasks;
-using System.Windows.Media;
-using Lemur.Windowing;
-using Lemur.JS;
 
 namespace Lemur.JavaScript.Api
 {

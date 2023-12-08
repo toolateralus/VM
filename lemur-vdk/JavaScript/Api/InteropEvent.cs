@@ -1,18 +1,13 @@
-﻿using System;
-using System.Windows;
-using Lemur.GUI;
-using System.Threading.Tasks;
-using System.Text;
-using Button = System.Windows.Controls.Button;
-using System.Windows.Input;
-using System.Reflection;
-using System.Threading;
+﻿using Lemur.GUI;
+using Lemur.JS;
+using Lemur.Windowing;
 using System.ComponentModel;
+using System.Threading.Tasks;
+using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Controls.Primitives;
-using Lemur.Windowing;
-using Lemur;
-using Lemur.JS;
+using System.Windows.Input;
+using Button = System.Windows.Controls.Button;
 
 namespace Lemur.JavaScript.Api
 {

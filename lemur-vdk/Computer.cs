@@ -1,22 +1,19 @@
-﻿using System;
-using System.IO;
+﻿using Lemur.FS;
 using Lemur.GUI;
-using System.Threading.Tasks;
-using System.Reflection;
-using Newtonsoft.Json.Linq;
-using System.Collections.Generic;
-using Lemur.FS;
-using Lemur.JS;
-using System.Windows.Controls;
-using System.Linq;
-using System.Windows.Media;
-using Microsoft.ClearScript.JavaScript;
-using Lemur.OS;
-using Newtonsoft.Json;
-using System.Threading;
-using Lemur.Windowing;
 using Lemur.JavaScript.Api;
 using Lemur.JavaScript.Network;
+using Lemur.JS;
+using Lemur.OS;
+using Lemur.Windowing;
+using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
+using System;
+using System.Collections.Generic;
+using System.IO;
+using System.Linq;
+using System.Threading;
+using System.Threading.Tasks;
+using System.Windows.Controls;
 
 namespace Lemur
 {
@@ -51,7 +48,7 @@ namespace Lemur
             if (FileSystem.GetResourcePath("startup.js") is string AbsPath)
                 JavaScript.ExecuteScript(AbsPath);
         }
-       
+
         public Computer(FileSystem fs)
         {
             current = this;
@@ -59,7 +56,7 @@ namespace Lemur
             FileSystem = fs;
 
             CmdLine = new();
-             
+
             NetworkConfiguration = new();
 
             Config = LoadConfig();
@@ -160,6 +157,8 @@ namespace Lemur
 
             array.Add(processID);
 
+            ProcessLookupTable[type] = array; 
+
             void OnWindowClosed()
             {
                 // for pesky calls that arent from the UI thread, from javascript etc.
@@ -217,7 +216,7 @@ namespace Lemur
         {
             if (disposing)
                 return;
-            
+
             jsApps.Add(type);
 
             Window.InstallIcon(AppType.JsXaml, type);
@@ -231,21 +230,22 @@ namespace Lemur
         }
         public void InstallCSWPF(string exePath, Type type)
         {
-            var name = exePath.Split('.')[0];
             Window.InstallIcon(AppType.NativeCs, exePath, type);
         }
         public void Uninstall(string name)
         {
             jsApps.Remove(name);
-            Window.Dispatcher.Invoke(() => { 
-                Window.RemoveDesktopIcon(name); });
+            Window.Dispatcher.Invoke(() =>
+            {
+                Window.RemoveDesktopIcon(name);
+            });
         }
         private static void LoadBackground(Computer pc, ComputerWindow wnd)
         {
             string backgroundPath = pc?.Config?.Value<string>("BACKGROUND") ?? "background.png";
             wnd.desktopBackground.Source = ComputerWindow.LoadImage(FileSystem.GetResourcePath(backgroundPath) ?? "background.png");
         }
-        public async Task OpenCustom(string type,  params object[] cmdLineArgs)
+        public async Task OpenCustom(string type, params object[] cmdLineArgs)
         {
             var data = Runtime.GetAppDefinition(type);
 
@@ -257,7 +257,7 @@ namespace Lemur
                 if (csApps.TryGetValue(type, out var csType))
                 {
                     OpenApp((UserControl)Activator.CreateInstance(csType, cmdLineArgs)!, type, GetNextProcessID());
-                    return; 
+                    return;
                 }
 
                 Notifications.Now($"Error : either the app was not found or there was an error parsing xaml or js for {type}.");
@@ -274,7 +274,7 @@ namespace Lemur
 
             OpenApp(control, type, processID, engine);
 
-            await engine.Execute(code).ConfigureAwait(false);
+            await engine.Execute(code).ConfigureAwait(true);
         }
 
         internal static string GetNextProcessID()
@@ -314,7 +314,7 @@ namespace Lemur
             var FileSystem = new FileSystem(workingDir);
 
             Computer pc = new Computer(FileSystem);
-            
+
             ComputerWindow wnd = new();
 
             Current.Window = wnd;
@@ -340,7 +340,8 @@ namespace Lemur
             List<T> contents = new();
             foreach (var window in Current.UserWindows)
             {
-                window.Value.Dispatcher.Invoke(() => {
+                window.Value.Dispatcher.Invoke(() =>
+                {
 
                     if (window.Value is not UserWindow userWindow)
                         return;
@@ -388,7 +389,7 @@ namespace Lemur
 
             string instantiation_code;
 
-            
+
             if (cmdLineArgs.Length != 0)
             {
                 var args = string.Join(", ", cmdLineArgs);
@@ -436,8 +437,9 @@ namespace Lemur
 
         internal void CloseApp(string pID)
         {
-            var win = UserWindows[pID];
-            win.Close();
+            if (UserWindows.TryGetValue(pID, out var win))
+                win.Close();
+            else Notifications.Now($"Could not find process {pID}");
         }
     }
 }

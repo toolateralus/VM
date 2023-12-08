@@ -1,13 +1,8 @@
-﻿using Microsoft.ClearScript;
-using Newtonsoft.Json.Linq;
+﻿using Lemur.Windowing;
 using System;
 using System.Collections.Generic;
-using System.Reflection;
+using System.Threading;
 using System.Threading.Tasks;
-using System.Drawing;
-using System.Collections.Concurrent;
-using Lemur.Windowing;
-using Lemur;
 
 namespace Lemur.JavaScript.Api
 {
@@ -57,9 +52,9 @@ namespace Lemur.JavaScript.Api
             }
             return default;
         }
-        public async void sleep(int ms)
+        public void sleep(int ms)
         {
-            await Task.Delay(ms);
+            Thread.Sleep(ms);
         }
         public void require(string path)
         {

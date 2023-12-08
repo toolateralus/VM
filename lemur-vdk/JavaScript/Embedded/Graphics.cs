@@ -1,7 +1,5 @@
-﻿using System.Collections.Generic;
-using Lemur.Windowing;
-using Lemur;
-using Image = System.Windows.Controls.Image;
+﻿using Lemur.Windowing;
+using System.Collections.Generic;
 
 namespace Lemur.JS.Embedded
 {

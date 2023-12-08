@@ -7,7 +7,7 @@ namespace Lemur.GUI
     {
         internal static float OpacityOff = 0.25f;
         internal static float OpacityOn = 0.85f;
-        public HoverButton() 
+        public HoverButton()
         {
             Opacity = OpacityOff;
         }

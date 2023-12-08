@@ -1,9 +1,9 @@
-﻿using System.Windows.Documents;
-using System.Windows;
-using System.Windows.Markup;
-using Markdig;
+﻿using Markdig;
 using Markdig.Wpf;
+using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Documents;
+using System.Windows.Markup;
 
 namespace Lemur.GUI
 {

@@ -1,7 +1,7 @@
-﻿using System;
-using System.Threading.Tasks;
+﻿using Lemur.JS;
 using Lemur.Windowing;
-using Lemur.JS;
+using System;
+using System.Threading.Tasks;
 
 namespace Lemur.JavaScript.Api
 {

@@ -1,11 +1,8 @@
-﻿using System;
+﻿using Lemur.FS;
 using System.IO;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
-using Microsoft.Web.WebView2.Core;
-using Lemur;
-using Lemur.FS;
 
 namespace Lemur.GUI
 {
@@ -42,8 +39,8 @@ namespace Lemur.GUI
             if (webViewInitialized)
             {
                 var html = FileSystem.GetResourcePath(appName + ".index.html");
-                
-                if (File.Exists(html)) 
+
+                if (File.Exists(html))
                     chromiumBrowser.NavigateToString(File.ReadAllText(html));
 
             }

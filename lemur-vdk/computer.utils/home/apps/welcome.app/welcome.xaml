@@ -14,7 +14,9 @@
 		 
        <StackPanel Grid.Column="0" Orientation="Vertical">
        		<Label Style="{StaticResource LabelStyle}" Content="Tutorials &amp; Documentation"/>
-        	<Button Style="{StaticResource ButtonStyle}" x:Name="tut01" Content="Getting Started"/>
+        	<Button Style="{StaticResource ButtonStyle}" x:Name="tut01" Content="Making an App"/>
+        	<Button Style="{StaticResource ButtonStyle}" x:Name="tut02" Content="Drawing Graphics"/>
+        	<Button Style="{StaticResource ButtonStyle}" x:Name="dj" Content="Destroy Garbage - temp fix"/>
     	</StackPanel>
     
         <RichTextBox Grid.Column="1" Background="#FF3A3838" Foreground="#FFC5C5C5" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Auto">

@@ -1,22 +1,22 @@
-﻿using System;
+﻿using JavaScriptEngineSwitcher.Core;
+using JavaScriptEngineSwitcher.V8;
+using Lemur.FS;
+using Lemur.GUI;
+using Lemur.JavaScript.Api;
+using Lemur.JavaScript.Embedded;
+using Lemur.JS.Embedded;
+using Lemur.Windowing;
+using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Diagnostics;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
-using JavaScriptEngineSwitcher.Core;
-using JavaScriptEngineSwitcher.V8;
-using Lemur.GUI;
-using Lemur.FS;
-using System.Diagnostics;
 using System.Windows.Input;
-using Lemur.JS.Embedded;
-using Lemur.Windowing;
-using Lemur.JavaScript.Api;
-using Lemur.JavaScript.Embedded;
-using System.Globalization;
 
 namespace Lemur.JS
 {
@@ -25,8 +25,9 @@ namespace Lemur.JS
         public bool isDown(string key)
         {
             bool result = false;
-            
-            Computer.Current.Window?.Dispatcher?.Invoke(() => {
+
+            Computer.Current.Window?.Dispatcher?.Invoke(() =>
+            {
                 if (Enum.TryParse<System.Windows.Input.Key>(key, out var _key))
                     result = Keyboard.IsKeyDown(_key);
                 else Notifications.Now($"Failed to parse key {key}");
@@ -42,7 +43,7 @@ namespace Lemur.JS
 
         private readonly Thread executionThread;
         public readonly Dictionary<string, object?> Modules = new();
-        
+
         public readonly List<InteropFunction> EventHandlers = new();
         public readonly Dictionary<string, object> EmbeddedObjects = new();
         private readonly ConcurrentDictionary<int, (string code, Action<object?> output)> CodeDictionary = new();
@@ -59,7 +60,7 @@ namespace Lemur.JS
 
         public Engine()
         {
-           
+
             engineSwitcher = JsEngineSwitcher.Current;
             engineSwitcher.EngineFactories.AddV8();
             engineSwitcher.DefaultEngineName = V8JsEngine.EngineName;
@@ -95,7 +96,8 @@ namespace Lemur.JS
             // the basic modules that are auto-included with each context.
             LoadModules(FileSystem.GetResourcePath("do_not_delete"));
 
-            InteropModule.OnModuleExported = (path, obj) => {
+            InteropModule.OnModuleExported = (path, obj) =>
+            {
                 Modules[path] = obj;
             };
 
@@ -115,7 +117,7 @@ namespace Lemur.JS
                 m_engine_internal.EmbedHostObject(item.Key, item.Value);
         }
         // Resource intensive loops
-        
+
         private async void ExecuteAsync()
         {
             while (!Disposing)
@@ -137,7 +139,7 @@ namespace Lemur.JS
                     {
                         CodeDictionary.Remove(pair.Key, out _);
                     }
-                   
+
                     continue;
                 }
                 await Task.Delay(1);
@@ -157,15 +159,15 @@ namespace Lemur.JS
                     IncludedFiles += AbsPath;
                     try
                     {
-                        var code = File.ReadAllText(AbsPath); 
+                        var code = File.ReadAllText(AbsPath);
                         m_engine_internal.Execute(code);
                     }
-                    catch(Exception e)
+                    catch (Exception e)
                     {
                         Notifications.Exception(e);
                     }
 
-                } 
+                }
             }
         }
         public void LoadModules(string sourceDir)
@@ -176,9 +178,9 @@ namespace Lemur.JS
                 return;
             }
 
-            FileSystem.ProcessDirectoriesAndFilesRecursively(sourceDir, (_,_) => { }, file);
+            FileSystem.ProcessDirectoriesAndFilesRecursively(sourceDir, (_, _) => { }, file);
 
-            void file (string d, string f)
+            void file(string d, string f)
             {
                 try
                 {
@@ -236,7 +238,7 @@ namespace Lemur.JS
         internal async Task CreateEventHandler(string identifier, string targetControl, string methodName, int type)
         {
             var wnd = Computer.Current.Window;
-            
+
             // check if this event already exists
             var result = await Execute($"{identifier} != null").ConfigureAwait(true);
 
@@ -248,7 +250,7 @@ namespace Lemur.JS
 
             // check if this method already exists
             result = await Execute($"{identifier}.{methodName} != null").ConfigureAwait(true);
-            
+
             string processClass = Computer.GetProcessClass(identifier).Replace(".app", "", StringComparison.CurrentCulture);
 
             if (result is not bool METHOD_EXISTS || !METHOD_EXISTS)
@@ -261,7 +263,7 @@ namespace Lemur.JS
 
             wnd.Dispatcher.Invoke(() =>
             {
-                var content  = Computer.Current.UserWindows[identifier].JavaScriptEngine.AppModule.GetUserContent();
+                var content = Computer.Current.UserWindows[identifier].JavaScriptEngine.AppModule.GetUserContent();
 
                 if (content == null)
                 {

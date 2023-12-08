@@ -1,15 +1,13 @@
-﻿using Newtonsoft.Json.Linq;
+﻿using Lemur.FS;
+using Lemur.JavaScript.Network;
+using Lemur.Windowing;
+using Newtonsoft.Json.Linq;
 using System;
 using System.IO;
 using System.Linq;
 using System.Net;
 using System.Text;
 using System.Threading.Tasks;
-using Lemur.FS;
-using Lemur.GUI;
-using Lemur.Windowing;
-using Lemur;
-using Lemur.JavaScript.Network;
 
 namespace Lemur.JavaScript.Embedded
 {

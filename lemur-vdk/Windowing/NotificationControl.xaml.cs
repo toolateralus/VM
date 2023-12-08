@@ -1,6 +1,4 @@
 ﻿using System;
-using System.Threading;
-using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Media.Animation;
@@ -43,7 +41,7 @@ namespace Lemur.GUI
             DataContext = this;
 
 
-            fadeOutTimer =  new DispatcherTimer
+            fadeOutTimer = new DispatcherTimer
             {
                 Interval = TimeSpan.FromSeconds(5)
             };
@@ -93,6 +91,6 @@ namespace Lemur.GUI
             BeginAnimation(OpacityProperty, fadeOutAnimation);
             fadeOutTimer.Stop();
         }
-        
+
     }
 }

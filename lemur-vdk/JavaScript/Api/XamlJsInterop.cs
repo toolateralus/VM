@@ -1,12 +1,7 @@
-﻿
-using Microsoft.Windows.Themes;
+﻿using Lemur.Windowing;
 using System;
-using System.Collections.Generic;
-using System.Reflection;
 using System.Windows.Controls;
 using System.Windows.Markup;
-using Lemur.JS;
-using Lemur.Windowing;
 
 namespace Lemur.JavaScript.Api
 {

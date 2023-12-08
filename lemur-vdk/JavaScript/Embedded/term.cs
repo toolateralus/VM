@@ -1,13 +1,12 @@
-﻿using System;
+﻿using Lemur.FS;
+using Lemur.GUI;
+using Lemur.Windowing;
+using System;
 using System.Diagnostics;
 using System.IO;
-using System.Threading;
-using Lemur.GUI;
-using Lemur.FS;
 using System.Text.RegularExpressions;
+using System.Threading;
 using System.Threading.Tasks;
-using Lemur;
-using Lemur.Windowing;
 
 namespace Lemur.JS.Embedded
 {

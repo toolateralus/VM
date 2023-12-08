@@ -1,10 +1,6 @@
-﻿using System;
+﻿using Lemur.GUI;
+using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using Lemur;
-using Lemur.GUI;
-using Lemur.OS;
 
 namespace Lemur.Windowing
 {

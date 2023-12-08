@@ -1,23 +1,20 @@
-﻿using Microsoft.ClearScript.JavaScript;
+﻿using Lemur.FS;
+using Lemur.GUI;
+using Lemur.JavaScript.Api;
+using Lemur.Windowing;
+using Microsoft.ClearScript.JavaScript;
 using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Reflection;
 using System.Runtime.InteropServices;
+using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
-using Lemur.GUI;
-using Lemur.FS;
 using Image = System.Windows.Controls.Image;
-using System.Security.Permissions;
-using System.Reflection;
-using System.Threading.Tasks;
-using System.DirectoryServices.ActiveDirectory;
-using Lemur;
-using Lemur.Windowing;
-using Lemur.JavaScript.Api;
 
 namespace Lemur.JS.Embedded
 {
@@ -202,7 +199,7 @@ namespace Lemur.JS.Embedded
             });
             return output;
         }
-        
+
         public static BitmapImage BitmapImageFromBase64(string base64String)
         {
             try
@@ -370,8 +367,8 @@ namespace Lemur.JS.Embedded
             {
                 await Computer.Current.OpenCustom(path, args).ConfigureAwait(true);
 
-                pid = $"p{Computer.processCount}"; // the last created process. 
                 // this way of fetching a pid is very presumptuous and bad.
+                pid = $"p{Computer.processCount}"; // the last created process. 
             }
 
             return pid;
@@ -395,7 +392,8 @@ namespace Lemur.JS.Embedded
                         if (Path.GetExtension(file) is string _ext && _ext == ".web")
                             Computer.Current.InstallJSHTML(Path.GetFileName(file));
 
-                    } catch
+                    }
+                    catch
                     {
                         Notifications.Now($"Failed to install {file}");
                     }

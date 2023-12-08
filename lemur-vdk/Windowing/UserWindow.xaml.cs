@@ -1,11 +1,8 @@
-﻿using System;
+﻿using Lemur.JS;
+using System;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
-using Lemur.GUI;
-using Lemur;
-using Lemur.JS;
-using static System.Windows.Forms.VisualStyles.VisualStyleElement;
 using Button = System.Windows.Controls.Button;
 
 namespace Lemur.GUI
@@ -16,7 +13,7 @@ namespace Lemur.GUI
     public partial class UserWindow : UserControl
     {
         public ResizableWindow Owner;
-        
+
         /// <summary>
         /// Called by the UI thread to clean up any resources.
         /// </summary>
@@ -31,7 +28,7 @@ namespace Lemur.GUI
             // TODO: fix this up
             minimizeBtn.Click += (_, _) => Owner?.ToggleVisibility();
 
-            maximizeBtn.Click += (_,_) => Owner?.ToggleMaximize();
+            maximizeBtn.Click += (_, _) => Owner?.ToggleMaximize();
 
             long lastClickedTime = 0;
 
