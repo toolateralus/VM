@@ -1,5 +1,6 @@
 ﻿using Lemur.JS;
 using System;
+using System.Linq;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
@@ -43,6 +44,14 @@ namespace Lemur.GUI
 
                 e.Handled = true;
             };
+
+            PreviewKeyDown += UserWindow_PreviewKeyDown;
+
+        }
+
+        private void UserWindow_PreviewKeyDown(object sender, KeyEventArgs e)
+        {
+            foreach (var item in JavaScriptEngine.EventHandlers)
         }
 
         protected override void OnPreviewMouseLeftButtonDown(MouseButtonEventArgs e)
