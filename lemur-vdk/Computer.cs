@@ -13,9 +13,13 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.IO;
 using System.Linq;
+using System.Reflection;
 using System.Threading;
 using System.Threading.Tasks;
+using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Media.Imaging;
+using System.Windows.Threading;
 
 namespace Lemur
 {
@@ -54,14 +58,7 @@ namespace Lemur
         internal readonly List<string> jsApps = new();
 
         internal bool disposing;
-        public void InitializeEngine(Computer computer)
-        {
-            JavaScript = new();
-
-            if (FileSystem.GetResourcePath("startup.js") is string AbsPath)
-                JavaScript.ExecuteScript(AbsPath);
-        }
-
+  
         public Computer(FileSystem fs)
         {
             current = this;
@@ -74,7 +71,10 @@ namespace Lemur
 
             Config = LoadConfig();
 
-            InitializeEngine(this);
+            JavaScript = new();
+
+            if (FileSystem.GetResourcePath("startup.js") is string AbsPath)
+                JavaScript.ExecuteScript(AbsPath);
 
         }
         internal static JObject? LoadConfig()
@@ -127,39 +127,56 @@ namespace Lemur
             Dispose();
 
         }
+        internal static void TryRunLateInit(object instance, ResizableWindow? resizableWindow = null)
+        {
+            var method = instance.GetType().GetMethods()
+             .FirstOrDefault(method =>
+                 method.Name.Contains("LateInit") &&
 
-      
+                 ((method.GetParameters().Length > 0 && method.GetParameters()[0].ParameterType == typeof(Computer)) ||
+
+                 method.GetParameters().Length > 1 &&
+                 method.GetParameters()[0].ParameterType == typeof(Computer) ||
+                 method.GetParameters()[1].ParameterType == typeof(ResizableWindow))
+             );
+
+            var parameters = method.GetParameters();
+
+            method?.Invoke(instance, parameters.Length == 1
+                ? new[] { Computer.Current }
+                : new object[] { Computer.Current, resizableWindow }
+            );
+
+        }
+        internal static bool IsValidExternAppType(IEnumerable<MemberInfo> members)
+        {
+            return members.Any(member => member.Name == "LateInit");
+        }
         public void OpenApp(UserControl control, string pClass, string processID, Engine? engine = null)
         {
+            ArgumentNullException.ThrowIfNull(control);
+            ArgumentNullException.ThrowIfNull(pClass);
+            ArgumentNullException.ThrowIfNull(processID);
 
+            // refresh config.
             LoadConfig();
 
-            if (ProcessClassTable.ContainsKey(pClass))
-            {
-                if (char.IsDigit(pClass.Last()))
-                {
-                    int i = int.Parse(pClass.Last().ToString()) + 1;
-                    pClass.Replace(pClass.Last(), i.ToString()[0]);
-                }
-                else
-                {
-                    pClass += "1";
-                }
-            }
+            // open up a window.
+            UserWindow userWindow = Window.CreateWindow(processID, pClass, out var resizable_window);
 
-            // the resizable is the container that hosts the user app.
-            // this is made separate to eliminate annoying and complex boiler plate.
-            UserWindow userWindow = Window.OpenAppUI(processID, pClass, out var resizable_window);
-
-
-            if (ComputerWindow.IsValidType(control.GetType().GetMembers()))
-                ComputerWindow.AssignComputer(control, resizable_window);
+            // run late init on valid extern apps.
+            var allMembers = control.GetType().GetMembers().Where(i => i is MethodInfo);
+            if (IsValidExternAppType(allMembers))
+                TryRunLateInit(control, resizable_window);
 
             userWindow.InitializeContent(resizable_window, control, engine);
 
-            Process? process = null;
+            // todo: add all the generated os controls to array(s) for easier disposal,
+            // such as the taskbar button, the desktop icon, etc.
+            // also, having this more organized will make it much easier to safely expose it to JavaScript
+            // so we can allow the user to add to their window's toolbar, title, close the app programmatically, etc.
 
-            process = new Process(userWindow, processID, pClass);
+            var process = new Process(userWindow, processID, pClass);
 
             RegisterNewProcess(process, out var procList);
 
@@ -189,22 +206,28 @@ namespace Lemur
                         ProcessClassTable.Remove(pClass);
                     else
                         ProcessClassTable[pClass] = array;
-                    
+
                 }
             }
 
+
+            // todo: remove a lot of the hard to reach behavior from the userWindow class and move it here.
+            // this will allow us to much easier control when & how things get disposed of, and more as described above.
             userWindow.OnAppClosed += OnWindowClosed;
 
+            // todo: make a unified interface for windowing, we have a window manager and window classes but
+            // the behavior feels scattered and disorganized. fetching weird references for controls should not be a thing : 
+            // we should have a query system or just methods exposing behavior directly on easy to get to objects.
             resizable_window.BringToTopOfDesktop();
 
 
-            // todo : change this
+            // todo : change this, works for now but it's annoying.
+            // we could have a much smarter windowing system that opens apps to the emptiest space or something.
             resizable_window.Width = 900;
             resizable_window.Height = 700;
             Canvas.SetTop(resizable_window, 200);
             Canvas.SetLeft(resizable_window, 200);
         }
-
         private static void RegisterNewProcess(Process process, out List<Process> procList)
         {
             GetProcessesOfType(process.Type, out procList);
@@ -227,13 +250,11 @@ namespace Lemur
             };
 
         }
-
         private static void GetProcessesOfType(string name, out List<Process> processes)
         {
             if (!ProcessClassTable.TryGetValue(name, out processes!))
                 processes= [];
         }
-
         public void InstallCSharpApp(string exePath, Type type)
         {
             if (csApps.TryGetValue(exePath, out _))
@@ -246,27 +267,213 @@ namespace Lemur
 
             Notifications.Now($"{exePath} installed!");
 
-            InstallCSWPF(exePath, type);
+            InstallFromType(exePath, type);
         }
-        public void InstallJSWPF(string type)
+        public void InstallNative(string type)
         {
             if (disposing)
                 return;
 
+            type = type.Replace(".app", "");
             jsApps.Add(type);
 
-            Window.InstallIcon(AppType.JsXaml, type);
+            InstallIcon(AppType.Native, type);
         }
-        public void InstallJSHTML(string type)
+        public static void SetupIcon(string name, Button btn)
         {
-            if (disposing)
-                return;
-            jsApps.Add(type);
-            Window.InstallIcon(AppType.JsHtml, type);
+            var grid = new Grid();
+
+            grid.RowDefinitions.Add(new RowDefinition { Height = new GridLength(1, GridUnitType.Star) });
+            grid.RowDefinitions.Add(new RowDefinition { Height = new GridLength(1, GridUnitType.Auto) });
+
+            grid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
+            grid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Auto) });
+
+            if (Runtime.GetAppIcon(name) is BitmapImage img)
+            {
+                var iconImage = new Image
+                {
+                    Source = img,
+                    Width = btn.Width,
+                    Height = btn.Width
+                };
+
+                grid.Children.Add(iconImage);
+            }
+
+            var textBlock = new TextBlock
+            {
+                Text = name,
+                TextAlignment = TextAlignment.Left,
+                FontSize = 12
+            };
+
+            var viewbox = new Viewbox
+            {
+                Child = textBlock,
+            };
+
+            Grid.SetRow(viewbox, 1);
+
+            grid.Children.Add(viewbox);
+
+            var contentBorder = new Border
+            {
+                CornerRadius = new CornerRadius(10),
+                ToolTip = name,
+                Child = grid // Set the Grid as the content of the Border
+            };
+
+            btn.Content = contentBorder;
+            btn.ToolTip = name;
         }
-        public void InstallCSWPF(string exePath, Type type)
+        public static void SetupIcon(string name, Button btn, Type type)
         {
-            Window.InstallIcon(AppType.NativeCs, exePath, type);
+            var grid = new Grid();
+
+            grid.RowDefinitions.Add(new RowDefinition { Height = new GridLength(1, GridUnitType.Star) });
+            grid.RowDefinitions.Add(new RowDefinition { Height = new GridLength(1, GridUnitType.Auto) });
+
+            grid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
+            grid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Auto) });
+
+            if (GetIcon(type) is BitmapImage img)
+            {
+                var iconImage = new Image
+                {
+                    Source = img,
+                    Width = btn.Width,
+                    Height = btn.Width
+                };
+
+                grid.Children.Add(iconImage);
+            }
+
+            var textBlock = new TextBlock
+            {
+                Text = name,
+                TextAlignment = TextAlignment.Left,
+                FontSize = 12
+            };
+
+            var viewbox = new Viewbox
+            {
+                Child = textBlock,
+            };
+
+            Grid.SetRow(viewbox, 1);
+
+            grid.Children.Add(viewbox);
+
+            var contentBorder = new Border
+            {
+                CornerRadius = new CornerRadius(10),
+                ToolTip = name,
+                Child = grid // Set the Grid as the content of the Border
+            };
+
+            btn.Content = contentBorder;
+            btn.ToolTip = name;
+
+        }
+        public static BitmapImage LoadImage(string path)
+        {
+            BitmapImage bitmapImage = new BitmapImage();
+            bitmapImage.BeginInit();
+            bitmapImage.UriSource = new Uri(path, UriKind.RelativeOrAbsolute);
+            bitmapImage.EndInit();
+            return bitmapImage;
+        }
+        public static BitmapImage? GetIcon(Type type)
+        {
+            var properties = type.GetProperties();
+
+            foreach (var property in properties)
+            {
+                if (property.Name.Contains("DesktopIcon") &&
+                    property.PropertyType == typeof(string) &&
+                    property.GetValue(null) is string path &&
+                    !string.IsNullOrEmpty(path))
+                {
+                    return LoadImage(path);
+                }
+            }
+
+            return null;
+        }
+        public void InstallIcon(AppType type, string appName, Type? runtime_type = null)
+        {
+            void InstallNative(Button btn, string type)
+            {
+                btn.MouseDoubleClick += OnDesktopIconPressed;
+
+                var contextMenu = Window.GetNativeContextMenu(appName);
+
+                btn.ContextMenu = contextMenu;
+
+                async void OnDesktopIconPressed(object? sender, RoutedEventArgs e)
+                  => await OpenCustom(type);
+
+                SetupIcon(type, btn);
+            }
+            void InstallExtern(Button btn, string name, Type type)
+            {
+                btn.MouseDoubleClick += OnDesktopIconPressed;
+                SetupIcon(appName, btn, type);
+
+                void OnDesktopIconPressed(object? sender, RoutedEventArgs e)
+                {
+                    if (Activator.CreateInstance(type) is object instance && instance is UserControl userControl)
+                    {
+                        Computer.Current.OpenApp(userControl, name, Computer.GetNextProcessID());
+                    }
+                    else
+                    {
+                        Notifications.Now("Failed to create instance of native application. the app is likely misconfigured");
+                    }
+                }
+            }
+
+            Window.Dispatcher?.Invoke(() =>
+            {
+
+                var btn = Window.MakeDesktopButton(appName);
+
+                switch (type)
+                {
+                    case AppType.Native:
+                        InstallNative(btn, appName);
+                        break;
+                    case AppType.Extern:
+                        if (runtime_type != null)
+                            InstallExtern(btn, appName, runtime_type);
+                        break;
+                }
+
+                MenuItem uninstall = new()
+                {
+                    Header = "uninstall app"
+                };
+
+                uninstall.Click += (sender, @event) =>
+                {
+                    var answer = MessageBox.Show($"are you sure you want to uninstall {appName}?", "uninstall?", MessageBoxButton.YesNo);
+
+                    if (answer == MessageBoxResult.Yes)
+                        Computer.Current.Uninstall(appName);
+                };
+                btn.ContextMenu ??= new();
+                btn.ContextMenu.Items.Add(uninstall);
+
+                Window.DesktopIconPanel.UpdateLayout();
+                Window.DesktopIconPanel.Children.Add(btn);
+            });
+
+        }
+        public void InstallFromType(string name, Type type)
+        {
+            name = name.Replace(".app", string.Empty);
+            InstallIcon(AppType.Extern, name, type);
         }
         public void Uninstall(string name)
         {
@@ -279,15 +486,16 @@ namespace Lemur
         private static void LoadBackground(Computer pc, ComputerWindow wnd)
         {
             string backgroundPath = pc?.Config?.Value<string>("BACKGROUND") ?? "background.png";
-            wnd.desktopBackground.Source = ComputerWindow.LoadImage(FileSystem.GetResourcePath(backgroundPath) ?? "background.png");
+            wnd.desktopBackground.Source = Computer.LoadImage(FileSystem.GetResourcePath(backgroundPath) ?? "background.png");
         }
-        #region Application
         public async Task OpenCustom(string type, params object[] cmdLineArgs)
         {
+            if (!type.Contains(".app"))
+                type += ".app";
+
             var data = Runtime.GetAppDefinition(type);
 
             var control = XamlHelper.ParseUserControl(data.XAML);
-
 
             if (control == null)
             {
@@ -331,11 +539,6 @@ namespace Lemur
 
             return processClass;
         }
-
-        /// <summary>
-        /// This just causes crashes.
-        /// </summary>
-        /// <param name="id"></param>
         public static void Restart(uint id)
         {
             Current.Exit(0);
@@ -432,8 +635,6 @@ namespace Lemur
 
             return instantiation_code;
         }
-        #endregion
-
         protected virtual void Dispose(bool disposing)
         {
             if (!this.disposing)
@@ -469,14 +670,12 @@ namespace Lemur
             Dispose(disposing: true);
             GC.SuppressFinalize(this);
         }
-
         internal void CloseApp(string pID)
         {
             if (GetProcess(pID) is Process p)
                 p.UI.Close();
             else Notifications.Now($"Could not find process {pID}");
         }
-
         internal static Process? GetProcess(string pid)
         {
             foreach (var pclass in ProcessClassTable)

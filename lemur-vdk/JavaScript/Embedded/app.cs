@@ -515,9 +515,7 @@ namespace Lemur.JS.Embedded
                     try
                     {
                         if (Path.GetExtension(file) is string ext && ext == ".app")
-                            Computer.Current.InstallJSWPF(Path.GetFileName(file));
-                        if (Path.GetExtension(file) is string _ext && _ext == ".web")
-                            Computer.Current.InstallJSHTML(Path.GetFileName(file));
+                            Computer.Current.InstallNative(Path.GetFileName(file));
 
                     }
                     catch
@@ -531,15 +529,21 @@ namespace Lemur.JS.Embedded
         }
         public void install(string dir)
         {
-            if (dir.Contains(".web"))
+            var t = "typeof<";
+            if (dir.StartsWith(t))
             {
-                Computer.Current.InstallJSHTML(dir);
-                return;
+                dir = dir.Replace(t, string.Empty);
+                dir = dir.Replace(">", string.Empty);
+
+                Type type = Type.GetType(dir);
+                Current.InstallFromType(dir, type);
+
             }
+
 
             if (dir.Contains(".app"))
             {
-                Computer.Current.InstallJSWPF(dir);
+                Computer.Current.InstallNative(dir);
             }
         }
         public void uninstall(string dir)

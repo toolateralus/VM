@@ -6,6 +6,7 @@ using Lemur.Windowing;
 using Newtonsoft.Json.Linq;
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Text;
@@ -175,19 +176,29 @@ namespace Lemur.OS
         }
         private void Config(object[]? obj)
         {
+            // I am not sure if this is even possible.
+            Computer.Current.Config ??= [];
 
-            Computer.Current.Config ??= new();
+            if (obj is null)
+                return;
 
-            if (obj != null && obj.Length > 0 && obj[0] is string getset)
+            if (obj.Length == 0)
             {
-                string toLower = getset.ToLower();
+                Notifications.Now("Invalid input parameters.");
+                return;
+            }
 
-                if (obj.Length > 1 && obj[1] is string propname)
+            if (obj[0] is string call)
+            {
+                switch (call)
                 {
-                    propname = propname.ToUpper();
-
-                    if (toLower == "get")
-                    {
+                    case "save":
+                        Computer.SaveConfig(Computer.Current.Config.ToString());
+                        return;
+                    case "load":
+                        Computer.LoadConfig();
+                        return;
+                    case "all":
                         var commandPrompt = Computer.TryGetProcessOfType<CommandPrompt>();
 
                         if (commandPrompt == default)
@@ -196,23 +207,65 @@ namespace Lemur.OS
                             return;
                         }
 
+                        StringBuilder outputSb = new();
+
+                        foreach (var kvp in Computer.Current.Config)
+                            outputSb.Append($"\n {{{kvp.Key} : {kvp.Value}}}");
+
+                        commandPrompt.output.AppendText(outputSb.ToString());
+                        break;
+                }
+                
+                if (obj.Length < 2) 
+                    return;
+
+                var propname = (obj[1] as string);
+
+                if (propname is null)
+                {
+                    Notifications.Now("Invalid input parameters.");
+                    return;
+                }
+
+                propname = propname.ToUpper(CultureInfo.CurrentCulture);
+
+                switch (call) 
+                {
+                    case "rm":
+
                         if (!Computer.Current.Config.TryGetValue(propname, out var propValue))
                         {
                             Notifications.Now($"Property '{propname}' not found in configuration.");
                             return;
                         }
 
+                        Computer.Current.Config.Remove(propname);
+
+                        break;
+
+
+                    case "get":
+                        var commandPrompt = Computer.TryGetProcessOfType<CommandPrompt>();
+
+                        if (commandPrompt == default)
+                        {
+                            Notifications.Now("You must have a cmd prompt open to display 'help' command results.");
+                            return;
+                        }
+
+                        if (!Computer.Current.Config.TryGetValue(propname, out propValue))
+                        {
+                            Notifications.Now($"Property '{propname}' not found in configuration.");
+                            return;
+                        }
+
                         commandPrompt.output.AppendText($"\n {{{propname} : {propValue}}}");
-                    }
-                    else if (toLower == "set" && obj.Length > 2)
-                    {
+                        break;
+
+                    case "set":
                         string arg = "";
 
-                        // join last args
-                        foreach (var item in obj[2..])
-                        {
-                            arg += $" {item}";
-                        }
+                        arg += string.Join(" ", obj[2..]);
 
                         arg = arg.Trim();
 
@@ -241,33 +294,17 @@ namespace Lemur.OS
                         }
 
                         Computer.Current.Config[propname] = arg;
-                    }
-                }
-                else if (toLower == "all")
-                {
-                    var commandPrompt = Computer.TryGetProcessOfType<CommandPrompt>();
+                        break;
 
-                    if (commandPrompt == default)
-                    {
-                        Notifications.Now("You must have a cmd prompt open to display 'help' command results.");
-                        return;
-                    }
-                    StringBuilder sb = new();
-                    foreach (var kvp in Computer.Current.Config)
-                    {
-                        sb.Append($"\n {{{kvp.Key} : {kvp.Value}}}");
-                    }
-                    commandPrompt.output.AppendText(sb.ToString());
+                   
                 }
-                else
-                {
-                    Notifications.Now("Invalid operation specified.");
-                }
+
+
             }
-            else
-            {
-                Notifications.Now("Invalid input parameters.");
-            }
+
+
+          
+
         }
         private void SetFont(object[]? obj)
         {

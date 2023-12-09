@@ -17,7 +17,7 @@ namespace Lemur.GUI
     public partial class CommandPrompt : UserControl
     {
         internal Engine? Engine;
-        private List<string> commandHistory = new List<string>();
+        private List<string> commandHistory = [];
         private int historyIndex = -1;
         private string tempInput = "";
         public static string? DesktopIcon => FileSystem.GetResourcePath("commandprompt.png");
@@ -140,13 +140,13 @@ namespace Lemur.GUI
 
             var text = output.Text;
 
-            commandHistory.Add(text);
-
             if (string.IsNullOrEmpty(input.Text))
             {
                 Notifications.Now("Invalid input");
                 return;
             }
+
+            commandHistory.Add(input.Text);
 
             await ExecuteJavaScript(code: input.Text, timeout: 50_000);
 

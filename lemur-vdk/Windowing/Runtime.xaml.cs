@@ -132,7 +132,7 @@ namespace Lemur.GUI
             if (string.IsNullOrEmpty(absPath) || !File.Exists(absPath))
                 return null;
 
-            return ComputerWindow.LoadImage(absPath);
+            return Computer.LoadImage(absPath);
         }
         /// <summary>
         /// This will validate paths and load the respective js and xaml code from provided 'mydir.app' directory (any .app dir with at least one .xaml and .xaml.js file pair)
