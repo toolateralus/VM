@@ -493,10 +493,8 @@ namespace Lemur.OS
         public bool TryInvoke(string name, string[] args)
         {
             Command cmd = Find(name);
-            cmd.Action?.Invoke(args);
-            // if it wasn't null then as far as we're concerned we've invoked it 
-            // the fullest extent.
-            return cmd.Action != null;
+            cmd?.Action?.Invoke(args);
+            return cmd?.Action != null;
         }
 
         [Command("root", "navigates the open file explorer to the root directory of the computer.")]
