@@ -2,9 +2,11 @@
   "NAME": "Default VDK",
   "ALIAS_PATH": "C:\\Users\\Josh\\AppData\\Roaming\\Lemur\\computer0\\home\\commands",
   "BACKGROUND": "background.png",
-  "TEXT_EDITOR_THEME": "Dark",
+  "TEXT_EDITOR_THEME": "Light",
   "CMD_LINE_TIMEOUT": "50_000",
   "DOWNLOAD_PATH": "/home/downloads",
   "DEFAULT_SERVER_IP": "192.168.0.138",
-  "ALWAYS_CONNECT": false
+  "ALWAYS_CONNECT": false,
+  "XARACSM": "100",
+  "FONT_SIZE": 12
 }

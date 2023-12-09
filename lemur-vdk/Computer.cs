@@ -300,15 +300,14 @@ namespace Lemur
             if (image is BitmapImage img)
             {
                 // todo: have alternate themes
+                btn.Background = Brushes.Transparent;
                 textBlock.Foreground = Brushes.Cyan;
                 textBlock.Background = new SolidColorBrush(Color.FromArgb(65, 10, 10, 10));
-                btn.Background = Brushes.Transparent;
 
                 var iconImage = new Image
                 {
                     Source = img,
-                    Stretch = Stretch.Fill,
-                    Margin = new Thickness(10, 10, 10, 10)
+                    Stretch = Stretch.Uniform,
                 };
 
                 stackPanel.Children.Add(iconImage);

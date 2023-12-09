@@ -27,8 +27,6 @@ namespace Lemur.GUI
             IDBox.Text = "0";
 
             BootButton.Focus();
-
-            StartPerpetualColorAnimation();
         }
 
         public static void LoadCustomSyntaxHighlighting()
@@ -175,34 +173,5 @@ namespace Lemur.GUI
             return failmsg;
         }
 
-        private readonly Color StartColor = Colors.MediumBlue;
-        private readonly Color EndColor = Colors.MediumSlateBlue;
-        private readonly TimeSpan AnimationDuration = TimeSpan.FromSeconds(5);
-        private async void StartPerpetualColorAnimation()
-        {
-            while (true)
-            {
-                await AnimateBackgroundColor(StartColor, EndColor, AnimationDuration);
-                await AnimateBackgroundColor(EndColor, StartColor, AnimationDuration);
-            }
-        }
-        private async Task AnimateBackgroundColor(Color fromColor, Color toColor, TimeSpan duration)
-        {
-            const int steps = 1000;
-
-            for (int step = 0; step <= steps; step++)
-            {
-                Color currentColor = Lerp(fromColor, toColor, step / (double)steps);
-                Background = new SolidColorBrush(currentColor);
-                await Task.Delay((int)duration.TotalMilliseconds / steps);
-            }
-        }
-        private Color Lerp(Color from, Color to, double progress)
-        {
-            byte r = (byte)(from.R + (to.R - from.R) * progress);
-            byte g = (byte)(from.G + (to.G - from.G) * progress);
-            byte b = (byte)(from.B + (to.B - from.B) * progress);
-            return Color.FromRgb(r, g, b);
-        }
     }
 }

@@ -19,7 +19,7 @@
         	<Button Style="{StaticResource ButtonStyle}" x:Name="dj" Content="Destroy Garbage - temp fix"/>
     	</StackPanel>
     
-        <RichTextBox FontFamily="Cascadia Code Light" FontSize="24" Grid.Column="1" Background="#FF3A3838" Foreground="#FFC5C5C5" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Auto">
+        <RichTextBox x:Name="textBox" FontFamily="Cascadia Code Light" FontSize="24" Grid.Column="1" Background="#FF3A3838" Foreground="#FFC5C5C5" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Auto">
             <FlowDocument>
                 <Paragraph>
                     <Bold>Welcome to Lemur VDK</Bold>

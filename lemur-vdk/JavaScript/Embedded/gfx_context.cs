@@ -1,7 +1,11 @@
-﻿using System;
+﻿using Lemur.FS;
+using Lemur.Windowing;
+using System;
 using System.Collections.Generic;
+using System.Drawing;
 using System.Runtime.InteropServices;
 using System.Windows;
+using System.Windows.Interop;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using Image = System.Windows.Controls.Image;
@@ -265,7 +269,7 @@ namespace Lemur.JS.Embedded
         }
 
 
-        private bool IsPointInsideTriangle(int x, int y, int x1, int y1, int x2, int y2, int x3, int y3)
+        private static bool IsPointInsideTriangle(int x, int y, int x1, int y1, int x2, int y2, int x3, int y3)
         {
             int denominator = (y2 - y3) * (x1 - x3) + (x3 - x2) * (y1 - y3);
             int a = ((y2 - y3) * (x - x3) + (x3 - x2) * (y - y3)) / denominator;
@@ -274,6 +278,64 @@ namespace Lemur.JS.Embedded
 
             return a >= 0 && a <= 1 && b >= 0 && b <= 1 && c >= 0 && c <= 1;
         }
+
+        internal void SaveToImage(string filePath)
+        {
+            try
+            {
+                using Bitmap bitmap = new(Width, Height);
+                for (int y = 0; y < Height; y++)
+                {
+                    for (int x = 0; x < Width; x++)
+                    {
+                        int index = (y * Width + x) * PixelFormatBpp;
+                        byte r = renderTexture[index + 2];
+                        byte g = renderTexture[index + 1];
+                        byte b = renderTexture[index];
+                        byte a = renderTexture[index + 3];
+                        System.Drawing.Color color = System.Drawing.Color.FromArgb(a, r, g, b);
+                        bitmap.SetPixel(x, y, color);
+                    }
+                }
+
+                FileSystem.Write(filePath, "");
+
+                filePath = FileSystem.GetResourcePath(filePath);
+
+                bitmap.Save(filePath, System.Drawing.Imaging.ImageFormat.Png);
+            }
+            catch (Exception ex)
+            {
+                Notifications.Now($"Error saving image: {ex.Message}");
+            }
+        }
+
+        internal void LoadFromImage(string filePath)
+        {
+            try
+            {
+                Computer.Current.Window.Dispatcher.Invoke(() =>
+                {
+                    using var bmp = new Bitmap(FileSystem.GetResourcePath(filePath));
+
+                    BitmapSource bitmapSource = Imaging.CreateBitmapSourceFromHBitmap(
+                        bmp.GetHbitmap(),
+                        IntPtr.Zero,
+                        Int32Rect.Empty,
+                        BitmapSizeOptions.FromEmptyOptions());
+                    bitmap = new(bitmapSource);
+
+                    if (image.TryGetTarget(out var imageControl))
+                        Draw(imageControl);
+                });
+
+            }
+            catch (Exception ex)
+            {
+                Notifications.Now($"Error loading image: {ex.Message}");
+            }
+        }
+
     }
 }
 

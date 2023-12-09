@@ -1,22 +1,21 @@
 class welcome {
     constructor() {
-    	this.child_processes = [];
     	this.doRender = true;
-    	
     	app.eventHandler('tut01', 'tut01_click', XAML_EVENTS.MOUSE_DOWN);
     	app.eventHandler('tut02', 'tut02_click', XAML_EVENTS.MOUSE_DOWN);
-    	app.eventHandler('dj', 'destroy_junk', XAML_EVENTS.MOUSE_DOWN);
-	}
-	destroy_junk() {
-		this.child_processes.forEach(i => {
-			app.close(i);
-		});
+    	
+    	app.setProperty('textBox', 'FontSize', 18);
+    	
 	}
 	tut01_click() {
-		this.child_processes.push(app.start('TextEditor.app', 'applications.md', this.doRender));
+		let pid = app.start('texed', 'applications.md', this.doRender);
+		app.close(pid);
 	}
 	tut02_click () {
-		this.child_processes.push(app.start('TextEditor.app', 'game.md', this.doRender));
-		this.child_processes.push(app.start('TextEditor.app', 'gamelib.md', this.doRender));
+		let pid = app.start('texed', 'game.md', this.doRender);
+		let pid1 = app.start('texed', 'gamelib.md', this.doRender);
+		
+		app.close(pid);
+		app.close(pid1);
 	}
 }

@@ -18,45 +18,18 @@ class paint {
             const msY = this.mouseState.y / height * this.resolution;
             const brush = this.brushIndex;
             const ctx = this.gfx_ctx;
-
-            const sqrRad = radius * radius;
-
-            for (let x = -radius; x <= radius; ++x) {
-                for (let y = -radius; y < radius; ++y) {
-
-                    const dist = (x * x) + (y * y);
-
-                    if (dist < sqrRad) {
-                        const pxX = Math.floor(x + msX);
-                        const pxY = Math.floor(y + msY);
-
-                        this.indexMap[pxX][pxY] = brush;
-
-                        if (brush > palette.length) print(brush);
-
-                        gfx.writePixelIndexed(ctx, pxX, pxY, brush);
-                    }
-                }
-            }
+			const rotation = 0;
+			const primitive = Primitive.Circle;
+			
+			const halfRad = radius / 2;
+			
+			gfx.drawFilledShape(this.gfx_ctx, Math.floor(msX - halfRad), Math.floor(msY - halfRad), radius, radius, rotation, brush, primitive);
 
             gfx.flushCtx(this.gfx_ctx);
         }
     }
 
-    drawCached() {
-        const width = app.getProperty('renderTarget', 'ActualWidth');
-        const height = app.getProperty('renderTarget', 'ActualHeight');
-        const ctx = this.gfx_ctx;
-
-        for (let x = 0; x < this.resolution; ++x) {
-            for (let y = 0; y < this.resolution; ++y) {
-                const index = this.indexMap[x][y];
-                gfx.writePixelIndexed(ctx, x, y, index);
-            }
-        }
-
-        gfx.flushCtx(this.gfx_ctx);
-    }
+   
     onMouseDown(left, right) {
         this.mouseState.right = right;
         this.mouseState.left = left;
@@ -76,13 +49,15 @@ class paint {
         this.brushIndex = index;
     }
     onSavePressed() {
-    	let filname = 'test.id';
-        file.write(filname, JSON.stringify(this.indexMap));
-        print(`Saved to "${filname}"`);
+    	gfx.flushCtx(this.gfx_ctx);
+    	gfx.saveToImage(this.gfx_ctx, 'home/test.bmp');
+    	print('saved to home/test.bmp');
     }
     onLoadPressed() {
-        this.indexMap = JSON.parse(file.read('test.id'));
-        this.drawCached();
+    	gfx.clearColorIndexed(this.gfx_ctx, Color.BLACK);
+        gfx.loadFromImage(this.gfx_ctx, 'home/test.bmp');
+        gfx.flushCtx(this.gfx_ctx);
+        print('loaded from home/test.bmp');
     }
     onClearPressed() {
         gfx.clearColorIndexed(this.gfx_ctx, Color.WHITE);
@@ -111,15 +86,7 @@ class paint {
 
         this.resolution = 256;
 
-        this.indexMap = [[]];
-
-        for (let i = 0; i < this.resolution; ++i) {
-        	this.indexMap[i] = [];
-            for (let j = 0; j < this.resolution; ++j) {
-                this.indexMap[i][j] = Color.WHITE;
-            }
-        }
-
+ 
         this.gfx_ctx = gfx.createCtx(this.id, 'renderTarget', this.resolution, this.resolution);
 
         gfx.flushCtx(this.gfx_ctx);

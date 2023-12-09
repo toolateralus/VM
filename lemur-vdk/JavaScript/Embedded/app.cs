@@ -185,22 +185,25 @@ namespace Lemur.JS.Embedded
             var targetType = target.GetType();
             var propertyInfo = targetType.GetProperty(propertyName);
 
-            // the property had no special handler.
-            // this could mean that the property is unsupported and it may throw an exception
-            // but it probably means it's the normal case of a supported set of args coming from js,
-            // like ActualWidth taking a double/long or whatever.
-            if (!SetPropertyHandlers.TryGetValue(propertyName, out var handler))
+            try
             {
-                propertyInfo?.SetValue(target, value);
-            }
-            else
-            {
-                if (handler.Invoke(propertyInfo, target, value))
-                    return;
+                if (!SetPropertyHandlers.TryGetValue(propertyName, out var handler))
+                {
+                    propertyInfo?.SetValue(target, value);
+                }
+                else
+                {
+                    if (handler.Invoke(propertyInfo, target, value))
+                        return;
 
-                // failed in setting the property
-                Notifications.Now($"{propertyName} failed to set. this likely means 'app.setProperty' recieved some bad arguments, or invalid for the particular property.");
-                return;
+                    // failed in setting the property
+                    Notifications.Now($"{propertyName} failed to set. this likely means 'app.setProperty' recieved some bad arguments, or invalid for the particular property.");
+                    return;
+                }
+            }
+            catch (Exception e)
+            {
+                Notifications.Exception(e);
             }
         }
         internal static object? GetProperty(object target, string propertyName)
@@ -215,6 +218,7 @@ namespace Lemur.JS.Embedded
 
             return propertyInfo?.GetValue(target);
         }
+
         private object? GetContent(string controlName, object? value)
         {
             object? output = null;

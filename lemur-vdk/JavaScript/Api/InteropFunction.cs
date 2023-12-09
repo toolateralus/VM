@@ -48,9 +48,9 @@ namespace Lemur.JavaScript.Api
         }
         public virtual async void InvokeEventBackground(object? arg1 = null, object? arg2 = null)
         {
-            try
+            _ = Task.Run(() =>
             {
-                _ = Task.Run(() =>
+                try
                 {
                     if (javaScriptEngine is null)
                         return;
@@ -59,13 +59,12 @@ namespace Lemur.JavaScript.Api
                         throw new MissingMethodException();
 
                     javaScriptEngine?.m_engine_internal?.CallFunction(functionHandle, arg1, arg2);
-                });
-
-            }
-            catch (Exception e)
-            {
-                Throw(e);
-            }
+                }
+                catch (Exception e)
+                {
+                    Throw(e);
+                }
+            });
         }
 
         private void Throw(Exception e)

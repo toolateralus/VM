@@ -1,4 +1,5 @@
 ﻿using Lemur.Windowing;
+using System;
 using System.Collections.Generic;
 
 namespace Lemur.JS.Embedded
@@ -68,13 +69,11 @@ namespace Lemur.JS.Embedded
             }
             ctx.ClearColorIndex(index);
         }
-        public bool flushCtx(int gfx_ctx, bool exception = false)
+        public bool flushCtx(int gfx_ctx)
         {
             if (!gfxContext.TryGetValue(gfx_ctx, out var context))
             {
-                if (exception)
-                    Notifications.Now($"Couldn't find graphics context for id : {gfx_ctx}");
-
+                Notifications.Now($"Couldn't find graphics context for id : {gfx_ctx}");
                 return false;
             }
 
@@ -86,6 +85,27 @@ namespace Lemur.JS.Embedded
             });
 
             return true;
+        }
+        public void saveToImage(int gfx_ctx, string path)
+        {
+            if (!gfxContext.TryGetValue(gfx_ctx, out var context))
+            {
+                Notifications.Now($"Couldn't find graphics context for id : {gfx_ctx}");
+                return;
+            }
+
+            context.SaveToImage(path);
+        }
+        public void loadFromImage(int gfx_ctx, string path)
+        {
+            if (!gfxContext.TryGetValue(gfx_ctx, out var context))
+            {
+                Notifications.Now($"Couldn't find graphics context for id : {gfx_ctx}");
+
+                return;
+            }
+
+            context.LoadFromImage(path);
         }
         public int createCtx(string id, string target, int width, int height)
         {

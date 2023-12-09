@@ -21,7 +21,6 @@ namespace Lemur.GUI
     {
         public string LoadedFile;
         internal string Contents;
-
         public Dictionary<string, string> LanguageOptions = new()
         {
             { "MarkDown", ".md" },
@@ -45,12 +44,10 @@ namespace Lemur.GUI
             { "XML", ".xml" },
             { "Json", ".json" },
         };
-
         // reflection grabs this later.
         public static string? DesktopIcon => FileSystem.GetResourcePath("texteditor.png");
-
         public MarkdownViewer? mdViewer;
-
+        public CommandPrompt? commandPrompt;
         public Texed(string path, bool renderMarkdown) : this(path)
         {
             if (renderMarkdown)
@@ -60,7 +57,6 @@ namespace Lemur.GUI
                 Computer.Current.OpenApp(mdViewer, "md.app", Computer.GetNextProcessID());
             }
         }
-
         /// <summary>
         /// Loads a file from path and opens a new text editor for that file.
         /// </summary>
@@ -105,13 +101,18 @@ namespace Lemur.GUI
         {
             var ctrl = Keyboard.IsKeyDown(Key.LeftCtrl);
 
-            if (ctrl && e.Key == Key.S)
+            if (ctrl && Keyboard.IsKeyDown(Key.S))
                 Save();
-            else if (ctrl && e.Key == Key.OemPlus)
+            else if (ctrl && Keyboard.IsKeyDown(Key.OemPlus))
                 textEditor.FontSize += 1;
-            else if (ctrl && e.Key == Key.OemMinus && textEditor.FontSize > 0)
+            else if (ctrl && Keyboard.IsKeyDown(Key.OemMinus) && textEditor.FontSize > 0)
                 textEditor.FontSize -= 1;
-            else if (e.Key == Key.F5)
+            else if (ctrl && Keyboard.IsKeyDown(Key.LeftShift) && Keyboard.IsKeyDown(Key.Tab))
+            {
+                // we should have 'tabs' in future, allowing for several open documents at once.
+                // this should be relatively easy.
+            }
+            else if (Keyboard.IsKeyDown(Key.F5))
             {
                 RunButton_Click(null!, null!);
             }
@@ -137,7 +138,6 @@ namespace Lemur.GUI
                 textEditor.Text = Contents;
             }
         }
-
         private void SetSyntaxHighlighting(string? extension)
         {
             var highlighter = HighlightingManager.Instance.GetDefinitionByExtension(extension);
@@ -155,7 +155,6 @@ namespace Lemur.GUI
                 textEditor.SyntaxHighlighting = highlighter;
             else Notifications.Now($"No syntax highlighting found for {extension}");
         }
-
         private void LoadButton_Click(object sender, RoutedEventArgs e)
         {
             FileExplorer fileExplorer = new FileExplorer();
@@ -171,7 +170,6 @@ namespace Lemur.GUI
         {
             Save();
         }
-
         internal void Save()
         {
             Notifications.Now(LoadedFile);
@@ -209,7 +207,6 @@ namespace Lemur.GUI
 
             Notifications.Now($"Saved {textEditor.LineCount} lines and {textEditor.Text.Length} characters to ...\\{LoadedFile.Split('\\').LastOrDefault()}");
         }
-        public CommandPrompt? commandPrompt;
         private async void RunButton_Click(object sender, RoutedEventArgs e)
         {
             var fileExt = LanguageOptions.ElementAt(shTypeBox.SelectedIndex).Value;
@@ -257,13 +254,11 @@ namespace Lemur.GUI
             }
 
         }
-
         private void Preferences_Click(object sender, RoutedEventArgs e)
         {
             textEditor.Visibility ^= Visibility.Hidden;
             prefsWindow.Visibility ^= Visibility.Hidden;
         }
-
         private void DocTypeBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
             if (sender is ComboBox cB)
@@ -274,7 +269,6 @@ namespace Lemur.GUI
                 SetSyntaxHighlighting(extension);
             }
         }
-
         private void ThemeBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
             if (sender is ComboBox cB)
