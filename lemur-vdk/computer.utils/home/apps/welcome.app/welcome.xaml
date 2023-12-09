@@ -16,7 +16,6 @@
        		<Label Style="{StaticResource LabelStyle}" Content="Tutorials &amp; Documentation"/>
         	<Button Style="{StaticResource ButtonStyle}" x:Name="tut01" Content="Making an App"/>
         	<Button Style="{StaticResource ButtonStyle}" x:Name="tut02" Content="Drawing Graphics"/>
-        	<Button Style="{StaticResource ButtonStyle}" x:Name="dj" Content="Destroy Garbage - temp fix"/>
     	</StackPanel>
     
         <RichTextBox x:Name="textBox" FontFamily="Cascadia Code Light" FontSize="24" Grid.Column="1" Background="#FF3A3838" Foreground="#FFC5C5C5" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Auto">
@@ -31,11 +30,9 @@
                     To move a window, click and drag on the top part, also known as the
                     <Italic>title bar</Italic> .
                 </Paragraph>
-                <Paragraph><Bold>A Very Important Note :</Bold></Paragraph>
+                <Paragraph><Bold>Note :</Bold></Paragraph>
                 <Paragraph>
-                    If you use the documentation links to the left, it's pretty ugly.
-                    when you press a button, it will open a text editor on top, a markdown viewer below that, and then you'll find this window / more tutorials between.
-                    this is very spammy and junky, it's an unfortunate side effect that's in the process of being rectified. it's just a large flaw that has prevented us from fixing this.
+                    temporarily, the documentation links are rough. on clicking one, both a text editor &amp; markdown viewer open. just close the text editor, you'll be left with the markdown.
                 </Paragraph>
             </FlowDocument>
         </RichTextBox>
