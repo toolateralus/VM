@@ -1,4 +1,5 @@
-﻿using Lemur.JS;
+﻿using Lemur.JavaScript.Api;
+using Lemur.JS;
 using System;
 using System.Linq;
 using System.Windows;
@@ -45,13 +46,27 @@ namespace Lemur.GUI
                 e.Handled = true;
             };
 
-            PreviewKeyDown += UserWindow_PreviewKeyDown;
+            Computer.Current.Window.PreviewKeyDown += UserWindow_PreviewKeyDown;
 
         }
 
         private void UserWindow_PreviewKeyDown(object sender, KeyEventArgs e)
         {
-            foreach (var item in JavaScriptEngine.EventHandlers)
+            if (JavaScriptEngine == null)
+                return;
+
+            if (JavaScriptEngine.EventHandlers.Count == 0)
+                return;
+
+            var events = JavaScriptEngine.EventHandlers.Where(e => e is InteropEvent iE && iE.Event == XAML_EVENTS.KEY_DOWN).ToList();
+
+            if (events.Count == 0)
+                return;
+
+            var interopEvents = events.Cast<InteropEvent>();
+
+            foreach (var interopEvent in interopEvents)
+                interopEvent.InvokeKeyboard(sender, e);
         }
 
         protected override void OnPreviewMouseLeftButtonDown(MouseButtonEventArgs e)

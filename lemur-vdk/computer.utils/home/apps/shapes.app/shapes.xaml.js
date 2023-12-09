@@ -45,14 +45,14 @@ class shapes {
 	
     spawnScene() {
         const gameObjects = [];
-
-        const countOfEach = 2500; 
-
+		
+		// 10,000 game objects.
+        const countOfEach = 417; 
         for (let z = 0; z < countOfEach; ++z)
             for (let i = 0; i < palette.length; ++i) {
                 const verts = create_square();
                 const scale = new Point(Math.floor(10 * i), Math.floor(5 * i));
-                const pos = new Point(i * i, this.width - z);
+                const pos = new Point(Math.floor(z * 1.5) % this.width, z % this.width);
                 let gO = new GameObject(verts, scale, pos);
                 
                 gO.drag = 1 - (i / 500);

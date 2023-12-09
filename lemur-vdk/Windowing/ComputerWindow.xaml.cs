@@ -39,7 +39,7 @@ namespace Lemur.GUI
 
             // what a horrible hack, i have no idea why this is needed
             // we can't get events for the desktop
-            Keyboard.AddPreviewKeyDownHandler(Desktop, Computer_KeyDown);
+            Keyboard.AddPreviewKeyDownHandler(App.Current.MainWindow, Computer_KeyDown);
 
             clock = new Timer(delegate
             {
