@@ -126,9 +126,8 @@ namespace Lemur.GUI
         }
         internal static BitmapImage? GetAppIcon(string type)
         {
-            var absPath = FileSystem.GetResourcePath(type) + "\\icon.bmp";
+            var absPath = FileSystem.GetResourcePath(type + ".app") + "\\icon.bmp";
 
-            // silent error, most commonly expected case.
             if (string.IsNullOrEmpty(absPath) || !File.Exists(absPath))
                 return null;
 

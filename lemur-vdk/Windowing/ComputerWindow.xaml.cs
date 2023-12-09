@@ -66,14 +66,20 @@ namespace Lemur.GUI
                 Header = "view source : JavaScript",
             };
 
-            jsSource.Click += (sender, @event) => JsSource_Click(sender, @event, appName);
+            jsSource.Click += (sender, @event) =>
+            {
+                JsSource_Click(sender, @event, appName);
+            };
 
             MenuItem xamlSource = new()
             {
                 Header = "view source : XAML",
             };
 
-            xamlSource.Click += (sender, @event) => XamlSource_Click(sender, @event, appName);
+            xamlSource.Click += (sender, @event) =>
+            {
+                XamlSource_Click(sender, @event, appName);
+            };
 
             contextMenu.Items.Add(jsSource);
             contextMenu.Items.Add(xamlSource);
@@ -91,7 +97,7 @@ namespace Lemur.GUI
         }
         public Button MakeDesktopButton(string appName)
         {
-            var btn = MakeButton(width: 60, height: 60);
+            var btn = MakeButton(width: 90, height: 70);
 
             btn.Margin = new Thickness(5, 5, 5, 5);
             btn.Content = appName;
@@ -100,19 +106,14 @@ namespace Lemur.GUI
 
             string regexPattern = @"[_a-zA-Z][_a-zA-Z0-9]*";
 
-            // Validate the input with the regex
             string[] splitName = appName.Split(".");
             if (splitName.Length > 0)
             {
                 string validName = splitName[0];
                 if (Regex.IsMatch(validName, regexPattern))
-                {
                     btn.Name = validName;
-                }
                 else
-                {
                     Notifications.Now("Invalid application names");
-                }
             }
             else
             {
@@ -132,7 +133,7 @@ namespace Lemur.GUI
 
             MenuItem close = new()
             {
-                Header = "close app"
+                Header = "Close App"
             };
 
             close.Click += Close_Click;
@@ -166,13 +167,19 @@ namespace Lemur.GUI
             // their js code, that would be very helpful.
 
             // does the resizing, moving, closing, minimizing, windowing stuff.
-            resizableWindow = new ResizableWindow()
+            resizableWindow = new ResizableWindow
             {
                 Content = window,
                 Width = 200,
                 Height = 200,
                 Margin = window.Margin,
             };
+
+            // really hacky silly capture here.
+            var w = resizableWindow;
+
+            window.OnAppClosed += () =>
+                w?.OnAppClosed?.Invoke();
 
             window.Title.Content = pClass;
 
@@ -231,11 +238,6 @@ namespace Lemur.GUI
             }
         }
 
-
-        
-        
-        
-
         private void ClearNotificaionsClicked(object sender, RoutedEventArgs e)
         {
             Notifications.Clear();
@@ -244,17 +246,17 @@ namespace Lemur.GUI
         {
             throw new NotImplementedException();
         }
-        private void XamlSource_Click(object sender, RoutedEventArgs e, string appName)
+        private void XamlSource_Click(object? sender, RoutedEventArgs e, string appName)
         {
-            var name = appName.Replace(".app", ".xaml");
+            var name = appName + ".xaml";
             var editor = new Texed(name);
-            Computer.Current.OpenApp(editor, $"{appName}.xaml", Computer.GetNextProcessID());
+            Computer.Current.OpenApp(editor, name, Computer.GetNextProcessID());
         }
-        private void JsSource_Click(object sender, RoutedEventArgs e, string appName)
+        private void JsSource_Click(object? sender, RoutedEventArgs e, string appName)
         {
-            var name = appName.Replace(".app", ".xaml.js");
+            var name = appName + ".xaml.js";
             var editor = new Texed(name);
-            Computer.Current.OpenApp(editor, $"{appName}.xaml.js", Computer.GetNextProcessID());
+            Computer.Current.OpenApp(editor, name, Computer.GetNextProcessID());
         }
         public void Computer_KeyDown(object sender, KeyEventArgs e)
         {

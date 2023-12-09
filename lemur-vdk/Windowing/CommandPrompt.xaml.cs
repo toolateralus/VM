@@ -10,6 +10,7 @@ using Lemur;
 using Lemur.FS;
 using Lemur.Windowing;
 using System.IO;
+using Newtonsoft.Json;
 
 namespace Lemur.GUI
 {
@@ -35,6 +36,12 @@ namespace Lemur.GUI
             input.Focus();
 
             output.TextChanged += Output_TextChanged;
+
+            if (FileSystem.GetResourcePath("history.txt") is string path && path != "")
+            {
+                var jArray = JsonConvert.DeserializeObject<List<string>>(FileSystem.Read(path));
+                commandHistory = jArray ?? [];
+            }
 
         }
 
@@ -100,6 +107,11 @@ namespace Lemur.GUI
             Engine ??= new();
             Window = rsz;
 
+            rsz.OnAppClosed += () =>
+            {
+                var json = JsonConvert.SerializeObject(commandHistory, Formatting.Indented);
+                FileSystem.Write("system/history.txt", json);
+            };
         }
 
 
@@ -133,7 +145,6 @@ namespace Lemur.GUI
 
             if (commandHistory.Count > 100)
                 commandHistory.RemoveAt(0);
-
 
             if (e != null && e.RoutedEvent != null)
                 e.Handled = true;

@@ -18,8 +18,11 @@ using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Threading;
+using System.Xml.Linq;
+using static System.Windows.Forms.VisualStyles.VisualStyleElement.TrayNotify;
 
 namespace Lemur
 {
@@ -279,103 +282,45 @@ namespace Lemur
 
             InstallIcon(AppType.Native, type);
         }
-        public static void SetupIcon(string name, Button btn)
+        public static void SetupIcon(string name, Button btn, object? image)
         {
-            var grid = new Grid();
-
-            grid.RowDefinitions.Add(new RowDefinition { Height = new GridLength(1, GridUnitType.Star) });
-            grid.RowDefinitions.Add(new RowDefinition { Height = new GridLength(1, GridUnitType.Auto) });
-
-            grid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
-            grid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Auto) });
-
-            if (Runtime.GetAppIcon(name) is BitmapImage img)
-            {
-                var iconImage = new Image
-                {
-                    Source = img,
-                    Width = btn.Width,
-                    Height = btn.Width
-                };
-
-                grid.Children.Add(iconImage);
-            }
+            var stackPanel = new StackPanel();
 
             var textBlock = new TextBlock
             {
                 Text = name,
                 TextAlignment = TextAlignment.Left,
-                FontSize = 12
+                FontSize = 12,
+                Foreground = btn.Foreground,
+                Background = btn.Background,
             };
 
-            var viewbox = new Viewbox
+            stackPanel.Children.Add(textBlock);
+
+            if (image is BitmapImage img)
             {
-                Child = textBlock,
-            };
+                // todo: have alternate themes
+                textBlock.Foreground = Brushes.Cyan;
+                textBlock.Background = new SolidColorBrush(Color.FromArgb(65, 10, 10, 10));
+                btn.Background = Brushes.Transparent;
 
-            Grid.SetRow(viewbox, 1);
-
-            grid.Children.Add(viewbox);
-
-            var contentBorder = new Border
-            {
-                CornerRadius = new CornerRadius(10),
-                ToolTip = name,
-                Child = grid // Set the Grid as the content of the Border
-            };
-
-            btn.Content = contentBorder;
-            btn.ToolTip = name;
-        }
-        public static void SetupIcon(string name, Button btn, Type type)
-        {
-            var grid = new Grid();
-
-            grid.RowDefinitions.Add(new RowDefinition { Height = new GridLength(1, GridUnitType.Star) });
-            grid.RowDefinitions.Add(new RowDefinition { Height = new GridLength(1, GridUnitType.Auto) });
-
-            grid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
-            grid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Auto) });
-
-            if (GetIcon(type) is BitmapImage img)
-            {
                 var iconImage = new Image
                 {
                     Source = img,
-                    Width = btn.Width,
-                    Height = btn.Width
+                    Stretch = Stretch.Fill,
+                    Margin = new Thickness(10, 10, 10, 10)
                 };
 
-                grid.Children.Add(iconImage);
+                stackPanel.Children.Add(iconImage);
             }
 
-            var textBlock = new TextBlock
-            {
-                Text = name,
-                TextAlignment = TextAlignment.Left,
-                FontSize = 12
-            };
+            stackPanel.ToolTip = name;
 
-            var viewbox = new Viewbox
-            {
-                Child = textBlock,
-            };
-
-            Grid.SetRow(viewbox, 1);
-
-            grid.Children.Add(viewbox);
-
-            var contentBorder = new Border
-            {
-                CornerRadius = new CornerRadius(10),
-                ToolTip = name,
-                Child = grid // Set the Grid as the content of the Border
-            };
-
-            btn.Content = contentBorder;
+            btn.Content = stackPanel;
             btn.ToolTip = name;
-
         }
+
+
         public static BitmapImage LoadImage(string path)
         {
             BitmapImage bitmapImage = new BitmapImage();
@@ -384,7 +329,7 @@ namespace Lemur
             bitmapImage.EndInit();
             return bitmapImage;
         }
-        public static BitmapImage? GetIcon(Type type)
+        public static BitmapImage? GetExternIcon(Type type)
         {
             var properties = type.GetProperties();
 
@@ -411,15 +356,14 @@ namespace Lemur
 
                 btn.ContextMenu = contextMenu;
 
-                async void OnDesktopIconPressed(object? sender, RoutedEventArgs e)
-                  => await OpenCustom(type);
+                async void OnDesktopIconPressed(object? sender, RoutedEventArgs e) => await OpenCustom(type);
 
-                SetupIcon(type, btn);
+                SetupIcon(type, btn, Runtime.GetAppIcon(appName));
             }
             void InstallExtern(Button btn, string name, Type type)
             {
                 btn.MouseDoubleClick += OnDesktopIconPressed;
-                SetupIcon(appName, btn, type);
+                SetupIcon(appName, btn, GetExternIcon(type));
 
                 void OnDesktopIconPressed(object? sender, RoutedEventArgs e)
                 {
@@ -446,7 +390,7 @@ namespace Lemur
                         break;
                     case AppType.Extern:
                         if (runtime_type != null)
-                            InstallExtern(btn, appName, runtime_type);
+                        InstallExtern(btn, appName, runtime_type);
                         break;
                 }
 
@@ -462,6 +406,7 @@ namespace Lemur
                     if (answer == MessageBoxResult.Yes)
                         Computer.Current.Uninstall(appName);
                 };
+
                 btn.ContextMenu ??= new();
                 btn.ContextMenu.Items.Add(uninstall);
 

@@ -9,7 +9,7 @@ namespace Lemur.GUI
         public double lastW = 0, lastH = 0;
         public Point lastPos = new();
         public bool Maximized = false;
-        public Action? OnClosed { get; internal set; }
+        public Action? OnAppClosed { get; internal set; }
 
         internal void BeginResize(ResizeEdge edge, Point relPos)
         {
