@@ -17,7 +17,7 @@ namespace Lemur.GUI
     /// <summary>
     /// Interaction logic for TextEditor.xaml
     /// </summary>
-    public partial class TextEditor : UserControl
+    public partial class Texed : UserControl
     {
         public string LoadedFile;
         internal string Contents;
@@ -51,7 +51,7 @@ namespace Lemur.GUI
 
         public MarkdownViewer? mdViewer;
 
-        public TextEditor(string path, bool renderMarkdown) : this(path)
+        public Texed(string path, bool renderMarkdown) : this(path)
         {
             if (renderMarkdown)
             {
@@ -65,14 +65,14 @@ namespace Lemur.GUI
         /// Loads a file from path and opens a new text editor for that file.
         /// </summary>
         /// <param name="path"></param>
-        public TextEditor(string path) : this()
+        public Texed(string path) : this()
         {
             LoadFile(path);
         }
         /// <summary>
         /// Base constructor, you probably do not want to use this.
         /// </summary>
-        public TextEditor()
+        public Texed()
         {
             Contents = "Load a file";
             LoadedFile = "newfile.txt";

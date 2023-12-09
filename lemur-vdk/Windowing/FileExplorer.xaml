@@ -18,30 +18,17 @@
     </UserControl.Resources>
     <Grid>
         <StackPanel Style="{StaticResource StackPanelStyle}" Orientation="Horizontal" VerticalAlignment="Top" Background="#FF373738" Margin="10,0,10,0">
-            <Button Style="{StaticResource ButtonStyle}" MinWidth="25" Margin="5" BorderBrush="DarkCyan" Foreground="White" Background="#FF5F36A9" Click="BackPressed" Height="20" Content="Back" >
+            <Button Style="{StaticResource ButtonStyle}" MinWidth="25" Margin="0.5" BorderBrush="DarkCyan" Foreground="White" Background="#FF5F36A9" Click="UpPressed" Height="20" Content="⮢" >
                 <Button.Effect>
                     <DropShadowEffect ShadowDepth="2"/>
                 </Button.Effect>
             </Button>
-            <Button Style="{StaticResource ButtonStyle}" MinWidth="25" Margin="0.5" BorderBrush="DarkCyan" Foreground="White" Background="#FF5F36A9" Click="ForwardPressed" Height="20" Content="Forward" >
+            <Button Style="{StaticResource ButtonStyle}" MinWidth="25" Margin="0.5" BorderBrush="DarkCyan" Foreground="White" Background="#FF5F36A9" Click="SearchPressed"  Height="20" Content="Go">
                 <Button.Effect>
                     <DropShadowEffect ShadowDepth="2"/>
                 </Button.Effect>
             </Button>
-            <Button Style="{StaticResource ButtonStyle}" MinWidth="25" Margin="0.5" BorderBrush="DarkCyan" Foreground="White" Background="#FF5F36A9" Click="UpPressed" Height="20" Content="Up" >
-                <Button.Effect>
-                    <DropShadowEffect ShadowDepth="2"/>
-                </Button.Effect>
-            </Button>
-            <Button Style="{StaticResource ButtonStyle}" MinWidth="25" Margin="0.5" BorderBrush="DarkCyan" Foreground="White" Background="#FF5F36A9" Click="SearchPressed"  Height="20" Content="Go" >
-                <Button.Effect>
-                    <DropShadowEffect ShadowDepth="2"/>
-                </Button.Effect>
-            </Button>
-            <TextBox Height="20" TextAlignment="Justify" MinWidth="250" Foreground="White" x:Name="SearchBar" Text="Search" Margin="2,5,5,5" BorderBrush="#FF43A7C1" Background="#FF272626" >
-                <TextBox.Effect>
-                    <DropShadowEffect ShadowDepth="2"/>
-                </TextBox.Effect>
+            <TextBox KeyDown="OnSearchBarkeyDown" Height="20" TextAlignment="Justify" MinWidth="250" Foreground="White" x:Name="SearchBar" Text="Search" Margin="2,5,5,5" BorderBrush="#FF43A7C1" Background="#FF272626" >
             </TextBox>
         </StackPanel>
         <ListBox x:Name="FileBox" Margin="10,35,10,10" ContextMenu="{StaticResource ExplorerContextMenu}" Foreground="White" Background="#FF333030">

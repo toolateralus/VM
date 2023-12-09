@@ -213,7 +213,10 @@ namespace Lemur.GUI
             var path = SearchBar.Text;
 
             if (Computer.Current.CmdLine.TryCommand(path))
+            {
+                Notifications.Now($"Command {path} succeeded.");
                 return;
+            }
 
             var exists = FileSystem.FileExists(path) || FileSystem.DirectoryExists(path);
 
@@ -221,14 +224,12 @@ namespace Lemur.GUI
             {
                 if (FileSystem.FileExists(path))
                 {
-                    Computer.Current.OpenApp(new TextEditor(path), "texteditor.app", Computer.GetNextProcessID());
+                    Computer.Current.OpenApp(new Texed(path), "texed.app", Computer.GetNextProcessID());
                     OnNavigated?.Invoke(path);
                 }
 
-
                 FileSystem.ChangeDirectory(path);
             }
-
         }
         private void UpPressed(object sender, RoutedEventArgs e)
         {
@@ -238,6 +239,15 @@ namespace Lemur.GUI
         private void ForwardPressed(object sender, RoutedEventArgs e)
         {
             UpdateView();
+        }
+
+        private void OnSearchBarkeyDown(object sender, KeyEventArgs e)
+        {
+            if (Keyboard.IsKeyDown(Key.Enter))
+            {
+                Navigate();
+                UpdateView();
+            }
         }
     }
 }

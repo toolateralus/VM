@@ -115,7 +115,7 @@ namespace Lemur.GUI
                 var path = FileSystem.Root + "/home/ide/temp.js";
                 File.WriteAllText(path, text + "\n this file can be found at 'computer/home/ide/temp.js'");
 
-                var textEditor = new TextEditor(path);
+                var textEditor = new Texed(path);
 
                 Computer.Current.OpenApp(textEditor, "temp.js", Computer.GetNextProcessID());
             }

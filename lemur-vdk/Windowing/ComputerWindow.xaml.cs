@@ -319,7 +319,7 @@ namespace Lemur.GUI
             }
             return false;
         }
-        internal UserWindow OpenAppUI(string pID, string appdotapp, out ResizableWindow resizableWindow)
+        internal UserWindow OpenAppUI(string pID, string pClass, out ResizableWindow resizableWindow)
         {
             TopMostZIndex++;
 
@@ -337,7 +337,10 @@ namespace Lemur.GUI
                 Margin = window.Margin,
             };
 
-            Button btn = MakeTaskbarButton(pID, appdotapp, resizableWindow.ToggleVisibility);
+            window.Title.Content = pClass;
+
+
+            Button btn = MakeTaskbarButton(pID, pClass, resizableWindow.ToggleVisibility);
 
             TaskbarStackPanel.Children.Add(btn);
             Desktop.Children.Add(resizableWindow);
@@ -494,14 +497,14 @@ namespace Lemur.GUI
         private void XamlSource_Click(object sender, RoutedEventArgs e, string appName)
         {
             var name = appName.Replace(".app", ".xaml");
-            var editor = new TextEditor(name);
+            var editor = new Texed(name);
             Computer.Current.OpenApp(editor, $"{appName}.xaml", Computer.GetNextProcessID());
         }
 
         private void JsSource_Click(object sender, RoutedEventArgs e, string appName)
         {
             var name = appName.Replace(".app", ".xaml.js");
-            var editor = new TextEditor(name);
+            var editor = new Texed(name);
             Computer.Current.OpenApp(editor, $"{appName}.xaml.js", Computer.GetNextProcessID());
         }
         protected virtual void Dispose(bool disposing)

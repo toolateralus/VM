@@ -119,6 +119,8 @@ namespace Lemur.JS.Embedded
 
             deferredJobs.Enqueue(async () =>
             {
+                
+
                 await Task.Delay(delayMs).ConfigureAwait(true);
 
                 if (GetProcess(id) is not Process p)
@@ -129,28 +131,35 @@ namespace Lemur.JS.Embedded
 
                 var engine = p.UI?.JavaScriptEngine;
 
+                
+
                 var callHandle = $"{id}.{methodName}";
 
-                if (engine is null)
-                {
-                    Notifications.Now($"Failed to defer {methodName} because the engine was null.");
+                if (engine is null || engine.Disposing)
                     return;
-                }
 
-                if (await engine.Execute($"{callHandle} === undefined") is bool doesNotExist && doesNotExist)
+                try
                 {
-                    Notifications.Now($"Failed to defer {methodName} because it was not found.");
-                    return;
-                }
 
-                if (args.Length > 0)
-                {
-                    var argsString = string.Join(", ", args);
-                    await engine.Execute($"{callHandle}({argsString})");
+                    if (engine.m_engine_internal.Evaluate<bool>($"{callHandle} === undefined"))
+                    {
+                        Notifications.Now($"Failed to defer {methodName} because it was not found.");
+                        return;
+                    }
+
+                    if (args.Length > 0)
+                    {
+                        var argsString = string.Join(", ", args);
+                        engine.m_engine_internal.Evaluate($"{callHandle}({argsString})");
+                    }
+                    else
+                    {
+                        engine.m_engine_internal.Evaluate($"{callHandle}()");
+                    }
                 }
-                else
+                catch( Exception e)
                 {
-                    await engine.Execute($"{callHandle}()");
+                    Notifications.Exception(e);
                 }
             });
         }
@@ -483,10 +492,10 @@ namespace Lemur.JS.Embedded
 
             async void start_app()
             {
-                await Computer.Current.OpenCustom(path, args).ConfigureAwait(true);
+                await Computer.Current.OpenCustom(path, args).ConfigureAwait(false);
 
                 // this way of fetching a pid is very presumptuous and bad.
-                pid = $"p{Computer.processCount - 2}"; // the last created process. 
+                pid = $"p{__procId}"; // the last created process. 
             }
 
             return pid;

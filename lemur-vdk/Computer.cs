@@ -27,7 +27,7 @@ namespace Lemur
     {
         internal string WorkingDir { get; private set; }
         internal uint ID { get; private set; }
-        internal static uint processCount;
+        internal static uint __procId;
 
         [Obsolete("This is a (probably broken) tcp network implementation. It is not especially secure. Use at your own risk, but probably don't use this. it is unused by default")]
         internal NetworkConfiguration NetworkConfiguration { get; set; }
@@ -129,32 +129,29 @@ namespace Lemur
         }
 
       
-        public void OpenApp(UserControl control, string type, string processID, Engine? engine = null)
+        public void OpenApp(UserControl control, string pClass, string processID, Engine? engine = null)
         {
-
 
             LoadConfig();
 
-
-
-            if (ProcessClassTable.ContainsKey(type))
+            if (ProcessClassTable.ContainsKey(pClass))
             {
-                if (char.IsDigit(type.Last()))
+                if (char.IsDigit(pClass.Last()))
                 {
-                    int i = int.Parse(type.Last().ToString()) + 1;
-                    type.Replace(type.Last(), i.ToString()[0]);
+                    int i = int.Parse(pClass.Last().ToString()) + 1;
+                    pClass.Replace(pClass.Last(), i.ToString()[0]);
                 }
                 else
                 {
-                    type += "1";
+                    pClass += "1";
                 }
             }
 
             // the resizable is the container that hosts the user app.
             // this is made separate to eliminate annoying and complex boiler plate.
-            UserWindow userWindow = Window.OpenAppUI(processID, type, out var resizable_window);
+            UserWindow userWindow = Window.OpenAppUI(processID, pClass, out var resizable_window);
 
-            // 
+
             if (ComputerWindow.IsValidType(control.GetType().GetMembers()))
                 ComputerWindow.AssignComputer(control, resizable_window);
 
@@ -162,7 +159,7 @@ namespace Lemur
 
             Process? process = null;
 
-            process = new Process(userWindow, processID, type);
+            process = new Process(userWindow, processID, pClass);
 
             RegisterNewProcess(process, out var procList);
 
@@ -176,7 +173,7 @@ namespace Lemur
 
                 void closeMethod()
                 {
-                    List<Process> array = ProcessClassTable[type];
+                    List<Process> array = ProcessClassTable[pClass];
 
                     process.OnProcessTermination?.Invoke();
 
@@ -184,14 +181,14 @@ namespace Lemur
 
                     resizable_window.Content = null;
 
-                    Window.RemoveTaskbarButton(type);
+                    Window.RemoveTaskbarButton(pClass);
 
                     array.Remove(process);
 
                     if (array.Count == 0)
-                        ProcessClassTable.Remove(type);
+                        ProcessClassTable.Remove(pClass);
                     else
-                        ProcessClassTable[type] = array;
+                        ProcessClassTable[pClass] = array;
                     
                 }
             }
@@ -318,7 +315,7 @@ namespace Lemur
         }
         internal static string GetNextProcessID()
         {
-            return $"p{processCount++}";
+            return $"p{__procId++}";
         }
         public static string GetProcessClass(string identifier)
         {
@@ -368,7 +365,7 @@ namespace Lemur
 
             pc.InstallCSharpApp("CommandPrompt.app", typeof(CommandPrompt));
             pc.InstallCSharpApp("FileExplorer.app", typeof(FileExplorer));
-            pc.InstallCSharpApp("TextEditor.app", typeof(TextEditor));
+            pc.InstallCSharpApp("texed.app", typeof(Texed));
 
             Runtime.LoadCustomSyntaxHighlighting();
         }

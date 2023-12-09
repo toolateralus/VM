@@ -32,6 +32,7 @@
                 <Button Style="{StaticResource ButtonStyle}" MinWidth="25" MinHeight="15" Margin="5" BorderBrush="DarkCyan" Foreground="White" Background="#FF5F36A9" x:Name="xBtn" Width="35" FontFamily="Consolas" FontSize="10" Content="X"/>
                 <Button Style="{StaticResource ButtonStyle}" MinWidth="25" MinHeight="15" Margin="5" BorderBrush="DarkCyan" Foreground="White" Background="#FF5F36A9" x:Name="minimizeBtn" Width="35" FontFamily="Consolas" FontSize="10" Content="MIN"/>
                 <Button Style="{StaticResource ButtonStyle}" MinWidth="25" MinHeight="15" Margin="5" BorderBrush="DarkCyan" Foreground="White" Background="#FF5F36A9" x:Name="maximizeBtn" Width="35" FontFamily="Consolas" FontSize="10" Content="MAX"/>
+                <Label x:Name="Title" Background="#FF1F1F1F" Foreground="White" Style="{StaticResource LabelStyle}"></Label>
             </StackPanel>
             <Frame Grid.Row="1" x:Name="ContentsFrame" />
         </Grid>

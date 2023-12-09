@@ -2,7 +2,7 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
-             xmlns:local="clr-namespace:System.Windows.Controls;assembly=PresentationFramework"
+             xmlns:local="clr-namespace:Lemur.GUI"
              mc:Ignorable="d" 
              d:DesignHeight="450" d:DesignWidth="800" Background="#AA3000a0" BorderBrush="White" BorderThickness="5" >
     <Grid>
@@ -19,7 +19,7 @@
         	<Button Style="{StaticResource ButtonStyle}" x:Name="dj" Content="Destroy Garbage - temp fix"/>
     	</StackPanel>
     
-        <RichTextBox Grid.Column="1" Background="#FF3A3838" Foreground="#FFC5C5C5" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Auto">
+        <RichTextBox FontFamily="Cascadia Code Light" FontSize="24" Grid.Column="1" Background="#FF3A3838" Foreground="#FFC5C5C5" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Auto">
             <FlowDocument>
                 <Paragraph>
                     <Bold>Welcome to Lemur VDK</Bold>
@@ -30,6 +30,12 @@
                 <Paragraph>
                     To move a window, click and drag on the top part, also known as the
                     <Italic>title bar</Italic> .
+                </Paragraph>
+                <Paragraph><Bold>A Very Important Note :</Bold></Paragraph>
+                <Paragraph>
+                    If you use the documentation links to the left, it's pretty ugly.
+                    when you press a button, it will open a text editor on top, a markdown viewer below that, and then you'll find this window / more tutorials between.
+                    this is very spammy and junky, it's an unfortunate side effect that's in the process of being rectified. it's just a large flaw that has prevented us from fixing this.
                 </Paragraph>
             </FlowDocument>
         </RichTextBox>

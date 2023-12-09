@@ -46,12 +46,21 @@ namespace Lemur.JavaScript.Api
         {
             InvokeEventBackground();
         }
-        public virtual void InvokeEventBackground(object? arg1 = null, object? arg2 = null)
+        public virtual async void InvokeEventBackground(object? arg1 = null, object? arg2 = null)
         {
             try
             {
-                if (javaScriptEngine.m_engine_internal.HasVariable(functionHandle))
+                _ = Task.Run(() =>
+                {
+                    if (javaScriptEngine is null)
+                        return;
+
+                    if (javaScriptEngine.m_engine_internal.Evaluate<bool>($"{functionHandle} === undefined"))
+                        throw new MissingMethodException();
+
                     javaScriptEngine?.m_engine_internal?.CallFunction(functionHandle, arg1, arg2);
+                });
+
             }
             catch (Exception e)
             {
