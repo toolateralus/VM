@@ -3,6 +3,21 @@ using System.Collections.Generic;
 
 namespace Lemur.Types
 {
+    public class SafeList<T>(IEnumerable<T?> array) : List<T?>(array)
+    {
+        public static implicit operator T?[](SafeList<T> list) => list.ToArray();
+        public static implicit operator SafeList<T>(T?[] array) => new(array);
+        public int Length => Count; // should be ambiguous :D
+        public new T? this[int index]
+        {
+            get
+            {
+                if (index < 0 || index >= Count)
+                    return default(T?);
+                return base[index];
+            }
+        }
+    }
     public class Deque<T>
     {
         private readonly List<T> items = new();
