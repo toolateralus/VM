@@ -4,13 +4,12 @@ using Lemur.JavaScript.Api;
 using Lemur.JavaScript.Network;
 using Lemur.JS;
 using Lemur.OS;
+using Lemur.Types;
 using Lemur.Windowing;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
-using OpenTK.Graphics.ES11;
 using System;
 using System.Collections.Generic;
-using System.ComponentModel;
 using System.IO;
 using System.Linq;
 using System.Reflection;
@@ -20,23 +19,18 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
-using System.Windows.Threading;
-using System.Xml.Linq;
-using static System.Windows.Forms.VisualStyles.VisualStyleElement.TrayNotify;
 
 namespace Lemur
 {
     public record Process(UserWindow UI, string ID, string Type)
     {
-        public Action? OnProcessTermination;
+        public Action? OnProcessTermination { get; internal set; }
     }
     public class Computer : IDisposable
     {
         internal string WorkingDir { get; private set; }
         internal uint ID { get; private set; }
         internal static uint __procId;
-
-        [Obsolete("This is a (probably broken) tcp network implementation. It is not especially secure. Use at your own risk, but probably don't use this. it is unused by default")]
         internal NetworkConfiguration NetworkConfiguration { get; set; }
         internal ComputerWindow Window { get; set; }
         internal FileSystem FileSystem { get; set; }
@@ -483,11 +477,13 @@ namespace Lemur
 
             return processClass;
         }
-        public static void Restart(uint id)
+
+        [Command("restart", "restarts the computer")]
+        public void Restart(SafeList<object> _)
         {
             Current.Exit(0);
             Current.Dispose();
-            Boot(id);
+            Boot(Current.ID);
         }
         internal protected static void Boot(uint cpu_id)
         {

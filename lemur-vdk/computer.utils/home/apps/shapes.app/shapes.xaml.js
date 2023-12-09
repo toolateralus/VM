@@ -15,22 +15,38 @@ class shapes {
         this.id = id;
         this.frameCt = 0;
 
-		this.width = 512;
+		this.width = 1024;
 
         this.gfx_ctx = gfx.createCtx(this.id, 'renderTarget', this.width, this.width);
 
         this.spawnScene();
 
         app.eventHandler('this', 'm_render', XAML_EVENTS.RENDER);
+        app.eventHandler('playButton', 'onPlayClicked', XAML_EVENTS.MOUSE_DOWN);
         
         this.profiler = new Profiler();
         this.profiler.start();
+        
+        this.playing = false;
+        
     }
-
+    
+	onPlayClicked() {
+		
+		if (this.playing === true) {
+			app.setProperty('playButton', 'Content', 'Play');
+			this.playing = false;
+		} else {
+			app.setProperty('playButton', 'Content', 'Pause');
+			this.playing = true;
+		}
+		
+	}
+	
     spawnScene() {
         const gameObjects = [];
 
-        const countOfEach = 25; 
+        const countOfEach = 2500; 
 
         for (let z = 0; z < countOfEach; ++z)
             for (let i = 0; i < palette.length; ++i) {
@@ -53,8 +69,8 @@ class shapes {
   
     m_render() {
     	
-    	
-    	
+    	if (this.playing !== true)
+    		return;
     
         gfx.clearColor(this.gfx_ctx, Color.BLACK);
 

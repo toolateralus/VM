@@ -12,8 +12,9 @@
                   <RowDefinition Height="35" />
             </Grid.RowDefinitions>
 
-            <StackPanel Style="{StaticResource StackPanelStyle}" Grid.Row="1" x:Name="ProfilerPanel" Orientation="Horizontal"> 
-        		<Slider x:Name="frequencySlider" Maximum="500" Value="0" Width="500" 	FontSize="16" Height="25" Opacity="0.75">
+            <StackPanel Style="{StaticResource StackPanelStyle}" Grid.Row="1" x:Name="ProfilerPanel" Orientation="Horizontal">
+            	<Button Width="100" Content="Play" Style="{StaticResource ButtonStyle}" x:Name="playButton"/>
+        		<Slider x:Name="frequencySlider" Maximum="10000" Value="50" Width="500" 	FontSize="16" Height="25">
 	                <Slider.Background>
 		                    <ImageBrush/>
 		                </Slider.Background>
@@ -22,7 +23,7 @@
 		                </Slider.Effect>
             	</Slider>
         		<Label Style="{StaticResource LabelStyle}" x:Name="gameObjectCountLabel" FontFamily="Consolas MS Bold" FontSize="20"
-                        Foreground="Cyan" Background="#474354" Content="fps"/>
+                        Foreground="Cyan" Background="#474354" Content="paused"/>
             
              	 <Label Style="{StaticResource LabelStyle}" x:Name="framerateLabel" FontFamily="Consolas MS Bold" FontSize="20"
                         Foreground="Cyan" Background="#474354" Content="fps"/>
