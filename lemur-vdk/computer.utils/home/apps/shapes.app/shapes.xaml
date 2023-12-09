@@ -35,7 +35,6 @@
                   HorizontalAlignment="Stretch"
                   VerticalAlignment="Stretch"
                   Stretch="Fill"
-                  RenderOptions.BitmapScalingMode="NearestNeighbor"
-            />
+                  RenderOptions.BitmapScalingMode="NearestNeighbor"/>
       </Grid>
 </UserControl>

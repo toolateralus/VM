@@ -8,6 +8,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
@@ -134,7 +135,13 @@ namespace Lemur.GUI
 
                 SetSyntaxHighlighting(extension);
 
-                Contents = File.ReadAllText(path);
+                Contents = "Loading file.. please wait.";
+
+                Task.Run(async () => {
+                    Contents = await File.ReadAllTextAsync(path).ConfigureAwait(false);
+                    await Dispatcher.InvokeAsync(() => { textEditor.Text = Contents; }); 
+                });
+
                 textEditor.Text = Contents;
             }
         }
