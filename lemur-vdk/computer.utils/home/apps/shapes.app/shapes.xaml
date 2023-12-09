@@ -12,8 +12,19 @@
                   <RowDefinition Height="35" />
             </Grid.RowDefinitions>
 
-            <StackPanel Style="{StaticResource StackPanelStyle}" Grid.Row="1" x:Name="ProfilerPanel" Orientation="Horizontal">      
-                  <Label Style="{StaticResource LabelStyle}" x:Name="framerateLabel" FontFamily="Consolas MS Bold" FontSize="20"
+            <StackPanel Style="{StaticResource StackPanelStyle}" Grid.Row="1" x:Name="ProfilerPanel" Orientation="Horizontal"> 
+        		<Slider x:Name="frequencySlider" Maximum="500" Value="0" Width="500" 	FontSize="16" Height="25" Opacity="0.75">
+	                <Slider.Background>
+		                    <ImageBrush/>
+		                </Slider.Background>
+		                <Slider.Effect>
+		                    <DropShadowEffect/>
+		                </Slider.Effect>
+            	</Slider>
+        		<Label Style="{StaticResource LabelStyle}" x:Name="gameObjectCountLabel" FontFamily="Consolas MS Bold" FontSize="20"
+                        Foreground="Cyan" Background="#474354" Content="fps"/>
+            
+             	 <Label Style="{StaticResource LabelStyle}" x:Name="framerateLabel" FontFamily="Consolas MS Bold" FontSize="20"
                         Foreground="Cyan" Background="#474354" Content="fps"/>
                         
                   <Label Style="{StaticResource LabelStyle}" x:Name="rendering" FontFamily="Consolas MS Bold" FontSize="20"
@@ -22,11 +33,10 @@
                   <Label Style="{StaticResource LabelStyle}" x:Name="uploading" FontFamily="Consolas MS Bold" FontSize="20"
                         Foreground="Cyan" Background="Green" Content="upload"/>
 
-                  <Label Style="{StaticResource LabelStyle}" x:Name="collision" FontFamily="Consolas MS Bold" FontSize="20"
-                        Foreground="Cyan" Background="Violet" Content="collision"/>
-
                   <Label Style="{StaticResource LabelStyle}" x:Name="other" FontFamily="Consolas MS Bold" FontSize="20"
                         Foreground="Cyan" Background="Black" Content="other"/>
+                        
+                
             </StackPanel>
 
             <Image Grid.Row="0"

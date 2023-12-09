@@ -11,6 +11,25 @@ class Profiler {
         this.stopwatch.Start();
         this.segmentTime = 0;
     }
+    drawProfile(){
+    	const results = this.sample_average();
+		const profilerWidth = app.getProperty('ProfilerPanel', 'ActualWidth') / 2;
+		const fpsWidth = app.getProperty('framerateLabel', 'ActualWidth');
+		const actualWidth = profilerWidth - fpsWidth;
+		
+		let totalTime = 0;
+		
+		for (const label in results)
+		    totalTime += results[label];
+		
+		const xFactor = actualWidth / totalTime;
+		
+		for (const label in results) {
+		    const time = results[label];
+		    app.setProperty(label, 'Content', `${time / 10_000} ms ${label}`);
+		    app.setProperty(label, 'Width', time * xFactor);
+		}
+    }
     set_marker(id) {
         const time = this.stopwatch.ElapsedTicks;
         const segmentDuration = time - this.segmentTime;

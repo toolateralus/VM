@@ -21,7 +21,8 @@ class shapes {
 
         this.spawnScene();
 
-        this.setupUIEvents();
+        app.eventHandler('this', 'm_render', XAML_EVENTS.RENDER);
+        
         this.profiler = new Profiler();
         this.profiler.start();
     }
@@ -29,7 +30,7 @@ class shapes {
     spawnScene() {
         const gameObjects = [];
 
-        const countOfEach = 5; 
+        const countOfEach = 25; 
 
         for (let z = 0; z < countOfEach; ++z)
             for (let i = 0; i < palette.length; ++i) {
@@ -49,80 +50,61 @@ class shapes {
         this.scene = new Scene(gameObjects);
     }
 
-    setupUIEvents() {
-        app.eventHandler('this', 'm_render', XAML_EVENTS.RENDER);
-    }
   
-    fpsCounterFrame(start) {
-        if (start) 
-        {
-            this.captureBeginTime = new Date().getTime();
-        } 
-        else
-        {
-            return new Date().getTime();
-        }
-    }
     m_render() {
+    	
+    	
+    	
+    
         gfx.clearColor(this.gfx_ctx, Color.BLACK);
 
         this.profiler.set_marker('other');
 
-        if (this.frameCt % (25 * 2) == 0) {
-            let time = this.fpsCounterFrame(false);
-            const elapsed = time - this.captureBeginTime;
-            app.setProperty('framerateLabel', 'Content', `fps:${Math.floor(1 / elapsed * 1000)}`);
-            this.captureBeginTime = 0;
-            this.drawProfile();
-        } else {
+		// run profiler 
+		// draw results every 60 frames.
+        if (this.frameCt % (60) == 0)
             this.fpsCounterFrame(false);
-        }
+        else
+            this.fpsCounterFrame(false);
+        
         this.fpsCounterFrame(true);
 
         this.profiler.set_marker('profiler');
 
         this.frameCt++;
         
-        const gos = this.scene.GameObjects();
+		let frequency = app.getProperty('frequencySlider', 'Value');
+    	frequency = Math.floor(frequency);	
+    	
+    	if (this.lastFrequency !== frequency)
+    	{
+    		this.lastFrequency = frequency;	
+    		app.setProperty('gameObjectCountLabel', 'Content', frequency);
+    	}
+    	
+    	const gameObjects = this.scene.gOs;
+    	for (let i = 0; i < frequency && i < gameObjects.length; ++i) {
+    		const gO = gameObjects[i];
+    		
+			if (gO.isMesh !== true)
+				return;
+				
+            const x = gO.pos.x;
+            const y = gO.pos.y;
 
-        gos.forEach(gO => {
-            if (gO.isMesh === true) {
-                const x = gO.pos.x;
-                const y = gO.pos.y;
+            const width = gO.scale.x;
+            const height = gO.scale.y;
 
-                const width = gO.scale.x;
-                const height = gO.scale.y;
+            const color = gO.colorIndex;
+            const prim = gO.primitveIndex;
 
-                const color = gO.colorIndex;
-                const prim = gO.primitveIndex;
+            const rot = gO.rotation;
 
-                const rot = gO.rotation;
-
-                
-
-                try {
-                    gfx.drawFilledShape(this.gfx_ctx, Math.floor(x), Math.floor(y), width, height, rot, color, prim);
-                }
-                catch (e) {
-                    print(`${e} \n\n error drawing filled shape at ${x}, ${y}`);
-                }
-
-            }
-
-        });
-
-        this.profiler.set_marker('rendering');
-        
-        gfx.flushCtx(this.gfx_ctx);
-        this.profiler.set_marker('uploading');
-
-
-        gos.forEach(gO => {
-            gO.velocity.y += 0.0981; 
+    	    gO.velocity.y += 0.0981; 
             gO.update_physics();
             gO.confine_to_screen_space(this.width);
         
-            gO
+            
 
             if (gO.pos.y > (this.width - 25)) {
                 gO.velocity.y = random() * -20;
@@ -133,37 +115,38 @@ class shapes {
             if (gO.pos.x === 0 || gO.pos.x === this.width) {
                 gO.velocity.x = -(gO.velocity.x * 2);
             }
+
+            try {
+                gfx.drawFilledShape(this.gfx_ctx, Math.floor(x), Math.floor(y), width, height, rot, color, prim);
+            }
+            catch (e) {
+                print(`${e} \n\n error drawing filled shape at ${x}, ${y}`);
+            }
+	
+        };
+
+        this.profiler.set_marker('rendering');
         
-        });
-		
-        this.profiler.set_marker('collision');
-    }
-
-    collisionRes(body_a, body_b) {
-        if (body_a.collides(body_b.x, body_b.y)){
-            print (`${body_a} collided with ${body_b}`)
-        }
-    }
-
-    drawProfile() {
-        const results = this.profiler.sample_average();
-
-        const profilerWidth = app.getProperty('ProfilerPanel', 'ActualWidth') / 2;
-        const fpsWidth = app.getProperty('framerateLabel', 'ActualWidth');
-
-        const actualWidth = profilerWidth - fpsWidth;
+        gfx.flushCtx(this.gfx_ctx);
         
-        let totalTime = 0;
+        this.profiler.set_marker('uploading');
 
-        for (const label in results)
-            totalTime += results[label];
-
-        const xFactor = actualWidth / totalTime;
-
-        for (const label in results) {
-            const time = results[label];
-            app.setProperty(label, 'Content', `${time / 10_000} ms ${label}`);
-            app.setProperty(label, 'Width', time * xFactor);
+        
+    }
+    
+    // false to begin a frame capture, false to end it and get the
+    fpsCounterFrame(start) {
+        if (start) 
+        {
+            this.captureBeginTime = new Date().getTime();
+        } 
+        else
+        {
+        	const time = new Date().getTime();
+	        const elapsed = time - this.captureBeginTime;
+            app.setProperty('framerateLabel', 'Content', `fps:${Math.floor(1 / elapsed * 1000)}`);
+            this.captureBeginTime = 0;
+            this.profiler.drawProfile();
         }
     }
 }
