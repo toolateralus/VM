@@ -1,5 +1,8 @@
 [
   "help",
   "print(250)",
-  "help"
+  "help",
+  "install 'paint.app'",
+  "install 'wizard.app'",
+  "install 'wizard.app'"
 ]
