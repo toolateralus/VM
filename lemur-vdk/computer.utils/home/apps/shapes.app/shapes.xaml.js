@@ -34,13 +34,14 @@ class shapes {
         for (let z = 0; z < countOfEach; ++z)
             for (let i = 0; i < palette.length; ++i) {
                 const verts = create_square();
-                const scale = new Point(50, 50);
+                const scale = new Point(Math.floor(10 * i), Math.floor(5 * i));
                 const pos = new Point(i * i, this.width - z);
                 let gO = new GameObject(verts, scale, pos);
                 
+                gO.drag = 1 - (i / 500);
                 gO.colorIndex = i;
                 gO.isMesh = true;
-                gO.primitveIndex = Primitive.Triangle;
+                gO.primitveIndex = Primitive.Rectangle;
 
                 gameObjects.push(gO);
             }
