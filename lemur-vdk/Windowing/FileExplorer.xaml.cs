@@ -192,17 +192,7 @@ namespace Lemur.GUI
         {
             Notifications.Now(FileSystem.CurrentDirectory);
         }
-        private void BackPressed(object sender, RoutedEventArgs e)
-        {
-            if (FileSystem.History.Count == 0)
-            {
-                Notifications.Now("No file or directory to go back to.");
-            }
-
-            FileSystem.ChangeDirectory(FileSystem.History.Pop());
-
-            UpdateView();
-        }
+        
         private void SearchPressed(object sender, RoutedEventArgs e)
         {
             Navigate();
@@ -234,10 +224,6 @@ namespace Lemur.GUI
         private void UpPressed(object sender, RoutedEventArgs e)
         {
             FileSystem.ChangeDirectory("..");
-            UpdateView();
-        }
-        private void ForwardPressed(object sender, RoutedEventArgs e)
-        {
             UpdateView();
         }
 

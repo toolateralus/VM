@@ -27,7 +27,7 @@ namespace Lemur.OS
         public readonly string[] Info = Info;
         public readonly string Identifier = identifier;
     }
-    public class CommandLine : IDisposable
+    public partial class CommandLine : IDisposable
     {
         public List<Command> Commands = new();
         public Dictionary<string, string> Aliases = new();
@@ -54,16 +54,113 @@ namespace Lemur.OS
                 }
             }
         }
+        [Command("move", "moves a file / changes its name")]
+        private void MoveFile(SafeList<object> obj)
+        {
+            if (obj[0] is not string a || obj[1] is not string b)
+            {
+                Notifications.Now("Bad arguments to : move");
+                return;
+            }
 
+            FileSystem.Move(a, b);
+            Notifications.Now($"Moved {a}->{b}");
+        }
+        [Command("delete", "deletes a file / folder. use with caution!")]
+        private void DeleteFile(SafeList<object> obj)
+        {
+            if (obj[0] is string target)
+            {
+                FileSystem.Delete(target);
+            }
+            else
+            {
+                Notifications.Now("Invalid input parameters.");
+            }
+        }
+        [Command("ls", "list's the current directory's contents, or list's the provided target directory's contents.")]
+        private void ListDir(SafeList<object> obj)
+        {
+            var commandPrompt = Computer.TryGetProcessOfType<CommandPrompt>();
 
+            if (commandPrompt == default)
+            {
+                Notifications.Now("You must have a cmd prompt open to display 'help' command results.");
+                return;
+            }
+
+            var list = Computer.Current.FileSystem.DirectoryListing();
+
+            var textList = string.Join("\n\t", list);
+
+            var text = $"\n##Current Directory: {FileSystem.CurrentDirectory}###\n";
+            commandPrompt.output.AppendText(text + "\t");
+            commandPrompt.output.AppendText(textList);
+        }
+        [Command("cd", "changes the computer-wide current directory.")]
+        private void ChangeDir(SafeList<object> obj)
+        {
+            if (obj[0] is string Path)
+            {
+                FileSystem.ChangeDirectory(Path);
+            }
+            else
+            {
+                Notifications.Now("failed cd: bad arguments. usage : cd /path/to/wherever.. or cd .. (to go up one)");
+            }
+        }
+        [Command("copy", "sets the command prompts font for this session. call this from a startup to set as default")]
+        private void CopyFile(SafeList<object> obj)
+        {
+            if (obj[0] is string path)
+            {
+                for (int i = 1; i < obj.Length; i++)
+                {
+                    if (obj[i] is not string destination)
+                    {
+                        Notifications.Now("failed copy: bad arguments. usage : copy source dest.. (one or many destinations)");
+                        continue;
+                    }
+
+                    if (destination is null || string.IsNullOrEmpty(destination))
+                    {
+                        Notifications.Now($"Invalid path {destination} in Copy");
+                        continue;
+                    }
+                    FileSystem.Copy(path, destination);
+                    Notifications.Now($"Copied from {path}->{destination}");
+                }
+            }
+            else
+            {
+                Notifications.Now("failed cpy: bad arguments. usage : copy source dest.. (one or many destinations)");
+            }
+        }
+        [Command("mkdir", "creates a directory at the given path")]
+        private void MakeDir(SafeList<object> obj)
+        {
+            if (obj[0] is string Path)
+            {
+                FileSystem.NewDirectory(Path);
+                Notifications.Now($"Created directory {Path}");
+            }
+            else
+            {
+                Notifications.Now("failed mkdir: bad arguments. usage : 'mkdir directory.'");
+            }
+        }
+        [Command("root", "navigates the open file explorer to the root directory of the computer.")]
+        public void RootCmd(SafeList<object> obj)
+        {
+            FileSystem.ChangeDirectory(FileSystem.Root);
+        }
         [Command("unhost", "if a server is currently running on this machine this halts any active connections and closes the sever.")]
-        private void Unhost(SafeList<object> obj)
+        private void StopHosting(SafeList<object> obj)
         {
             Computer.Current.NetworkConfiguration.StopHosting();
         }
-
         [Command("--kill-all", "kills all the running processes on the computer, specify an app name like terminal to kill only those app instances, if any.")]
-        private void KillAll(SafeList<object> obj)
+        private void KillAllProcesses(SafeList<object> obj)
         {
             List<string> toKill = [];
 
@@ -90,7 +187,6 @@ namespace Lemur.OS
             }
 
         }
-
         [Command("dispose", "disposes of the current running JavaScript environment, and instantiates a new one.")]
         private void DisposeJSEnv(SafeList<object> obj)
         {
@@ -115,9 +211,8 @@ namespace Lemur.OS
             }
             Notifications.Now("Engine swap failed. Please restart your computer.");
         }
-
         [Command("host", "hosts a server on the provided <port>, none provided it will default to 8080")]
-        private void Host(SafeList<object> obj)
+        private void StartHosting(SafeList<object> obj)
         {
             Task.Run(async () =>
             {
@@ -130,57 +225,24 @@ namespace Lemur.OS
                 Notifications.Now($"Failed to begin hosting on {LANIPFetcher.GetLocalIPAddress().MapToIPv4()}:{port}");
             });
         }
-
-
-        [Command("move", "moves a file / changes its name")]
-        private void Move(SafeList<object> obj)
-        {
-            string? a = obj[0] as string;
-            string? b = obj[1] as string;
-
-            if (a == null || b == null)
-            {
-                Notifications.Now("Bad arguments to : move");
-                return;
-            }
-
-            FileSystem.Move(a, b);
-            Notifications.Now($"Moved {a}->{b}");
-        }
-
         [Command("lp", "lists all the running processes")]
-        private void LP(SafeList<object> obj)
+        private void ListProcesses(SafeList<object> obj)
         {
             foreach (var item in Computer.ProcessClassTable)
             {
                 Notifications.Now($"Process: {item.Key} \n\t PIDs: {string.Join(",", item.Value.Select(i => i.ID))}");
             }
         }
-
         [Command("ip", "fetches the local ip address of your internet connection")]
-        private void getIP(SafeList<object> obj)
+        private void GetIPAddress(SafeList<object> obj)
         {
             var IP = LANIPFetcher.GetLocalIPAddress().MapToIPv4();
             Notifications.Now(IP.ToString());
         }
-
-        [Command("delete", "deletes a file / folder. use with caution!")]
-        private void Delete(SafeList<object> obj)
-        {
-            if (obj != null && obj.Length > 0 && obj[0] is string target)
-            {
-                FileSystem.Delete(target);
-            }
-            else
-            {
-                Notifications.Now("Invalid input parameters.");
-            }
-        }
-
         [Command("edit", "reads / creates a .js file at provided path, and opens it in the text editor")]
-        private void Edit(SafeList<object> obj)
+        private void EditTextFile(SafeList<object> obj)
         {
-            if (obj != null && obj.Length > 0 && obj[0] is string fileName)
+            if (obj[0] is string fileName)
             {
 
                 if (FileSystem.GetResourcePath(fileName) is string AbsPath && !string.IsNullOrEmpty(AbsPath))
@@ -200,9 +262,8 @@ namespace Lemur.OS
                 Notifications.Now("Invalid input parameters.");
             }
         }
-
         [Command("config", "config <all|set|get|rm> <prop_name?> <value?>")]
-        private void Config(SafeList<object> obj)
+        private void ModifyConfig(SafeList<object> obj)
         {
             // I am not sure if this is even possible.
             Computer.Current.Config ??= [];
@@ -334,40 +395,8 @@ namespace Lemur.OS
           
 
         }
-
-        [Command("ls", "list's the current directory's contents, or list's the provided target directory's contents.")]
-        private void ListDir(SafeList<object> obj)
-        {
-            var commandPrompt = Computer.TryGetProcessOfType<CommandPrompt>();
-
-            if (commandPrompt == default)
-            {
-                Notifications.Now("You must have a cmd prompt open to display 'help' command results.");
-                return;
-            }
-
-            var list = Computer.Current.FileSystem.DirectoryListing();
-
-            var textList = string.Join("\n\t", list);
-
-            var text = $"\n##Current Directory: {FileSystem.CurrentDirectory}###\n";
-            commandPrompt.output.AppendText(text + "\t");
-            commandPrompt.output.AppendText(textList);
-        }
-        [Command("cd", "changes the computer-wide current directory.")]
-        private void ChangeDir(SafeList<object> obj)
-        {
-            if (obj != null && obj.Length > 0 && obj[0] is string Path)
-            {
-                FileSystem.ChangeDirectory(Path);
-            }
-            else
-            {
-                Notifications.Now("failed cd: bad arguments. usage : cd /path/to/wherever.. or cd .. (to go up one)");
-            }
-        }
         [Command("clear", "clears the terminal(s), if open.")]
-        private void Clear(SafeList<object> obj)
+        private void ClearTerminal(SafeList<object> obj)
         {
             var cmd = Computer.TryGetProcessOfType<CommandPrompt>()?.output;
             Computer.Current.Window.Dispatcher.Invoke(() => { cmd?.Clear(); });
@@ -375,55 +404,19 @@ namespace Lemur.OS
             if (cmd is null)
                 Notifications.Now("failed to clear - no cmd prompt open");
         }
-        [Command("copy", "sets the command prompts font for this session. call this from a startup to set as default")]
-        private void Copy(SafeList<object> obj)
-        {
-            if (obj != null && obj.Length > 1 && obj[0] is string Path)
-            {
-                for (int i = 1; i < obj.Length; i++)
-                {
-                    string Destination = obj[i] as string;
-
-                    if (Destination is null || string.IsNullOrEmpty(Destination))
-                    {
-                        Notifications.Now($"Invalid path {Destination} in Copy");
-                        continue;
-                    }
-                    FileSystem.Copy(Path, Destination);
-                    Notifications.Now($"Copied from {Path}->{Destination}");
-                }
-            }
-            else
-            {
-                Notifications.Now("failed cpy: bad arguments. usage : copy source dest.. (one or many destinations)");
-            }
-        }
-
-        [Command("mkdir", "creates a directory at the given path")]
-        private void MkDir(SafeList<object> obj)
-        {
-            if (obj != null && obj.Length > 0 && obj[0] is string Path)
-            {
-                FileSystem.NewDirectory(Path);
-                Notifications.Now($"Created directory {Path}");
-            }
-            else
-            {
-                Notifications.Now("failed mkdir: bad arguments. usage : 'mkdir directory.'");
-            }
-        }
-
         [Command("help", "prints these help listings")]
-        private void Help(SafeList<object> obj)
+        private void ShowHelp(SafeList<object> obj)
         {
             var commandPrompt = Computer.TryGetProcessOfType<CommandPrompt>();
 
             StringBuilder cmdbuilder = new();
             StringBuilder aliasbuilder = new();
 
+            // todo: make this easier to read, add a manual.
             foreach (var item in Commands)
                 cmdbuilder?.Append($"\n{{{item.Identifier}}} \t\n\'{string.Join(",", item.Info)}\'");
 
+            // todo: add better alias info
             foreach (var item in Aliases)
                 aliasbuilder.Append($"\n{item.Key} -> {item.Value.Split('\\').Last()}");
 
@@ -435,11 +428,10 @@ namespace Lemur.OS
             commandPrompt?.output.AppendText(aliasbuilder.ToString());
 
         }
-
-        [Command("run", "run's a JavaScript file of specified path in the computer's main engine.")]
-        private async void RunJs(SafeList<object> obj)
+        [Command("run", "runs a JavaScript file of specified path in the computers main engine.")]
+        private async void RunJsFile(SafeList<object> obj)
         {
-            if (obj != null && obj.Length > 0 && obj[0] is string path && FileSystem.GetResourcePath(path + ".js") is string AbsPath && File.Exists(AbsPath))
+            if (obj[0] is string path && FileSystem.GetResourcePath(path.Replace(".js", "") + ".js") is string AbsPath && File.Exists(AbsPath))
             {
                 await Computer.Current.JavaScript.Execute(File.ReadAllText(AbsPath));
                 Notifications.Now($"running {AbsPath}...");
@@ -497,11 +489,6 @@ namespace Lemur.OS
             return cmd?.Action != null;
         }
 
-        [Command("root", "navigates the open file explorer to the root directory of the computer.")]
-        public void RootCmd(SafeList<object> obj)
-        {
-            FileSystem.ChangeDirectory(FileSystem.Root);
-        }
         protected virtual void Dispose(bool disposing)
         {
             if (!Disposing)

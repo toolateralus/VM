@@ -1,13 +1,17 @@
-﻿using Lemur.Types;
+﻿using Lemur.FS;
+using Lemur.GUI;
+using Lemur.Types;
 using Lemur.Windowing;
 using System;
 using System.IO;
 using System.Linq;
 using System.Windows;
 using Path = System.IO.Path;
-
 namespace Lemur.FS
 {
+    // ### Terminal Commands
+
+    // Actual implementation
     public partial class FileSystem
     {
         public static string Root { get; private set; }
@@ -58,7 +62,7 @@ namespace Lemur.FS
                 }
             }
         }
-        public static Deque<string> History = new();
+
         public static string GetResourcePath(string name)
         {
             try
@@ -158,6 +162,9 @@ namespace Lemur.FS
         {
             try
             {
+                if (path == "~")
+                    path = Root;
+
                 if (path == "..")
                 {
                     string currentDirectory = CurrentDirectory;
@@ -178,11 +185,8 @@ namespace Lemur.FS
                 path = GetRelativeOrAbsolute(path);
 
                 if (Directory.Exists(path) && WithinFileSystemBounds(path))
-                {
-                    if (!string.IsNullOrEmpty(CurrentDirectory))
-                        History.Push(CurrentDirectory);
                     CurrentDirectory = path;
-                }
+
                 else if (!File.Exists(path))
                 {
                     Notifications.Now($"Directory '{path}' not found in current path.");
