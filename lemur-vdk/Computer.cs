@@ -301,7 +301,8 @@ namespace Lemur
                 var iconImage = new Image
                 {
                     Source = img,
-                    Stretch = Stretch.Uniform,
+                    Stretch = Stretch.Fill,
+                    Height = 50,
                 };
 
                 stackPanel.Children.Add(iconImage);
