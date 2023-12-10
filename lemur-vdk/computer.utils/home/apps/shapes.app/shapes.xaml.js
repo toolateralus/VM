@@ -52,7 +52,7 @@ class shapes {
         const countOfEach = 417; 
         for (let z = 0; z < countOfEach; ++z)
             for (let i = 0; i < palette.length; ++i) {
-                const scale = new Point(100, 100);
+                const scale = new Point(50, 50);
                 const pos = new Point(this.width * random(), this.width * random());
                 let gO = new GameObject([], scale, pos);
                 

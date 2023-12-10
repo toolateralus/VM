@@ -101,9 +101,15 @@ namespace Lemur.JS.Embedded
             if (!gfxContext.TryGetValue(gfx_ctx, out var context))
             {
                 Notifications.Now($"Couldn't find graphics context for id : {gfx_ctx}");
-
                 return;
             }
+            
+            if (context == null)
+            {
+                Notifications.Now($"Couldn't find graphics context for id : {gfx_ctx}");
+                return;
+            }
+
 
             context.DrawSkybox();
         }
