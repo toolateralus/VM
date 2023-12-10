@@ -19,6 +19,7 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
+using System.Windows.Shapes;
 
 namespace Lemur
 {
@@ -278,39 +279,42 @@ namespace Lemur
         }
         public static void SetupIcon(string name, Button btn, object? image)
         {
-            var stackPanel = new StackPanel();
+            btn.Background = Brushes.Transparent;
+            var grid = new Grid() { Height = btn.Height, Width = btn.Width };
+
+            grid.ColumnDefinitions.Add(new() { Width = new GridLength(1, GridUnitType.Star) });
+            grid.RowDefinitions.Add(new() { Height = new GridLength(1, GridUnitType.Auto) });
+            grid.RowDefinitions.Add(new() { Height = new GridLength(1, GridUnitType.Star) });
 
             var textBlock = new TextBlock
             {
                 Text = name,
                 TextAlignment = TextAlignment.Left,
                 FontSize = 12,
-                Foreground = btn.Foreground,
-                Background = btn.Background,
+                Foreground = Brushes.Cyan,
+                Background = new SolidColorBrush(Color.FromArgb(65, 10, 10, 10)),
             };
 
-            stackPanel.Children.Add(textBlock);
+            Grid.SetRow(textBlock, 0);
+            grid.Children.Add(textBlock);
+
+            FrameworkElement element;
 
             if (image is BitmapImage img)
-            {
-                // todo: have alternate themes
-                btn.Background = Brushes.Transparent;
-                textBlock.Foreground = Brushes.Cyan;
-                textBlock.Background = new SolidColorBrush(Color.FromArgb(65, 10, 10, 10));
-
-                var iconImage = new Image
+                element = new Image
                 {
                     Source = img,
                     Stretch = Stretch.Fill,
-                    Height = 50,
                 };
+            else
+                element = new Rectangle() { Fill = Brushes.Black };
 
-                stackPanel.Children.Add(iconImage);
-            }
+            grid.Children.Add(element);
 
-            stackPanel.ToolTip = name;
+            Grid.SetRow(element, 1);
+            grid.ToolTip = name;
 
-            btn.Content = stackPanel;
+            btn.Content = grid;
             btn.ToolTip = name;
         }
 
