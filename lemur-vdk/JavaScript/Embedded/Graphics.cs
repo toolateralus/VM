@@ -96,6 +96,28 @@ namespace Lemur.JS.Embedded
 
             context.SaveToImage(path);
         }
+        public void drawSkybox(int gfx_ctx)
+        {
+            if (!gfxContext.TryGetValue(gfx_ctx, out var context))
+            {
+                Notifications.Now($"Couldn't find graphics context for id : {gfx_ctx}");
+
+                return;
+            }
+
+            context.DrawSkybox();
+        }
+        public void loadSkybox(int gfx_ctx, string path)
+        {
+            if (!gfxContext.TryGetValue(gfx_ctx, out var context))
+            {
+                Notifications.Now($"Couldn't find graphics context for id : {gfx_ctx}");
+
+                return;
+            }
+
+            context.LoadSkybox(path);
+        }
         public void loadFromImage(int gfx_ctx, string path)
         {
             if (!gfxContext.TryGetValue(gfx_ctx, out var context))

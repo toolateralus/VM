@@ -6,7 +6,7 @@ const {
 
 const { Profiler } = require('profiler.js');
 
-class shapes {
+class gamer {
     constructor(id) {
 
         this.captureBeginTime = 0;
@@ -15,7 +15,7 @@ class shapes {
         this.id = id;
         this.frameCt = 0;
 
-		this.width = 256;
+		this.width = 2048;
 
         this.gfx_ctx = gfx.createCtx(this.id, 'renderTarget', this.width, this.width);
 
@@ -29,10 +29,48 @@ class shapes {
         
         this.playing = false;
         
-        
+        this.playerSpeed = 50;
+        this.projectiles = [];
         //gfx.loadSkybox(this.gfx_ctx, 'icon.bmp');
     }
     
+    handleInput() {
+        this.player.velocity.y = 0;
+
+        if (Key.isDown('E'))
+            this.player.scale.add(1, 1);
+        else if (Key.isDown('Q'))
+            this.player.scale.sub(1, 1);
+
+        if (Key.isDown('A')) 
+            this.player.velocity.x = -this.playerSpeed;
+        else if (Key.isDown('D'))
+            this.player.velocity.x = this.playerSpeed;
+
+        if (Key.isDown('W') || Key.isDown('S'))
+            this.shoot();
+        
+    }
+
+    shoot() {
+        const bullet = new GameObject([], this.player.scale, new Point(this.player.pos.x - this.player.scale.x, this.player.pos.y - this.player.scale.x));
+        bullet.isMesh = true;
+        bullet.colorIndex = Color.RED;
+        bullet.primitveIndex = Primitive.Rectangle;
+        bullet.velocity.y = -100;
+        bullet.drag = 0.999;
+        this.scene.gOs.push(bullet);
+        this.projectiles.push(bullet);
+
+        const msDelay = 2000;
+        const index = this.projectiles.length - 1;
+        app.defer('destroyProjectile', msDelay, index);
+    }
+    destroyProjectile(index) {
+        const projectile = this.projectiles[index];
+        this.scene.gOs.splice(this.scene.gOs.indexOf(projectile), 1);
+        this.projectiles.splice(index, 1);
+    }
 	onPlayClicked() {
 		
 		if (this.playing === true) {
@@ -42,37 +80,27 @@ class shapes {
 			app.setProperty('playButton', 'Content', 'Pause');
 			this.playing = true;
 		}
-		
 	}
-	
     spawnScene() {
         const gameObjects = [];
 		
-		// 10,000 game objects.
-        const countOfEach = 417; 
-        for (let z = 0; z < countOfEach; ++z)
-            for (let i = 0; i < palette.length; ++i) {
-                const scale = new Point(100, 100);
-                const pos = new Point(this.width * random(), this.width * random());
-                let gO = new GameObject([], scale, pos);
-                
-                gO.drag = 1 - (i / 500);
-                gO.colorIndex = i;
-                gO.isMesh = true;
-                gO.primitveIndex = Primitive.Rectangle;
+        const go = new GameObject([], new Point(100, 100), new Point(Math.floor(this.width / 2), this.width));
+        go.isMesh = true;
+        go.colorIndex = Color.YELLOW;
+        go.primitveIndex = Primitive.Rectangle;
+        
+        this.player = go;
 
-                gameObjects.push(gO);
-            }
-
+        gameObjects.push(this.player);
         this.scene = new Scene(gameObjects);
     }
-
-  
     m_render() {
     	
     	if (this.playing !== true)
     		return;
         
+        this.handleInput();
+
     	//gfx.drawSkybox(this.gfx_ctx);
         gfx.clearColor(this.gfx_ctx, Color.BLACK);
 
@@ -146,7 +174,6 @@ class shapes {
 
         
     }
-    
     // false to begin a frame capture, false to end it and get the
     fpsCounterFrame(start) {
         if (start) 

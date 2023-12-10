@@ -35,6 +35,7 @@ namespace Lemur.JS.Embedded
         private byte[] renderTexture = Array.Empty<byte>();
 
         private WriteableBitmap bitmap;
+        private WriteableBitmap skybox;
         internal readonly WeakReference<Image> image;
         public static readonly List<byte[]> palette = new()
         {
@@ -278,7 +279,28 @@ namespace Lemur.JS.Embedded
 
             return a >= 0 && a <= 1 && b >= 0 && b <= 1 && c >= 0 && c <= 1;
         }
+        internal void DrawSkybox()
+        {
+            lock(bitmap)
+            Computer.Current.Window.Dispatcher.Invoke(() =>
+            {
+                if (skybox != null)
+                {
+                    // let's do the most performant copy of pixel data possible from skybox to bitmap
+                    // https://stackoverflow.com/questions/6484357/copying-from-a-bitmapsource-to-a-writeablebitmap
 
+                    var rect = new Int32Rect(0, 0, skybox.PixelWidth, skybox.PixelHeight);
+                    skybox.CopyPixels(rect, renderTexture, Width * PixelFormatBpp, 0);
+                    bitmap = skybox.Clone();
+                } 
+                else
+                {
+                    Notifications.Now("No skybox was loaded. call 'gfx.loadSkybox(string path)'");
+                }
+
+            });
+          
+        }
         internal void SaveToImage(string filePath)
         {
             try
@@ -309,7 +331,33 @@ namespace Lemur.JS.Embedded
                 Notifications.Now($"Error saving image: {ex.Message}");
             }
         }
+        public void LoadSkybox(string filePath)
+        {
+            try
+            {
+                Computer.Current.Window.Dispatcher.Invoke(() =>
+                {
+                    using var bmp = new Bitmap(FileSystem.GetResourcePath(filePath));
 
+                    // Resize the skybox image to match the dimensions of your render texture
+                    bmp.SetResolution(Width, Height);
+
+                    BitmapSource bitmapSource = Imaging.CreateBitmapSourceFromHBitmap(
+                        bmp.GetHbitmap(),
+                        IntPtr.Zero,
+                        Int32Rect.Empty,
+                        BitmapSizeOptions.FromEmptyOptions());
+                    skybox = new(bitmapSource);
+
+                    if (image.TryGetTarget(out var imageControl))
+                        Draw(imageControl);
+                });
+            }
+            catch (Exception ex)
+            {
+                Notifications.Now($"Error loading skybox: {ex.Message}");
+            }
+        }
         internal void LoadFromImage(string filePath)
         {
             try

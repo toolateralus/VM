@@ -29,6 +29,11 @@ class Point {
         this.y += y;
         return this;
     }
+    sub(x, y) {
+        this.x -= x;
+        this.y -= y;
+        return this;
+    }
     subtract(otherPoint) {
         this.x -= otherPoint.x;
         this.y -= otherPoint.y;
