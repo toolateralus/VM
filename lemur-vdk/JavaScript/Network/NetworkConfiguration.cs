@@ -77,12 +77,12 @@ namespace Lemur.JavaScript.Network
             return host.Running;
         }
 
-        internal static void Broadcast(int outCh, int inCh, object? msg)
+        internal static void Broadcast(int channel, int reply, object? msg)
         {
-            if (!NetworkEvents.TryGetValue(outCh, out _))
-                NetworkEvents.TryAdd(outCh, new());
+            if (!NetworkEvents.TryGetValue(channel, out _))
+                NetworkEvents.TryAdd(channel, new());
 
-            NetworkEvents[outCh].Enqueue((msg, inCh));
+            NetworkEvents[channel].Enqueue((msg, reply));
 
             foreach (var userWindow in Computer.ProcessClassTable.SelectMany(i => i.Value.Select(i => i)))
             {
@@ -91,7 +91,7 @@ namespace Lemur.JavaScript.Network
 
                 foreach (var eventHandler in userWindow?.UI?.JavaScriptEngine.EventHandlers)
                     if (eventHandler is NetworkEvent networkEventHandler)
-                        networkEventHandler.InvokeEvent(outCh, inCh, msg);
+                        networkEventHandler.InvokeEvent(channel, reply, msg);
             }
         }
         public static (object? value, int reply) PullEvent(int channel, int timeout = 20_000, [CallerMemberName] string callerName = "unknown")

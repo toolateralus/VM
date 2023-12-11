@@ -152,7 +152,7 @@ namespace Lemur.JavaScript.Network
 
             var bytesLength = Encoding.UTF8.GetByteCount(dataString);
 
-            string message = $"\n{listener}, ch {reply} -> {channel}, {FormatBytes(bytesLength)}";
+            string message = $"\nReceived data, listener: {listener}, ch: {channel}, reply: {reply}, size: {FormatBytes(bytesLength)}";
 
             Computer.Current.Window.Dispatcher.Invoke(() => {
                 foreach (var cmd in Computer.TryGetAllProcessesOfType<CommandPrompt>())
@@ -216,10 +216,10 @@ namespace Lemur.JavaScript.Network
                         HandleIncomingDataTransmission(packet);
                         break;
                     case TransmissionType.Message:
-                        await HandleMessageTransmission(packet, clients);
+                        await BroadcastMessage(clients, packet.Client, packet.Metadata).ConfigureAwait(false);
                         break;
                     case TransmissionType.Download:
-                        await HandleDownloadRequest(packet);
+                        await HandleDownloadRequest(packet).ConfigureAwait(false);
                         break;
                     case TransmissionType.Request:
                         HandleRequest(packet.Data, packet);
@@ -271,12 +271,6 @@ namespace Lemur.JavaScript.Network
             // message signaling the end of the download.
             JObject endPacket = JObject.Parse(ToJson(Message, TransmissionType.Download, DownloadReplyChannel, -1));
             await SendJsonToClient(packet.Client, endPacket).ConfigureAwait(false);
-        }
-        private static async Task HandleMessageTransmission(Packet packet, List<TcpClient> clients)
-        {
-            string data = packet.Metadata.Value<string>("data") ?? "";
-            var responseMetadata = JObject.Parse(ToJson(data, TransmissionType.Message, packet.Metadata.Value<int>("ch"), packet.Metadata.Value<int>("reply"), false));
-            await BroadcastMessage(clients, packet.Client, responseMetadata).ConfigureAwait(false);
         }
         private void HandleIncomingDataTransmission(Packet packet)
         {
