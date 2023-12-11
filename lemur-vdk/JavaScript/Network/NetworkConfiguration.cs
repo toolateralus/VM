@@ -165,7 +165,7 @@ namespace Lemur.JavaScript.Network
         {
             client?.Close();
             stream?.Close();
-            Task.Run(() => listenerThread?.Join());
+            listenerThread?.Join();
             Notifications.Now($"Disconnected from {ServerIP}::{ServerPort}");
         }
 

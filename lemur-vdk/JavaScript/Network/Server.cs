@@ -116,6 +116,11 @@ namespace Lemur.JavaScript.Network
                     AvailableForDownload.Add(item.Split('\\').Last());
             });
         }
+        /// <param name="stream"></param>
+        /// <param name="client"></param>
+        /// <param name="listener"></param>
+        /// <returns></returns>
+        /// <exception cref="IOException"></exception>
         internal static Packet? ListenForPacket(NetworkStream stream, TcpClient client, string listener)
         {
 
@@ -181,18 +186,17 @@ namespace Lemur.JavaScript.Network
         }
         private async Task HandleClientCommunicationAsync(TcpClient client, List<TcpClient> connectedClients)
         {
-            NetworkStream stream = client.GetStream();
+            using NetworkStream stream = client.GetStream();
             try
             {
-                while (true)
+                while (client.Connected && ListenForPacket(stream, client, "server") is Packet packet)
                 {
-                    Packet packet = ListenForPacket(stream, client, "server");
                     await TryHandleMessages(packet, connectedClients).ConfigureAwait(false);
                 }
             }
-            catch (Exception ex)
+            catch (IOException ex)
             {
-                Notifications.Now($"SERVER:Client {client.GetHashCode()} errored:: \n{ex.Message}\n{ex.InnerException}\n{ex}");
+                Notifications.Now($"SERVER:Client {client.GetHashCode()} errored:: \n{ex.Message}");
             }
             finally
             {
@@ -371,9 +375,16 @@ namespace Lemur.JavaScript.Network
             byte[] bytes = Encoding.UTF8.GetBytes(data.ToString());
             var length = BitConverter.GetBytes(bytes.Length);
 
-            // header defining length of message.
-            await connectedStream.WriteAsync(length, 0, 4);
-            await connectedStream.WriteAsync(bytes, 0, bytes.Length);
+            try
+            {
+                await connectedStream.WriteAsync(length.AsMemory(0, 4)).ConfigureAwait(false);
+                await connectedStream.WriteAsync(bytes).ConfigureAwait(false);
+            }
+            catch (SocketException ex) when (ex.SocketErrorCode == SocketError.ConnectionAborted)
+            {
+                Notifications.Now($"Connection aborted: {ex.Message}");
+                client.Close();
+            }
         }
     }
 }
