@@ -46,11 +46,8 @@ namespace Lemur.JavaScript.Network
                     StartClient(Server);
             }
         }
-        public void StartClient(IPAddress ip, string? name = null)
+        internal void StartClient(IPAddress ip, string? name = null)
         {
-
-            ArgumentNullException.ThrowIfNull(ip);
-
             try
             {
                 var ip_str = ip.ToString();

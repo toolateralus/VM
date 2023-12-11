@@ -116,7 +116,7 @@ namespace Lemur.JavaScript.Network
                     AvailableForDownload.Add(item.Split('\\').Last());
             });
         }
-        internal static Packet ListenForPacket(NetworkStream stream, TcpClient client, string source)
+        internal static Packet? ListenForPacket(NetworkStream stream, TcpClient client, string listener)
         {
 
             // this header will indicate the size of the actual metadata
@@ -148,11 +148,11 @@ namespace Lemur.JavaScript.Network
             int reply = metadata.Value<int>("reply");
 
             // base64 string representation of data
-            string dataString = metadata.Value<string>("data") ?? $"{source} : Data not found! something has gone wrong with the other's json construction";
+            string dataString = metadata.Value<string>("data") ?? $"{listener} : Data not found! something has gone wrong with the other's json construction";
 
             var bytesLength = Encoding.UTF8.GetByteCount(dataString);
 
-            string message = $"\n{source}, ch {reply} -> {channel}, {FormatBytes(bytesLength)}";
+            string message = $"\n{listener}, ch {reply} -> {channel}, {FormatBytes(bytesLength)}";
 
             Computer.Current.Window.Dispatcher.Invoke(() => {
                 foreach (var cmd in Computer.TryGetAllProcessesOfType<CommandPrompt>())
@@ -177,7 +177,7 @@ namespace Lemur.JavaScript.Network
             TcpClient client = await server.AcceptTcpClientAsync().ConfigureAwait(false);
             connectedClients.Add(client);
             Notifications.Now($"SERVER:Client {client.GetHashCode()} connected ");
-            await HandleClientCommunicationAsync(client, connectedClients).ConfigureAwait(false);
+            Task.Run(async delegate { await HandleClientCommunicationAsync(client, connectedClients).ConfigureAwait(false); });
         }
         private async Task HandleClientCommunicationAsync(TcpClient client, List<TcpClient> connectedClients)
         {
