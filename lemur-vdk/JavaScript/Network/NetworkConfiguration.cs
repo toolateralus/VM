@@ -3,6 +3,7 @@ using Lemur.Windowing;
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
 using System.Net;
 using System.Net.Sockets;
@@ -45,8 +46,9 @@ namespace Lemur.JavaScript.Network
                     StartClient(Server);
             }
         }
-        public void StartClient(IPAddress ip)
+        public void StartClient(IPAddress ip, string? name = null)
         {
+
             ArgumentNullException.ThrowIfNull(ip);
 
             try
@@ -57,8 +59,8 @@ namespace Lemur.JavaScript.Network
 
                 client = new TcpClient(ip_str, port);
                 stream = client.GetStream();
-
-                listenerThread = new Thread(listenMessages);
+                name ??= client.GetHashCode().ToString(CultureInfo.CurrentCulture);
+                listenerThread = new Thread(() => listenMessages(name));
                 listenerThread.Start();
             }
             catch (Exception e)
@@ -182,7 +184,7 @@ namespace Lemur.JavaScript.Network
         {
             return $"{LANIPFetcher.GetLocalIPAddress().MapToIPv4()}:{host?.openPort}";
         }
-        public void listenMessages()
+        public void listenMessages(string name)
         {
             try
             {
@@ -191,11 +193,11 @@ namespace Lemur.JavaScript.Network
                     // ! operator usage
                     // IsConnected() is a widely used way to validate that stream & client aren't null and are connected.
                     // They cannot be null
-                    var packet = RecieveMessage(stream!, client!, false);
+                    var packet = ListenForPacket(stream!, client!, name);
 
                     int messageLength = packet.Metadata.Value<int>("size");
-                    int sender_ch = packet.Metadata.Value<int>("ch");
-                    int reciever_ch = packet.Metadata.Value<int>("reply");
+                    int channel = packet.Metadata.Value<int>("ch");
+                    int reply = packet.Metadata.Value<int>("reply");
                     var path = packet.Metadata.Value<string>("path");
                     var data = packet.Metadata.Value<string>("data") ?? "";
 
@@ -203,12 +205,12 @@ namespace Lemur.JavaScript.Network
                     // send the whole packet? or deconstruct for the user?
                     // this way implies you need to send formatted json in send message which is false, it formats your message for you.
                     if (path is null)
-                        Broadcast(sender_ch, reciever_ch, packet.Metadata.ToString());
+                        Broadcast(channel, reply, packet.Metadata.ToString());
 
 
                     // downloads // file transfer
                     else
-                        Broadcast(sender_ch, reciever_ch, packet.Metadata);
+                        Broadcast(channel, reply, packet.Metadata);
                 }
             }
             catch (Exception e)

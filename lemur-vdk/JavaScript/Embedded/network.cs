@@ -253,8 +253,8 @@ namespace Lemur.JavaScript.Embedded
                 parameters[1] is int replyChannel &&
                 parameters[2] is string message)
             {
-                OnTransmit?.Invoke(message, TransmissionType.Message, replyChannel, channel, false);
-                var json = Server.ToJson(message, TransmissionType.Message, replyChannel, channel, false);
+                OnTransmit?.Invoke(message, TransmissionType.Message, channel, replyChannel, false);
+                var json = Server.ToJson(message, TransmissionType.Message, channel, replyChannel, false);
                 NetworkConfiguration.Broadcast(channel, replyChannel, json);
             }
         }

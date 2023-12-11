@@ -116,9 +116,8 @@ namespace Lemur.JavaScript.Network
                     AvailableForDownload.Add(item.Split('\\').Last());
             });
         }
-        public static Packet RecieveMessage(NetworkStream stream, TcpClient client, bool isServer)
+        internal static Packet ListenForPacket(NetworkStream stream, TcpClient client, string source)
         {
-            string ID() => !isServer ? "client" : "server";
 
             // this header will indicate the size of the actual metadata
             byte[] header = new byte[4];
@@ -149,20 +148,16 @@ namespace Lemur.JavaScript.Network
             int reply = metadata.Value<int>("reply");
 
             // base64 string representation of data
-            string dataString = metadata.Value<string>("data") ?? $"{ID()} : Data not found! something has gone wrong with the other's json construction";
+            string dataString = metadata.Value<string>("data") ?? $"{source} : Data not found! something has gone wrong with the other's json construction";
 
             var bytesLength = Encoding.UTF8.GetByteCount(dataString);
-            string message;
-            if (isServer)
-                message = $"{client.GetHashCode()} -> server, ch {reply} -> {channel}, {FormatBytes(bytesLength)}\n";
-            else
-                message = $"server -> {client.GetHashCode()}, ch {reply} -> {channel}, {FormatBytes(bytesLength)}\n";
+
+            string message = $"\n{source}, ch {reply} -> {channel}, {FormatBytes(bytesLength)}";
 
             Computer.Current.Window.Dispatcher.Invoke(() => {
                 foreach (var cmd in Computer.TryGetAllProcessesOfType<CommandPrompt>())
                     cmd.output.AppendText(message);
             });
-            
             return new(metadata, dataString, client, stream);
         }
         public static JObject ParseMetadata(byte[] metaData)
@@ -175,14 +170,14 @@ namespace Lemur.JavaScript.Network
             {
                 Notifications.Now($"Metadata parsing {e.GetType().Name}: {e.Message}");
             }
-            return new JObject();
+            return [];
         }
-        public async Task ConnectClientAsync(TcpListener server, List<TcpClient> connectedClients)
+        internal async Task ConnectClientAsync(TcpListener server, List<TcpClient> connectedClients)
         {
-            TcpClient client = await server.AcceptTcpClientAsync();
+            TcpClient client = await server.AcceptTcpClientAsync().ConfigureAwait(false);
             connectedClients.Add(client);
             Notifications.Now($"SERVER:Client {client.GetHashCode()} connected ");
-            Task.Run(() => HandleClientCommunicationAsync(client, connectedClients));
+            await HandleClientCommunicationAsync(client, connectedClients).ConfigureAwait(false);
         }
         private async Task HandleClientCommunicationAsync(TcpClient client, List<TcpClient> connectedClients)
         {
@@ -191,8 +186,8 @@ namespace Lemur.JavaScript.Network
             {
                 while (true)
                 {
-                    Packet packet = RecieveMessage(stream, client, true);
-                    await TryHandleMessages(packet, connectedClients);
+                    Packet packet = ListenForPacket(stream, client, "server");
+                    await TryHandleMessages(packet, connectedClients).ConfigureAwait(false);
                 }
             }
             catch (Exception ex)
@@ -280,7 +275,7 @@ namespace Lemur.JavaScript.Network
         private static async Task HandleMessageTransmission(Packet packet, List<TcpClient> clients)
         {
             string data = packet.Metadata.Value<string>("data") ?? "";
-            var responseMetadata = JObject.Parse(ToJson(data, TransmissionType.Message, packet.Metadata.Value<int>("reply"), packet.Metadata.Value<int>("ch"), false));
+            var responseMetadata = JObject.Parse(ToJson(data, TransmissionType.Message, packet.Metadata.Value<int>("ch"), packet.Metadata.Value<int>("reply"), false));
             await BroadcastMessage(clients, packet.Client, responseMetadata).ConfigureAwait(false);
         }
         private void HandleIncomingDataTransmission(Packet packet)
