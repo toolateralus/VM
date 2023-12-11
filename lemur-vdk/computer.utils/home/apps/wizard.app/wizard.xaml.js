@@ -17,11 +17,12 @@ class wizard
 
         const xamljsCode = `// this class is mandatory. all calls to 
 class ${appName.replace('.app', '')} {
-    constructor(id, args) {
+    constructor(id) {
         // this field is used for the gfxContext, but is also your process id.
         // this will likely be deprecated soon, but is neccesary for many graphics related things for now.
         this.id = id;
-}}`;
+        }
+}`;
 
         const xamlCode = `<UserControl xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
 xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"

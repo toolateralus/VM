@@ -95,9 +95,17 @@ class GameObject {
         this.drag = 0.95;
     }
     confine_to_screen_space(width) {
-        const min_x = 1, min_y = 1, max_x = width - 1, max_y = width - 1;
+        const min_x = 0;
+        const min_y = 0;
+        const max_x = width - this.scale.x;
+        const max_y = width - this.scale.y;
+        
+        var collided = this.pos.x < min_x || this.pos.x > max_x || this.pos.y < min_y || this.pos.y > max_y;
+        
         this.pos.x = Math.min(Math.max(this.pos.x, min_x), max_x);
         this.pos.y = Math.min(Math.max(this.pos.y, min_y), max_y);
+        
+        return collided;
     }
     distanceToPoint(x1, y1, x2, y2) {
         const dx = x2 - x1;

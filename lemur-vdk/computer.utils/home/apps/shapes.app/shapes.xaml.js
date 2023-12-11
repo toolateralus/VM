@@ -52,8 +52,8 @@ class shapes {
         const countOfEach = 417; 
         for (let z = 0; z < countOfEach; ++z)
             for (let i = 0; i < palette.length; ++i) {
-                const scale = new Point(50, 50);
-                const pos = new Point(this.width * random(), this.width * random());
+                const scale = new Point(Math.floor(z % Math.max(1, i)), Math.floor(i * i));
+                const pos = new Point(0 + i * i, i + z % this.width);
                 let gO = new GameObject([], scale, pos);
                 
                 gO.drag = 1 - (i / 500);
