@@ -73,12 +73,12 @@ class gamer {
         	if (!msg.hasValue || !(msg = msg.value).type) {
         		return;
         	}
-            const bullet = new GameObject([], this.player.scale, packet.pos);
+            const bullet = new GameObject([], this.player.scale, msg.pos);
             
             bullet.isMesh = true;
             bullet.colorIndex = Color.SPRING_GREEN;
             bullet.primitveIndex = Primitive.Rectangle;
-            bullet.velocity = packet.vel;
+            bullet.velocity = msg.vel;
             bullet.isProjectile = true;
             
             this.scene.gOs.push(bullet);
