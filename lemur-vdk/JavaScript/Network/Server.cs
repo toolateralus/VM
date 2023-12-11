@@ -80,10 +80,10 @@ namespace Lemur.JavaScript.Network
         }
     }
 
-    public class Packet(JObject header, byte[] message, TcpClient client, NetworkStream stream)
+    public class Packet(JObject header, string message, TcpClient client, NetworkStream stream)
     {
         public JObject Metadata = header;
-        public byte[] Data = message;
+        public string Data = message;
         public TcpClient Client = client;
         public NetworkStream Stream = stream;
     }
@@ -150,15 +150,11 @@ namespace Lemur.JavaScript.Network
             // base64 string representation of data
             string dataString = metadata.Value<string>("data") ?? $"{ID()} : Data not found! something has gone wrong with the other's json construction";
 
-            // byte representation of data, original.
-            var dataBytes = Convert.FromBase64String(dataString);
-
-            // sizeof data.
-            var bytesLength = dataBytes.Length;
+            var bytesLength = Encoding.UTF8.GetByteCount(dataString);
 
             Notifications.Now($"{ID()} listend {FormatBytes(bytesLength)} from {client.GetHashCode()}: CH {{{senderCh}}} -->> CH{{{listenerCh}}}");
 
-            return new(metadata, dataBytes, client, stream);
+            return new(metadata, dataString, client, stream);
         }
         public static JObject ParseMetadata(byte[] metaData)
         {
@@ -222,14 +218,14 @@ namespace Lemur.JavaScript.Network
                         await HandleDownloadRequest(packet);
                         break;
                     case TransmissionType.Request:
-                        HandleRequest(Encoding.UTF8.GetString(packet.Data), packet);
+                        HandleRequest(packet.Data, packet);
                         break;
                 }
             }
         }
         private async Task HandleDownloadRequest(Packet packet)
         {
-            var file = Encoding.UTF8.GetString(packet.Data);
+            var file = packet.Data;
             if (AvailableForDownload.Contains(file))
             {
                 await SendDataRecusive(file);
@@ -247,9 +243,7 @@ namespace Lemur.JavaScript.Network
 
                 if (File.Exists(path))
                 {
-                    var fileName = Encoding.UTF8.GetBytes(file);
-                    var fileContents = File.ReadAllBytes(path);
-                    var metadata = ToJson(fileContents.Length, fileContents, TransmissionType.Download, DownloadReplyChannel, -1, false, fileName);
+                    var metadata = ToJson(path, TransmissionType.Download, DownloadReplyChannel, -1, false, file);
                     await SendJsonToClient(packet.Client, JObject.Parse(metadata));
                 }
                 else if (Directory.Exists(path))
@@ -271,16 +265,14 @@ namespace Lemur.JavaScript.Network
         private static async Task SendDownloadMessage(Packet packet, string Message)
         {
             // message signaling the end of the download.
-            var message = Encoding.UTF8.GetBytes(Message);
-            var length = message.Length;
-            JObject endPacket = JObject.Parse(ToJson(length, message, TransmissionType.Download, DownloadReplyChannel, -1));
-            await SendJsonToClient(packet.Client, endPacket);
+            JObject endPacket = JObject.Parse(ToJson(Message, TransmissionType.Download, DownloadReplyChannel, -1));
+            await SendJsonToClient(packet.Client, endPacket).ConfigureAwait(false);
         }
         private static async Task HandleMessageTransmission(Packet packet, List<TcpClient> clients)
         {
-            var bytes = Convert.FromBase64String(packet.Metadata.Value<string>("data"));
-            var responseMetadata = JObject.Parse(ToJson(bytes.Length, bytes, TransmissionType.Message, packet.Metadata.Value<int>("reply"), packet.Metadata.Value<int>("ch"), false));
-            await BroadcastMessage(clients, packet.Client, responseMetadata);
+            string data = packet.Metadata.Value<string>("data") ?? "";
+            var responseMetadata = JObject.Parse(ToJson(data, TransmissionType.Message, packet.Metadata.Value<int>("reply"), packet.Metadata.Value<int>("ch"), false));
+            await BroadcastMessage(clients, packet.Client, responseMetadata).ConfigureAwait(false);
         }
         private void HandleIncomingDataTransmission(Packet packet)
         {
@@ -291,7 +283,7 @@ namespace Lemur.JavaScript.Network
                 {
                     if (packet.Metadata.Value<bool>("isDir"))
                     {
-                        Directory.CreateDirectory(UploadDirectory + "\\" + Encoding.UTF8.GetString(packet.Data));
+                        Directory.CreateDirectory(UploadDirectory + "\\" + packet.Data);
                     }
                     else
                     {
@@ -302,7 +294,7 @@ namespace Lemur.JavaScript.Network
 
                         path = UploadDirectory + "\\" + item.Key;
 
-                        File.WriteAllBytes(path, packet.Data);
+                        File.WriteAllBytes(path, Convert.FromBase64String(packet.Data));
                     }
                     toRemove = item.Key;
                 }
@@ -314,31 +306,28 @@ namespace Lemur.JavaScript.Network
         }
         private void HandleIncomingPathTransmission(Packet packet)
         {
-            if (Encoding.UTF8.GetString(packet.Data) is string Path)
+            // write the dir, or we wait for file data.
+            string path = packet.Data;
+            if (packet.Metadata.Value<bool>("isDir"))
             {
-                // write the dir, or we wait for file data.
-                if (packet.Metadata.Value<bool>("isDir"))
-                {
-                    Directory.CreateDirectory(UploadDirectory + "\\" + Path);
-                }
-                else
-                {
-                    IncomingFileTransfersPending[Path] = packet.Client;
-                }
+                Directory.CreateDirectory(UploadDirectory + "\\" + path);
+            }
+            else
+            {
+                IncomingFileTransfersPending[path] = packet.Client;
             }
         }
-        public static string ToJson(int dataSize, byte[] data, TransmissionType type, int ch, int reply, bool isDir = false, byte[] path = null)
+        public static string ToJson(string data, TransmissionType type, int ch, int reply, bool isDir = false, string? path = null)
         {
             var json = new
             {
-                size = dataSize,
-                data = Convert.ToBase64String(data),
+                size = Encoding.UTF8.GetByteCount(data),
+                data,
                 type = type.ToString(),
                 ch,
                 reply,
                 isDir,
                 path,
-
             };
 
             return JsonConvert.SerializeObject(json);
@@ -351,10 +340,8 @@ namespace Lemur.JavaScript.Network
                 case "GET_DOWNLOADS":
 
                     var names = string.Join(",\n", AvailableForDownload);
-                    var bytes = Encoding.UTF8.GetBytes(names);
-
-                    JObject metadata = JObject.Parse(ToJson(bytes.Length, bytes, TransmissionType.Request, RequestReplyChannel, -1, false));
-                    await SendJsonToClient(packet.Client, metadata);
+                    JObject metadata = JObject.Parse(ToJson(names, TransmissionType.Request, RequestReplyChannel, -1, false));
+                    await SendJsonToClient(packet.Client, metadata).ConfigureAwait(false);
 
                     Notifications.Now($"SERVER:Responding with {names}");
                     break;

@@ -13,7 +13,7 @@ using System.Threading.Tasks;
 
 namespace Lemur.JavaScript.Embedded
 {
-    public delegate void TransmissionStream(byte[] data, TransmissionType type, int outCh, int replyCh, bool isDir);
+    public delegate void TransmissionStream(string data, TransmissionType type, int outCh, int replyCh, bool isDir);
     public class network
     {
         public event TransmissionStream OnTransmit;
@@ -117,27 +117,25 @@ namespace Lemur.JavaScript.Embedded
             if (isDir)
             {
                 string root_dir = AbsPath.Split('\\').Last();
-                byte[] bytePath = Encoding.UTF8.GetBytes(root_dir);
 
-                OnTransmit?.Invoke(bytePath, TransmissionType.Path, -1, -1, true);
+                OnTransmit?.Invoke(root_dir, TransmissionType.Path, -1, -1, true);
 
                 foreach (var item in Directory.GetFileSystemEntries(AbsPath))
                 {
                     string strPath = item.Replace(AbsPath, root_dir);
-                    bytePath = Encoding.UTF8.GetBytes(strPath);
                     try
                     {
-                        byte[] fileBytes = await File.ReadAllBytesAsync(item);
+                        byte[] fileBytes = await File.ReadAllBytesAsync(item).ConfigureAwait(false);
 
                         if (Directory.Exists(item))
                         {
-                            OnTransmit?.Invoke(bytePath, TransmissionType.Path, -1, -1, true);
+                            OnTransmit?.Invoke(strPath, TransmissionType.Path, -1, -1, true);
                             Notifications.Now($"Uploading directory item: from {strPath}::{item}");
                         }
                         else if (File.Exists(item))
                         {
-                            OnTransmit?.Invoke(bytePath, TransmissionType.Path, -1, -1, false);
-                            OnTransmit?.Invoke(fileBytes, TransmissionType.Data, -1, -1, false);
+                            OnTransmit?.Invoke(strPath, TransmissionType.Path, -1, -1, false);
+                            OnTransmit?.Invoke(Convert.ToBase64String(fileBytes), TransmissionType.Data, -1, -1, false);
                             Notifications.Now("Uploading path: " + item);
                         }
                     }
@@ -149,21 +147,19 @@ namespace Lemur.JavaScript.Embedded
             }
             else if (File.Exists(AbsPath))
             {
-                byte[] pathBytes = Encoding.UTF8.GetBytes(path);
-                byte[] fileBytes = await File.ReadAllBytesAsync(AbsPath);
+                byte[] fileBytes = await File.ReadAllBytesAsync(AbsPath).ConfigureAwait(false);
 
-                OnTransmit?.Invoke(pathBytes, TransmissionType.Path, -1, -1, false);
-                OnTransmit?.Invoke(fileBytes, TransmissionType.Data, -1, -1, false);
+                OnTransmit?.Invoke(path, TransmissionType.Path, -1, -1, false);
+                OnTransmit?.Invoke(Convert.ToBase64String(fileBytes), TransmissionType.Data, -1, -1, false);
 
                 Notifications.Now("Uploading path: " + path);
             }
         }
         public async void check_for_downloadable_content()
         {
-            OnTransmit?.Invoke(Encoding.UTF8.GetBytes("GET_DOWNLOADS"), TransmissionType.Request, -1, Server.RequestReplyChannel, false);
-            var response = await NetworkConfiguration.PullEventAsync(Server.RequestReplyChannel);
-            if (response.value is string rVal &&
-                JObject.Parse(rVal).Value<string>("data") is string data)
+            OnTransmit?.Invoke("GET_DOWNLOADS", TransmissionType.Request, -1, Server.RequestReplyChannel, false);
+            var (value, reply) = await NetworkConfiguration.PullEventAsync(Server.RequestReplyChannel).ConfigureAwait(false);
+            if (value is string rVal && JObject.Parse(rVal).Value<string>("data") is string data)
             {
                 Notifications.Now(data);
             }
@@ -194,12 +190,11 @@ namespace Lemur.JavaScript.Embedded
                 Directory.CreateDirectory(root);
             }
 
-            OnTransmit?.Invoke(Encoding.UTF8.GetBytes(path), TransmissionType.Download, 0, Server.DownloadReplyChannel, false);
+            OnTransmit?.Invoke(path, TransmissionType.Download, 0, Server.DownloadReplyChannel, false);
 
             while (Computer.Current.NetworkConfiguration.IsConnected())
             {
                 (object? value, int reply) = await NetworkConfiguration.PullEventAsync(Server.DownloadReplyChannel);
-                string pathString = null;
 
                 if (value is not JObject metadata)
                 {
@@ -225,15 +220,11 @@ namespace Lemur.JavaScript.Embedded
                     return;
                 }
 
-                if (Convert.FromBase64String(metadata.Value<string>("path")) is not byte[] pathBytes)
+                if (metadata.Value<string>("path") is not string pathString)
                 {
                     Notifications.Now($"Invalid path for {path}");
                     return;
                 }
-
-                pathString = Encoding.UTF8.GetString(pathBytes);
-
-
                 var fullPath = Path.Combine(root, pathString);
 
                 var directoryPath = Path.GetDirectoryName(fullPath);
@@ -262,13 +253,9 @@ namespace Lemur.JavaScript.Embedded
                 parameters[1] is int replyChannel &&
                 parameters[2] is string message)
             {
-                byte[] outgoingData = Encoding.UTF8.GetBytes(message);
-                if (outgoingData != null)
-                {
-                    OnTransmit?.Invoke(outgoingData, TransmissionType.Message, replyChannel, channel, false);
-                    var json = Server.ToJson(outgoingData.Length, outgoingData, TransmissionType.Message, replyChannel, channel, false);
-                    NetworkConfiguration.Broadcast(channel, replyChannel, json);
-                }
+                OnTransmit?.Invoke(message, TransmissionType.Message, replyChannel, channel, false);
+                var json = Server.ToJson(message, TransmissionType.Message, replyChannel, channel, false);
+                NetworkConfiguration.Broadcast(channel, replyChannel, json);
             }
         }
         public object? listen(params object?[]? parameters)
