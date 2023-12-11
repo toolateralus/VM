@@ -102,18 +102,18 @@ namespace Lemur.GUI
         {
             var ctrl = Keyboard.IsKeyDown(Key.LeftCtrl);
 
-            if (ctrl && Keyboard.IsKeyDown(Key.S))
+            if (ctrl && e.Key == Key.S)
                 Save();
-            else if (ctrl && Keyboard.IsKeyDown(Key.OemPlus))
+            else if (ctrl && e.Key == Key.OemPlus)
                 textEditor.FontSize += 1;
-            else if (ctrl && Keyboard.IsKeyDown(Key.OemMinus) && textEditor.FontSize > 0)
+            else if (ctrl && e.Key == Key.OemMinus && textEditor.FontSize > 0)
                 textEditor.FontSize -= 1;
-            else if (ctrl && Keyboard.IsKeyDown(Key.LeftShift) && Keyboard.IsKeyDown(Key.Tab))
+            else if (ctrl && e.Key == Key.LeftShift && Keyboard.IsKeyDown(Key.Tab))
             {
                 // we should have 'tabs' in future, allowing for several open documents at once.
                 // this should be relatively easy.
             }
-            else if (Keyboard.IsKeyDown(Key.F5))
+            else if (e.Key == Key.F5)
             {
                 RunButton_Click(null!, null!);
             }
