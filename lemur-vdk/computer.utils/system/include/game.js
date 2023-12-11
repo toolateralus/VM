@@ -92,7 +92,7 @@ class GameObject {
         this._cachedColorRatio = undefined;
         this.rotation = 0;
         this.angular = 0;
-        this.drag = 0.95;
+        this.drag = 0.98;
     }
     confine_to_screen_space(width) {
         const min_x = 0;
@@ -170,15 +170,16 @@ class GameObject {
         }
         return edges;
     }
-    update_physics() {
+    update_physics(deltaTime) {
 
-		this.rotation += this.angular;
-		
-        this.pos.x += this.velocity.x;
-        this.pos.y += this.velocity.y;
+        if (typeof deltaTime !== 'number' || deltaTime === NaN)
+            return;
 
+		this.rotation  += this.angular    * deltaTime;
+        this.pos.x     += this.velocity.x * deltaTime;
+        this.pos.y     += this.velocity.y * deltaTime;
 		
-		this.angular *= this.drag;
+		this.angular    *= this.drag;
         this.velocity.x *= this.drag;
         this.velocity.y *= this.drag;
     }

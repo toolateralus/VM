@@ -10,16 +10,15 @@ class gamer {
     constructor(id) {
 
         this.id = id;
-        
 
-        this.width = 2048;
+        this.width = 512;
         this.playing = true;
         
         this.playerSpeed = 50;
 
         const gameObjects = [];
 
-        const go = new GameObject([], new Point(100, 100), new Point(Math.floor(this.width / 2), this.width - 100));
+        const go = new GameObject([], new Point(50, 50), new Point(Math.floor(this.width / 2), this.width - 100));
         go.isMesh = true;
         go.colorIndex = Color.YELLOW;
         go.primitveIndex = Primitive.Rectangle;
@@ -33,17 +32,11 @@ class gamer {
 
         this.gfx_ctx = gfx.createCtx(this.id, 'renderTarget', this.width, this.width);
         app.eventHandler('this', 'm_render', XAML_EVENTS.RENDER);
-		app.eventHandler('connectBtn', 'onConnectPressed', XAML_EVENTS.RENDER);
-		
-        gfx.loadSkybox(this.gfx_ctx, 'icon.bmp');
+		app.eventHandler('connectBtn', 'onConnectPressed', XAML_EVENTS.MOUSE_DOWN);
 
-        const Packet = {
-            type: 'gameState',
-            input_fire: false,
-            input_strafe: 0,
-        };
-
-       
+        this.startTime = 0;
+        
+        this.shotVelocity = -500;
     }
     onCollision(gO) {
 
@@ -66,7 +59,7 @@ class gamer {
         network.send(this.opponent, this.channel, JSON.stringify(packet));
     }
 	onConnectPressed () {
-	
+        network.connect('192.168.0.141');
 	}
     
     onMessage(channel, reply, message) {
@@ -74,16 +67,20 @@ class gamer {
     	
         if (channel === this.channel) {
         	var msg = JSON.tryParse(packet.data);
+        	
+        	describe(msg);
+        	
         	if (!msg.hasValue || !(msg = msg.value).type) {
         		return;
         	}
             const bullet = new GameObject([], this.player.scale, packet.pos);
+            
             bullet.isMesh = true;
             bullet.colorIndex = Color.SPRING_GREEN;
             bullet.primitveIndex = Primitive.Rectangle;
             bullet.velocity = packet.vel;
-            bullet.drag = 0.999;
             bullet.isProjectile = true;
+            
             this.scene.gOs.push(bullet);
         }
     }
@@ -91,14 +88,14 @@ class gamer {
         if (this.playing !== true)
             return;
 
-        this.update();
+        const time = Date.now();
+        const deltaTime = (time - this.startTime) / 1000;
 
-        //gfx.drawSkybox(this.gfx_ctx);
+        this.update(deltaTime);
+
+		this.startTime = time;
         gfx.clearColor(this.gfx_ctx, Color.BLACK);
 
-        this.frameCt++;
-
-        const destroyed = [];
         const gameObjects = this.scene.gOs;
 
         for (let i = 0; i < gameObjects.length; ++i) {
@@ -118,29 +115,34 @@ class gamer {
 
             const rot = gO.rotation;
 
-            gO.velocity.y += 0.0981;
-            gO.update_physics();
-            
-            if (gO.confine_to_screen_space(this.width))
-                destroyed.push(gO);
-
             gfx.drawFilledShape(this.gfx_ctx, Math.floor(x), Math.floor(y), width, height, rot, color, prim);
         };
 
-        destroyed.forEach(gO => {
-            this.onCollision(gO);
-        });
-    
         gfx.flushCtx(this.gfx_ctx);
-
+        
+     
     }
-    update() {
+    update(deltaTime) {
         this.player.pos.y = this.width - 100;
         this.player.velocity.y = 0;
 
 		if (Key.isDown('Escape')) {
 			Key.clearFocus();
 		}
+
+        const destroyed = [];
+
+        this.scene.gOs.forEach (gO => {
+            gO.velocity.y += 0.0981 * deltaTime;
+            gO.update_physics(deltaTime);
+            if (gO.confine_to_screen_space(this.width))
+                destroyed.push(gO);
+        });
+
+        destroyed.forEach(gO => {
+            this.onCollision(gO);
+        });
+    
 
         let w = Key.isDown('W');
         let a = Key.isDown('A');
@@ -155,15 +157,25 @@ class gamer {
 
             this.player.velocity.x = strafe * this.playerSpeed;
         }
+
+        const deltaTimeMillis = clamp(0, 16, Math.floor(deltaTime));
+
+        sleep(16 - deltaTimeMillis);
     }
     shoot() {
+    
+    	if (this.scene.gOs.length > 2) {
+    		return;
+    	}
+    
         const bullet = new GameObject([], this.player.scale, new Point(this.player.pos.x - this.player.scale.x, this.player.pos.y - this.player.scale.x));
         bullet.isMesh = true;
         bullet.colorIndex = Color.RED;
         bullet.primitveIndex = Primitive.Rectangle;
-        bullet.velocity.y = -100;
-        bullet.drag = 0.999;
+        bullet.velocity.y = this.shotVelocity;
         bullet.isProjectile = true;
+        bullet.drag = 0.999;
+        
         this.scene.gOs.push(bullet);
     }
 }

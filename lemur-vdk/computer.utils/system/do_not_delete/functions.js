@@ -70,6 +70,12 @@ function describe(obj) {
 
     for (const property in obj) {
         string += property + ": " + obj[property] + "\n";
+        
+        if (typeof property === 'object') {
+        	print(`member ${property}`);
+        	describe(obj);
+    	}
+        
     }
 
     print(string);
