@@ -33,7 +33,8 @@ class gamer {
 
         this.gfx_ctx = gfx.createCtx(this.id, 'renderTarget', this.width, this.width);
         app.eventHandler('this', 'm_render', XAML_EVENTS.RENDER);
-
+		app.eventHandler('connectBtn', 'onConnectPressed', XAML_EVENTS.RENDER);
+		
         gfx.loadSkybox(this.gfx_ctx, 'icon.bmp');
 
         const Packet = {
@@ -64,6 +65,10 @@ class gamer {
 
         network.send(this.opponent, this.channel, JSON.stringify(packet));
     }
+	onConnectPressed () {
+	
+	}
+    
     onMessage(channel, reply, message) {
         const packet = parseNetPacket(message);
 

@@ -37,7 +37,12 @@
   "print(network.IsConnected)",
   "describe(network);",
   "describe(network);",
+  "edit junkass.js",
+  "edit junkass.js",
+  "edit junkass.js",
   "edit server.js",
   "edit server.js",
-  "TypeError: Cannot read properties of undefined (reading 'projectiles')\r\nJsRuntimeException"
+  "TypeError: Cannot read properties of undefined (reading 'projectiles')\r\nJsRuntimeException",
+  "host",
+  "connect"
 ]
