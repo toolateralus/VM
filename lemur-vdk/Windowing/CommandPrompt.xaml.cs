@@ -146,7 +146,8 @@ namespace Lemur.GUI
 
         private async Task Send(KeyEventArgs? e)
         {
-            OnSend?.Invoke(input.Text);
+            string inputText = input.Text;
+            OnSend?.Invoke(inputText);
 
             if (commandHistory.Count > 100)
                 commandHistory.RemoveAt(0);
@@ -154,19 +155,22 @@ namespace Lemur.GUI
             if (e != null && e.RoutedEvent != null)
                 e.Handled = true;
 
-            var text = output.Text;
+            var outputText = output.Text;
 
-            if (string.IsNullOrEmpty(input.Text))
+            if (string.IsNullOrEmpty(inputText))
             {
                 Notifications.Now("Invalid input");
                 return;
             }
 
-            commandHistory.Add(input.Text);
+            if (commandHistory.Contains(inputText))
+                commandHistory.RemoveAll(i => i == inputText);
 
-            await ExecuteJavaScript(code: input.Text, timeout: 50_000);
+            commandHistory.Add(inputText);
 
-            if (output.Text == text)
+            await ExecuteJavaScript(code: inputText, timeout: 50_000);
+
+            if (output.Text == outputText)
                 output.AppendText("\n done.");
 
             input.Clear();
