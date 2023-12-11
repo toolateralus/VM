@@ -34,6 +34,20 @@ function create_square() {
 }
 // -------------------------
 
+JSON.tryParse = (msg) => {
+	try {
+		return  {
+			hasValue:true,
+			value:JSON.parse(msg),
+		}
+	}
+	catch {
+		return {
+			hasValue:false,
+			value:null,
+		}
+	}
+};
 
 
 // general -------------------------

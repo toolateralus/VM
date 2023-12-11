@@ -70,8 +70,8 @@ class gamer {
 	}
     
     onMessage(channel, reply, message) {
-        const packet = JSON.parse(JSON.parse(message).data);
-    	const packet = JSON.parse(json);
+    	const packet = JSON.parse(message);
+    	
         if (channel === this.channel) {
         	var msg = JSON.tryParse(packet.data);
         	if (!msg.hasValue || !(msg = msg.value).type) {
