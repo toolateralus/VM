@@ -17,12 +17,6 @@ function read() {
     return term.read();
 }
 
-function parseNetPacket(message) {
-    let msg = JSON.parse(message).data;
-    let packet = JSON.parse(conv.utf8FromBase64(msg));
-    return packet;
-}
-
 function clamp(min, max, value) {
     return Math.min(max, Math.max(min, value))
 }

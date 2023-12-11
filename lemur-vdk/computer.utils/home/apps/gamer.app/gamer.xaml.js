@@ -70,7 +70,7 @@ class gamer {
 	}
     
     onMessage(channel, reply, message) {
-        const packet = parseNetPacket(message);
+        const packet = JSON.parse(message).data;
 
         print('Received packet: ', JSON.stringify(packet));
 
