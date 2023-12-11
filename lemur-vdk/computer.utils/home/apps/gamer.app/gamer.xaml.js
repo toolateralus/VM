@@ -71,18 +71,20 @@ class gamer {
     
     onMessage(channel, reply, message) {
         const packet = JSON.parse(JSON.parse(message).data);
+    	const packet = JSON.parse(json);
         if (channel === this.channel) {
-            if (packet.type === 'bullet') {
-
-                const bullet = new GameObject([], this.player.scale, packet.pos);
-                bullet.isMesh = true;
-                bullet.colorIndex = Color.SPRING_GREEN;
-                bullet.primitveIndex = Primitive.Rectangle;
-                bullet.velocity = packet.vel;
-                bullet.drag = 0.999;
-                bullet.isProjectile = true;
-                this.scene.gOs.push(bullet);
-            }    
+        	var msg = JSON.tryParse(packet.data);
+        	if (!msg.hasValue || !(msg = msg.value).type) {
+        		return;
+        	}
+            const bullet = new GameObject([], this.player.scale, packet.pos);
+            bullet.isMesh = true;
+            bullet.colorIndex = Color.SPRING_GREEN;
+            bullet.primitveIndex = Primitive.Rectangle;
+            bullet.velocity = packet.vel;
+            bullet.drag = 0.999;
+            bullet.isProjectile = true;
+            this.scene.gOs.push(bullet);
         }
     }
     m_render() {
