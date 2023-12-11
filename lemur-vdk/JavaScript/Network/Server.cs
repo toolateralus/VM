@@ -142,19 +142,22 @@ namespace Lemur.JavaScript.Network
             // we can decide on a fixed buffer length for an incoming file transfer and fragment it accordingly on client side.
             int messageLength = metadata.Value<int>("size");
 
-            // sender channel
-            int senderCh = metadata.Value<int>("ch");
+            // channel
+            int channel = metadata.Value<int>("ch");
 
             // reply channel
-            int listenerCh = metadata.Value<int>("reply");
+            int reply = metadata.Value<int>("reply");
 
             // base64 string representation of data
             string dataString = metadata.Value<string>("data") ?? $"{ID()} : Data not found! something has gone wrong with the other's json construction";
 
             var bytesLength = Encoding.UTF8.GetByteCount(dataString);
+            string message;
+            if (isServer)
+                message = $"{client.GetHashCode()} -> server, ch {reply} -> {channel}, {FormatBytes(bytesLength)}\n";
+            else
+                message = $"server -> {client.GetHashCode()}, ch {reply} -> {channel}, {FormatBytes(bytesLength)}\n";
 
-            string message = $"{ID()} received {FormatBytes(bytesLength)} from {client.GetHashCode()}: CH {{{senderCh}}} -->> CH{{{listenerCh}}}\n";
-            
             Computer.Current.Window.Dispatcher.Invoke(() => {
                 foreach (var cmd in Computer.TryGetAllProcessesOfType<CommandPrompt>())
                     cmd.output.AppendText(message);
@@ -168,9 +171,9 @@ namespace Lemur.JavaScript.Network
             {
                 return JObject.Parse(Encoding.UTF8.GetString(metaData));
             }
-            catch
+            catch (Exception e)
             {
-
+                Notifications.Now($"Metadata parsing {e.GetType().Name}: {e.Message}");
             }
             return new JObject();
         }
