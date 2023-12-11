@@ -70,10 +70,7 @@ class gamer {
 	}
     
     onMessage(channel, reply, message) {
-        const packet = JSON.parse(message).data;
-
-        print('Received packet: ', JSON.stringify(packet));
-
+        const packet = JSON.parse(JSON.parse(message).data);
         if (channel === this.channel) {
             if (packet.type === 'bullet') {
 
@@ -86,10 +83,6 @@ class gamer {
                 bullet.isProjectile = true;
                 this.scene.gOs.push(bullet);
             }    
-        }
-        // client tasks
-        if (channel === this.opponent) {
-
         }
     }
     m_render() {
