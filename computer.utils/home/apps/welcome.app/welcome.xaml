@@ -1,0 +1,42 @@
+<UserControl xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:local="clr-namespace:Lemur.GUI"
+             mc:Ignorable="d" 
+             d:DesignHeight="450" d:DesignWidth="800" Background="#AA3000a0" BorderBrush="White" BorderThickness="5" >
+    <Grid>
+    
+    	 <Grid.ColumnDefinitions>
+		     <ColumnDefinition Width="*"/>
+		     <ColumnDefinition Width="*"/>
+		 </Grid.ColumnDefinitions>
+		 
+       <StackPanel Grid.Column="0" Orientation="Vertical">
+       		<Label Style="{StaticResource LabelStyle}" Content="Tutorials &amp; Documentation"/>
+        	<Button Style="{StaticResource ButtonStyle}" x:Name="tut01" Content="Making an App"/>
+        	<Button Style="{StaticResource ButtonStyle}" x:Name="tut02" Content="Drawing Graphics"/>
+    	</StackPanel>
+    
+        <RichTextBox x:Name="textBox" FontFamily="Cascadia Code Light" FontSize="24" Grid.Column="1" Background="#FF3A3838" Foreground="#FFC5C5C5" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Auto">
+            <FlowDocument>
+                <Paragraph>
+                    <Bold>Welcome to Lemur VDK</Bold>
+                </Paragraph>
+                <Paragraph>
+                    To resize a window, click and drag on its edges and corners.
+                </Paragraph>
+                <Paragraph>
+                    To move a window, click and drag on the top part, also known as the
+                    <Italic>title bar</Italic> .
+                </Paragraph>
+                <Paragraph><Bold>Note :</Bold></Paragraph>
+                <Paragraph>
+                    temporarily, the documentation links are rough. on clicking one, both a text editor &amp; markdown viewer open. just close the text editor, you'll be left with the markdown.
+                </Paragraph>
+            </FlowDocument>
+        </RichTextBox>
+        
+     
+    </Grid>
+</UserControl>
