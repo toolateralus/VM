@@ -32,11 +32,15 @@ namespace Lemur.GUI
         public CommandPrompt()
         {
             InitializeComponent();
+
             PreviewKeyDown += CommandPrompt_PreviewKeyDown;
+
             DrawTextBox("type 'help' for commands, \nor enter any valid single-line java script to interact with the environment. \n");
             input.Focus();
 
             output.TextChanged += Output_TextChanged;
+
+
 
             if (FileSystem.GetResourcePath("history.txt") is string path && path != "")
             {
@@ -118,11 +122,11 @@ namespace Lemur.GUI
 
         private async void CommandPrompt_PreviewKeyDown(object sender, System.Windows.Input.KeyEventArgs e)
         {
-            if (Keyboard.IsKeyDown(Key.LeftCtrl) && Keyboard.IsKeyDown(Key.C))
+            if (Keyboard.IsKeyDown(Key.LeftCtrl) && Keyboard.IsKeyDown(Key.LeftShift) && e.Key == Key.C)
             {
                 (Window.Content as UserWindow)?.Close();
             }
-            if (Keyboard.IsKeyDown(Key.LeftCtrl) && Keyboard.IsKeyDown(Key.T))
+            if (Keyboard.IsKeyDown(Key.LeftCtrl) && e.Key == Key.T)
             {
                 var text = input.Text;
                 var path = FileSystem.Root + "/home/ide/temp.js";
