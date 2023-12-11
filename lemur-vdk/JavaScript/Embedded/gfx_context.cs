@@ -1,4 +1,5 @@
 ﻿using Lemur.FS;
+using Lemur.GUI;
 using Lemur.Windowing;
 using System;
 using System.Collections.Generic;
@@ -23,7 +24,15 @@ namespace Lemur.JS.Embedded
                 var content = Computer.GetProcess(pid).UI;
                 var app = content.JavaScriptEngine.AppModule;
                 var control = app.GetUserContent();
-                image = Embedded.app.FindControl(control, TargetControl) as Image ?? throw new InvalidCastException(nameof(control));
+
+                image = Embedded.app.FindControl(control, TargetControl) as Image;
+
+                if (image == null) {
+                    Notifications.Now($"{TargetControl} {image} target control not found when creating graphics context.");
+                    return;
+                }
+
+
             });
             this.image = new(image);
             this.PixelFormatBpp = PixelFormatBpp;

@@ -8,6 +8,7 @@ namespace Lemur.JavaScript.Api
     internal class NetworkEvent : InteropFunction
     {
         public const string ARGS_STRING = "(channel, replyChannel, data)";
+
         public NetworkEvent(Engine javaScriptEngine, string identifier, string methodName)
         {
             base.javaScriptEngine = javaScriptEngine;
@@ -22,12 +23,6 @@ namespace Lemur.JavaScript.Api
             Task.Run(() => javaScriptEngine?.Execute(func));
             return id;
         }
-        /// <summary>
-        /// This is intentionally hidden
-        /// </summary>
-        /// <param name="arg1"></param>
-        /// <param name="arg2"></param>
-        private new void InvokeEvent(object? arg1 = null, object? arg2 = null) { }
         public void InvokeEvent(object? channel = null, object? replyChannel = null, object? data = null)
         {
             try

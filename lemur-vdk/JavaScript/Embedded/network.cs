@@ -1,4 +1,5 @@
 ﻿using Lemur.FS;
+using Lemur.JavaScript.Api;
 using Lemur.JavaScript.Network;
 using Lemur.Windowing;
 using Newtonsoft.Json.Linq;
@@ -6,6 +7,7 @@ using System;
 using System.IO;
 using System.Linq;
 using System.Net;
+using System.Runtime.CompilerServices;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -17,10 +19,41 @@ namespace Lemur.JavaScript.Embedded
         public event TransmissionStream OnTransmit;
         private int size;
 
+        internal string processID;
+
         public network()
         {
             OnTransmit = Computer.Current.NetworkConfiguration.OnSendMessage;
         }
+
+        public void addListener(string methodName)
+        {
+            if (Computer.GetProcess(processID) is Process p)
+            {
+                if (p.UI.JavaScriptEngine.Disposing)
+                {
+                    Notifications.Now("JavaScript engine was disposing");
+                    return;
+                }
+
+                p.UI.JavaScriptEngine.CreateNetworkEventHandler(p.UI.JavaScriptEngine, processID, methodName);
+            }
+        }
+
+        public void removeListener(string methodName)
+        {
+            if (Computer.GetProcess(processID) is Process p)
+            {
+                if (p.UI.JavaScriptEngine.Disposing)
+                {
+                    Notifications.Now("JavaScript engine was disposing");
+                    return;
+                }
+
+                p.UI.JavaScriptEngine.  RemoveNetworkEventHandler(p.UI.JavaScriptEngine, processID, methodName);
+            }
+        }
+
 
         public string? ip()
         {
@@ -128,7 +161,7 @@ namespace Lemur.JavaScript.Embedded
         public async void check_for_downloadable_content()
         {
             OnTransmit?.Invoke(Encoding.UTF8.GetBytes("GET_DOWNLOADS"), TransmissionType.Request, -1, Server.RequestReplyChannel, false);
-            var response = await NetworkConfiguration.PullEventAsync(Server.RequestReplyChannel, Computer.Current);
+            var response = await NetworkConfiguration.PullEventAsync(Server.RequestReplyChannel);
             if (response.value is string rVal &&
                 JObject.Parse(rVal).Value<string>("data") is string data)
             {
@@ -165,7 +198,7 @@ namespace Lemur.JavaScript.Embedded
 
             while (Computer.Current.NetworkConfiguration.IsConnected())
             {
-                (object? value, int reply) = await NetworkConfiguration.PullEventAsync(Server.DownloadReplyChannel, Computer.Current);
+                (object? value, int reply) = await NetworkConfiguration.PullEventAsync(Server.DownloadReplyChannel);
                 string pathString = null;
 
                 if (value is not JObject metadata)
@@ -238,33 +271,31 @@ namespace Lemur.JavaScript.Embedded
                 }
             }
         }
-        public object? receive(params object?[]? parameters)
+        public object? listen(params object?[]? parameters)
         {
             (object? value, int reply) @event = default;
 
-            Task get_task = new(async delegate
+            if (parameters is null || parameters.Length == 0)
             {
-                if (parameters is null || parameters.Length == 0)
-                {
-                    Notifications.Now("Insufficient parameters for a network connection");
-                    return;
-                }
-                if (parameters[0] is string p1 && int.TryParse(p1, out int ch))
-                {
-                    @event = await NetworkConfiguration.PullEventAsync(ch, Computer.Current);
-                }
-                else if (parameters[0] is int chInt)
-                {
-                    @event = await NetworkConfiguration.PullEventAsync(chInt, Computer.Current);
-                }
-                else
-                {
-                    Notifications.Now($"Invalid parameter for receive {parameters[0]}");
-                    return;
-                }
-            });
+                Notifications.Now("Insufficient parameters for a network connection");
+                return null;
+            }
+            if (parameters[0] is string channelString && int.TryParse(channelString, out int ch))
+            {
+                @event = NetworkConfiguration.PullEvent(ch);
+            }
+            else if (parameters[0] is int chInt)
+            {
+                @event = NetworkConfiguration.PullEvent(chInt);
+            }
+            else
+            {
+                Notifications.Now($"Invalid parameter for listen {parameters[0]}");
+                return null;
+            }
 
             return @event.value;
         }
+
     }
 }

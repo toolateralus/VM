@@ -456,7 +456,8 @@ namespace Lemur
 
             Engine engine = new();
 
-            engine.AppModule.__Attach__Process__ID(processID);
+            engine.NetworkModule.processID = processID;
+            engine.AppModule.processID = processID;
 
             var code = await InstantiateWindowClass(type, processID, cmdLineArgs, data, engine).ConfigureAwait(true);
 

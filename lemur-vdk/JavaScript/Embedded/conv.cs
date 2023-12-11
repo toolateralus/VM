@@ -4,12 +4,17 @@ using Microsoft.ClearScript.JavaScript;
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Text;
 
 namespace Lemur.JS.Embedded
 {
     public class conv
     {
-        public object toBytes(string background) => Convert.FromBase64String(background);
+        public string utf8FromBase64(string base64)
+        {
+            return Encoding.UTF8.GetString((byte[])toBytes(base64));
+        }
+        public object toBytes(string base64) => Convert.FromBase64String(base64);
         public string toBase64(object ints)
         {
             List<byte> bytes = new List<byte>();

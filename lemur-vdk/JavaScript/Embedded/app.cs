@@ -39,9 +39,10 @@ namespace Lemur.JS.Embedded
             }},
 
         };
-        private string id;
+
         internal Thread bgThread;
         private ConcurrentQueue<Action> deferredJobs = [];
+        internal string processID;
 
         private bool Disposing { get;  set; }
 
@@ -94,11 +95,11 @@ namespace Lemur.JS.Embedded
         {
             WakeUpBackgroundThread();
 
-            deferredJobs.Enqueue(async () =>
+            deferredJobs.Enqueue((Action)(async () =>
             {
                 await Task.Delay(delay);
 
-                var proc = Computer.GetProcess(id);
+                var proc = Computer.GetProcess((string)this.processID);
 
                 var engine = proc?.UI?.JavaScriptEngine;
 
@@ -110,20 +111,20 @@ namespace Lemur.JS.Embedded
                     await engine.Execute($"{identifier} = {code}");
                 else
                     _ = await engine.Execute(code);
-            });
+            }));
         }
 
         public void defer(string methodName, int delayMs, params object[]? args)
         {
             WakeUpBackgroundThread();
 
-            deferredJobs.Enqueue(async () =>
+            deferredJobs.Enqueue((Action)(async () =>
             {
                 
 
                 await Task.Delay(delayMs).ConfigureAwait(true);
 
-                if (GetProcess(id) is not Process p)
+                if (GetProcess((string)this.processID) is not Process p)
                 {
                     Notifications.Now($"Failed to defer {methodName} because the process was not found.");
                     return;
@@ -133,7 +134,7 @@ namespace Lemur.JS.Embedded
 
                 
 
-                var callHandle = $"{id}.{methodName}";
+                var callHandle = $"{this.processID}.{methodName}";
 
                 if (engine is null || engine.Disposing)
                     return;
@@ -157,11 +158,11 @@ namespace Lemur.JS.Embedded
                         engine.m_engine_internal.Evaluate($"{callHandle}()");
                     }
                 }
-                catch( Exception e)
+                catch(Exception e)
                 {
                     Notifications.Exception(e);
                 }
-            });
+            }));
         }
 
         private void WakeUpBackgroundThread()
@@ -245,7 +246,7 @@ namespace Lemur.JS.Embedded
         }
         public UserControl? GetUserContent()
         {
-            var window = Computer.GetProcess(id)?.UI;
+            var window = Computer.GetProcess(processID)?.UI;
 
             if (window != null)
             {
@@ -481,8 +482,8 @@ namespace Lemur.JS.Embedded
         }
         public void eventHandler(string targetControl, string methodName, int type)
         {
-            if (Computer.GetProcess(id) is Process p)
-                Task.Run(async () => await p.UI.JavaScriptEngine?.CreateEventHandler(id, targetControl, methodName, type));
+            if (GetProcess(processID) is Process p)
+                Task.Run(async () => await p.UI.JavaScriptEngine?.CreateEventHandler(processID, targetControl, methodName, type));
         }
         public void close(string pid)
         {
@@ -574,7 +575,7 @@ namespace Lemur.JS.Embedded
 
         internal void __Attach__Process__ID(string id)
         {
-            this.id = id;
+            this.processID = id;
         }
     }
 }

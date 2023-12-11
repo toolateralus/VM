@@ -22,6 +22,13 @@ namespace Lemur.JS
 {
     public class key
     {
+        public void clearFocus() {
+            Computer.Current.Window?.Dispatcher?.Invoke(() =>
+            {
+                Keyboard.ClearFocus();
+            });
+
+        }
         public bool isDown(string key)
         {
             bool result = false;
@@ -316,7 +323,7 @@ namespace Lemur.JS
                 if (EventHandlers.Contains(eh))
                     EventHandlers.Remove(eh);
 
-                eh.ForceDispose();
+                eh?.ForceDispose();
                 disposed = true;
             };
 
@@ -330,6 +337,27 @@ namespace Lemur.JS
             executionThread.Join();
             AppModule.ReleaseThread();
             GC.Collect();
+        }
+
+        internal void CreateNetworkEventHandler(Engine javaScriptEngine, string processID, string methodName)
+        {
+            ArgumentNullException.ThrowIfNull(javaScriptEngine);
+            ArgumentNullException.ThrowIfNull(processID);
+            ArgumentNullException.ThrowIfNull(methodName);
+
+            var nwEvent = new NetworkEvent(javaScriptEngine, processID, methodName);
+            EventHandlers.Add(nwEvent);
+        }
+
+        internal void RemoveNetworkEventHandler(Engine javaScriptEngine, string processID, string methodName)
+        {
+            ArgumentNullException.ThrowIfNull(javaScriptEngine);
+            ArgumentNullException.ThrowIfNull(processID);
+            ArgumentNullException.ThrowIfNull(methodName);
+
+            var nwEvent = EventHandlers.FirstOrDefault(e => e.functionHandle.Contains(processID) && e.functionHandle.Contains(methodName));
+            if (nwEvent != null)
+                EventHandlers.Remove(nwEvent);
         }
     }
 }

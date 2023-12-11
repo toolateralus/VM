@@ -156,7 +156,7 @@ namespace Lemur.JavaScript.Network
             // sizeof data.
             var bytesLength = dataBytes.Length;
 
-            Notifications.Now($"{ID()} Received {FormatBytes(bytesLength)} from {client.GetHashCode()}: CH {{{senderCh}}} -->> CH{{{listenerCh}}}");
+            Notifications.Now($"{ID()} listend {FormatBytes(bytesLength)} from {client.GetHashCode()}: CH {{{senderCh}}} -->> CH{{{listenerCh}}}");
 
             return new(metadata, dataBytes, client, stream);
         }

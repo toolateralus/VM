@@ -15,12 +15,10 @@ namespace Lemur.GUI
     public partial class UserWindow : UserControl
     {
         public ResizableWindow Owner;
-
         /// <summary>
         /// Called by the UI thread to clean up any resources.
         /// </summary>
         internal event Action? OnAppClosed;
-
         public Engine JavaScriptEngine;
         public UserWindow()
         {
@@ -49,7 +47,6 @@ namespace Lemur.GUI
             Computer.Current.Window.PreviewKeyDown += UserWindow_PreviewKeyDown;
 
         }
-
         private void UserWindow_PreviewKeyDown(object sender, KeyEventArgs e)
         {
             if (JavaScriptEngine == null)
@@ -68,12 +65,10 @@ namespace Lemur.GUI
             foreach (var interopEvent in interopEvents)
                 interopEvent.InvokeKeyboard(sender, e);
         }
-
         protected override void OnPreviewMouseLeftButtonDown(MouseButtonEventArgs e)
         {
             Owner?.BringToTopOfDesktop();
         }
-
         internal void InitializeContent(ResizableWindow frame, UserControl actualUserContent, Engine? engine)
         {
             Owner = frame;

@@ -17,7 +17,9 @@ namespace Lemur.JS.Embedded
                 Notifications.Now($"Couldn't find graphics context for id : {gfx_ctx}");
                 return false;
             }
+
             ctx.WritePixelPacked(x, y, color);
+
             return true;
         }
         public bool writePixelRGBA(int gfx_ctx, int x, int y, byte r, byte g, byte b, byte a)
@@ -29,6 +31,7 @@ namespace Lemur.JS.Embedded
             }
 
             ctx.WritePixel(x, y, r, g, b, a);
+
             return true;
         }
         public bool drawFilledShape(int gfx_ctx, int x, int y, int w, int h, double r, int colorIndex, int primitveIndex)

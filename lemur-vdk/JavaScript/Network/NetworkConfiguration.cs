@@ -1,6 +1,7 @@
 ﻿using Lemur.JavaScript.Api;
 using Lemur.Windowing;
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using System.Net;
@@ -25,13 +26,13 @@ namespace Lemur.JavaScript.Network
 
         public const int defaultPort = 8080;
 
-        internal Action<byte[]>? OnMessageReceived;
+        internal Action<byte[]>? OnMessagelistend;
 
         public static string ServerIP { get; set; } = "192.168.0.138";
         public static int ServerPort { get; set; }
         public static IPAddress Server => IPAddress.Parse(ServerIP);
 
-        public static Dictionary<int, Queue<(object? val, int replyCh)>> NetworkEvents = new();
+        public static ConcurrentDictionary<int, Queue<(object? val, int replyCh)>> NetworkEvents = new();
 
         public NetworkConfiguration()
         {
@@ -57,7 +58,7 @@ namespace Lemur.JavaScript.Network
                 client = new TcpClient(ip_str, port);
                 stream = client.GetStream();
 
-                listenerThread = new Thread(ReceiveMessages);
+                listenerThread = new Thread(listenMessages);
                 listenerThread.Start();
             }
             catch (Exception e)
@@ -80,7 +81,7 @@ namespace Lemur.JavaScript.Network
         internal static void Broadcast(int outCh, int inCh, object? msg)
         {
             if (!NetworkEvents.TryGetValue(outCh, out _))
-                NetworkEvents.Add(outCh, new());
+                NetworkEvents.TryAdd(outCh, new());
 
             NetworkEvents[outCh].Enqueue((msg, inCh));
 
@@ -94,7 +95,35 @@ namespace Lemur.JavaScript.Network
                         networkEventHandler.InvokeEvent(outCh, inCh, msg);
             }
         }
-        public static async Task<(object? value, int reply)> PullEventAsync(int channel, Lemur.Computer computer, int timeout = 20_000, [CallerMemberName] string callerName = "unknown")
+        public static (object? value, int reply) PullEvent(int channel, int timeout = 20_000, [CallerMemberName] string callerName = "unknown")
+        {
+            Queue<(object? val, int replyCh)>? queue = null;
+
+            bool timedOut = false;
+
+            Task.Run(async () =>
+            {
+                await Task.Delay(timeout);
+                timedOut = true;
+            });
+
+            bool messageNotRecieved() => !NetworkEvents.TryGetValue(channel, out queue) || queue is null || queue.Count == 0;
+
+            bool shouldWait() => !timedOut && !Computer.Current.disposing && Computer.Current.NetworkConfiguration.IsConnected();
+
+            while (shouldWait() && messageNotRecieved())
+            {/* ----------------------------------------------- */
+                Thread.Sleep(16);
+            }
+
+            var val = queue?.Dequeue();
+
+            if (queue?.Count == 0)
+                NetworkEvents.TryRemove(channel, out _);
+
+            return val ?? new("failed", -1);
+        }
+        public static async Task<(object? value, int reply)> PullEventAsync(int channel, int timeout = 20_000, [CallerMemberName] string callerName = "unknown")
         {
             Queue<(object? val, int replyCh)> queue;
 
@@ -108,8 +137,8 @@ namespace Lemur.JavaScript.Network
                 while (!NetworkEvents.TryGetValue(channel, out queue)
                         || queue is null
                         || queue.Count == 0
-                        && !computer.disposing
-                        && computer.NetworkConfiguration.IsConnected())
+                        && !Computer.Current.disposing
+                        && Computer.Current.NetworkConfiguration.IsConnected())
                 {/* ----------------------------------------------- */
                     Task.Delay(16);
                 }
@@ -117,7 +146,7 @@ namespace Lemur.JavaScript.Network
                 var val = queue?.Dequeue();
 
                 if (queue?.Count == 0)
-                    NetworkEvents.Remove(channel);
+                    NetworkEvents.Remove(channel, out _);
 
                 return val;
             }, cts);
@@ -153,7 +182,7 @@ namespace Lemur.JavaScript.Network
         {
             return $"{LANIPFetcher.GetLocalIPAddress().MapToIPv4()}:{host?.openPort}";
         }
-        public void ReceiveMessages()
+        public void listenMessages()
         {
             try
             {

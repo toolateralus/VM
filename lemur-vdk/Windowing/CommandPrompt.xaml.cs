@@ -11,6 +11,7 @@ using Lemur.FS;
 using Lemur.Windowing;
 using System.IO;
 using Newtonsoft.Json;
+using System.Security.Cryptography.Xml;
 
 namespace Lemur.GUI
 {
