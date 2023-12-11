@@ -70,10 +70,8 @@ class gamer {
         if (channel === this.channel) {
         	var msg = JSON.tryParse(packet.data);
         	if (!msg.hasValue || !(msg = msg.value).type) {
-        		print(`json err`);
         		return;
         	}
-        	describe(msg);
             if (msg.type === 'bullet') {
                 const bullet = new GameObject([], this.player.scale, msg.pos);
                 bullet.isMesh = true;
@@ -84,8 +82,6 @@ class gamer {
                 bullet.isProjectile = true;
                 this.scene.gOs.push(bullet);
             }
-        } else {
-        	print(`wrong channel: ${channel}, expected: ${this.channel}`);
         }
     }
     m_render() {
