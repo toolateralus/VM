@@ -192,6 +192,12 @@ namespace Lemur.JavaScript.Network
                     // They cannot be null
                     var packet = ListenForPacket(stream!, client!, name);
 
+                    if (packet is null)
+                    {
+                        Notifications.Now($"Recieved a null packet from {name}");
+                        return; 
+                    }
+
                     int messageLength = packet.Metadata.Value<int>("size");
                     int channel = packet.Metadata.Value<int>("ch");
                     int reply = packet.Metadata.Value<int>("reply");

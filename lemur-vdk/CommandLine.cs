@@ -470,12 +470,13 @@ namespace Lemur.OS
                 {
                     var args = jsCode.Substring(index, ArgsArrayReplacement.Length);
 
-                    var newArgs = $"[{string.Join(",", str_args)}]";
+                    var newArgs = $"[{string.Join("' ,'", str_args)}]";
 
                     jsCode = jsCode.Replace(args, newArgs);
                 }
 
                 _ = Task.Run(async delegate { await Computer.Current.JavaScript.Execute(jsCode); });
+
                 return true;
             }
 
