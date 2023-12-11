@@ -1,4 +1,5 @@
-﻿using Lemur.Windowing;
+﻿using Lemur.GUI;
+using Lemur.Windowing;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using System;
@@ -152,8 +153,13 @@ namespace Lemur.JavaScript.Network
 
             var bytesLength = Encoding.UTF8.GetByteCount(dataString);
 
-            Notifications.Now($"{ID()} listend {FormatBytes(bytesLength)} from {client.GetHashCode()}: CH {{{senderCh}}} -->> CH{{{listenerCh}}}");
-
+            string message = $"{ID()} received {FormatBytes(bytesLength)} from {client.GetHashCode()}: CH {{{senderCh}}} -->> CH{{{listenerCh}}}\n";
+            
+            Computer.Current.Window.Dispatcher.Invoke(() => {
+                foreach (var cmd in Computer.TryGetAllProcessesOfType<CommandPrompt>())
+                    cmd.output.AppendText(message);
+            });
+            
             return new(metadata, dataString, client, stream);
         }
         public static JObject ParseMetadata(byte[] metaData)
