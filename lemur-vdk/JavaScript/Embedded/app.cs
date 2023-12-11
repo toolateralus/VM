@@ -497,10 +497,9 @@ namespace Lemur.JS.Embedded
 
             async void start_app()
             {
-                await Computer.Current.OpenCustom(path, args).ConfigureAwait(false);
-
                 // this way of fetching a pid is very presumptuous and bad.
-                pid = $"p{__procId}"; // the last created process. 
+                pid = $"p{__procId + 1}"; // the next to be created process. 
+                await Computer.Current.OpenCustom(path, args).ConfigureAwait(false);
             }
 
             return pid;
