@@ -177,7 +177,11 @@ namespace Lemur.JavaScript.Network
             TcpClient client = await server.AcceptTcpClientAsync().ConfigureAwait(false);
             connectedClients.Add(client);
             Notifications.Now($"SERVER:Client {client.GetHashCode()} connected ");
-            Task.Run(async delegate { await HandleClientCommunicationAsync(client, connectedClients).ConfigureAwait(false); });
+            _ = Task.Run(
+                async delegate { 
+                    await HandleClientCommunicationAsync(client, connectedClients).ConfigureAwait(false); 
+                }
+            );
         }
         private async Task HandleClientCommunicationAsync(TcpClient client, List<TcpClient> connectedClients)
         {

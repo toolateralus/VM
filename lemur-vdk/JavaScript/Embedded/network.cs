@@ -36,7 +36,7 @@ namespace Lemur.JavaScript.Embedded
                     return;
                 }
 
-                p.UI.JavaScriptEngine.CreateNetworkEventHandler(p.UI.JavaScriptEngine, processID, methodName);
+                p.UI.JavaScriptEngine.CreateNetworkEventHandler(processID, methodName);
             }
         }
 
@@ -50,7 +50,7 @@ namespace Lemur.JavaScript.Embedded
                     return;
                 }
 
-                p.UI.JavaScriptEngine.  RemoveNetworkEventHandler(p.UI.JavaScriptEngine, processID, methodName);
+                p.UI.JavaScriptEngine.RemoveNetworkEventHandler(processID, methodName);
             }
         }
 

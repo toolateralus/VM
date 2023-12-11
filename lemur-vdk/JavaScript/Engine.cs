@@ -339,19 +339,17 @@ namespace Lemur.JS
             GC.Collect();
         }
 
-        internal void CreateNetworkEventHandler(Engine javaScriptEngine, string processID, string methodName)
+        internal void CreateNetworkEventHandler(string processID, string methodName)
         {
-            ArgumentNullException.ThrowIfNull(javaScriptEngine);
             ArgumentNullException.ThrowIfNull(processID);
             ArgumentNullException.ThrowIfNull(methodName);
 
-            var nwEvent = new NetworkEvent(javaScriptEngine, processID, methodName);
+            var nwEvent = new NetworkEvent(this, processID, methodName);
             EventHandlers.Add(nwEvent);
         }
 
-        internal void RemoveNetworkEventHandler(Engine javaScriptEngine, string processID, string methodName)
+        internal void RemoveNetworkEventHandler(string processID, string methodName)
         {
-            ArgumentNullException.ThrowIfNull(javaScriptEngine);
             ArgumentNullException.ThrowIfNull(processID);
             ArgumentNullException.ThrowIfNull(methodName);
 
