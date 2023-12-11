@@ -198,7 +198,6 @@ namespace Lemur.JavaScript.Network
                     int reciever_ch = packet.Metadata.Value<int>("reply");
                     var path = packet.Metadata.Value<string>("path");
                     var data = packet.Metadata.Value<string>("data") ?? "";
-                    packet.Metadata["data"] = Encoding.UTF8.GetString(Convert.FromBase64String(data));
 
                     // normal messages
                     // send the whole packet? or deconstruct for the user?
@@ -222,9 +221,9 @@ namespace Lemur.JavaScript.Network
                 client?.Close();
             }
         }
-        internal void OnSendMessage(byte[] dataBytes, TransmissionType type, int ch, int reply, bool isDir = false)
+        internal void OnSendMessage(string data, TransmissionType type, int ch, int reply, bool isDir = false)
         {
-            var metadata = ToJson(dataBytes.Length, dataBytes, type, ch, reply, isDir);
+            var metadata = ToJson(data, type, ch, reply, isDir);
 
             byte[] metadataBytes = Encoding.UTF8.GetBytes(metadata);
             byte[] lengthBytes = BitConverter.GetBytes(metadataBytes.Length);
