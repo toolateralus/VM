@@ -78,7 +78,7 @@ namespace Lemur.JavaScript.Embedded
                 Notifications.Now("DEFAULT_SERVER_IP not found in this computer's config, nor was an IP provided. please, enter an IP address to connect to.");
             }
         }
-        private async Task ConnectToIP(IPAddress targetIP, string ipString)
+        private void ConnectToIP(IPAddress targetIP, string ipString)
         {
             Notifications.Now($"Trying to connect to: {ipString}");
 
