@@ -46,9 +46,9 @@ namespace Lemur.GUI
             { "Json", ".json" },
         };
         // reflection grabs this later.
-        public static string? DesktopIcon => FileSystem.GetResourcePath("texteditor.png");
+        public static string? DesktopIcon => FileSystem.GetResourcePath("texed.png");
         public MarkdownViewer? mdViewer;
-        public CommandPrompt? commandPrompt;
+        public Terminal? terminal;
         public Texed(string path, bool renderMarkdown) : this(path)
         {
             if (renderMarkdown)
@@ -244,15 +244,15 @@ namespace Lemur.GUI
                     break;
 
                 case ".js":
-                    if (commandPrompt == null)
+                    if (terminal == null)
                     {
-                        commandPrompt = new CommandPrompt();
+                        terminal = new Terminal();
 
                         var jsEngine = new Engine();
-                        Computer.Current.OpenApp(commandPrompt, "cmd.app", Computer.GetNextProcessID(), engine: jsEngine);
+                        Computer.Current.OpenApp(terminal, "cmd.app", Computer.GetNextProcessID(), engine: jsEngine);
                     }
 
-                    await commandPrompt.Engine.Execute(string.IsNullOrEmpty(textEditor.Text) ? "print('You must provide some javascript to execute...')" : textEditor.Text);
+                    await terminal.Engine.Execute(string.IsNullOrEmpty(textEditor.Text) ? "print('You must provide some javascript to execute...')" : textEditor.Text);
                     break;
 
                 default:

@@ -7,6 +7,15 @@ namespace Lemur.JS.Embedded
 {
     public class file_t
     {
+        public string getListings(string path) {
+            path = FileSystem.Root + path;
+            if (Directory.Exists(path))
+            {
+                var listings = Directory.GetFiles(path);
+                return string.Join(' ', listings);
+            }
+            return "";
+        }
         public object? read(string path)
         {
             if (!File.Exists(path))

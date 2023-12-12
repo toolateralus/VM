@@ -15,6 +15,7 @@ namespace Lemur.JavaScript.Api
             Task.Run(async delegate { functionHandle = await CreateFunction(identifier, methodName); });
         }
 
+
         public override async Task<string> CreateFunction(string identifier, string methodName)
         {
             var event_call = $"{identifier}.{methodName}{ARGS_STRING}";

@@ -268,7 +268,7 @@ namespace Lemur.GUI
                 case Key.OemTilde:
                     if (Keyboard.IsKeyDown(Key.LeftCtrl))
                     {
-                        var cmd = new CommandPrompt();
+                        var cmd = new Terminal();
                         Computer.Current.OpenApp(cmd, "Cmd", Computer.GetNextProcessID());
                     }
                     break;

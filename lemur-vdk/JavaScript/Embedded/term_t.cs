@@ -10,8 +10,17 @@ using System.Threading.Tasks;
 
 namespace Lemur.JS.Embedded
 {
-    public class term
+    /// <summary>
+    /// An embedded JavaScript Type :
+    /// 
+    /// Provides interaction with the terminal and OS 'terminal'
+    /// </summary>
+    public class term_t
     {
+        /// <summary>
+        /// Tries to invoke a terminal command, in the background.
+        /// </summary>
+        /// <param name="command"></param>
         public void call(string command)
         {
             Task.Run(() =>
@@ -20,6 +29,10 @@ namespace Lemur.JS.Embedded
                     Notifications.Now($"Couldn't 'call' {command}");
             });
         }
+        /// <summary>
+        /// Prints to the terminal. there is a global function 'print' that wraps this.
+        /// </summary>
+        /// <param name="message"></param>
         public void print(object message)
         {
             try
@@ -35,11 +48,14 @@ namespace Lemur.JS.Embedded
                 Notifications.Exception(e);
             }
         }
-
+        /// <summary>
+        /// Read from the terminal.
+        /// </summary>
+        /// <returns></returns>
         public string? read()
         {
-            CommandPrompt cmd = null;
-            cmd = Computer.TryGetProcessOfType<CommandPrompt>();
+            Terminal cmd = null;
+            cmd = Computer.TryGetProcessOfType<Terminal>();
 
             var waiting = true;
             string result = "";
@@ -48,6 +64,7 @@ namespace Lemur.JS.Embedded
                 Notifications.Now("No console was open, so reading is impossible");
                 return null;
             }
+            cmd.ProcessReading = true;
             cmd.OnSend += end;
 
             void end(string obj)
@@ -59,6 +76,9 @@ namespace Lemur.JS.Embedded
             {
                 Thread.Sleep(5);
             }
+
+            cmd.ProcessReading = false;
+            cmd.OnSend -= end;
 
             return result;
         }

@@ -3,6 +3,14 @@ using System.Collections.Generic;
 
 namespace Lemur.Types
 {
+
+    /// <summary>
+    /// A bounds checked list, which returns null when
+    /// accessed out of bounds. this is to encourage the use of pattern matching to 
+    /// combine length, existence, and type checks
+    /// </summary>
+    /// <typeparam name="T">The type to be stored</typeparam>
+    /// <param name="array">The array to copy</param>
     public class SafeList<T>(IEnumerable<T?> array) : List<T?>(array)
     {
         public static implicit operator T?[](SafeList<T> list) => list.ToArray();
@@ -13,7 +21,7 @@ namespace Lemur.Types
             get
             {
                 if (index < 0 || index >= Count)
-                    return default(T?);
+                    return default;
                 return base[index];
             }
         }

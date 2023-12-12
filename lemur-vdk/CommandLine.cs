@@ -27,6 +27,80 @@ namespace Lemur.OS
         public readonly string[] Info = Info;
         public readonly string Identifier = identifier;
     }
+    /// <summary>
+    /// command parser &amp; execution engine for Lemur.
+    /// </summary>
+    public partial class CommandLine
+    {
+        public bool TryCommand(string input)
+        {
+            if (Find(input) is Command _cmd && _cmd.Identifier != null && _cmd.Identifier != "NULL" && _cmd.Action != null)
+            {
+                _cmd.Action.Invoke(new SafeList<object?>([]));
+                return true;
+            }
+
+            string[] split = input.Split(' ');
+
+            if (split.Length == 0)
+                return false;
+
+            string cmdName = split.First();
+            var str_args = split[1..];
+
+            if (Aliases.TryGetValue(cmdName, out var alias) && File.Exists(alias))
+            {
+                var jsCode = File.ReadAllText(alias);
+
+                const string ArgsArrayReplacement = "[/***/]";
+
+                var index = jsCode.IndexOf(ArgsArrayReplacement);
+
+                if (index != -1)
+                {
+                    var args = jsCode.Substring(index, ArgsArrayReplacement.Length);
+
+                    var newArgs = $"[{string.Join("' ,'", str_args)}]";
+
+                    jsCode = jsCode.Replace(args, newArgs);
+                }
+
+                _ = Task.Run(async delegate { await Computer.Current.JavaScript.Execute(jsCode); });
+
+                return true;
+            }
+
+            return TryInvoke(cmdName, str_args);
+        }
+        public Command Find(string name) => Commands.FirstOrDefault(c => c.Identifier == name);
+        public bool TryInvoke(string name, string[] args)
+        {
+            Command cmd = Find(name);
+            cmd?.Action?.Invoke(args);
+            return cmd?.Action != null;
+        }
+        protected virtual void Dispose(bool disposing)
+        {
+            if (!Disposing)
+            {
+                if (disposing)
+                {
+                    Commands.Clear();
+                    Aliases.Clear();
+                }
+                Disposing = true;
+            }
+        }
+        public void Dispose()
+        {
+            Dispose(disposing: true);
+            GC.SuppressFinalize(this);
+        }
+    }
+    /// <summary>
+    /// Set of base commands for Lemur. Feel free to expand / refine these.
+    /// Check out SafeList to find out more.
+    /// </summary>
     public partial class CommandLine : IDisposable
     {
         public List<Command> Commands = new();
@@ -81,9 +155,9 @@ namespace Lemur.OS
         [Command("ls", "list's the current directory's contents, or list's the provided target directory's contents.")]
         private static void ListDir(SafeList<object> obj)
         {
-            var commandPrompt = Computer.TryGetProcessOfType<CommandPrompt>();
+            var terminal = Computer.TryGetProcessOfType<Terminal>();
 
-            if (commandPrompt == default)
+            if (terminal == default)
             {
                 Notifications.Now("You must have a cmd prompt open to display 'help' command results.");
                 return;
@@ -94,8 +168,8 @@ namespace Lemur.OS
             var textList = string.Join("\n\t", list);
 
             var text = $"\n##Current Directory: {FileSystem.CurrentDirectory}###\n";
-            commandPrompt.output.AppendText(text + "\t");
-            commandPrompt.output.AppendText(textList);
+            terminal.output.AppendText(text + "\t");
+            terminal.output.AppendText(textList);
         }
         [Command("cd", "changes the computer-wide current directory.")]
         private static void ChangeDir(SafeList<object> obj)
@@ -288,9 +362,9 @@ namespace Lemur.OS
                         Computer.LoadConfig();
                         return;
                     case "all":
-                        var commandPrompt = Computer.TryGetProcessOfType<CommandPrompt>();
+                        var terminal = Computer.TryGetProcessOfType<Terminal>();
 
-                        if (commandPrompt == default)
+                        if (terminal == default)
                         {
                             Notifications.Now("You must have a cmd prompt open to display 'help' command results.");
                             return;
@@ -301,7 +375,7 @@ namespace Lemur.OS
                         foreach (var kvp in Computer.Current.Config)
                             outputSb.Append($"\n {{{kvp.Key} : {kvp.Value}}}");
 
-                        commandPrompt.output.AppendText(outputSb.ToString());
+                        terminal.output.AppendText(outputSb.ToString());
                         break;
                 }
                 
@@ -334,9 +408,9 @@ namespace Lemur.OS
 
 
                     case "get":
-                        var commandPrompt = Computer.TryGetProcessOfType<CommandPrompt>();
+                        var terminal = Computer.TryGetProcessOfType<Terminal>();
 
-                        if (commandPrompt == default)
+                        if (terminal == default)
                         {
                             Notifications.Now("You must have a cmd prompt open to display 'help' command results.");
                             return;
@@ -348,7 +422,7 @@ namespace Lemur.OS
                             return;
                         }
 
-                        commandPrompt.output.AppendText($"\n {{{propname} : {propValue}}}");
+                        terminal.output.AppendText($"\n {{{propname} : {propValue}}}");
                         break;
 
                     case "set":
@@ -398,7 +472,7 @@ namespace Lemur.OS
         [Command("clear", "clears the terminal(s), if open.")]
         private static void ClearTerminal(SafeList<object> obj)
         {
-            var cmd = Computer.TryGetProcessOfType<CommandPrompt>()?.output;
+            var cmd = Computer.TryGetProcessOfType<Terminal>()?.output;
             Computer.Current.Window.Dispatcher.Invoke(() => { cmd?.Clear(); });
 
             if (cmd is null)
@@ -407,7 +481,7 @@ namespace Lemur.OS
         [Command("help", "prints these help listings")]
         private static void ShowHelp(SafeList<object> obj)
         {
-            var commandPrompt = Computer.TryGetProcessOfType<CommandPrompt>();
+            var terminal = Computer.TryGetProcessOfType<Terminal>();
 
             StringBuilder cmdbuilder = new();
             StringBuilder aliasbuilder = new();
@@ -421,11 +495,11 @@ namespace Lemur.OS
                 aliasbuilder.Append($"\n{item.Key} -> {item.Value.Split('\\').Last()}");
 
 
-            commandPrompt?.DrawTextBox(" ### Native Commands ### ");
-            commandPrompt?.output.AppendText(cmdbuilder.ToString());
+            terminal?.DrawTextBox(" ### Native Commands ### ");
+            terminal?.output.AppendText(cmdbuilder.ToString());
 
-            commandPrompt?.DrawTextBox(" ### Command Aliases ### ");
-            commandPrompt?.output.AppendText(aliasbuilder.ToString());
+            terminal?.DrawTextBox(" ### Command Aliases ### ");
+            terminal?.output.AppendText(aliasbuilder.ToString());
 
         }
         [Command("run", "runs a JavaScript file of specified path in the computers main engine.")]
@@ -441,72 +515,8 @@ namespace Lemur.OS
                 Notifications.Now("failed run: bad args. usage : run 'path.js'");
             }
         }
-
-        public bool TryCommand(string input)
-        {
-            if (Find(input) is Command _cmd && _cmd.Identifier != null && _cmd.Identifier != "NULL" && _cmd.Action != null)
-            {
-                _cmd.Action.Invoke(new SafeList<object?>([]));
-                return true;
-            }
-
-            string[] split = input.Split(' ');
-
-            if (split.Length == 0)
-                return false;
-
-            string cmdName = split.First();
-            var str_args = split[1..];
-
-            if (Aliases.TryGetValue(cmdName, out var alias) && File.Exists(alias))
-            {
-                var jsCode = File.ReadAllText(alias);
-
-                const string ArgsArrayReplacement = "[/***/]";
-
-                var index = jsCode.IndexOf(ArgsArrayReplacement);
-
-                if (index != -1)
-                {
-                    var args = jsCode.Substring(index, ArgsArrayReplacement.Length);
-
-                    var newArgs = $"[{string.Join("' ,'", str_args)}]";
-
-                    jsCode = jsCode.Replace(args, newArgs);
-                }
-
-                _ = Task.Run(async delegate { await Computer.Current.JavaScript.Execute(jsCode); });
-
-                return true;
-            }
-
-            return TryInvoke(cmdName, str_args);
-        }
-        public Command Find(string name) => Commands.FirstOrDefault(c => c.Identifier == name);
-        public bool TryInvoke(string name, string[] args)
-        {
-            Command cmd = Find(name);
-            cmd?.Action?.Invoke(args);
-            return cmd?.Action != null;
-        }
-
-        protected virtual void Dispose(bool disposing)
-        {
-            if (!Disposing)
-            {
-                if (disposing)
-                {
-                    Commands.Clear();
-                    Aliases.Clear();
-                }
-                Disposing = true;
-            }
-        }
-        public void Dispose()
-        {
-            Dispose(disposing: true);
-            GC.SuppressFinalize(this);
-        }
-    }
+       
+       
+     }
 }
 

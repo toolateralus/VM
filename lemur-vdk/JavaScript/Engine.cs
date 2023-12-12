@@ -62,7 +62,7 @@ namespace Lemur.JS
         public conv ConvModule { get; }
         public app AppModule { get; }
         public file_t FileModule { get; }
-        public term TermModule { get; }
+        public term_t TermModule { get; }
         public key KeyModule { get; }
 
         public Engine()
@@ -82,7 +82,7 @@ namespace Lemur.JS
             ConvModule = new conv();
             AppModule = new app();
             FileModule = new file_t();
-            TermModule = new term();
+            TermModule = new term_t();
             KeyModule = new key();
 
             EmbedObject("conv", ConvModule);

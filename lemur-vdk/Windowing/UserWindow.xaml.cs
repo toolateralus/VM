@@ -49,13 +49,21 @@ namespace Lemur.GUI
         }
         private void UserWindow_PreviewKeyDown(object sender, KeyEventArgs e)
         {
+            if (e.Key == Key.C && 
+                Keyboard.IsKeyDown(Key.LeftCtrl) && 
+                Keyboard.IsKeyDown(Key.LeftShift))
+            {
+                Close();
+            }
+                
             if (JavaScriptEngine == null)
                 return;
 
             if (JavaScriptEngine.EventHandlers.Count == 0)
                 return;
 
-            var events = JavaScriptEngine.EventHandlers.Where(e => e is InteropEvent iE && iE.Event == XAML_EVENTS.KEY_DOWN).ToList();
+            var events = JavaScriptEngine.EventHandlers.Where(e => e is InteropEvent iE
+                                                                && iE.Event == XAML_EVENTS.KEY_DOWN).ToList();
 
             if (events.Count == 0)
                 return;

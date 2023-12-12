@@ -180,6 +180,7 @@ namespace Lemur
 
             void OnWindowClosed()
             {
+
                 // for pesky calls that arent from the UI thread, from javascript etc.
                 if (Thread.CurrentThread.GetApartmentState() != ApartmentState.STA)
                     App.Current.Dispatcher.Invoke(() => closeMethod());
@@ -188,6 +189,14 @@ namespace Lemur
 
                 void closeMethod()
                 {
+                    userWindow.OnAppClosed -= OnWindowClosed;
+
+                    if (!ProcessClassTable.ContainsKey(pClass))
+                    {
+                        Notifications.Now($"Tried to close non existent app : {pClass}");
+                        return;
+                    }
+
                     List<Process> array = ProcessClassTable[pClass];
 
                     process.OnProcessTermination?.Invoke();
@@ -512,7 +521,7 @@ namespace Lemur
                 pc.Dispose();
             };
 
-            pc.InstallCSharpApp("CommandPrompt.app", typeof(CommandPrompt));
+            pc.InstallCSharpApp("terminal.app", typeof(Terminal));
             pc.InstallCSharpApp("FileExplorer.app", typeof(FileExplorer));
             pc.InstallCSharpApp("texed.app", typeof(Texed));
 

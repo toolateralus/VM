@@ -12,28 +12,34 @@ using Lemur.Windowing;
 using System.IO;
 using Newtonsoft.Json;
 using System.Security.Cryptography.Xml;
+using Lemur.JS.Embedded;
 
 namespace Lemur.GUI
 {
-
-    public partial class CommandPrompt : UserControl
+    public partial class Terminal : UserControl
     {
+        enum Interpreter
+        {
+            Terminal,
+            JavaScript,
+        }
         internal Engine? Engine;
         private List<string> commandHistory = [];
         private int historyIndex = -1;
         private string tempInput = "";
-        public static string? DesktopIcon => FileSystem.GetResourcePath("commandprompt.png");
+        public static string? DesktopIcon => FileSystem.GetResourcePath("terminal.png");
 
         public Action<string> OnSend { get; internal set; }
         public ResizableWindow Window { get; private set; }
+        public bool ProcessReading { get; internal set; }
 
         public static string? LastSentInput;
         string LastSentBuffer = "";
-        public CommandPrompt()
+        public Terminal()
         {
             InitializeComponent();
 
-            PreviewKeyDown += CommandPrompt_PreviewKeyDown;
+            PreviewKeyDown += terminal_PreviewKeyDown;
 
             DrawTextBox("type 'help' for commands, \nor enter any valid single-line java script to interact with the environment. \n");
             input.Focus();
@@ -120,40 +126,75 @@ namespace Lemur.GUI
         }
 
 
-        private async void CommandPrompt_PreviewKeyDown(object sender, System.Windows.Input.KeyEventArgs e)
+        private async void terminal_PreviewKeyDown(object sender, System.Windows.Input.KeyEventArgs e)
         {
-            if (Keyboard.IsKeyDown(Key.LeftCtrl) && Keyboard.IsKeyDown(Key.LeftShift) && e.Key == Key.C)
+            
+            switch (e.Key)
             {
-                (Window.Content as UserWindow)?.Close();
-            }
-            if (Keyboard.IsKeyDown(Key.LeftCtrl) && e.Key == Key.T)
-            {
-                var text = input.Text;
-                var path = FileSystem.Root + "/home/ide/temp.js";
-                File.WriteAllText(path, text + "\n this file can be found at 'computer/home/ide/temp.js'");
+                
 
-                var textEditor = new Texed(path);
+                case Key.T:
+                    if (!Keyboard.IsKeyDown(Key.LeftCtrl))
+                        return;
 
-                Computer.Current.OpenApp(textEditor, "temp.js", Computer.GetNextProcessID());
-            }
+                    // todo: fix up temp file.
+                    var text = input.Text;
+                    var path = FileSystem.Root + "/home/ide/temp.js";
+                    File.WriteAllText(path, text + "\n this file can be found at 'computer/home/ide/temp.js'");
+                    var textEditor = new Texed(path);
+                    Computer.Current.OpenApp(textEditor, "temp.js", Computer.GetNextProcessID());
+                    break;
 
-            if (e.Key == Key.Enter || e.Key == Key.F5)
-            {
-                await Send(e);
+
+                case Key.Enter:
+                case Key.F5:
+                    await Send(e).ConfigureAwait(true);
+                    break;
+
+                case Key.Up:
+                    if (historyIndex == -1)
+                    {
+                        tempInput = input.Text;
+                    }
+                    if (historyIndex < commandHistory.Count - 1)
+                    {
+                        historyIndex++;
+                        input.Text = commandHistory[commandHistory.Count - 1 - historyIndex];
+                    }
+                    break;
+                case Key.Down:
+                    if (historyIndex == -1)
+                    {
+                        tempInput = input.Text;
+                    }
+                    if (historyIndex > 0)
+                    {
+                        historyIndex--;
+                        input.Text = commandHistory[commandHistory.Count - 1 - historyIndex];
+                    }
+                    break;
             }
-            ManageCommandHistoryKeys(e);
         }
 
         private async Task Send(KeyEventArgs? e)
         {
+            if (e != null && e.RoutedEvent != null)
+                e.Handled = true;
+
             string inputText = input.Text;
+
             OnSend?.Invoke(inputText);
+
+            // for term.read
+            if (ProcessReading)
+            {
+                input.Text = inputText;
+                return;
+            }
 
             if (commandHistory.Count > 100)
                 commandHistory.RemoveAt(0);
-
-            if (e != null && e.RoutedEvent != null)
-                e.Handled = true;
+            
 
             var outputText = output.Text;
 
@@ -168,7 +209,27 @@ namespace Lemur.GUI
 
             commandHistory.Add(inputText);
 
-            await ExecuteJavaScript(code: inputText, timeout: 50_000);
+            
+            
+            switch ((Interpreter)interpreterBox.SelectedIndex)
+            {
+                // terminal
+                case Interpreter.Terminal:
+                    var success = Computer.Current.CmdLine.TryCommand(inputText);
+
+                    if (!success)
+                    {
+                        Notifications.Now($"terminal::failure {inputText} : command not found.");
+                        return;
+                    }
+
+                    break;
+
+                case Interpreter.JavaScript:
+                    await ExecuteJavaScript(code: inputText, timeout: 50_000).ConfigureAwait(true);
+                    break;
+            }
+            
 
             if (output.Text == outputText)
                 output.AppendText("\n done.");
@@ -179,81 +240,53 @@ namespace Lemur.GUI
             LastSentBuffer = output.Text;
         }
 
-        private void ManageCommandHistoryKeys(KeyEventArgs e)
-        {
-            if (e.Key == System.Windows.Input.Key.Up)
-            {
-                if (historyIndex == -1)
-                    tempInput = input.Text;
-
-                if (historyIndex < commandHistory.Count - 1)
-                {
-                    historyIndex++;
-                    input.Text = commandHistory[commandHistory.Count - 1 - historyIndex];
-                }
-            }
-
-            if (e.Key == System.Windows.Input.Key.Down)
-            {
-                if (historyIndex == -1)
-                    tempInput = input.Text;
-
-                if (historyIndex > 0)
-                {
-                    historyIndex--;
-                    input.Text = commandHistory[commandHistory.Count - 1 - historyIndex];
-                }
-            }
-
-
-        }
 
         private async Task ExecuteJavaScript(string code, int timeout = int.MaxValue)
         {
-            if (Computer.Current.CmdLine.TryCommand(code))
-                return;
-
-            input.Clear();
-
             try
             {
                 using var cts = new CancellationTokenSource();
-                var executionTask = Engine?.Execute(code, cts.Token);
+
+                var executionTask = Engine?.Execute(code, cts.Token) ?? throw new InvalidOperationException("Couldn't get an execution task from the engine.");
 
                 var timeoutTask = Task.Delay(timeout);
 
-                if (executionTask == null)
-                    throw new NullReferenceException("No execution task was found, the engine probably was disposed while in use.");
-
-                var completedTask = await Task.WhenAny(executionTask, timeoutTask);
+                var completedTask = await Task.WhenAny(executionTask, timeoutTask).ConfigureAwait(true);
 
                 if (completedTask == timeoutTask)
                 {
-                    cts.Cancel(); // Cancel the execution task
-                    this.output.AppendText("\nExecution timed out.");
+                    await cts.CancelAsync().ConfigureAwait(true);
+                    output.AppendText("\nExecution timed out.");
                 }
                 else
                 {
-                    var result = await executionTask;
+                    var result = await executionTask.ConfigureAwait(true);
                     string? output = result?.ToString();
 
                     if (!string.IsNullOrEmpty(output))
-                    {
                         this.output.AppendText("\n" + output);
-                    }
                 }
             }
             catch (Exception ex)
             {
-                this.output.Text += ex.Message + Environment.NewLine;
+                output.Text += ex.Message + Environment.NewLine;
             }
         }
 
 
-
-        private void Grid_MouseDown(object sender, System.Windows.Input.MouseButtonEventArgs e)
+        private void Grid_MouseDown(object sender, MouseButtonEventArgs e)
         {
             input.Focus();
+        }
+
+        private void ClearButtonClicked(object sender, System.Windows.RoutedEventArgs e)
+        {
+            Computer.Current.CmdLine.TryCommand("clear");
+        }
+
+        private void Button_MouseEnter(object sender, MouseEventArgs e)
+        {
+
         }
     }
 }

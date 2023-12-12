@@ -17,7 +17,7 @@ namespace Lemur.Windowing
 
             void send_notification_ui()
             {
-                var cmd = Computer.TryGetProcessOfTypeUnsafe<CommandPrompt>();
+                var cmd = Computer.TryGetProcessOfTypeUnsafe<Terminal>();
 
                 var children = cw.NotificationStackPanel.Children;
 
