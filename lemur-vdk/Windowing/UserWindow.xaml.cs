@@ -63,7 +63,7 @@ namespace Lemur.GUI
                     ResizableParent?.ToggleMaximize();
                 else
                     ResizableParent?.BeginMove(e.GetPosition(this));
-
+                 
                 lastClickedTime = DateTimeOffset.Now.ToUnixTimeMilliseconds();
 
                 e.Handled = true;
