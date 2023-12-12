@@ -29,9 +29,9 @@ namespace Lemur.GUI
         private string tempInput = "";
         public static string? DesktopIcon => FileSystem.GetResourcePath("terminal.png");
 
-        public Action<string> OnSend { get; internal set; }
+        public Action<string> OnTerminalSend { get; internal set; }
         public ResizableWindow Window { get; private set; }
-        public bool ProcessReading { get; internal set; }
+        public bool IsReading { get; internal set; }
 
         public static string? LastSentInput;
         string LastSentBuffer = "";
@@ -41,7 +41,7 @@ namespace Lemur.GUI
 
             PreviewKeyDown += terminal_PreviewKeyDown;
 
-            DrawTextBox("type 'help' for commands, \nor enter any valid single-line java script to interact with the environment. \n");
+            output.AppendText("Interpreter Controls:\r\n----------------------\r\n\r\nCommon Shortcuts:\r\n- [Shift + Tab]: Toggle between interpreters.\r\n- [Ctrl + T]: Open a temporary JavaScript file with the input's contents.\r\n- [Ctrl + Shift + C]: End any process, including this one, and close the window.\r\n\r\nJavaScript Interpreter:\r\n------------------------\r\n\r\nShortcuts:\r\n- [Left Shift + Enter] or [F5]: Run the input code.\r\n\r\nTerminal Interpreter:\r\n---------------------\r\nShortcuts:\r\n-'help' command : type help into the input bar below and press enter. \n you will get a list of all possible commands and how to use many of them \r\n[Up Arrow / Down Arrow]: Navigate forward and backward in command history.\r\n  (Note: This feature may have occasional quirks but is generally reliable and saves history to a file on session begin and end.)\r\n");
             input.Focus();
 
             output.TextChanged += Output_TextChanged;
@@ -61,59 +61,7 @@ namespace Lemur.GUI
             output.ScrollToLine(output.Text.Length);
         }
 
-        public void DrawTextBox(string content)
-        {
-            List<string> contentLines = content.Split('\n').ToList();
-            int maxContentWidth = GetMaxContentWidth(contentLines);
-            int boxWidth = maxContentWidth + 6; // Account for box characters
-
-            void DrawBoxTop()
-            {
-                output.AppendText("\n╔");
-                for (int i = 0; i < boxWidth; ++i)
-                {
-                    output.AppendText("═");
-                }
-                output.AppendText("╗\n");
-            }
-
-            void DrawBoxBottom()
-            {
-                output.AppendText("╚");
-                for (int i = 0; i < boxWidth; ++i)
-                {
-                    output.AppendText("═");
-                }
-                output.AppendText("╝");
-            }
-
-            DrawBoxTop();
-
-            foreach (string line in contentLines)
-            {
-                output.AppendText("║" + PadCenter(line, boxWidth) + "║\n");
-            }
-
-            DrawBoxBottom();
-        }
-
-        private int GetMaxContentWidth(List<string> contentLines)
-        {
-            int maxWidth = 0;
-            foreach (string line in contentLines)
-            {
-                maxWidth = Math.Max(maxWidth, line.Length);
-            }
-            return maxWidth;
-        }
-
-        private string PadCenter(string text, int width)
-        {
-            int padding = (width - text.Length) / 2;
-            return text.PadLeft(padding + text.Length).PadRight(width);
-        }
-
-        public void LateInit(Computer computer, ResizableWindow rsz)
+        public void LateInit(Computer _, ResizableWindow rsz)
         {
             Engine ??= new();
             Window = rsz;
@@ -125,13 +73,39 @@ namespace Lemur.GUI
             };
         }
 
-
+        Dictionary<Interpreter, string> cachedInput = new (){
+            { Interpreter.Terminal, ""},
+            { Interpreter.JavaScript, ""},
+        };
         private async void terminal_PreviewKeyDown(object sender, System.Windows.Input.KeyEventArgs e)
         {
             
             switch (e.Key)
             {
-                
+                case Key.Tab:
+                    // switching interpreters.
+                    if (Keyboard.IsKeyDown(Key.LeftShift))
+                    {
+                        interpreterBox.SelectedIndex = 1 - interpreterBox.SelectedIndex;
+                        var i = (Interpreter)interpreterBox.SelectedIndex;
+                        output.AppendText($"\nusing interpreter::{i}");
+
+                        if (i == Interpreter.JavaScript)
+                        {
+                            cachedInput[Interpreter.Terminal] = input.Text;
+                            input.Text = cachedInput[Interpreter.JavaScript];
+                            input.MinHeight = 100;
+                            input.Focus();
+                        } else if (i == Interpreter.Terminal)
+                        {
+                            cachedInput[Interpreter.JavaScript] = input.Text;
+                            input.Text = cachedInput[Interpreter.Terminal];
+                            input.MinHeight = 0;
+                            input.Focus();
+                        }
+
+                    }
+                    break;
 
                 case Key.T:
                     if (!Keyboard.IsKeyDown(Key.LeftCtrl))
@@ -152,6 +126,9 @@ namespace Lemur.GUI
                     break;
 
                 case Key.Up:
+                    if ((Interpreter)interpreterBox.SelectedIndex == Interpreter.JavaScript)
+                        return;
+
                     if (historyIndex == -1)
                     {
                         tempInput = input.Text;
@@ -163,10 +140,11 @@ namespace Lemur.GUI
                     }
                     break;
                 case Key.Down:
+                    if ((Interpreter)interpreterBox.SelectedIndex == Interpreter.JavaScript)
+                        return;
+
                     if (historyIndex == -1)
-                    {
                         tempInput = input.Text;
-                    }
                     if (historyIndex > 0)
                     {
                         historyIndex--;
@@ -178,68 +156,85 @@ namespace Lemur.GUI
 
         private async Task Send(KeyEventArgs? e)
         {
-            if (e != null && e.RoutedEvent != null)
-                e.Handled = true;
+
 
             string inputText = input.Text;
 
-            OnSend?.Invoke(inputText);
-
-            // for term.read
-            if (ProcessReading)
-            {
-                input.Text = inputText;
-                return;
-            }
-
-            if (commandHistory.Count > 100)
-                commandHistory.RemoveAt(0);
-            
-
             var outputText = output.Text;
 
-            if (string.IsNullOrEmpty(inputText))
+
+            switch ((Interpreter)interpreterBox.SelectedIndex)
             {
-                Notifications.Now("Invalid input");
-                return;
+                // terminal
+                case Interpreter.Terminal:
+
+                    HandleEvent(e);
+                    if (string.IsNullOrEmpty(inputText))
+                    {
+                        Notifications.Now("Invalid input");
+                        return;
+                    }
+
+                    OnTerminalSend?.Invoke(inputText);
+
+                    // for term.read
+                    if (IsReading)
+                        return;
+
+                    var success = Computer.Current.CmdLine.TryCommand(inputText);
+
+                    if (!success)
+                    {
+                        Notifications.Now($"terminal::failure\n\t{inputText}\n\t\t: command not found.");
+                        return;
+                    }
+                    PushHistory(inputText);
+                    input.Clear();
+                    break;
+
+                case Interpreter.JavaScript:
+
+                    // for newlines
+                    if (!Keyboard.IsKeyDown(Key.LeftShift) && !Keyboard.IsKeyDown(Key.F5))
+                        return;
+
+                    if (string.IsNullOrEmpty(inputText))
+                    {
+                        Notifications.Now("Invalid input");
+                        return;
+                    }
+
+                    await ExecuteJavaScript(code: inputText, timeout: 50_000).ConfigureAwait(true);
+                    break;
             }
+
+            // clean up, show stuff.
+            if (output.Text == outputText)
+                output.AppendText("\n done.");
+
+            
+
+            LastSentInput = LastSentBuffer;
+            LastSentBuffer = output.Text;
+            HandleEvent(e);
+        }
+
+        private static void HandleEvent(KeyEventArgs? e)
+        {
+            if (e != null && e.RoutedEvent != null)
+                e.Handled = true;
+        }
+
+        private void PushHistory(string inputText)
+        {
+            if (commandHistory.Count > 100)
+                commandHistory.RemoveAt(0);
 
             if (commandHistory.Contains(inputText))
                 commandHistory.RemoveAll(i => i == inputText);
 
             commandHistory.Add(inputText);
-
-            
-            
-            switch ((Interpreter)interpreterBox.SelectedIndex)
-            {
-                // terminal
-                case Interpreter.Terminal:
-                    var success = Computer.Current.CmdLine.TryCommand(inputText);
-
-                    if (!success)
-                    {
-                        Notifications.Now($"terminal::failure {inputText} : command not found.");
-                        return;
-                    }
-
-                    break;
-
-                case Interpreter.JavaScript:
-                    await ExecuteJavaScript(code: inputText, timeout: 50_000).ConfigureAwait(true);
-                    break;
-            }
-            
-
-            if (output.Text == outputText)
-                output.AppendText("\n done.");
-
-            input.Clear();
-
-            LastSentInput = LastSentBuffer;
-            LastSentBuffer = output.Text;
         }
-
 
         private async Task ExecuteJavaScript(string code, int timeout = int.MaxValue)
         {

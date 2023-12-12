@@ -64,8 +64,8 @@ namespace Lemur.JS.Embedded
                 Notifications.Now("No console was open, so reading is impossible");
                 return null;
             }
-            cmd.ProcessReading = true;
-            cmd.OnSend += end;
+            cmd.IsReading = true;
+            cmd.OnTerminalSend += end;
 
             void end(string obj)
             {
@@ -77,8 +77,8 @@ namespace Lemur.JS.Embedded
                 Thread.Sleep(5);
             }
 
-            cmd.ProcessReading = false;
-            cmd.OnSend -= end;
+            cmd.IsReading = false;
+            cmd.OnTerminalSend -= end;
 
             return result;
         }

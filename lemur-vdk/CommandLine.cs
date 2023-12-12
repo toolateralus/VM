@@ -14,9 +14,30 @@ using System.Linq;
 using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
+using System.Xml.Linq;
 
-namespace Lemur.OS
+namespace Lemur.OS.Language
 {
+    public class JavaScriptPreProcessor
+    {
+        public static string InjectCommandLineArgs(string[] str_args, string jsCode)
+        {
+            const string ArgsArrayReplacement = "[/***/]";
+
+            var index = jsCode.IndexOf(ArgsArrayReplacement);
+
+            if (index != -1)
+            {
+                var args = jsCode.Substring(index, ArgsArrayReplacement.Length);
+
+                var newArgs = $"[{string.Join("' ,'", str_args)}]";
+
+                jsCode = jsCode.Replace(args, newArgs);
+            }
+
+            return jsCode;
+        }
+    }
     public record Command(string Identifier, CommandAction Action, params string[] Info); // oh well!
 
     public delegate void CommandAction(SafeList<object> args);
@@ -32,69 +53,56 @@ namespace Lemur.OS
     /// </summary>
     public partial class CommandLine
     {
-        public bool TryCommand(string input)
+        public bool TryCommand(string termInput)
         {
-            if (Find(input) is Command _cmd && _cmd.Identifier != null && _cmd.Identifier != "NULL" && _cmd.Action != null)
+            var inputs = termInput.Split(';');
+
+            foreach (var input in inputs)
             {
-                _cmd.Action.Invoke(new SafeList<object?>([]));
-                return true;
-            }
-
-            string[] split = input.Split(' ');
-
-            if (split.Length == 0)
-                return false;
-
-            string cmdName = split.First();
-            var str_args = split[1..];
-
-            if (Aliases.TryGetValue(cmdName, out var alias) && File.Exists(alias))
-            {
-                var jsCode = File.ReadAllText(alias);
-
-                const string ArgsArrayReplacement = "[/***/]";
-
-                var index = jsCode.IndexOf(ArgsArrayReplacement);
-
-                if (index != -1)
+                if (Commands.FirstOrDefault(c => c.Identifier == input) is Command _cmd && _cmd.Identifier != null && _cmd.Identifier != "NULL" && _cmd.Action != null)
                 {
-                    var args = jsCode.Substring(index, ArgsArrayReplacement.Length);
-
-                    var newArgs = $"[{string.Join("' ,'", str_args)}]";
-
-                    jsCode = jsCode.Replace(args, newArgs);
+                    _cmd.Action.Invoke(new SafeList<object?>([]));
+                    return true;
                 }
 
-                _ = Task.Run(async delegate { await Computer.Current.JavaScript.Execute(jsCode); });
+                string[] split = input.Split(' ');
 
-                return true;
+                if (split.Length == 0)
+                    continue;
+
+                string cmdName = split.First();
+                var str_args = split[1..];
+
+                if (Aliases.TryGetValue(cmdName, out var alias) && File.Exists(alias))
+                {
+                    var jsCode = File.ReadAllText(alias);
+
+                    jsCode = JavaScriptPreProcessor.InjectCommandLineArgs(str_args, jsCode);
+
+                    _ = Task.Run(async delegate { await Computer.Current.JavaScript.Execute(jsCode); });
+
+                    return true;
+                }
+
+                return TryInvoke(cmdName, str_args);
+
             }
 
-            return TryInvoke(cmdName, str_args);
+            return false; 
         }
-        public Command Find(string name) => Commands.FirstOrDefault(c => c.Identifier == name);
-        public bool TryInvoke(string name, string[] args)
+
+       
+
+        public bool TryInvoke(string name, params string[] args)
         {
-            Command cmd = Find(name);
+            Command? cmd = Commands.FirstOrDefault(c => c.Identifier == name);
             cmd?.Action?.Invoke(args);
             return cmd?.Action != null;
         }
-        protected virtual void Dispose(bool disposing)
-        {
-            if (!Disposing)
-            {
-                if (disposing)
-                {
-                    Commands.Clear();
-                    Aliases.Clear();
-                }
-                Disposing = true;
-            }
-        }
         public void Dispose()
         {
-            Dispose(disposing: true);
-            GC.SuppressFinalize(this);
+            Commands.Clear();
+            Aliases.Clear();
         }
     }
     /// <summary>
@@ -495,10 +503,10 @@ namespace Lemur.OS
                 aliasbuilder.Append($"\n{item.Key} -> {item.Value.Split('\\').Last()}");
 
 
-            terminal?.DrawTextBox(" ### Native Commands ### ");
+            terminal?.output.AppendText(" ### Native Commands ### ");
             terminal?.output.AppendText(cmdbuilder.ToString());
 
-            terminal?.DrawTextBox(" ### Command Aliases ### ");
+            terminal?.output.AppendText(" ### Command Aliases ### ");
             terminal?.output.AppendText(aliasbuilder.ToString());
 
         }

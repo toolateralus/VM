@@ -4,6 +4,7 @@ using Lemur.JavaScript.Api;
 using Lemur.JavaScript.Network;
 using Lemur.JS;
 using Lemur.OS;
+using Lemur.OS.Language;
 using Lemur.Types;
 using Lemur.Windowing;
 using Newtonsoft.Json;
