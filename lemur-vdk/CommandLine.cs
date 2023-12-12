@@ -503,11 +503,15 @@ namespace Lemur.OS.Language
                 aliasbuilder.Append($"\n{item.Key} -> {item.Value.Split('\\').Last()}");
 
 
-            terminal?.output.AppendText(" ### Native Commands ### ");
-            terminal?.output.AppendText(cmdbuilder.ToString());
+            terminal.Dispatcher.Invoke(() =>
+            {
+                terminal?.output.AppendText(" ### Native Commands ### ");
+                terminal?.output.AppendText(cmdbuilder.ToString());
 
-            terminal?.output.AppendText(" ### Command Aliases ### ");
-            terminal?.output.AppendText(aliasbuilder.ToString());
+                terminal?.output.AppendText(" ### Command Aliases ### ");
+                terminal?.output.AppendText(aliasbuilder.ToString());
+            });
+
 
         }
         [Command("run", "runs a JavaScript file of specified path in the computers main engine.")]

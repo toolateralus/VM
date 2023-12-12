@@ -11,6 +11,7 @@
             <RowDefinition Height="auto"/>
             <RowDefinition Height="*"/>
             <RowDefinition Height="auto"/>
+            <RowDefinition Height="auto"/>
         </Grid.RowDefinitions>
             
         <avalonEdit:TextEditor IsReadOnly="true" BorderBrush="White" BorderThickness="1" Grid.Row="1" Background="Black" Foreground="White" SyntaxHighlighting="JavaScriptCustom" FontSize="16" x:Name="output"  FontFamily="Cascadia Code Extra Light" Height="Auto" Width="Auto" HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Auto" WordWrap="True" />
@@ -84,7 +85,7 @@
             </ComboBox>
 
         </StackPanel>
-        
-        <avalonEdit:TextEditor BorderBrush="White" BorderThickness="1" Grid.Row="2" Background="Black" Foreground="White" SyntaxHighlighting="JavaScriptCustom" FontSize="16" x:Name="input" IsReadOnly="false"  FontFamily="Cascadia Code Extra Light" Height="Auto" Width="Auto" HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Auto" WordWrap="True"/>
+        <Label x:Name="interpreterLabel" TextBlock.LineStackingStrategy="BlockLineHeight" TextBlock.LineHeight="5" Grid.Row="2" Content="terminal" MaxHeight="15" FontSize="10" FontFamily="Cascadia Code Extra Light" Background="Black" Foreground="Cyan"/>
+        <avalonEdit:TextEditor BorderBrush="White" BorderThickness="1" Grid.Row="3" Background="Black" Foreground="White" SyntaxHighlighting="JavaScriptCustom" FontSize="16" x:Name="input" IsReadOnly="false"  FontFamily="Cascadia Code Extra Light" Height="Auto" Width="Auto" HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Auto" WordWrap="True"/>
     </Grid>
 </UserControl>

@@ -90,14 +90,18 @@ namespace Lemur.GUI
                         var i = (Interpreter)interpreterBox.SelectedIndex;
                         output.AppendText($"\nusing interpreter::{i}");
 
+                        // switching to javascript;
                         if (i == Interpreter.JavaScript)
                         {
+                            interpreterLabel.Content = "JavaScript";
                             cachedInput[Interpreter.Terminal] = input.Text;
                             input.Text = cachedInput[Interpreter.JavaScript];
                             input.MinHeight = 100;
                             input.Focus();
+                        // switching to terminal
                         } else if (i == Interpreter.Terminal)
                         {
+                            interpreterLabel.Content = "Terminal";
                             cachedInput[Interpreter.JavaScript] = input.Text;
                             input.Text = cachedInput[Interpreter.Terminal];
                             input.MinHeight = 0;
