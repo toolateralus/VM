@@ -116,7 +116,7 @@ namespace Lemur.GUI
             if (isDragging)
                 return;
 
-            window.BringToTopOfDesktop();
+            window.BringIntoViewAndToTop();
             startDragPosition = mousePos;
             targetWindow = window;
             isDragging = true;
@@ -126,7 +126,7 @@ namespace Lemur.GUI
         {
             if (isResizing)
                 return;
-            window.BringToTopOfDesktop();
+            window.BringIntoViewAndToTop();
             PerformResize(window, edge, relPos);
             resizingEdge = edge;
             targetWindow = window;

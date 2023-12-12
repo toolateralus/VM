@@ -4,12 +4,14 @@ using Lemur.JavaScript.Network;
 using Lemur.Windowing;
 using Newtonsoft.Json.Linq;
 using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Net;
 using System.Runtime.CompilerServices;
 using System.Text;
 using System.Threading.Tasks;
+using System.Windows.Documents;
 
 namespace Lemur.JavaScript.Embedded
 {
@@ -18,9 +20,8 @@ namespace Lemur.JavaScript.Embedded
     {
         public event TransmissionStream OnTransmit;
         private int size;
-
         internal string processID;
-
+        private List<string> attachedListeners = [];
         public network()
         {
             OnTransmit = Computer.Current.NetworkConfiguration.OnSendMessage;
@@ -36,6 +37,8 @@ namespace Lemur.JavaScript.Embedded
                     return;
                 }
 
+                attachedListeners.Add(methodName);
+
                 p.UI.Engine.CreateNetworkEventHandler(processID, methodName);
             }
         }
@@ -44,11 +47,7 @@ namespace Lemur.JavaScript.Embedded
         {
             if (Computer.GetProcess(processID) is Process p)
             {
-                if (p.UI.Engine.Disposing)
-                {
-                    Notifications.Now("JavaScript engine was disposing");
-                    return;
-                }
+                attachedListeners.Remove(methodName);
 
                 p.UI.Engine.RemoveNetworkEventHandler(processID, methodName);
             }
@@ -284,5 +283,12 @@ namespace Lemur.JavaScript.Embedded
             return @event.value;
         }
 
+        internal void Dispose()
+        {
+            string[] listeners = attachedListeners.ToArray();
+
+            foreach (var listener in listeners)
+                removeListener(listener);
+        }
     }
 }

@@ -13,7 +13,7 @@ namespace Lemur.GUI
         public double lastW = 0, lastH = 0;
         public Point lastPos = new();
         public bool Maximized = false;
-        public Action? OnAppClosed { get; internal set; }
+        public Action? OnApplicationClose { get; internal set; }
         public bool WindowIsFocused { get; internal set; }
         internal void BeginResize(ResizeEdge edge, Point relPos)
         {
@@ -29,7 +29,7 @@ namespace Lemur.GUI
             windowManager.BeginMove(this, position);
         }
 
-        public void BringToTopOfDesktop()
+        public void BringIntoViewAndToTop()
         {
             if (Parent is Canvas grid && grid.Children.Contains(this))
             {
@@ -37,20 +37,13 @@ namespace Lemur.GUI
                 grid.Children.Add(this);
                 Panel.SetZIndex(this, Computer.Current.Window.TopMostZIndex);
 
-                if (!Maximized)
-                    ToggleMaximize();
+                if (Visibility == Visibility.Collapsed || Visibility == Visibility.Hidden)
+                    Visibility = Visibility.Visible;
             }
         }
         internal void ToggleVisibility()
         {
-
             Visibility ^= Visibility.Collapsed;
-
-            if (Visibility == Visibility.Visible)
-                BringToTopOfDesktop();
-
-            if (Visibility == Visibility.Hidden)
-                Visibility = Visibility.Visible;
         }
         public void ToggleMaximize()
         {
@@ -79,9 +72,8 @@ namespace Lemur.GUI
             lastPos = new(Canvas.GetLeft(this), Canvas.GetTop(this));
             Canvas.SetTop(this, 0);
             Canvas.SetLeft(this, 0);
-            Width = SystemParameters.PrimaryScreenWidth - 5;
+            Width = SystemParameters.PrimaryScreenWidth - 2.5;
             Height = SystemParameters.PrimaryScreenHeight - 25;
-            BringToTopOfDesktop();
 
         }
 

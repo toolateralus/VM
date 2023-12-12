@@ -1,5 +1,6 @@
 ﻿using Lemur.JavaScript.Api;
 using Lemur.JS;
+using Lemur.Windowing;
 using System;
 using System.Linq;
 using System.Windows;
@@ -26,23 +27,37 @@ namespace Lemur.GUI
         public Engine Engine { get; set; }
         public bool WindowIsFocused => ResizableParent?.WindowIsFocused ?? false;
 
+
         /// <summary>
         /// called during Close to cleanup any extra UI, Threading, JavaScript resources etc.
         /// </summary>
         internal event Action? OnApplicationClose;
-        public UserWindow()
+        readonly string pID;
+        public UserWindow(string pID)
         {
             InitializeComponent();
+            this.pID = pID;
             xBtn.Click += CloseWindow;
 
             // TODO: fix this up
-            minimizeBtn.Click += (_, _) => ResizableParent?.ToggleVisibility();
+            minimizeBtn.Click += (_, _) =>
+            {
+                ResizableParent?.ToggleVisibility();
 
-            maximizeBtn.Click += (_, _) => ResizableParent?.ToggleMaximize();
+                if (ResizableParent.Visibility == Visibility.Visible) {
+                    ResizableParent.BringIntoViewAndToTop();
+                }
+            };
+
+            maximizeBtn.Click += (_, _) =>
+            {
+                ResizableParent?.ToggleMaximize();
+                ResizableParent?.BringIntoViewAndToTop();
+            };
 
             long lastClickedTime = 0;
 
-            Toolbar.MouseLeftButtonDown += (_, e) =>
+            MouseLeftButtonDown += (_, e) =>
             {
                 if (DateTimeOffset.Now.ToUnixTimeMilliseconds() - lastClickedTime < 500)
                     ResizableParent?.ToggleMaximize();
@@ -59,12 +74,18 @@ namespace Lemur.GUI
         }
         private void UserWindow_PreviewKeyDown(object sender, KeyEventArgs e)
         {
-            if (e.Key == Key.C && 
+            if (e.Key == System.Windows.Input.Key.C &&
                 WindowIsFocused &&
-                Keyboard.IsKeyDown(Key.LeftCtrl) && 
-                Keyboard.IsKeyDown(Key.LeftShift))
+                Keyboard.IsKeyDown(System.Windows.Input.Key.LeftCtrl) &&
+                Keyboard.IsKeyDown(System.Windows.Input.Key.LeftShift))
             {
-                Close();
+                if (Computer.GetProcess(pID) is not Process proc)
+                {
+                    Notifications.Now("Failed to find process from user window terminate.. this is not good.");
+                    return;
+                }
+
+                proc.Terminate();
             }
                 
             if (Engine == null)
@@ -86,7 +107,7 @@ namespace Lemur.GUI
         }
         protected override void OnPreviewMouseLeftButtonDown(MouseButtonEventArgs e)
         {
-            ResizableParent?.BringToTopOfDesktop();
+            ResizableParent?.BringIntoViewAndToTop();
         }
         internal void InitializeContent(ResizableWindow frame, UserControl actualUserContent, Engine? engine)
         {
@@ -99,7 +120,7 @@ namespace Lemur.GUI
         }
         internal void Close()
         {
-            Engine?.Dispose();
+            ResizableParent.OnApplicationClose?.Invoke();
             OnApplicationClose?.Invoke();
         }
         /// <summary>
@@ -109,7 +130,8 @@ namespace Lemur.GUI
         /// <param name="e"></param>
         private void CloseWindow(object sender, RoutedEventArgs e)
         {
-            Close();
+            var proc = Computer.GetProcess(pID) ?? throw new InvalidOperationException("Failed to find process on window close. What?");
+            proc.Terminate();
             e.Handled = true;
         }
         // this is in use. the IDE just says it isn't

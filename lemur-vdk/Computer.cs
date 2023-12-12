@@ -3,7 +3,6 @@ using Lemur.GUI;
 using Lemur.JavaScript.Api;
 using Lemur.JavaScript.Network;
 using Lemur.JS;
-using Lemur.OS;
 using Lemur.OS.Language;
 using Lemur.Types;
 using Lemur.Windowing;
@@ -11,9 +10,11 @@ using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Reflection;
+using System.Runtime.CompilerServices;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
@@ -21,12 +22,37 @@ using System.Windows.Controls;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Shapes;
+using static System.Runtime.InteropServices.JavaScript.JSType;
 
 namespace Lemur
 {
     public record Process(UserWindow UI, string ID, string Type)
     {
         public Action? OnProcessTermination { get; internal set; }
+
+        /// <summary>
+        /// Anything that wants to close a process MUST call this method to do so.
+        /// </summary>
+        internal void Terminate()
+        {
+            // destroy event handlers mostly.
+            OnProcessTermination?.Invoke();
+
+            // close visual UI.
+            UI.Close();
+
+            // dispose of the js execution context
+            UI.Engine?.Dispose();
+
+            // remove the process and or type from process table.
+            var procList = Computer.ProcessClassTable[Type];
+            procList.Remove(this);
+
+            if (procList.Count == 0)
+                Computer.ProcessClassTable.Remove(Type);
+            else Computer.ProcessClassTable[Type] = procList; // unnecessary? probably.
+
+        }
     }
     public class Computer : IDisposable
     {
@@ -43,7 +69,6 @@ namespace Lemur
         private static Computer? current;
         private int startupTimeoutMs = 20_000;
         public static Computer Current => current;
-
 
         public static IEnumerable<Process> AllProcesses()
         {
@@ -191,30 +216,8 @@ namespace Lemur
                 void closeMethod()
                 {
                     userWindow.OnApplicationClose -= OnWindowClosed;
-
-                    if (!ProcessClassTable.ContainsKey(pClass))
-                    {
-                        Notifications.Now($"Tried to close non existent app : {pClass}");
-                        return;
-                    }
-
-                    List<Process> array = ProcessClassTable[pClass];
-
-                    process.OnProcessTermination?.Invoke();
-
                     Window.Desktop.Children.Remove(resizable_window);
-
-                    resizable_window.Content = null;
-
                     Window.RemoveTaskbarButton(pClass);
-
-                    array.Remove(process);
-
-                    if (array.Count == 0)
-                        ProcessClassTable.Remove(pClass);
-                    else
-                        ProcessClassTable[pClass] = array;
-
                 }
             }
 
@@ -226,7 +229,7 @@ namespace Lemur
             // todo: make a unified interface for windowing, we have a window manager and window classes but
             // the behavior feels scattered and disorganized. fetching weird references for controls should not be a thing : 
             // we should have a query system or just methods exposing behavior directly on easy to get to objects.
-            resizable_window.BringToTopOfDesktop();
+            resizable_window.BringIntoViewAndToTop();
 
 
             // todo : change this, works for now but it's annoying.
@@ -244,19 +247,7 @@ namespace Lemur
 
             ProcessClassTable[process.Type] = procList;
 
-            process.OnProcessTermination += () =>
-            {
-                var procList = ProcessClassTable[process.Type];
-
-                procList.Remove(process);
-
-                ProcessClassTable[process.Type] = procList;
-                
-                if (procList.Count == 0)
-                    ProcessClassTable.Remove(process.Type);
-
-            };
-
+           
         }
         private static void GetProcessesOfType(string name, out List<Process> processes)
         {
@@ -364,7 +355,10 @@ namespace Lemur
 
                 btn.ContextMenu = contextMenu;
 
-                async void OnDesktopIconPressed(object? sender, RoutedEventArgs e) => await OpenCustom(type);
+                async void OnDesktopIconPressed(object? sender, RoutedEventArgs e)
+                {
+                    await OpenCustom(type);
+                }
 
                 SetupIcon(type, btn, Runtime.GetAppIcon(appName));
             }
@@ -407,12 +401,25 @@ namespace Lemur
                     Header = "uninstall app"
                 };
 
+                MenuItem delete = new()
+                {
+                    Header = "delete app (no undo)"
+                };
+
                 uninstall.Click += (sender, @event) =>
                 {
                     var answer = MessageBox.Show($"are you sure you want to uninstall {appName}?", "uninstall?", MessageBoxButton.YesNo);
 
                     if (answer == MessageBoxResult.Yes)
                         Computer.Current.Uninstall(appName);
+                };
+
+                delete.Click += (sender, @event) =>
+                {
+                    var answer = System.Windows.MessageBox.Show($"are you sure you want to delete {appName}?", "Delete PERMANENTLY??", MessageBoxButton.YesNo, System.Windows.MessageBoxImage.Warning);
+
+                    if (answer == MessageBoxResult.Yes)
+                        FileSystem.Delete(appName);
                 };
 
                 btn.ContextMenu ??= new();
@@ -443,6 +450,7 @@ namespace Lemur
         }
         public async Task OpenCustom(string type, params object[] cmdLineArgs)
         {
+
             if (!type.Contains(".app"))
                 type += ".app";
 
@@ -608,7 +616,7 @@ namespace Lemur
                         procs.Add(item);
 
                     foreach (var item in procs)
-                        item.UI.Close();
+                        item.Terminate();
                 }
 
 
@@ -629,7 +637,7 @@ namespace Lemur
         internal void CloseApp(string pID)
         {
             if (GetProcess(pID) is Process p)
-                p.UI.Close();
+                p.Terminate();
             else Notifications.Now($"Could not find process {pID}");
         }
         internal static Process? GetProcess(string pid)

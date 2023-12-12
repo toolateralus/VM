@@ -174,7 +174,7 @@ namespace Lemur.GUI
         {
             TopMostZIndex++;
 
-            var window = new UserWindow();
+            var window = new UserWindow(pID);
 
             // TODO: add a way for users to add buttons and toolbars easily through
             // their js code, that would be very helpful.
@@ -191,8 +191,6 @@ namespace Lemur.GUI
             // really hacky silly capture here.
             var w = resizableWindow;
 
-            window.OnApplicationClose += () =>
-                w?.OnAppClosed?.Invoke();
 
             window.Title.Content = pClass;
 
@@ -305,7 +303,7 @@ namespace Lemur.GUI
                             ctrlTabIndex = 0;
 
                         var ownerWindow = windowElement?.UI?.ResizableParent;
-                        ownerWindow?.BringToTopOfDesktop();
+                        ownerWindow?.BringIntoViewAndToTop();
                     }
                     break;
             }

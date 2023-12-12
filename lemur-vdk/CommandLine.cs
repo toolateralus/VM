@@ -166,13 +166,51 @@ namespace Lemur.OS.Language
         [Command("mangler", "mangles a javascript file's names & identifiers, or a range of lines. usage : mangler <filename> <optional lineStart> <optional lineEnd>")]
         private static void Mangler(SafeList<object> obj)
         {
-
             if (obj.Length == 0)
             {
-                Notifications.Now("must provide a file for mangler");
+                Notifications.Now("mangler::error must provide a file for mangler");
                 return;
             }
 
+            if (obj[0] is string fileName)
+            {
+                fileName = FileSystem.GetResourcePath(fileName);
+                if (!File.Exists (fileName))
+                {
+                    Notifications.Now("mangler::error : file did not exist");
+                    return;
+                } 
+            } 
+            else
+            {
+                Notifications.Now("mangler::error : invalid filename");
+                return;
+            }
+
+            var data = File.ReadAllText(fileName);
+
+            if (obj[1] is not string startIndex || !int.TryParse(startIndex, out var start))
+            {
+                File.WriteAllText(fileName, JavaScriptPreProcessor.MangleNames(data));
+                return;
+            }
+
+            if (obj[2] is not string endIndex || !int.TryParse(endIndex, out var end))
+            {
+                Notifications.Now("invalid end index");
+                return;
+            }
+
+            var lines = data.Split('\n')[start..end];
+
+            var obfuscatedLines = JavaScriptPreProcessor.MangleNames(string.Join("\n", lines)).Split('\n');
+            int line = 0;
+
+            for (int i = 0; i < lines.Length; i++)
+            {
+                if (i > start && i < end)
+                    lines[i] = obfuscatedLines[line++];
+            }
 
         }
         [Command("delete", "deletes a file / folder. use with caution!")]
@@ -292,34 +330,11 @@ namespace Lemur.OS.Language
             foreach (var pid in toKill)
             {
                 var proc = Computer.GetProcess(pid);
-                proc?.UI.Close();
+                proc?.Terminate();
             }
 
         }
-        [Command("dispose", "disposes of the current running JavaScript environment, and instantiates a new one.")]
-        private static void DisposeJSEnv(SafeList<object> obj)
-        {
-            if (Computer.Current.JavaScript.Disposing)
-            {
-                Notifications.Now("You cannot reset the JS environment while it's in the process of disposing.");
-                return;
-            }
-
-            var oldEngine = Computer.Current.JavaScript;
-            oldEngine.Dispose();
-
-            Engine newEngine = new();
-
-
-            Computer.Current.JavaScript = newEngine;
-
-            if (Computer.Current.JavaScript == newEngine)
-            {
-                Notifications.Now("Engine successfully swapped");
-                return;
-            }
-            Notifications.Now("Engine swap failed. Please restart your computer.");
-        }
+      
         [Command("host", "hosts a server on the provided <port>, none provided it will default to 8080")]
         private static void StartHosting(SafeList<object> obj)
         {

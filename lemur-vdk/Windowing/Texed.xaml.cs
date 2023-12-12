@@ -105,20 +105,20 @@ namespace Lemur.GUI
         }
         protected override void OnKeyUp(KeyEventArgs e)
         {
-            var ctrl = Keyboard.IsKeyDown(Key.LeftCtrl);
+            var ctrl = Keyboard.IsKeyDown(System.Windows.Input.Key.LeftCtrl);
 
-            if (ctrl && e.Key == Key.S)
+            if (ctrl && e.Key == System.Windows.Input.Key.S)
                 Save();
-            else if (ctrl && e.Key == Key.OemPlus)
+            else if (ctrl && e.Key == System.Windows.Input.Key.OemPlus)
                 textEditor.FontSize += 1;
-            else if (ctrl && e.Key == Key.OemMinus && textEditor.FontSize > 0)
+            else if (ctrl && e.Key == System.Windows.Input.Key.OemMinus && textEditor.FontSize > 0)
                 textEditor.FontSize -= 1;
-            else if (ctrl && e.Key == Key.LeftShift && Keyboard.IsKeyDown(Key.Tab))
+            else if (ctrl && e.Key == System.Windows.Input.Key.LeftShift && Keyboard.IsKeyDown(System.Windows.Input.Key.Tab))
             {
                 // we should have 'tabs' in future, allowing for several open documents at once.
                 // this should be relatively easy.
             }
-            else if (e.Key == Key.F5)
+            else if (e.Key == System.Windows.Input.Key.F5)
             {
                 RunButton_Click(null!, null!);
             }
@@ -245,7 +245,7 @@ namespace Lemur.GUI
                             break;
                         }
 
-                    Computer.Current.JavaScript.Execute($"app.start('{name}')");
+                    Computer.Current.JavaScript.Execute($"App.start('{name}')");
                     break;
 
                 case ".js":
@@ -256,8 +256,8 @@ namespace Lemur.GUI
                         var jsEngine = new Engine();
                         Computer.Current.OpenApp(terminal, "cmd.app", Computer.GetNextProcessID(), engine: jsEngine);
                     }
-
-                    await terminal.Engine.Execute(string.IsNullOrEmpty(textEditor.Text) ? "print('You must provide some javascript to execute...')" : textEditor.Text);
+                    var code = string.IsNullOrEmpty(textEditor.Text) ? "print('You must provide some javascript to execute...')" : textEditor.Text;
+                    Task.Run(async () => { await terminal.Engine.Execute(code); });
                     break;
 
                 default:

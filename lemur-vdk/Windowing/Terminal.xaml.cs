@@ -66,7 +66,7 @@ namespace Lemur.GUI
             Engine ??= new();
             Window = rsz;
 
-            rsz.OnAppClosed += () =>
+            rsz.OnApplicationClose += () =>
             {
                 var json = JsonConvert.SerializeObject(commandHistory, Formatting.Indented);
                 FileSystem.Write("system/history.txt", json);
@@ -82,9 +82,9 @@ namespace Lemur.GUI
             
             switch (e.Key)
             {
-                case Key.Tab:
+                case System.Windows.Input.Key.Tab:
                     // switching interpreters.
-                    if (Keyboard.IsKeyDown(Key.LeftShift))
+                    if (Keyboard.IsKeyDown(System.Windows.Input.Key.LeftShift))
                     {
                         interpreterBox.SelectedIndex = 1 - interpreterBox.SelectedIndex;
                         var i = (Interpreter)interpreterBox.SelectedIndex;
@@ -111,8 +111,8 @@ namespace Lemur.GUI
                     }
                     break;
 
-                case Key.T:
-                    if (!Keyboard.IsKeyDown(Key.LeftCtrl))
+                case System.Windows.Input.Key.T:
+                    if (!Keyboard.IsKeyDown(System.Windows.Input.Key.LeftCtrl))
                         return;
 
                     // todo: fix up temp file.
@@ -124,12 +124,12 @@ namespace Lemur.GUI
                     break;
 
 
-                case Key.Enter:
-                case Key.F5:
+                case System.Windows.Input.Key.Enter:
+                case System.Windows.Input.Key.F5:
                     await Send(e).ConfigureAwait(true);
                     break;
 
-                case Key.Up:
+                case System.Windows.Input.Key.Up:
                     if ((Interpreter)interpreterBox.SelectedIndex == Interpreter.JavaScript)
                         return;
 
@@ -143,7 +143,7 @@ namespace Lemur.GUI
                         input.Text = commandHistory[commandHistory.Count - 1 - historyIndex];
                     }
                     break;
-                case Key.Down:
+                case System.Windows.Input.Key.Down:
                     if ((Interpreter)interpreterBox.SelectedIndex == Interpreter.JavaScript)
                         return;
 
@@ -199,7 +199,7 @@ namespace Lemur.GUI
                 case Interpreter.JavaScript:
 
                     // for newlines
-                    if (!Keyboard.IsKeyDown(Key.LeftShift) && !Keyboard.IsKeyDown(Key.F5))
+                    if (!Keyboard.IsKeyDown(System.Windows.Input.Key.LeftShift) && !Keyboard.IsKeyDown(System.Windows.Input.Key.F5))
                         return;
 
                     if (string.IsNullOrEmpty(inputText))
