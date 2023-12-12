@@ -5,14 +5,14 @@ class Line {
         this.end = end;
     }
 
-    getClosestPoint(x, y) {
+    getClosestVec2(x, y) {
         const dx = this.end.x - this.start.x;
         const dy = this.end.y - this.start.y;
         const u = ((x - this.start.x) * dx + (y - this.start.y) * dy) / (dx * dx + dy * dy);
         return u >= 0 && u <= 1 ? this.start : u < 0 ? this.start : this.end;
     }
 }
-class Point {
+class Vec2 {
     constructor(x, y, color) {
         this.x = x;
         this.y = y;
@@ -34,9 +34,9 @@ class Point {
         this.y -= y;
         return this;
     }
-    subtract(otherPoint) {
-        this.x -= otherPoint.x;
-        this.y -= otherPoint.y;
+    subtract(otherVec2) {
+        this.x -= otherVec2.x;
+        this.y -= otherVec2.y;
         return this;
     }
     mult(scalar) {
@@ -81,24 +81,31 @@ class Point {
     }
 
 }
-class GameObject {
+class Node {
 
-    constructor(Points, scale, pos) {
-        this.scale = scale ?? new Point(1, 1);
-        this.pos = pos ?? new Point(0, 0);
-        this.points = Points ?? [];
-        this.edges = this.createEdges(this.points);
-        this.velocity = new Point(0, 0);
-        this._cachedColorRatio = undefined;
+    constructor(scale, pos, points) {
+        this.scale = scale ?? new Vec2(1, 1);
+        this.pos = pos ?? new Vec2(0, 0);
+        this.points = points;
+
+        if (this.points) {
+            this.edges = this.createEdges(this.points);
+
+            // this should probably be removed.
+            this._cachedColorRatio = undefined;
+        }
+        
+        this.velocity = new Vec2(0, 0);
+        
         this.rotation = 0;
         this.angular = 0;
         this.drag = 0.98;
     }
-    confine_to_screen_space(width) {
-        const min_x = 0;
-        const min_y = 0;
-        const max_x = width - this.scale.x;
-        const max_y = width - this.scale.y;
+    clamp_position(min = new Vec2(0, 0), max = new Vec2(1, 1)) {
+        const min_x = min.x;
+        const min_y = min.y;
+        const max_x = max.x - this.scale.x;
+        const max_y = max.y - this.scale.y;
         
         var collided = this.pos.x < min_x || this.pos.x > max_x || this.pos.y < min_y || this.pos.y > max_y;
         
@@ -107,37 +114,37 @@ class GameObject {
         
         return collided;
     }
-    distanceToPoint(x1, y1, x2, y2) {
+    distanceToVec2(x1, y1, x2, y2) {
         const dx = x2 - x1;
         const dy = y2 - y1;
         return Math.sqrt(dx ** 2 + dy ** 2);
     }
-    getClosestPoints(x, y) {
+    getClosestVec2s(x, y) {
 
         // sort edges by distance from query pt
         const sortedEdges = this.edges.slice().sort((edgeA, edgeB) => {
-            const distanceA = edgeA.start.distance(new Point(x, y));
-            const distanceB = edgeB.start.distance(new Point(x, y));
+            const distanceA = edgeA.start.distance(new Vec2(x, y));
+            const distanceB = edgeB.start.distance(new Vec2(x, y));
             return distanceA - distanceB;
         });
 
         // get closest
         const edge = sortedEdges[0];
 
-        // get Points
-        const closest = edge.getClosestPoint(x, y);
+        // get Vec2s
+        const closest = edge.getClosestVec2(x, y);
         const other = closest === edge.start ? edge.end : edge.start;
 
         // get ratio
-        const distanceClosestToQuery = closest.distance(new Point(x, y));
+        const distanceClosestToQuery = closest.distance(new Vec2(x, y));
         const distanceClosestToOther = closest.distance(other);
         this._cachedColorRatio = distanceClosestToQuery / (distanceClosestToQuery + distanceClosestToOther);
 
         return [closest, other];
     }
-    getBlendedColor(Points, lerpFunction) {
-        const A = Points[0];
-        const B = Points[1];
+    getBlendedColor(Vec2s, lerpFunction) {
+        const A = Vec2s[0];
+        const B = Vec2s[1];
         const blended = lerpFunction(A, B, this._cachedColorRatio);
         this._cachedColorRatio = 0;
         return blended;
@@ -160,12 +167,12 @@ class GameObject {
 
         return isInside;
     }
-    createEdges(Points) {
+    createEdges(Vec2s) {
         const edges = [];
 
-        for (let i = 0; i < Points.length; ++i) {
-            const pt1 = Points[i];
-            const pt2 = Points[(i + 1) % Points.length];
+        for (let i = 0; i < Vec2s.length; ++i) {
+            const pt1 = Vec2s[i];
+            const pt2 = Vec2s[(i + 1) % Vec2s.length];
             edges.push(new Line(pt1, pt2));
         }
         return edges;
@@ -187,23 +194,23 @@ class GameObject {
         const cosAngle = Math.cos(angle);
         const sinAngle = Math.sin(angle);
 
-        for (const Point of this.points) {
-            const x = Point.x - this.pos.x;
-            const y = Point.y - this.pos.y;
+        for (const Vec2 of this.points) {
+            const x = Vec2.x - this.pos.x;
+            const y = Vec2.y - this.pos.y;
 
             const rotatedX = x * cosAngle - y * sinAngle;
             const rotatedY = x * sinAngle + y * cosAngle;
 
-            Point.x = rotatedX + this.pos.x;
-            Point.y = rotatedY + this.pos.y;
+            Vec2.x = rotatedX + this.pos.x;
+            Vec2.y = rotatedY + this.pos.y;
         }
     }
 }
 class Scene {
-    // array of all GameObjects in Scene.
-    GameObjects = () => this.gOs;
-    constructor(gOs) {
-        this.gOs = gOs;
+    // array of all Nodes in Scene.
+    Nodes = () => this.nodes;
+    constructor(nodes) {
+        this.nodes = nodes;
     }
 }
 class Renderer {
@@ -351,14 +358,14 @@ class Renderer {
 
         gfx.clearColor(this.gfx_ctx, this.bgColor);
 
-        const gameObjects = scene.GameObjects();
+        const nodes = scene.Nodes();
 
         // all objects in Scene
-        for (let z = 0; z < gameObjects.length; ++z) {
-            const gO = gameObjects[z];
-            const edges = gO.edges;
-            const scale = gO.scale;
-            const pos = gO.pos;
+        for (let z = 0; z < nodes.length; ++z) {
+            const node = nodes[z];
+            const edges = node.edges;
+            const scale = node.scale;
+            const pos = node.pos;
             
             edges.forEach(edge => {
                 const start = edge.start;
@@ -378,9 +385,9 @@ class Renderer {
 }
 
 return {  
-    Point : Point,
+    Vec2 : Vec2,
     Line : Line, 
-    GameObject : GameObject,
+    Node : Node,
     Scene : Scene,
     Renderer: Renderer,
 };

@@ -1,6 +1,6 @@
 const {
-    Point,
-    GameObject,
+    Vec2,
+    Node,
     Scene,
 } = require('game.js');
 const { Profiler } = require('profiler.js');
@@ -16,17 +16,17 @@ class cubesOnline {
         
         this.playerSpeed = 50;
 
-        const gameObjects = [];
+        const nodes = [];
 
-        const go = new GameObject([], new Point(50, 50), new Point(Math.floor(this.width / 2), this.width - 100));
+        const go = new Node(new Vec2(50, 50), new Vec2(Math.floor(this.width / 2), this.width - 100));
         go.isMesh = true;
         go.colorIndex = Color.YELLOW;
         go.primitveIndex = Primitive.Rectangle;
 
         this.player = go;
 
-        gameObjects.push(this.player);
-        this.scene = new Scene(gameObjects);
+        nodes.push(this.player);
+        this.scene = new Scene(nodes);
 
         network.addListener('onMessage');
 
@@ -37,19 +37,25 @@ class cubesOnline {
         this.startTime = 0;
         
         this.shotVelocity = -500;
-    }
-    onCollision(gO) {
 
-        if (gO.isProjectile !== true) {
+        this.bounds = {
+            min : new Vec2(0, 0),
+            max : new Vec2(this.width, this.width),
+        };
+
+    }
+    onCollision(node) {
+
+        if (node.isProjectile !== true) {
             return;
         }
     
-        const index = this.scene.gOs.indexOf(gO);
-        this.scene.gOs.splice(index, 1);
+        const index = this.scene.nodes.indexOf(node);
+        this.scene.nodes.splice(index, 1);
 
         const packet = {
             type: 'bullet',
-            bullet: gO,
+            bullet: node,
         };
 
         network.send(this.opponent, this.channel, JSON.stringify(packet));
@@ -70,7 +76,7 @@ class cubesOnline {
         		return;
         	}
         	const obj = msg.bullet;
-            const bullet = new GameObject(obj.points, obj.scale, obj.pos);
+            const bullet = new Node(obj.points, obj.scale, obj.pos);
             bullet.isMesh = obj.isMesh;
             bullet.colorIndex = (obj.colorIndex + 1) % palette.length;
             bullet.primitveIndex = obj.primitveIndex;
@@ -78,7 +84,7 @@ class cubesOnline {
             bullet.velocity.y = -obj.velocity.y;
             bullet.drag = obj.drag;
             bullet.isProjectile = obj.isProjectile;
-            this.scene.gOs.push(bullet);
+            this.scene.nodes.push(bullet);
         }
     }
     m_render() {
@@ -96,24 +102,24 @@ class cubesOnline {
 		this.startTime = time;
         gfx.clearColor(this.gfx_ctx, Color.BLACK);
 
-        const gameObjects = this.scene.gOs;
+        const nodes = this.scene.nodes;
 
-        for (let i = 0; i < gameObjects.length; ++i) {
-            const gO = gameObjects[i];
+        for (let i = 0; i < nodes.length; ++i) {
+            const node = nodes[i];
 
-            if (gO.isMesh !== true)
+            if (node.isMesh !== true)
                 return;
 
-            const x = gO.pos.x;
-            const y = gO.pos.y;
+            const x = node.pos.x;
+            const y = node.pos.y;
 
-            const width = gO.scale.x;
-            const height = gO.scale.y;
+            const width = node.scale.x;
+            const height = node.scale.y;
 
-            const color = gO.colorIndex;
-            const prim = gO.primitveIndex;
+            const color = node.colorIndex;
+            const prim = node.primitveIndex;
 
-            const rot = gO.rotation;
+            const rot = node.rotation;
 
             gfx.drawFilledShape(this.gfx_ctx, Math.floor(x), Math.floor(y), width, height, rot, color, prim);
         };
@@ -132,15 +138,15 @@ class cubesOnline {
 
         const destroyed = [];
 
-        this.scene.gOs.forEach (gO => {
-            gO.velocity.y += 0.0981 * deltaTime;
-            gO.update_physics(deltaTime);
-            if (gO.confine_to_screen_space(this.width))
-                destroyed.push(gO);
+        this.scene.nodes.forEach (node => {
+            node.velocity.y += 0.0981 * deltaTime;
+            node.update_physics(deltaTime);
+            if (node.clamp_position(this.bounds.min, this.bounds.max))
+                destroyed.push(node);
         });
 
-        destroyed.forEach(gO => {
-            this.onCollision(gO);
+        destroyed.forEach(node => {
+            this.onCollision(node);
         });
     
 
@@ -164,11 +170,11 @@ class cubesOnline {
     }
     shoot() {
     
-    	if (this.scene.gOs.length > 2) {
+    	if (this.scene.nodes.length > 2) {
     		return;
     	}
     
-        const bullet = new GameObject([], this.player.scale, new Point(this.player.pos.x - this.player.scale.x, this.player.pos.y - this.player.scale.x));
+        const bullet = new Node(this.player.scale, new Vec2(this.player.pos.x - this.player.scale.x, this.player.pos.y - this.player.scale.x));
         bullet.isMesh = true;
         bullet.colorIndex = Color.RED;
         bullet.primitveIndex = Primitive.Rectangle;
@@ -176,6 +182,6 @@ class cubesOnline {
         bullet.isProjectile = true;
         bullet.drag = 0.999;
         
-        this.scene.gOs.push(bullet);
+        this.scene.nodes.push(bullet);
     }
 }

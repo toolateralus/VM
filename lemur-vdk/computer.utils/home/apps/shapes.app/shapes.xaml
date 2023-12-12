@@ -22,7 +22,7 @@
 		                    <DropShadowEffect/>
 		                </Slider.Effect>
             	</Slider>
-        		<Label Style="{StaticResource LabelStyle}" x:Name="gameObjectCountLabel" FontFamily="Consolas MS Bold" FontSize="20"
+        		<Label Style="{StaticResource LabelStyle}" x:Name="nodeCountLabel" FontFamily="Consolas MS Bold" FontSize="20"
                         Foreground="Cyan" Background="#474354" Content="paused"/>
             
              	 <Label Style="{StaticResource LabelStyle}" x:Name="framerateLabel" FontFamily="Consolas MS Bold" FontSize="20"

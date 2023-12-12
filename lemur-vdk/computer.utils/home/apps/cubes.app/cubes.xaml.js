@@ -1,7 +1,6 @@
 const {
-    Point,
-    Line, 
-    GameObject,
+    Vec2,
+    Node,
     Scene,
     Renderer,
 } = require('game.js');
@@ -9,132 +8,83 @@ const { Profiler } = require('profiler.js');
 
 class cubes {
     constructor(id) {
-
-        this.captureBeginTime = 0;
-        this.captureEndTime = 0;
-        // for the engine.
         this.id = id;
-        this.frameCt = 0;
-
-		// right now we just use a square resolution.
 		this.width = 256;
+        
+        // spawn ct of each color, 1 == 24 spawns, 2 == 48 etc.
+        this.spawnScene(5);
+        
+        this.bounds = {
+            min : new Vec2(0, 0),
+            max : new Vec2(this.width , this.width),
+        };
 
-        const gfx_ctx = gfx.createCtx(this.id, 'renderTarget', this.width, this.width);
-
+        // create a context and pass it to the renderer. in this case, 
+        // we won't be doing much with the ctx.
+     	const gfx_ctx = gfx.createCtx(this.id, 'renderTarget', this.width, this.width);
         this.renderer = new Renderer(this.width, gfx_ctx);
-
-        const gameObjects = [];
-
-		// creates a square for each color in the indexed palette, 24.
-		const countOfEach = 5;
-		
-		for (let z = 0; z < countOfEach; ++z)
-        for (let i = 0; i < palette.length; ++i) {
-            const verts = create_square();
-            const scale = new Point(25, 25);
-            const pos = new Point(i * i, this.renderer.width - z);
-            let gO = new GameObject(verts, scale, pos);
-            verts.forEach(v => v.color = i);
-            gameObjects.push(gO);
-        }
-
-        this.scene = new Scene(gameObjects);
-
-        // setup events (including render/physics loops)
-        this.setupUIEvents();
+        
+        app.eventHandler('this', 'm_render', XAML_EVENTS.RENDER);
+        
         this.profiler = new Profiler();
         this.profiler.start();
+    }
+    
+    // spawn a number of randomly colored node's.
+	spawnScene(countOfEach = 5) {
+		const nodes = [];
+		for (let z = 0; z < countOfEach; ++z) {
+	        for (let i = 0; i < palette.length; ++i) {
+	            const verts = create_square();
+	            const scale = new Vec2(25, 25);
+	            const pos = new Vec2(i * i, this.width - z);
+	            let node = new Node(scale, pos, verts);
+                
+	            verts.forEach(v => v.color = i);
+	            nodes.push(node);
+       		}
+   		}
 
-    }
-
-    setupUIEvents() {
-        app.eventHandler('this', 'm_render', XAML_EVENTS.RENDER);
-    }
-  
-    fpsCounterFrame(start) {
-        if (start) 
-        {
-            this.captureBeginTime = new Date().getTime();
-        } 
-        else
-        {
-            return new Date().getTime();
-        }
-    }
+        this.scene = new Scene(nodes);
+	}
+	
+	// the 'this.profiler.set_marker('region_name') is used to
+	// set various segments / splits in the profiler.
+	// the profiler is just a latency averager.
+	
     m_render() {
-
         this.profiler.set_marker('other');
 
-        if (this.frameCt % (25 * 2) == 0) {
-            let time = this.fpsCounterFrame(false);
-            const elapsed = time - this.captureBeginTime;
-            app.setProperty('framerateLabel', 'Content', `fps:${Math.floor(1 / elapsed * 1000)}`);
-            this.captureBeginTime = 0;
-            this.drawProfile();
-        } else {
-            this.fpsCounterFrame(false);
-        }
-        this.fpsCounterFrame(true);
-
-        this.profiler.set_marker('profiler');
-
-        this.frameCt++;
-
+		// draw objects
         this.renderer.m_drawScene(this.scene, this.gfx_ctx);
         this.profiler.set_marker('rendering');
         
+        // display draw
         gfx.flushCtx(this.renderer.gfx_ctx);
         this.profiler.set_marker('uploading');
 
-		const gos = this.scene.GameObjects();
-
-        gos.forEach(gO => {
-        	gO.velocity.y += 0.181; 
-        	gO.update_physics();
-        	gO.confine_to_screen_space(this.renderer.width);
-        	
-        	if (gO.pos.y > (this.renderer.width - 15)) {
-        		gO.velocity.y = random() * -20;
-        		gO.velocity.x = (1 - random());
-        	}
-        	
-        	if (gO.pos.x < 15 || gO.pos.x > this.renderer.width - 15) {
-        		gO.velocity.x = -(gO.velocity.x * 2);
-        	}
-        	
-        });
-        
-		
+        this.m_update();
         this.profiler.set_marker('collision');
-    }
-
-    collisionRes(body_a, body_b) {
-        if (body_a.collides(body_b.x, body_b.y)){
-            print (`${body_a} collided with ${body_b}`)
-        }
-    }
-
-    drawProfile() {
-        const results = this.profiler.sample_average();
-
-        const profilerWidth = app.getProperty('ProfilerPanel', 'ActualWidth') / 2;
-        const fpsWidth = app.getProperty('framerateLabel', 'ActualWidth');
-
-        const actualWidth = profilerWidth - fpsWidth;
         
-        let totalTime = 0;
-
-        for (const label in results)
-            totalTime += results[label];
-
-        const xFactor = actualWidth / totalTime;
-
-        for (const label in results) {
-            const time = results[label];
-            app.setProperty(label, 'Content', `${time / 10_000} ms ${label}`);
-            app.setProperty(label, 'Width', time * xFactor);
-        }
+        // draws the profile gfx.
+        this.profiler.drawProfile();
     }
     
+    m_update(deltaTime = (8 / 1000)) {
+
+    	this.scene.nodes.forEach(node => {
+        	// gravity
+        	node.velocity.y = 1 * deltaTime;
+        	
+        	node.update_physics(deltaTime);
+        	let collided = node.clamp_position(this.bounds.min, this.bounds.max);
+        	
+        	// bounce;
+        	if (collided) {
+        		node.velocity.y = random() * -20 / deltaTime;
+        		node.velocity.x = -(node.velocity.x * 2);
+        	}
+        });
+    }
     
 }

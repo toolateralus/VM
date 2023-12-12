@@ -28,7 +28,6 @@ namespace Lemur.GUI
     /// </summary>
     public partial class DesktopWindow : Window, IDisposable
     {
-        private Timer clock;
         public bool Disposing;
 
         public static event Action<Key, bool> OnKeyDown;
@@ -47,22 +46,14 @@ namespace Lemur.GUI
             // we can't get events for the desktop
             Keyboard.AddPreviewKeyDownHandler(App.Current.MainWindow, Computer_KeyDown);
 
-            clock = new Timer(delegate
+            CompositionTarget.Rendering += delegate
             {
-                Dispatcher.Invoke(this.UpdateComputerTime);
-            });
-
-            clock.Change(0, TimeSpan.FromSeconds(10).Milliseconds);
+                DateTime now = DateTime.Now;
+                string formattedDateTime = now.ToString("MM/dd/yy || h:mm:ss");
+                TimeLabel.Content = formattedDateTime;
+            };
 
         }
-
-        public void UpdateComputerTime()
-        {
-            DateTime now = DateTime.Now;
-            string formattedDateTime = now.ToString("MM/dd/yy || h:mm");
-            TimeLabel.Content = formattedDateTime;
-        }
-
         internal ContextMenu GetNativeContextMenu(string appName)
         {
             var contextMenu = new ContextMenu();
@@ -331,7 +322,6 @@ namespace Lemur.GUI
                 DesktopIconPanel.Children.Clear();
                 Taskbar.Children.Clear();
                 TaskbarStackPanel.Children.Clear();
-                clock.Dispose();
                 Content = null;
                 Close();
                 Disposing = true;

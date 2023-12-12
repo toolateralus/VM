@@ -29,6 +29,6 @@ The game does basically nothing right now, it just bounces cube projectiles back
 
 
 
-If successful, the bullet will bounce up and down off the bounds of the screen, changing colors. Each time a gameObject bounces, it would have been sent over the network to the other player.
+If successful, the bullet will bounce up and down off the bounds of the screen, changing colors. Each time a node bounces, it would have been sent over the network to the other player.
 
 This is currently very unreliable but a big start to the network system. Many bugs & crashes are expected, and no security is in place.

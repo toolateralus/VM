@@ -1,6 +1,6 @@
 ```Javascript
-class Point {
-    // you do NOT need to provide a color. only when using Point() for vertices with the provided line renderers, or your own vertex color / shading.
+class Vec2 {
+    // you do NOT need to provide a color. only when using Vec2() for vertices with the provided line renderers, or your own vertex color / shading.
     constructor(x, y, color) {
         this.x = x;
         this.y = y;
@@ -8,7 +8,7 @@ class Point {
     }
     
     // this class has many helper methods.
-    // 'pt' or 'other' refers to another Point() instance.
+    // 'pt' or 'other' refers to another Vec2() instance.
     // x and y refer to numerical coordinates.
 
     // color is often not used
@@ -18,7 +18,7 @@ class Point {
     addPt(pt);
     add(x, y);
 
-    subtract(otherPoint);
+    subtract(otherVec2);
 
     mult(scalar);
     divide(scalar);
@@ -36,55 +36,33 @@ class Point {
 ```
 
 ```Javascript
-class GameObject {
+class Node {
 
-    // points is a list of Point() objects representing the vertices of this GameObject.
-    constructor(Points, scale, pos) {
-        this.scale = scale ?? new Point(1, 1);
-        this.pos = pos ?? new Point(0, 0);
-        this.points = Points ?? [];
-        this.edges = this.createEdges(this.points);
-        this.velocity = new Point(0, 0);
-        this._cachedColorRatio = undefined; // deprecated, do not use.
+    constructor(scale, pos) {
+        this.scale = scale ?? new Vec2(1, 1);
+        this.pos = pos ?? new Vec2(0, 0);
+        this.velocity = new Vec2(0, 0);
+
         this.rotation = 0;
         this.angular = 0;
         this.drag = 0.95;
     }
 
     // clamps the position of the game object between 0 and width, which should be in pixel space, ie the resolution of the renderer.
-    confine_to_screen_space(width);
+    clamp_position(min : Vec2, max : Vec2);
 
-    // this function is not correct and should not be used, it is deprecated, but not yet removed.
-    distanceToPoint(x1, y1, x2, y2);
+    update_physics(deltaTime : number);
 
-    // returns the closest and second closest Point to Point(x,y);
-    // in an array [closest, other];
-    getClosestPoints(x, y)
-    
-    // blends [a, b] a two-element array Points, by their vertex colors using the provided interpolation function, and returns the blended value.
-    getBlendedColor(Points, lerpFunction);
-
-    // returns true if this gameObject's AABB (at position, of size scale) collides with Point(x, y)
-    collides(x, y);
-
-    // updates the 'edges' field with new lines based on the current vertex data.
-    createEdges(Points);
-
-    // applys an euler integrator to velocity and angular velocity,
-    // and then drag.
-    update_physics();
-
-    // angle is a double in (degrees | radians)?
-    rotate(angle);
+    rotate(angle : number);
 }
 ```
-this one's not quite neccesary, but is useful as the line renderer's use it as a unified way to accept a collection of GameObjects.
+this one's not quite neccesary, but is useful as the line renderer's use it as a unified way to accept a collection of Nodes.
 ``` JavaScript
 class Scene {
-    // array of all GameObjects in Scene.
-    GameObjects = () => this.gOs;
-    constructor(gOs) {
-        this.gOs = gOs;
+    // array of all Nodes in Scene.
+    Nodes = () => this.nodes;
+    constructor(nodes) {
+        this.nodes = nodes;
     }
 }
 ```

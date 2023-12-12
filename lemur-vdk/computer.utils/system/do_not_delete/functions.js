@@ -25,10 +25,10 @@ function to_color(color) {
     return packedColor;
 }
 function create_square() {
-    const v1 = new Point(-0.5, -0.5, Color.WHITE)
-    const v2 = new Point(-0.5, 0.5, Color.WHITE)
-    const v3 = new Point(0.5, 0.5, Color.WHITE)
-    const v4 = new Point(0.5, -0.5, Color.WHITE)
+    const v1 = new Vec2(-0.5, -0.5, Color.WHITE)
+    const v2 = new Vec2(-0.5, 0.5, Color.WHITE)
+    const v3 = new Vec2(0.5, 0.5, Color.WHITE)
+    const v4 = new Vec2(0.5, -0.5, Color.WHITE)
     const verts = [v1, v2, v3, v4];
     return verts;
 }

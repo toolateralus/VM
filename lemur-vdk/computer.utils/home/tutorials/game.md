@@ -27,8 +27,8 @@ for our tutorial, these are mandatory :
 
 ```javascript
 const {
-    Point,
-    GameObject,
+    Vec2,
+    Node,
     Scene,
 } = require('game.js');
 ```
@@ -75,11 +75,11 @@ Also, while we're at it, we're going to add a `app.eventHandler` for our render 
 
 so, in our constructor  we will add :
 ---
-1. `this.resolution = new Point(256, 256);`
+1. `this.resolution = new Vec2(256, 256);`
 1. `this.gfx_ctx = gfx.createCtx(id, 'renderTarget', this.resolution.x, this.resolution.y);`
 3. `app.eventHandler('this', 'm_render', XAML_EVENTS.RENDER);`
  ---
-    this.resolution = new Point(256, 256);
+    this.resolution = new Vec2(256, 256);
 this will be the pixel width & height of our drawing context.
 the image, as shown above, will automatically scale to the size of the window.
 
@@ -101,7 +101,7 @@ this call creates our context, attaches our drawing surface to the control at sp
 ```Javascript
 constructor(id){
     
-    this.resolution = new Point(256, 256);
+    this.resolution = new Vec2(256, 256);
 
     this.gfx_ctx = gfx.createCtx(id, 'renderTarget', 
                         this.resolution.x, this.resolution.y);
@@ -121,7 +121,7 @@ m_render() {
 
 Now that we have our context, it's time to start drawing. But before we do that, we need to decide what we're going to draw. This involves creating a scene and designing some objects to populate it.
 
-This is the reason we `require()`'d GameObject, Point (a 2D vector), and Scene, which serves as a container.
+This is the reason we `require()`'d Node, Vec2 (a 2D vector), and Scene, which serves as a container.
 
 ---
 #### Very reccomended : 
@@ -137,14 +137,14 @@ constructor (id) {
     // start new code : 
 
     const gos = [];
-    // let's make a couple gameObjects to just statically draw
+    // let's make a couple nodes to just statically draw
     for (let i = 0; i < 5; ++i) {
-        const scale = new Point(5,5)
-        const pos = new Point(i, this.resolution.y - scale.y);
+        const scale = new Vec2(5,5)
+        const pos = new Vec2(i, this.resolution.y - scale.y);
         // we can just pass in an empty array for vertices
         // won't be using them.
         // for a long time, it was not optional.
-        const gO = new GameObject([], scale, pos);
+        const node = new Node(scale, pos);
 
         // we are going to add some extra fields
         // since we arent using vertex based rendering.
@@ -154,17 +154,17 @@ constructor (id) {
         // that's auto included in every context.
         // there is also a Color enum, with members like
         // Color.WHITE;
-        gO.colorIndex = i;
+        node.colorIndex = i;
 
         // this is a 0-3 index, check the enum.
-        gO.primitiveIndex = Primitive.Triangle;
+        node.primitiveIndex = Primitive.Triangle;
 
         // we'll use this as a quick way to validate 
         // we're working on our special game object.
-        gO.isMesh = true;
+        node.isMesh = true;
 
         // add it to our scene
-        gos.push(gO);
+        gos.push(node);
     }
     this.scene = new Scene(gos);
 }
@@ -179,22 +179,22 @@ m_render () {
 gfx.clearColor(this.gfx_ctx, Color.BLACK);
 
 // get our game objects.
-const gOs = this.scene.GameObjects();
+const nodes = this.scene.Nodes();
 
-gOs.forEach(gO => {
+nodes.forEach(node => {
 
     // if we found our special object
-    if (gO.isMesh === true) {
-        const x = gO.pos.x;
-        const y = gO.pos.y;
+    if (node.isMesh === true) {
+        const x = node.pos.x;
+        const y = node.pos.y;
 
-        const width = gO.scale.x;
-        const height = gO.scale.y;
+        const width = node.scale.x;
+        const height = node.scale.y;
 
-        const rotation = gO.rotation;
+        const rotation = node.rotation;
 
-        const primitive = gO.primitiveIndex;
-        const color = gO.colorIndex;
+        const primitive = node.primitiveIndex;
+        const color = node.colorIndex;
 
         // these arguments are pretty self explanatory
         // I've attempted to make the code as expressive as possible.

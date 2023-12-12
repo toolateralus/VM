@@ -94,8 +94,8 @@
             <Word>Date</Word>
 
             <Word>Renderer</Word>
-            <Word>GameObject</Word>
-            <Word>Point</Word>
+            <Word>Node</Word>
+            <Word>Vec2</Word>
             
             <Word>pos</Word>
             <Word>rotation</Word>
