@@ -15,6 +15,7 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
+using System.Windows.Data;
 using System.Windows.Input;
 using static Lemur.Computer;
 
@@ -85,13 +86,13 @@ namespace Lemur.JS
             TermModule = new term_t();
             KeyModule = new key();
 
-            EmbedObject("conv", ConvModule);
-            EmbedObject("network", NetworkModule);
-            EmbedObject("interop", InteropModule);
-            EmbedObject("gfx", GraphicsModule);
-            EmbedObject("app", AppModule);
-            EmbedObject("file", FileModule);
-            EmbedObject("term", TermModule);
+            EmbedObject("Convert", ConvModule);
+            EmbedObject("Network", NetworkModule);
+            EmbedObject("Interop", InteropModule);
+            EmbedObject("Graphics", GraphicsModule);
+            EmbedObject("App", AppModule);
+            EmbedObject("File", FileModule);
+            EmbedObject("Terminal", TermModule);
             EmbedObject("Key", KeyModule);
             EmbedType("Stopwatch", typeof(System.Diagnostics.Stopwatch));
             EmbedObject("config", Computer.Current.Config);
@@ -101,14 +102,14 @@ namespace Lemur.JS
             executionThread.Start();
 
             // the basic modules that are auto-included with each context.
+            // this differs from 'include' where that's a deferred loading strategy
+            // aka lazy loading on demand.
             LoadModules(FileSystem.GetResourcePath("do_not_delete"));
 
             InteropModule.OnModuleExported = (path, obj) =>
             {
                 Modules[path] = obj;
             };
-
-
         }
         public void EmbedObject(string name, object? obj)
         {
@@ -191,7 +192,10 @@ namespace Lemur.JS
             {
                 try
                 {
-                    m_engine_internal.Execute(File.ReadAllText(f));
+                    var code = File.ReadAllText(f);
+
+                    if (!string.IsNullOrEmpty(code))
+                        m_engine_internal.Execute(code);
                 }
                 catch (Exception e)
                 {

@@ -5,7 +5,7 @@
 - simply hover over the edge of a window to resize, you'll see different button bars appear when you're in the right spot. click and drag to resize.
 - to drag, left click & drag. you can grab anywhere that doesn't handle a click event, which on a fresh app is anywhere, or on any app, the title bar.
 #### for making applications
-- make sure you check out the in-app documentation, just click navigate with the file explorer, double click a .md file, and click 'render .md' to view docs in-app. theyre rough & unfinished.
+- make sure you check out the in-app documentation, just click navigate with the file explorer, double click a .md file, and click 'render .md' to view docs in-App. theyre rough & unfinished.
 #### user data location
 - computers get created in User/Appdata/Roaming/Lemur/..., this is your virtual file system.
 ### notes

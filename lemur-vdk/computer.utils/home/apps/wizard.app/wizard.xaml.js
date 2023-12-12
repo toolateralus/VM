@@ -2,10 +2,10 @@ class wizard
 {
     constructor(id) {
         this.id = id;
-        app.eventHandler('createBtn', 'create', XAML_EVENTS.MOUSE_DOWN);
+        App.eventHandler('createBtn', 'create', XAML_EVENTS.MOUSE_DOWN);
     }
     create() {
-        var appName = app.getProperty('nameBox', 'Text');
+        var appName = App.getProperty('nameBox', 'Text');
 
         var appDirName = appName;
 
@@ -36,8 +36,8 @@ d:DesignHeight="450" d:DesignWidth="800" Background="#474354" BorderBrush="White
 </UserControl>
         `;
 
-        file.write(xamljsPath, xamljsCode)
-        file.write(xamlPath, xamlCode)
+        File.write(xamljsPath, xamljsCode)
+        File.write(xamlPath, xamlCode)
 
         call(`install '${appDirName}'`);
     }

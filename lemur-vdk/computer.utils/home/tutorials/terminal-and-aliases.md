@@ -27,7 +27,7 @@ ideas surrounding writing console commands for the OS in JavaScript.
 
 {
 	print('hello world command:');
-	print(`server connected : ${network.IsConnected}`)
+	print(`server connected : ${Network.IsConnected}`)
 }
 
 ```
@@ -89,7 +89,7 @@ must follow C style data formats, such as double quoted strings `"mystring"` etc
 To enhance your console command system, consider dynamically
 loading your commands.
 ``` javascript
-term.setAliasDirectory($path)
+TerminalsetAliasDirectory($path)
 ```
 calling this function allows you to load all command files within a specified directory to avoid modifying the startup script for every new command.
 ```javascript startup.js
@@ -99,7 +99,7 @@ calling this function allows you to load all command files within a specified di
 	// note : this reloads the currently loaded 
 	// aliases and only loads under this dir.
 
-	term.setAliasDirectory(commandDirectory);
+	TerminalsetAliasDirectory(commandDirectory);
 	// By default, the method will just get the file name
 	// as in ::
 	// C//Users//MyPath.js
@@ -107,12 +107,12 @@ calling this function allows you to load all command files within a specified di
 	// -> MyPath
 	
 	// optionally, you can provide regex to control the 
-	// file naming convention. you MUST use C# Regex Format!!
+	// file naming Convertention. you MUST use C# Regex Format!!
 	
-	if (/*overriding the naming convention*/)
+	if (/*overriding the naming Convertention*/)
 	{
 		const regex = '^(.*?)_(.*?)_(.*?)\.js$';
-		term.setAliasDirectory(commandDirectory, regex)
+		TerminalsetAliasDirectory(commandDirectory, regex)
 	}
 }
 ```

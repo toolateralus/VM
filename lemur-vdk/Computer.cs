@@ -95,7 +95,7 @@ namespace Lemur
                 }
                 else
                 {
-                    Notifications.Now("Could not locate a valid 'config.json' file.");
+                    Notifications.Now("Could not locate a valid 'config.json' File.");
                 }
             }
 

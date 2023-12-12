@@ -17,12 +17,12 @@ class shapes {
 
 		this.width = 256;
 
-        this.gfx_ctx = gfx.createCtx(this.id, 'renderTarget', this.width, this.width);
+        this.gfx_ctx = Graphics.createCtx(this.id, 'renderTarget', this.width, this.width);
 
         this.spawnScene();
 
-        app.eventHandler('this', 'm_render', XAML_EVENTS.RENDER);
-        app.eventHandler('playButton', 'onPlayClicked', XAML_EVENTS.MOUSE_DOWN);
+        App.eventHandler('this', 'm_render', XAML_EVENTS.RENDER);
+        App.eventHandler('playButton', 'onPlayClicked', XAML_EVENTS.MOUSE_DOWN);
         
         this.profiler = new Profiler();
         this.profiler.start();
@@ -34,16 +34,16 @@ class shapes {
             max : new Vec2(this.width, this.width),
         };
         
-        //gfx.loadSkybox(this.gfx_ctx, 'icon.bmp');
+        //Graphics.loadSkybox(this.gfx_ctx, 'icon.bmp');
     }
     
 	onPlayClicked() {
 		
 		if (this.playing === true) {
-			app.setProperty('playButton', 'Content', 'Play');
+			App.setProperty('playButton', 'Content', 'Play');
 			this.playing = false;
 		} else {
-			app.setProperty('playButton', 'Content', 'Pause');
+			App.setProperty('playButton', 'Content', 'Pause');
 			this.playing = true;
 		}
 		
@@ -77,8 +77,8 @@ class shapes {
     	if (this.playing !== true)
     		return;
         
-    	//gfx.drawSkybox(this.gfx_ctx);
-        gfx.clearColor(this.gfx_ctx, Color.BLACK);
+    	//Graphics.drawSkybox(this.gfx_ctx);
+        Graphics.clearColor(this.gfx_ctx, Color.BLACK);
 
         this.profiler.set_marker('other');
 
@@ -95,13 +95,13 @@ class shapes {
 
         this.frameCt++;
         
-		let frequency = app.getProperty('frequencySlider', 'Value');
+		let frequency = App.getProperty('frequencySlider', 'Value');
     	frequency = Math.floor(frequency);	
     	
     	if (this.lastFrequency !== frequency)
     	{
     		this.lastFrequency = frequency;	
-    		app.setProperty('nodeCountLabel', 'Content', frequency);
+    		App.setProperty('nodeCountLabel', 'Content', frequency);
     	}
     	
     	const nodes = this.scene.nodes;
@@ -138,13 +138,13 @@ class shapes {
                 node.velocity.x = -(node.velocity.x * 2);
             }
 
-            gfx.drawFilledShape(this.gfx_ctx, Math.floor(x), Math.floor(y), width, height, rot, color, prim);
+            Graphics.drawFilledShape(this.gfx_ctx, Math.floor(x), Math.floor(y), width, height, rot, color, prim);
 	
         };
 
         this.profiler.set_marker('rendering');
         
-        gfx.flushCtx(this.gfx_ctx);
+        Graphics.flushCtx(this.gfx_ctx);
         
         this.profiler.set_marker('uploading');
 
@@ -161,7 +161,7 @@ class shapes {
         {
         	const time = new Date().getTime();
 	        const elapsed = time - this.captureBeginTime;
-            app.setProperty('framerateLabel', 'Content', `fps:${Math.floor(1 / elapsed * 1000)}`);
+            App.setProperty('framerateLabel', 'Content', `fps:${Math.floor(1 / elapsed * 1000)}`);
             this.captureBeginTime = 0;
             this.profiler.drawProfile();
         }

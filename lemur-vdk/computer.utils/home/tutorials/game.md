@@ -45,14 +45,14 @@ for now, we don't need to be super concerned with those types. instead, we can n
 
 ## Graphics Module & Context
 
-the `graphics module` is a permanently embedded type in all the JavaScript environments, accessible through the identifier `gfx`. this type has various methods to aid in creating `contexts`, drawing to them, clearing, etc. it's basically a tiny graphics library.
+the `graphics module` is a permanently embedded type in all the JavaScript environments, accessible through the identifier `Graphics`. this type has various methods to aid in creating `contexts`, drawing to them, clearing, etc. it's basically a tiny graphics library.
 
 a `graphics context` is a drawing surface provided by the `graphics module`. it is not accessible directly to the javascript environment, instead, we call to the `graphics module` to create one. it returns an ID, referred to often as `this.gfx_ctx`, which is neccesary for performing most graphics related functions, if not all.
 
 > `ctx` is often used as an abbreviation for context. it's to keep the scripts simple since I often write them in the Text Editor in Lemur.
 
-so our first step is to call to the `gfx` module, and create a context.
-we can simply call `gfx.createCtx()`, but to provide valid parameters, we will have to have an existing `Image` in our WPF layout. we'll call our's `renderTarget`.
+so our first step is to call to the `Graphics` module, and create a context.
+we can simply call `Graphics.createCtx()`, but to provide valid parameters, we will have to have an existing `Image` in our WPF layout. we'll call our's `renderTarget`.
 
 ```XAML
 <!-- in your 'game.xaml' file, within the control grid... -->
@@ -71,25 +71,25 @@ we can simply call `gfx.createCtx()`, but to provide valid parameters, we will h
 then, back in the JavaScript, we can actually register our context.
 for the purpose of this simplified tutorial, we will just used a fixed resolution.
 
-Also, while we're at it, we're going to add a `app.eventHandler` for our render loop. this is covered in another tutorial.
+Also, while we're at it, we're going to add a `App.eventHandler` for our render loop. this is covered in another tutorial.
 
 so, in our constructor  we will add :
 ---
 1. `this.resolution = new Vec2(256, 256);`
-1. `this.gfx_ctx = gfx.createCtx(id, 'renderTarget', this.resolution.x, this.resolution.y);`
-3. `app.eventHandler('this', 'm_render', XAML_EVENTS.RENDER);`
+1. `this.gfx_ctx = Graphics.createCtx(id, 'renderTarget', this.resolution.x, this.resolution.y);`
+3. `App.eventHandler('this', 'm_render', XAML_EVENTS.RENDER);`
  ---
     this.resolution = new Vec2(256, 256);
 this will be the pixel width & height of our drawing context.
 the image, as shown above, will automatically scale to the size of the window.
 
-    this.gfx_ctx = gfx.createCtx(id, 'renderTarget', this.resolution.x, this.resolution.y);
+    this.gfx_ctx = Graphics.createCtx(id, 'renderTarget', this.resolution.x, this.resolution.y);
 this call creates our context, attaches our drawing surface to the control at specified size, and returns us a handle we can use for many graphics functions.
  `id` is our process id
  `renderTarget` is the wpf image we wil draw to
  and we pass our resolution in as `width, height`.
 
-    app.eventHandler('this', 'm_render', XAML_EVENTS.RENDER);
+    App.eventHandler('this', 'm_render', XAML_EVENTS.RENDER);
 `this` is passed in as a special keyword, but it would otherwise be a wpf control. `this`, when passed as a control, references the window itself.
  `m_render` is the name I've given to our render loop callback function, but this could be anything.
  this function will get called as frequently as the environment allows, any framerate limiting or sleeping can be done in javascript.
@@ -103,13 +103,13 @@ constructor(id){
     
     this.resolution = new Vec2(256, 256);
 
-    this.gfx_ctx = gfx.createCtx(id, 'renderTarget', 
+    this.gfx_ctx = Graphics.createCtx(id, 'renderTarget', 
                         this.resolution.x, this.resolution.y);
 
     // create a render loop function that will get called 
     // as frequently as possible, in a loop. this persists until the app closes.
     // make sure the m_render function is defined.
-    app.eventHandler('this', 'm_render', XAML_EVENTS.RENDER);
+    App.eventHandler('this', 'm_render', XAML_EVENTS.RENDER);
 }
 
 // the render loop function.
@@ -132,7 +132,7 @@ take a look at the types in the `gamelib.md` markdown tutorial, which can be fou
 So, in our constructor, we're going to add a few things.
 ```Javascript
 constructor (id) {
-    //.. init gfx context, etc.
+    //.. init Graphics context, etc.
 
     // start new code : 
 
@@ -176,7 +176,7 @@ then in our `m_render` member function, we can add the neccesary code to render 
 m_render () {
 
 // clear the screen to black every frame, so we don't get trails and smudge.
-gfx.clearColor(this.gfx_ctx, Color.BLACK);
+Graphics.clearColor(this.gfx_ctx, Color.BLACK);
 
 // get our game objects.
 const nodes = this.scene.Nodes();
@@ -200,7 +200,7 @@ nodes.forEach(node => {
         // I've attempted to make the code as expressive as possible.
 
         // note this doesn't actually show up on screen when we just call draw, it just organizes the data.
-        gfx.drawFilledShape(this.gfx_ctx, 
+        Graphics.drawFilledShape(this.gfx_ctx, 
                             x, y,
                             width, height,
                             rotation,
@@ -210,13 +210,13 @@ nodes.forEach(node => {
 
 // this is the call that will take the drawn data and flush the 'frame buffer'
 // in other words, it copies the image that you've drawn to the wpf control.
-gfx.flushCtx(this.gfx_ctx);
+Graphics.flushCtx(this.gfx_ctx);
 
 }
 
 ```
 
-now, if you've followed correctly, you should be able to save up your xaml & .xaml.js file, and run your app. You should see 5 pretty tiny triangles or rectangles (whatever primitive you used) in the bottom left. Epic!
+now, if you've followed correctly, you should be able to save up your xaml & .xaml.js file, and run your App. You should see 5 pretty tiny triangles or rectangles (whatever primitive you used) in the bottom left. Epic!
 
 Now, you can just add whatever you want during your render loop to create your game logic.
 

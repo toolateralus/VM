@@ -6,7 +6,7 @@
       mc:Ignorable="d"
       d:DesignHeight="450" d:DesignWidth="800" Background="#474354" BorderBrush="White"
       BorderThickness="5">
-      <Grid>
+      <Grid x:Name="MainGrid">
             <Grid.RowDefinitions>
                   <RowDefinition Height="*" />
                   <RowDefinition Height="35" />

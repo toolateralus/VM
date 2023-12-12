@@ -13,9 +13,9 @@ using Image = System.Windows.Controls.Image;
 
 namespace Lemur.JS.Embedded
 {
-    public class gfx_context
+    public class Graphics_context
     {
-        public gfx_context(string pid, string TargetControl, int PixelFormatBpp)
+        public Graphics_context(string pid, string TargetControl, int PixelFormatBpp)
         {
 
             Image image = null;
@@ -304,7 +304,7 @@ namespace Lemur.JS.Embedded
                 } 
                 else
                 {
-                    Notifications.Now("No skybox was loaded. call 'gfx.loadSkybox(string path)'");
+                    Notifications.Now("No skybox was loaded. call 'Graphics.loadSkybox(string path)'");
                 }
 
             });

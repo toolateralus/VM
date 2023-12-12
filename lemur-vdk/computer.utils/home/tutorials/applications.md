@@ -42,7 +42,7 @@ home.app         (required)
 └── icon.bmp     (optional)
 ```
 
-This is the bare-minimum, and you can have any files in there along with your apps code, these are just used for creating and jitting your app.
+This is the bare-minimum, and you can have any files in there along with your apps code, these are just used for creating and jitting your App.
 
 Ensure that the folder name, the names of the `.xaml` and `.xaml.js` files, and the name of the JavaScript class all match your application's name for proper recognition by the system.
 
@@ -64,16 +64,16 @@ To create this, for the easiest option, just use vs-code for now.
 
 #### `Just as a rule of thumb` generally the application WILL NOT CRASH under any circumstances. even in extremely erroneous conditions, you will only crash the app with XAML errors, or running out of resources (CPU/RAM) anything outside of this is a bug, and there are many.
 
-Now that we have our file structure sorted, and it looks like the tree diagram, we can start actually adding some code to our app. So far it's been boring as fudge, but now we get to write some actual code. Just to get us started on our XAML boiler plate, we can navigate to the `computer/utils/base_app` directory and just copy paste the example's xaml into our `home.xaml` file.
+Now that we have our file structure sorted, and it looks like the tree diagram, we can start actually adding some code to our App. So far it's been boring as fudge, but now we get to write some actual code. Just to get us started on our XAML boiler plate, we can navigate to the `computer/utils/base_app` directory and just copy paste the example's xaml into our `home.xaml` File.
 
-Theres also a starter `base_app.xaml.js` file, which gets us up and going with the appropriate class and constructor setup. 
+Theres also a starter `base_App.xaml.js` file, which gets us up and going with the appropriate class and constructor setup. 
 
 this step (constructor, class, filename) `BEYOND CRUCIAL` for WPF to work with your JS backend.
 
 Just for ease of use here, these are the provided xaml / js files.
 ```xaml
 <!-- for use with base_app (template) -->
-<!-- from computer/utils/base_app/base_app.xaml -->
+<!-- from computer/utils/base_app/base_App.xaml -->
 
 <UserControl xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
@@ -105,7 +105,7 @@ Just for ease of use here, these are the provided xaml / js files.
     Theres a tutorial for making wpf/js apps in the documentation. see this first.
 
     your class that you will use with WPF for ui management MUST have the SAME NAME
-    as the <app_name>.app folder, the <app_name>.xaml file, and the <app_name>.xaml.js file.
+    as the <app_name>.app folder, the <app_name>.xaml file, and the <app_name>.xaml.js File.
 
     if you read the tutorial you already knew that B)
     just a reminder!
@@ -119,12 +119,12 @@ Just for ease of use here, these are the provided xaml / js files.
 class base_app {
     loadImage() {
         
-        const text = interop.pushEvent(this.id, 'textBox', 'get_content', '')
+        const text = Interop.pushEvent(this.id, 'textBox', 'get_content', '')
         
         // reads bytes of file at path : 'text',
-        // converts those bytes to a base64 string and
+        // Converterts those bytes to a base64 string and
         // returns that string to us, or null if failed.
-        const background = interop.base64FromFile(text);
+        const background = Interop.base64FromFile(text);
         
         // bad read, file not found, etc.
         if (background === null || background.length === 0){
@@ -135,8 +135,8 @@ class base_app {
         // call to the wpf application to search this classes XAML for 'renderTarget', and call a
         // 'draw_image' event on it with 'background' as data.
         // in the case of 'draw_image' you must provide a base64 string representing a common file-format image. (.png, .jpg, .bmp)
-        // this is achieved with the `interop.base64FromFile(filePath)` function
-        app.pushEvent(this.id, 'renderTarget', 'draw_image', background);
+        // this is achieved with the `Interop.base64FromFile(filePath)` function
+        App.pushEvent(this.id, 'renderTarget', 'draw_image', background);
     }
 
     
@@ -153,22 +153,22 @@ class base_app {
         // call to the wpf to search this class's XAML for an element 'showImageBtn' 
         // and subscribe the javascript function (which is present in this class) called 'loadImage' to the 'MouseDown'
         // event of that 'showImageBtn' control/element.
-        app.eventHandler(this.id, 'showImageBtn', 'loadImage', XAML_EVENTS.MOUSE_DOWN);
+        App.eventHandler(this.id, 'showImageBtn', 'loadImage', XAML_EVENTS.MOUSE_DOWN);
 
         // call to the wpf to search this class's XAML for a control/element 'textBlock' and call the 'set_content' event
         // with that control as an argument, along with our string data we want to fill that label.
         // Note, in the case of setting text, and many other properties, theres several ways to do so.
         // this one is more limited but maybe more efficient because it does not rely on reflection.
         let string = "enter a file path (relative or absolute to any degree)";
-        app.pushEvent(this.id, 'textBlock', 'set_content', string);
+        App.pushEvent(this.id, 'textBlock', 'set_content', string);
 
         let x = false;
         // an alternative to the call would be 
 
         // the guard is meant to just note that this isn't expected to be called
-        // as is, youd remove the if and the above app.pushEvent call.
+        // as is, youd remove the if and the above App.pushEvent call.
         if (x)
-            app.setProperty(this.id, 'textBlock', 'Content', string)
+            App.setProperty(this.id, 'textBlock', 'Content', string)
 
         // and this can be used for basically any WPF property name, restricted only by javascript vs c# typing.
         // the bounds of this isn't well documented but outside of creating new elements at runtime,

@@ -1,6 +1,6 @@
 A tiny test of an online game.
 
-The game does basically nothing right now, it just bounces cube projectiles back and forth over the network.
+The game does basically nothing right now, it just bounces cube projectiles back and forth over the Network.
 
 ## Usage
 
@@ -15,7 +15,7 @@ The game does basically nothing right now, it just bounces cube projectiles back
 - Open two instances of the app, set ones output channel to the other's input channel, and vice versa then fire.
 - This is bugged. It freezes when two clients make a shot at the same time, so you have to send the shot before starting the second client. 
 - With some trickery, it is possible.
-- To do said trickery, open one app. set the channels to `1` and `0`
+- To do said trickery, open one App. set the channels to `1` and `0`
 - Quickly, fire a shot. before that shot reaches the border of the app, start another instance. the default channels are `0` and `1` so it will recieve this one shot.
 #### *On two computers*:
 - **User 0 (Host)**:
@@ -29,6 +29,6 @@ The game does basically nothing right now, it just bounces cube projectiles back
 
 
 
-If successful, the bullet will bounce up and down off the bounds of the screen, changing colors. Each time a node bounces, it would have been sent over the network to the other player.
+If successful, the bullet will bounce up and down off the bounds of the screen, changing colors. Each time a node bounces, it would have been sent over the Network to the other player.
 
-This is currently very unreliable but a big start to the network system. Many bugs & crashes are expected, and no security is in place.
+This is currently very unreliable but a big start to the Network system. Many bugs & crashes are expected, and no security is in place.

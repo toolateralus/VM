@@ -101,11 +101,11 @@
             <Word>rotation</Word>
             <Word>scale</Word>
 
-            <Word>interop</Word>
-            <Word>network</Word>
+            <Word>Interop</Word>
+            <Word>Network</Word>
             <Word>app</Word>
             <Word>term</Word>
-            <Word>gfx</Word>
+            <Word>Graphics</Word>
             <Word>file</Word>
 
             <Word>Function</Word>

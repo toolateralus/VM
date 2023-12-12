@@ -8,10 +8,10 @@ namespace Lemur.JS.Embedded
     {
         private int ctxIndex;
 
-        public Dictionary<int, gfx_context> gfxContext = [];
+        public Dictionary<int, Graphics_context> GraphicsContext = [];
         public bool writePixel(int gfx_ctx, int x, int y, int color)
         {
-            if (!gfxContext.TryGetValue(gfx_ctx, out var ctx))
+            if (!GraphicsContext.TryGetValue(gfx_ctx, out var ctx))
             {
 
                 Notifications.Now($"Couldn't find graphics context for id : {gfx_ctx}");
@@ -24,7 +24,7 @@ namespace Lemur.JS.Embedded
         }
         public bool writePixelRGBA(int gfx_ctx, int x, int y, byte r, byte g, byte b, byte a)
         {
-            if (!gfxContext.TryGetValue(gfx_ctx, out var ctx))
+            if (!GraphicsContext.TryGetValue(gfx_ctx, out var ctx))
             {
                 Notifications.Now($"Couldn't find graphics context for id : {gfx_ctx}");
                 return false;
@@ -36,17 +36,17 @@ namespace Lemur.JS.Embedded
         }
         public bool drawFilledShape(int gfx_ctx, int x, int y, int w, int h, double r, int colorIndex, int primitveIndex)
         {
-            if (!gfxContext.TryGetValue(gfx_ctx, out var ctx))
+            if (!GraphicsContext.TryGetValue(gfx_ctx, out var ctx))
             {
                 Notifications.Now($"Couldn't find graphics context for id : {gfx_ctx}");
                 return false;
             }
-            ctx.DrawFilledShape(x, y, h, w, r, colorIndex, (gfx_context.PrimitiveShape)primitveIndex);
+            ctx.DrawFilledShape(x, y, h, w, r, colorIndex, (Graphics_context.PrimitiveShape)primitveIndex);
             return true;
         }
         public bool writePixelIndexed(int gfx_ctx, int x, int y, int index)
         {
-            if (!gfxContext.TryGetValue(gfx_ctx, out var ctx))
+            if (!GraphicsContext.TryGetValue(gfx_ctx, out var ctx))
             {
                 Notifications.Now($"Couldn't find graphics context for id : {gfx_ctx}");
                 return false;
@@ -56,7 +56,7 @@ namespace Lemur.JS.Embedded
         }
         public void clearColor(int gfx_ctx, int color)
         {
-            if (!gfxContext.TryGetValue(gfx_ctx, out var ctx))
+            if (!GraphicsContext.TryGetValue(gfx_ctx, out var ctx))
             {
                 Notifications.Now($"Couldn't find graphics context for id : {gfx_ctx}");
                 return;
@@ -65,7 +65,7 @@ namespace Lemur.JS.Embedded
         }
         public void clearColorIndexed(int gfx_ctx, int index)
         {
-            if (!gfxContext.TryGetValue(gfx_ctx, out var ctx))
+            if (!GraphicsContext.TryGetValue(gfx_ctx, out var ctx))
             {
                 Notifications.Now($"Couldn't find graphics context for id : {gfx_ctx}");
                 return;
@@ -74,7 +74,7 @@ namespace Lemur.JS.Embedded
         }
         public bool flushCtx(int gfx_ctx)
         {
-            if (!gfxContext.TryGetValue(gfx_ctx, out var context))
+            if (!GraphicsContext.TryGetValue(gfx_ctx, out var context))
             {
                 Notifications.Now($"Couldn't find graphics context for id : {gfx_ctx}");
                 return false;
@@ -91,7 +91,7 @@ namespace Lemur.JS.Embedded
         }
         public void saveToImage(int gfx_ctx, string path)
         {
-            if (!gfxContext.TryGetValue(gfx_ctx, out var context))
+            if (!GraphicsContext.TryGetValue(gfx_ctx, out var context))
             {
                 Notifications.Now($"Couldn't find graphics context for id : {gfx_ctx}");
                 return;
@@ -101,7 +101,7 @@ namespace Lemur.JS.Embedded
         }
         public void drawSkybox(int gfx_ctx)
         {
-            if (!gfxContext.TryGetValue(gfx_ctx, out var context))
+            if (!GraphicsContext.TryGetValue(gfx_ctx, out var context))
             {
                 Notifications.Now($"Couldn't find graphics context for id : {gfx_ctx}");
                 return;
@@ -118,7 +118,7 @@ namespace Lemur.JS.Embedded
         }
         public void loadSkybox(int gfx_ctx, string path)
         {
-            if (!gfxContext.TryGetValue(gfx_ctx, out var context))
+            if (!GraphicsContext.TryGetValue(gfx_ctx, out var context))
             {
                 Notifications.Now($"Couldn't find graphics context for id : {gfx_ctx}");
 
@@ -129,7 +129,7 @@ namespace Lemur.JS.Embedded
         }
         public void loadFromImage(int gfx_ctx, string path)
         {
-            if (!gfxContext.TryGetValue(gfx_ctx, out var context))
+            if (!GraphicsContext.TryGetValue(gfx_ctx, out var context))
             {
                 Notifications.Now($"Couldn't find graphics context for id : {gfx_ctx}");
 
@@ -143,16 +143,16 @@ namespace Lemur.JS.Embedded
             int bpp = 4;
 
 
-            var ctx = new gfx_context(id, target, bpp);
+            var ctx = new Graphics_context(id, target, bpp);
 
             ctx.Resize(width, height);
 
             int i = 0;
 
-            while (gfxContext.ContainsKey(ctxIndex))
+            while (GraphicsContext.ContainsKey(ctxIndex))
                 ctxIndex++;
 
-            gfxContext[ctxIndex] = ctx;
+            GraphicsContext[ctxIndex] = ctx;
 
             return ctxIndex;
         }

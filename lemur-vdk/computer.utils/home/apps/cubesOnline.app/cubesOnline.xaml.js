@@ -31,11 +31,11 @@ class cubesOnline {
         nodes.push(this.player);
         this.scene = new Scene(nodes);
 
-        network.addListener('onMessage');
+        Network.addListener('onMessage');
 
-        this.gfx_ctx = gfx.createCtx(this.id, 'renderTarget', this.width, this.width);
-        app.eventHandler('this', 'm_render', XAML_EVENTS.RENDER);
-		app.eventHandler('connectBtn', 'onConnectPressed', XAML_EVENTS.MOUSE_DOWN);
+        this.gfx_ctx = Graphics.createCtx(this.id, 'renderTarget', this.width, this.width);
+        App.eventHandler('this', 'm_render', XAML_EVENTS.RENDER);
+		App.eventHandler('connectBtn', 'onConnectPressed', XAML_EVENTS.MOUSE_DOWN);
 
         this.startTime = 0;
         
@@ -77,7 +77,7 @@ class cubesOnline {
             bullet: node,
         };
 
-        network.send(this.opponent, this.channel, JSON.stringify(packet));
+        Network.send(this.opponent, this.channel, JSON.stringify(packet));
     }
 	onConnectPressed () {
         //todo: rewrite this;
@@ -109,15 +109,15 @@ class cubesOnline {
 
         this.update(deltaTime);
         
-        this.channel = parseInt(app.getProperty('yourChannelBox', 'Text'));
-        this.opponent = parseInt(app.getProperty('channelBox', 'Text'));
+        this.channel = parseInt(App.getProperty('yourChannelBox', 'Text'));
+        this.opponent = parseInt(App.getProperty('channelBox', 'Text'));
 
 		this.startTime = time;
         
         this.draw();
     }
     draw() {
-        gfx.clearColor(this.gfx_ctx, Color.BLACK);
+        Graphics.clearColor(this.gfx_ctx, Color.BLACK);
 
         const nodes = this.scene.nodes;
 
@@ -138,10 +138,10 @@ class cubesOnline {
 
             const rot = node.rotation;
 
-            gfx.drawFilledShape(this.gfx_ctx, Math.floor(x), Math.floor(y), width, height, rot, color, prim);
+            Graphics.drawFilledShape(this.gfx_ctx, Math.floor(x), Math.floor(y), width, height, rot, color, prim);
         };
 
-        gfx.flushCtx(this.gfx_ctx);
+        Graphics.flushCtx(this.gfx_ctx);
     }
     update(deltaTime) {
         this.player.pos.y = this.width - 100;

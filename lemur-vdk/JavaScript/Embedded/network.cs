@@ -108,7 +108,7 @@ namespace Lemur.JavaScript.Embedded
 
             if (FileSystem.GetResourcePath(path) is not string AbsPath)
             {
-                // non existent file.
+                // non existent File.
                 return;
             }
 

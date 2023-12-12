@@ -8,11 +8,13 @@ using Microsoft.Windows.Themes;
 using Newtonsoft.Json.Linq;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics.Metrics;
 using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Text;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using System.Xml.Linq;
 
@@ -20,6 +22,19 @@ namespace Lemur.OS.Language
 {
     public class JavaScriptPreProcessor
     {
+        public static string MangleNames(string input)
+        {
+            var nameMap = new Dictionary<string, string>();
+            string pattern = @"\b(class|function|var|let|const)\s+(\w+)";
+            var counter = 0;
+            return Regex.Replace(input, pattern, m =>
+            {
+                string key = m.Groups[2].Value;
+                if (!nameMap.ContainsKey(key))
+                    nameMap[key] = $"x{counter++}";
+                return $"{m.Groups[1].Value} {nameMap[key]}";
+            });
+        }
         public static string InjectCommandLineArgs(string[] str_args, string jsCode)
         {
             const string ArgsArrayReplacement = "[/***/]";
@@ -147,6 +162,18 @@ namespace Lemur.OS.Language
 
             FileSystem.Move(a, b);
             Notifications.Now($"Moved {a}->{b}");
+        }
+        [Command("mangler", "mangles a javascript file's names & identifiers, or a range of lines. usage : mangler <filename> <optional lineStart> <optional lineEnd>")]
+        private static void Mangler(SafeList<object> obj)
+        {
+
+            if (obj.Length == 0)
+            {
+                Notifications.Now("must provide a file for mangler");
+                return;
+            }
+
+
         }
         [Command("delete", "deletes a file / folder. use with caution!")]
         private static void DeleteFile(SafeList<object> obj)

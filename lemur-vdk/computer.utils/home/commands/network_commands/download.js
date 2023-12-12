@@ -5,15 +5,15 @@
 	let install = args[1];
 	if (typeof fileName === 'string'){
 		
-		if (!network.IsConnected){
+		if (!Network.IsConnected){
 			// try connect to last known ip.
-			network.connect(null);
+			Network.connect(null);
 			
-			if (!network.IsConnected){
+			if (!Network.IsConnected){
 				print('failed to connect, use the connect command to establish a connection to the server before you download.');
 			};
 		}
-		network.download(fileName);
+		Network.download(fileName);
 
 		if (install === true){
 			call(`install ${fileName}`)

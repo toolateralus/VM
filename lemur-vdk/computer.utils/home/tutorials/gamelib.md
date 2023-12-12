@@ -70,9 +70,9 @@ class Scene {
 This renderer is mostly for drawing vertex based shapes in Scene objects, with vertex color.
 ```Javascript
 class Renderer {
-    constructor(resolution, gfxCtx) {
+    constructor(resolution, GraphicsCtx) {
         // Renderer data
-        this.gfx_ctx = gfxCtx;
+        this.gfx_ctx = GraphicsCtx;
 
         if (this.gfx_ctx == undefined || this.gfx_ctx == null) {
             print('graphics context failed to initialize');
@@ -96,12 +96,12 @@ class Renderer {
 
     // wrapper to ease calling with unpacked color & unfloored double coordinates.
     writePixel(x, y, color) {
-        gfx.writePixel(this.gfx_ctx, Math.floor(x), Math.floor(y), to_color(color));
+        Graphics.writePixel(this.gfx_ctx, Math.floor(x), Math.floor(y), to_color(color));
     }
 
     // wrapper to ease calling with unfloored double coordinates.
     writePixelIndexed(x, y, index) {
-        gfx.writePixelIndexed(this.gfx_ctx, Math.floor(x), Math.floor(y), index);
+        Graphics.writePixelIndexed(this.gfx_ctx, Math.floor(x), Math.floor(y), index);
     }
 
     // draws a line with indexed color, used internally.

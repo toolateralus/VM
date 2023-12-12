@@ -3,7 +3,6 @@ using Lemur.GUI;
 using Lemur.JavaScript.Api;
 using Lemur.Windowing;
 using Microsoft.ClearScript.JavaScript;
-using Newtonsoft.Json.Linq;
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
@@ -18,7 +17,6 @@ using System.Windows.Controls;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using static Lemur.Computer;
-using static System.Runtime.InteropServices.JavaScript.JSType;
 using Image = System.Windows.Controls.Image;
 
 namespace Lemur.JS.Embedded
@@ -90,6 +88,108 @@ namespace Lemur.JS.Embedded
 
                 }
             }
+        }
+
+        public void setRow(string element, int row)
+        {
+            Current.Window.Dispatcher.Invoke(() =>
+            {
+                var control = FindControl(GetUserContent(), element);
+
+                if (control is null)
+                    return;
+
+                Grid.SetRow(control, row);
+            });
+        }
+
+        public void setColumn(string element, int row)
+        {
+
+            Current.Window.Dispatcher.Invoke(() => { 
+                var control = FindControl(GetUserContent(), element);
+
+                if (control is null)
+                    return;
+
+                Grid.SetColumn(control, row);
+            });
+        }
+        public void setColumnSpan(string element, int row)
+        {
+            Current.Window.Dispatcher.Invoke(() =>
+            {
+                var control = FindControl(GetUserContent(), element);
+
+                if (control is null)
+                    return;
+
+                Grid.SetColumnSpan(control, row);
+            });
+        }
+        public void setRowSpan(string element, int row)
+        {
+            Current.Window.Dispatcher.Invoke(() =>
+            {
+                var control = FindControl(GetUserContent(), element);
+
+                if (control is null)
+                    return;
+
+                Grid.SetRowSpan(control, row);
+            });
+        }
+        public bool addChild(string parentName, string childTypeString, string childName)
+        {
+            var didAdd = false;
+
+            childTypeString = "System.Windows.Controls." + childTypeString.Trim(); 
+
+            Current.Window?.Dispatcher.Invoke(() =>
+            {
+                var userControl = GetUserContent();
+                var parentControl = FindControl(userControl, parentName);
+
+                if (parentControl == null)
+                {
+                    Notifications.Now($"{parentName} : control not found");
+                    return;
+                }
+
+                var childrenProperty = parentControl.GetType().GetProperty("Children");
+                if (childrenProperty == null)
+                {
+                    Notifications.Now($"{parentName} target parent had no children property");
+                    return;
+                }
+
+                var children = childrenProperty.GetValue(parentControl) as System.Collections.IList;
+
+                if (children == null) {
+                    Notifications.Now("No 'Children' property found");
+                    return;
+                }
+
+                Type? childType = typeof(Control).Assembly.DefinedTypes.FirstOrDefault(type => type.FullName.Contains(childTypeString));
+
+                if (childType == null || !typeof(FrameworkElement).IsAssignableFrom(childType)) {
+                    Notifications.Now($"Invalid type string provided for createChild {childType}");
+                    return;
+                }
+
+                var newChild = Activator.CreateInstance(childType) as FrameworkElement;
+                
+                if (newChild == null) {
+                    Notifications.Now("addChild child element was null on instantiation");
+                    return;
+                }
+
+                newChild.Name = childName;
+                children.Add(newChild);
+                didAdd = children.Contains(newChild);
+            });
+
+            return didAdd;
         }
 
         public bool removeChild(string parent, string childName)
@@ -291,11 +391,12 @@ namespace Lemur.JS.Embedded
         }
         public UserControl? GetUserContent()
         {
-            var window = Computer.GetProcess(processID)?.UI;
+            var window = GetProcess(processID)?.UI;
 
             if (window != null)
             {
                 var frame = window.ContentsFrame;
+
                 if (frame.Content is UserControl userContent)
                     return userContent;
             }

@@ -8,11 +8,11 @@ class paint {
     }
 
     draw() {
-        const width = app.getProperty('renderTarget', 'ActualWidth');
-        const height = app.getProperty('renderTarget', 'ActualHeight');
+        const width = App.getProperty('renderTarget', 'ActualWidth');
+        const height = App.getProperty('renderTarget', 'ActualHeight');
 
         if (this.mouseState.right === true) {
-            const radius = Math.floor(app.getProperty('thicknessSlider', 'Value') ?? 3);
+            const radius = Math.floor(App.getProperty('thicknessSlider', 'Value') ?? 3);
 
             const msX = this.mouseState.x / width  * this.resolution;
             const msY = this.mouseState.y / height * this.resolution;
@@ -23,9 +23,9 @@ class paint {
 			
 			const halfRad = radius / 2;
 			
-			gfx.drawFilledShape(this.gfx_ctx, Math.floor(msX - halfRad), Math.floor(msY - halfRad), radius, radius, rotation, brush, primitive);
+			Graphics.drawFilledShape(this.gfx_ctx, Math.floor(msX - halfRad), Math.floor(msY - halfRad), radius, radius, rotation, brush, primitive);
 
-            gfx.flushCtx(this.gfx_ctx);
+            Graphics.flushCtx(this.gfx_ctx);
         }
     }
 
@@ -42,30 +42,30 @@ class paint {
     onKeyDown() {
         if (Key.isDown('C')) {
             this.pickerOpen = 1 - this.pickerOpen;
-            app.setProperty('colorPickerPanel', 'Visibility', this.pickerOpen)
+            App.setProperty('colorPickerPanel', 'Visibility', this.pickerOpen)
         }
     }
     onSelectionChanged(index) {
         this.brushIndex = index;
     }
     onSavePressed() {
-    	gfx.flushCtx(this.gfx_ctx);
-    	gfx.saveToImage(this.gfx_ctx, 'home/test.bmp');
+    	Graphics.flushCtx(this.gfx_ctx);
+    	Graphics.saveToImage(this.gfx_ctx, 'home/test.bmp');
     	print('saved to home/test.bmp');
     }
     onLoadPressed() {
-    	gfx.clearColorIndexed(this.gfx_ctx, Color.BLACK);
-        gfx.loadFromImage(this.gfx_ctx, 'home/test.bmp');
-        gfx.flushCtx(this.gfx_ctx);
+    	Graphics.clearColorIndexed(this.gfx_ctx, Color.BLACK);
+        Graphics.loadFromImage(this.gfx_ctx, 'home/test.bmp');
+        Graphics.flushCtx(this.gfx_ctx);
         print('loaded from home/test.bmp');
     }
     onClearPressed() {
-        gfx.clearColorIndexed(this.gfx_ctx, Color.WHITE);
-        gfx.flushCtx(this.gfx_ctx);
+        Graphics.clearColorIndexed(this.gfx_ctx, Color.WHITE);
+        Graphics.flushCtx(this.gfx_ctx);
     }
     onFillPressed() { 
-        gfx.clearColor(this.gfx_ctx, palette_indexed[this.brushIndex]);
-        gfx.flushCtx(this.gfx_ctx);
+        Graphics.clearColor(this.gfx_ctx, palette_indexed[this.brushIndex]);
+        Graphics.flushCtx(this.gfx_ctx);
     }
     constructor(id) {
         this.id = id;
@@ -80,31 +80,31 @@ class paint {
             right : false
         }
 
-        app.setProperty('colorPickerPanel', 'Visibility', 0)
+        App.setProperty('colorPickerPanel', 'Visibility', 0)
 
         this.brushIndex = 0;
 
         this.resolution = 256;
 
  
-        this.gfx_ctx = gfx.createCtx(this.id, 'renderTarget', this.resolution, this.resolution);
+        this.gfx_ctx = Graphics.createCtx(this.id, 'renderTarget', this.resolution, this.resolution);
 
-        gfx.flushCtx(this.gfx_ctx);
+        Graphics.flushCtx(this.gfx_ctx);
 
-        app.eventHandler('renderTarget', 'onMouseDown', XAML_EVENTS.MOUSE_DOWN);
-        app.eventHandler('renderTarget', 'onMouseDown', XAML_EVENTS.MOUSE_UP);
+        App.eventHandler('renderTarget', 'onMouseDown', XAML_EVENTS.MOUSE_DOWN);
+        App.eventHandler('renderTarget', 'onMouseDown', XAML_EVENTS.MOUSE_UP);
 
-        app.eventHandler('SaveButton', 'onSavePressed', XAML_EVENTS.MOUSE_DOWN);
-        app.eventHandler('LoadButton', 'onLoadPressed', XAML_EVENTS.MOUSE_DOWN);
-        app.eventHandler('ClearButton', 'onClearPressed', XAML_EVENTS.MOUSE_DOWN);
-        app.eventHandler('FillButton', 'onFillPressed', XAML_EVENTS.MOUSE_DOWN);
+        App.eventHandler('SaveButton', 'onSavePressed', XAML_EVENTS.MOUSE_DOWN);
+        App.eventHandler('LoadButton', 'onLoadPressed', XAML_EVENTS.MOUSE_DOWN);
+        App.eventHandler('ClearButton', 'onClearPressed', XAML_EVENTS.MOUSE_DOWN);
+        App.eventHandler('FillButton', 'onFillPressed', XAML_EVENTS.MOUSE_DOWN);
 
-        app.eventHandler('renderTarget', 'onMouseLeave', XAML_EVENTS.MOUSE_LEAVE);
-        app.eventHandler('renderTarget', 'onMouseMoved', XAML_EVENTS.MOUSE_MOVE);
+        App.eventHandler('renderTarget', 'onMouseLeave', XAML_EVENTS.MOUSE_LEAVE);
+        App.eventHandler('renderTarget', 'onMouseMoved', XAML_EVENTS.MOUSE_MOVE);
 
-        app.eventHandler('renderTarget', 'onKeyDown', XAML_EVENTS.KEY_DOWN);
+        App.eventHandler('renderTarget', 'onKeyDown', XAML_EVENTS.KEY_DOWN);
 
-        app.eventHandler('colorPickerBox', 'onSelectionChanged', XAML_EVENTS.SELECTION_CHANGED);
+        App.eventHandler('colorPickerBox', 'onSelectionChanged', XAML_EVENTS.SELECTION_CHANGED);
 
     }
 }

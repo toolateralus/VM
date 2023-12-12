@@ -3,7 +3,7 @@
 
     const ip = args[0]
 
-    result = network.connect(ip);
+    result = Network.connect(ip);
 
     print(result)
     

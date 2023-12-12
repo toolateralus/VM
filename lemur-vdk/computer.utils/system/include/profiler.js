@@ -13,8 +13,8 @@ class Profiler {
     }
     drawProfile(){
     	const results = this.sample_average();
-		const profilerWidth = app.getProperty('ProfilerPanel', 'ActualWidth') / 2;
-		const fpsWidth = app.getProperty('framerateLabel', 'ActualWidth');
+		const profilerWidth = App.getProperty('ProfilerPanel', 'ActualWidth') / 2;
+		const fpsWidth = App.getProperty('framerateLabel', 'ActualWidth');
 		const actualWidth = profilerWidth - fpsWidth;
 		
 		let totalTime = 0;
@@ -26,8 +26,8 @@ class Profiler {
 		
 		for (const label in results) {
 		    const time = results[label];
-		    app.setProperty(label, 'Content', `${time / 10_000} ms ${label}`);
-		    app.setProperty(label, 'Width', time * xFactor);
+		    App.setProperty(label, 'Content', `${time / 10_000} ms ${label}`);
+		    App.setProperty(label, 'Width', time * xFactor);
 		}
     }
     set_marker(id) {

@@ -227,9 +227,9 @@ class Scene {
     }
 }
 class Renderer {
-    constructor(resolution, gfxCtx) {
+    constructor(resolution, GraphicsCtx) {
         // Renderer data
-        this.gfx_ctx = gfxCtx;
+        this.gfx_ctx = GraphicsCtx;
 
         if (this.gfx_ctx == undefined || this.gfx_ctx == null) {
             print('graphics context failed to initialize');
@@ -255,10 +255,10 @@ class Renderer {
         return result;
     }
     writePixel(x, y, color) {
-        gfx.writePixel(this.gfx_ctx, Math.floor(x), Math.floor(y), to_color(color));
+        Graphics.writePixel(this.gfx_ctx, Math.floor(x), Math.floor(y), to_color(color));
     }
     writePixelIndexed(x, y, index) {
-        gfx.writePixelIndexed(this.gfx_ctx, Math.floor(x), Math.floor(y), index);
+        Graphics.writePixelIndexed(this.gfx_ctx, Math.floor(x), Math.floor(y), index);
     }
     // https://en.wikipedia.org/wiki/Bresenham's_line_algorithm
     // Bresenhams line drawing algorithm, adapted from stack overflow somewhere.
@@ -369,7 +369,7 @@ class Renderer {
     }
     m_drawScene(scene) {
 
-        gfx.clearColor(this.gfx_ctx, this.bgColor);
+        Graphics.clearColor(this.gfx_ctx, this.bgColor);
 
         const nodes = scene.Nodes();
 

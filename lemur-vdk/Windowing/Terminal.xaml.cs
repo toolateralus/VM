@@ -181,7 +181,7 @@ namespace Lemur.GUI
 
                     OnTerminalSend?.Invoke(inputText);
 
-                    // for term.read
+                    // for Terminalread
                     if (IsReading)
                         return;
 
@@ -244,6 +244,8 @@ namespace Lemur.GUI
         {
             try
             {
+                ArgumentNullException.ThrowIfNull(code);
+
                 using var cts = new CancellationTokenSource();
 
                 var executionTask = Engine?.Execute(code, cts.Token) ?? throw new InvalidOperationException("Couldn't get an execution task from the engine.");

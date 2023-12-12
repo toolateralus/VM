@@ -1,3 +1,3 @@
 {
-    result = network.disconnect();
+    result = Network.disconnect();
 }

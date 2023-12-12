@@ -7,15 +7,15 @@
 		
 		print(`uploading file ${fileName}`);
 		
-		if (!network.IsConnected){
+		if (!Network.IsConnected){
 			// try connect to last known ip.
-			network.connect(null);
+			Network.connect(null);
 			
-			if (!network.IsConnected){
+			if (!Network.IsConnected){
 				print('failed to connect, use the connect/host command(s) to establish a connection to the server/host before you upload.');
 			};
 		}
-		network.upload(fileName);
+		Network.upload(fileName);
 	} 
 	else
 	{

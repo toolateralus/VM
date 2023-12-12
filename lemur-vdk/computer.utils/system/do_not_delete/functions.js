@@ -2,19 +2,19 @@
 
 // terminal -------------------------
 function print(obj) {
-    term.print(obj);
+    Terminal.print(obj);
 }
 function alias(cmd, path) {
-    term.alias(cmd, path)
+    Terminal.alias(cmd, path)
 }
 function call(command) {
-    term.call(command);
+    Terminal.call(command);
 }
 function sleep(ms) {
-    return interop.sleep(ms);
+    return Interop.sleep(ms);
 }
 function read() {
-    return term.read();
+    return Terminal.read();
 }
 
 function clamp(min, max, value) {
@@ -32,7 +32,17 @@ function create_square() {
     const verts = [v1, v2, v3, v4];
     return verts;
 }
-// -------------------------
+
+// ------------------------- functions added to intrinsics / embeddeds
+
+function get_set (controlName, propName, func) {
+    if (typeof func !== 'function') {
+        throw new Error('invalid get_set : you must pass in a function');
+    }
+    const value = App.getProperty(controlName, propName);
+    const result = func(value);
+    App.setProperty(controlName, propName, result);
+}
 
 JSON.tryParse = (msg) => {
 	try {
@@ -50,9 +60,10 @@ JSON.tryParse = (msg) => {
 };
 
 
+
 // general -------------------------
 function random(max = 1) {
-    return interop.random(max);
+    return Interop.random(max);
 }
 function describe(obj) {
 
@@ -87,7 +98,7 @@ function describe(obj) {
 // require -------------------------
 
 function require(path) {
-    const fn = new Function(file.read(path));
+    const fn = new Function(File.read(path));
     const result = fn();
     return result;
 }
