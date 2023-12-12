@@ -57,6 +57,7 @@ namespace Lemur.GUI
         public Explorer()
         {
             InitializeComponent();
+            FileBox.FontSize = 16;
 
             FileBox.ItemsSource = FileViewerData;
             FileBox.SelectionChanged += PreviewPath;

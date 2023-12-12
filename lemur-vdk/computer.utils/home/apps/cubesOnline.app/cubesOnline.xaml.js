@@ -6,7 +6,7 @@ const {
 const { Profiler } = require('profiler.js');
 
 
-class gamer {
+class cubesOnline {
     constructor(id) {
 
         this.id = id;
