@@ -7,16 +7,18 @@ using System.Windows.Threading;
 
 namespace Lemur.GUI
 {
+    // TODO: we should use object pooling & a static class for notifications and handle their lifetime
+    // in that class. this was nice & simple but it's very slow and does too much.
+
+    /// <summary>
+    /// UI Control used for displaying runtime notifications, often errors.
+    /// </summary>
     public partial class NotificationControl : UserControl
     {
-
         const int NOTIFICATION_SIZE_X = 350, NOTIFICATION_SIZE_Y = 100;
-
         private DispatcherTimer fadeOutTimer;
-
         public static readonly DependencyProperty MessageProperty =
             DependencyProperty.Register("Message", typeof(string), typeof(NotificationControl), new PropertyMetadata(string.Empty));
-
         public string Message
         {
             get { return (string)GetValue(MessageProperty); }
@@ -72,17 +74,14 @@ namespace Lemur.GUI
             var popUpAnim = new ThicknessAnimation(margin, TimeSpan.FromSeconds(1));
             BeginAnimation(MarginProperty, popUpAnim);
         }
-
         private void OnMouseEnter(object? sender, System.Windows.Input.MouseEventArgs e)
         {
             fadeOutTimer.Stop();
         }
-
         private void OnMouseLeave(object? sender, System.Windows.Input.MouseEventArgs e)
         {
             fadeOutTimer.Start();
         }
-
         private void OnFadeOutTimerTick(object? sender, EventArgs e)
         {
             var fadeOutAnimation = new DoubleAnimation(1, 0, TimeSpan.FromSeconds(1.5));

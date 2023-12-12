@@ -34,7 +34,7 @@ namespace Lemur
         internal uint ID { get; private set; }
         internal static uint __procId;
         internal NetworkConfiguration NetworkConfiguration { get; set; }
-        internal ComputerWindow Window { get; set; }
+        internal DesktopWindow Window { get; set; }
         internal FileSystem FileSystem { get; set; }
         internal Engine JavaScript { get; set; }
         internal CommandLine CmdLine { get; set; }
@@ -190,7 +190,7 @@ namespace Lemur
 
                 void closeMethod()
                 {
-                    userWindow.OnAppClosed -= OnWindowClosed;
+                    userWindow.OnApplicationClose -= OnWindowClosed;
 
                     if (!ProcessClassTable.ContainsKey(pClass))
                     {
@@ -221,7 +221,7 @@ namespace Lemur
 
             // todo: remove a lot of the hard to reach behavior from the userWindow class and move it here.
             // this will allow us to much easier control when & how things get disposed of, and more as described above.
-            userWindow.OnAppClosed += OnWindowClosed;
+            userWindow.OnApplicationClose += OnWindowClosed;
 
             // todo: make a unified interface for windowing, we have a window manager and window classes but
             // the behavior feels scattered and disorganized. fetching weird references for controls should not be a thing : 
@@ -436,7 +436,7 @@ namespace Lemur
                 Window.RemoveDesktopIcon(name);
             });
         }
-        private static void LoadBackground(Computer pc, ComputerWindow wnd)
+        private static void LoadBackground(Computer pc, DesktopWindow wnd)
         {
             string backgroundPath = pc?.Config?.Value<string>("BACKGROUND") ?? "background.png";
             wnd.desktopBackground.Source = Computer.LoadImage(FileSystem.GetResourcePath(backgroundPath) ?? "background.png");
@@ -508,7 +508,7 @@ namespace Lemur
 
             Computer pc = new Computer(FileSystem);
 
-            ComputerWindow wnd = new();
+            DesktopWindow wnd = new();
 
             Current.Window = wnd;
 

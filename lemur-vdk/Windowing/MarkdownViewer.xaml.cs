@@ -7,6 +7,9 @@ using System.Windows.Markup;
 
 namespace Lemur.GUI
 {
+    /// <summary>
+    /// Hosts a flow document and uses Markdig to transform .MD (markdown) files into displayable XML code for WPF.
+    /// </summary>
     public partial class MarkdownViewer : UserControl
     {
         public MarkdownViewer()

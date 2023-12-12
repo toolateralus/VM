@@ -270,7 +270,7 @@ namespace Lemur.JS
 
             wnd.Dispatcher.Invoke(() =>
             {
-                var content = Computer.GetProcess(identifier)?.UI?.JavaScriptEngine?.AppModule?.GetUserContent();
+                var content = Computer.GetProcess(identifier)?.UI?.Engine?.AppModule?.GetUserContent();
 
                 if (content == null)
                 {

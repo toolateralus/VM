@@ -101,7 +101,7 @@ namespace Lemur.JS.Embedded
 
                 var proc = Computer.GetProcess((string)this.processID);
 
-                var engine = proc?.UI?.JavaScriptEngine;
+                var engine = proc?.UI?.Engine;
 
                 // for command line apps.
                 if (proc is null || engine is null)
@@ -130,7 +130,7 @@ namespace Lemur.JS.Embedded
                     return;
                 }
 
-                var engine = p.UI?.JavaScriptEngine;
+                var engine = p.UI?.Engine;
 
                 
 
@@ -483,7 +483,7 @@ namespace Lemur.JS.Embedded
         public void eventHandler(string targetControl, string methodName, int type)
         {
             if (GetProcess(processID) is Process p)
-                Task.Run(async () => await p.UI.JavaScriptEngine?.CreateEventHandler(processID, targetControl, methodName, type));
+                Task.Run(async () => await p.UI.Engine?.CreateEventHandler(processID, targetControl, methodName, type));
         }
         public void close(string pid)
         {
@@ -552,7 +552,7 @@ namespace Lemur.JS.Embedded
         }
         public void uninstall(string dir)
         {
-            ComputerWindow window = Computer.Current.Window;
+            DesktopWindow window = Computer.Current.Window;
 
             // js/html app
             if (dir.Contains(".web"))

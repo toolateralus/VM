@@ -10,34 +10,42 @@ using Button = System.Windows.Controls.Button;
 namespace Lemur.GUI
 {
     /// <summary>
-    /// Interaction logic for UserWindow.xaml needs work big time.
+    /// This type is the container for any 'window' or application that appears in Lemur.
+    /// it composes of the JavaScript engine, access to the UI above, and has events to clean up and close
+    /// applications.
     /// </summary>
     public partial class UserWindow : UserControl
     {
-        public ResizableWindow Owner;
         /// <summary>
-        /// Called by the UI thread to clean up any resources.
+        /// The window manager container that has the logic for resizing, moving, etc.
         /// </summary>
-        internal event Action? OnAppClosed;
-        public Engine JavaScriptEngine;
+        public ResizableWindow ResizableParent { get; set; }
+        /// <summary>
+        /// The JavaScript engine that powers this app.
+        /// </summary>
+        public Engine Engine { get; set; }
+        /// <summary>
+        /// called during Close to cleanup any extra UI, Threading, JavaScript resources etc.
+        /// </summary>
+        internal event Action? OnApplicationClose;
         public UserWindow()
         {
             InitializeComponent();
             xBtn.Click += CloseWindow;
 
             // TODO: fix this up
-            minimizeBtn.Click += (_, _) => Owner?.ToggleVisibility();
+            minimizeBtn.Click += (_, _) => ResizableParent?.ToggleVisibility();
 
-            maximizeBtn.Click += (_, _) => Owner?.ToggleMaximize();
+            maximizeBtn.Click += (_, _) => ResizableParent?.ToggleMaximize();
 
             long lastClickedTime = 0;
 
             Toolbar.MouseLeftButtonDown += (_, e) =>
             {
                 if (DateTimeOffset.Now.ToUnixTimeMilliseconds() - lastClickedTime < 500)
-                    Owner?.ToggleMaximize();
+                    ResizableParent?.ToggleMaximize();
                 else
-                    Owner?.BeginMove(e.GetPosition(this));
+                    ResizableParent?.BeginMove(e.GetPosition(this));
 
                 lastClickedTime = DateTimeOffset.Now.ToUnixTimeMilliseconds();
 
@@ -56,13 +64,13 @@ namespace Lemur.GUI
                 Close();
             }
                 
-            if (JavaScriptEngine == null)
+            if (Engine == null)
                 return;
 
-            if (JavaScriptEngine.EventHandlers.Count == 0)
+            if (Engine.EventHandlers.Count == 0)
                 return;
 
-            var events = JavaScriptEngine.EventHandlers.Where(e => e is InteropEvent iE
+            var events = Engine.EventHandlers.Where(e => e is InteropEvent iE
                                                                 && iE.Event == XAML_EVENTS.KEY_DOWN).ToList();
 
             if (events.Count == 0)
@@ -75,24 +83,24 @@ namespace Lemur.GUI
         }
         protected override void OnPreviewMouseLeftButtonDown(MouseButtonEventArgs e)
         {
-            Owner?.BringToTopOfDesktop();
+            ResizableParent?.BringToTopOfDesktop();
         }
         internal void InitializeContent(ResizableWindow frame, UserControl actualUserContent, Engine? engine)
         {
-            Owner = frame;
+            ResizableParent = frame;
 
             ContentsFrame.Content = actualUserContent;
 
             if (engine != null)
-                JavaScriptEngine = engine;
+                Engine = engine;
         }
         internal void Close()
         {
-            JavaScriptEngine?.Dispose();
-            OnAppClosed?.Invoke();
+            Engine?.Dispose();
+            OnApplicationClose?.Invoke();
         }
         /// <summary>
-        /// Wrapper for the button
+        /// Close() wrapper for the Shut Down button.
         /// </summary>
         /// <param name="sender"></param>
         /// <param name="e"></param>
@@ -101,12 +109,13 @@ namespace Lemur.GUI
             Close();
             e.Handled = true;
         }
+        // this is in use. the IDE just says it isn't
         private void OnResizeBorderClicked(object sender, MouseButtonEventArgs e)
         {
             if (sender is not Button button || button.Tag is not string tag)
                 return;
             ResizeEdge edge = (ResizeEdge)Enum.Parse(typeof(ResizeEdge), tag);
-            Owner.BeginResize(edge, e.GetPosition(this));
+            ResizableParent.BeginResize(edge, e.GetPosition(this));
             e.Handled = true;
         }
     }

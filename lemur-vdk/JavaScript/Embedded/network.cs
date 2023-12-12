@@ -30,13 +30,13 @@ namespace Lemur.JavaScript.Embedded
         {
             if (Computer.GetProcess(processID) is Process p)
             {
-                if (p.UI.JavaScriptEngine.Disposing)
+                if (p.UI.Engine.Disposing)
                 {
                     Notifications.Now("JavaScript engine was disposing");
                     return;
                 }
 
-                p.UI.JavaScriptEngine.CreateNetworkEventHandler(processID, methodName);
+                p.UI.Engine.CreateNetworkEventHandler(processID, methodName);
             }
         }
 
@@ -44,13 +44,13 @@ namespace Lemur.JavaScript.Embedded
         {
             if (Computer.GetProcess(processID) is Process p)
             {
-                if (p.UI.JavaScriptEngine.Disposing)
+                if (p.UI.Engine.Disposing)
                 {
                     Notifications.Now("JavaScript engine was disposing");
                     return;
                 }
 
-                p.UI.JavaScriptEngine.RemoveNetworkEventHandler(processID, methodName);
+                p.UI.Engine.RemoveNetworkEventHandler(processID, methodName);
             }
         }
 

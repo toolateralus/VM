@@ -20,7 +20,13 @@ namespace Lemur.GUI
         Native,
         Extern,
     }
-    public partial class ComputerWindow : Window, IDisposable
+    /// <summary>
+    /// The 'MainWindow' for the computer, while not being the main application window.
+    /// The full screen window that appears as your computer desktop monitor.
+    /// Contains a few methods for generating WPF Controls at runtime, and 
+    /// managing the basic UI events.
+    /// </summary>
+    public partial class DesktopWindow : Window, IDisposable
     {
         private Timer clock;
         public bool Disposing;
@@ -29,7 +35,7 @@ namespace Lemur.GUI
 
         public int TopMostZIndex { get; internal set; }
         private int ctrlTabIndex;
-        public ComputerWindow()
+        public DesktopWindow()
         {
             InitializeComponent();
 
@@ -178,7 +184,7 @@ namespace Lemur.GUI
             // really hacky silly capture here.
             var w = resizableWindow;
 
-            window.OnAppClosed += () =>
+            window.OnApplicationClose += () =>
                 w?.OnAppClosed?.Invoke();
 
             window.Title.Content = pClass;
@@ -291,7 +297,7 @@ namespace Lemur.GUI
                         if (ctrlTabIndex > windows.Count - 1)
                             ctrlTabIndex = 0;
 
-                        var ownerWindow = windowElement?.UI?.Owner;
+                        var ownerWindow = windowElement?.UI?.ResizableParent;
                         ownerWindow?.BringToTopOfDesktop();
                     }
                     break;

@@ -13,7 +13,9 @@ using System.Windows.Input;
 namespace Lemur.GUI
 {
     /// <summary>
-    /// Interaction logic for FileExplorer.xaml
+    /// The included file explorer app. 
+    /// browse, create, open, move, and delete files & directories.
+    /// Rough around the edges, not the most refined tool.
     /// </summary>
     public partial class FileExplorer : UserControl
     {

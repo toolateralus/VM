@@ -14,7 +14,10 @@ using KeyEventArgs = System.Windows.Input.KeyEventArgs;
 
 namespace Lemur.GUI
 {
-
+    /// <summary>
+    /// The MainWindow of the app, responsible for launching & initializing a 'Computer',
+    /// and some helpers.
+    /// </summary>
     public partial class Runtime : Window
     {
         public Runtime()

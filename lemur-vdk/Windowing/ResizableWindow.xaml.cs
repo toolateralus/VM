@@ -4,6 +4,9 @@ using System.Windows.Controls;
 
 namespace Lemur.GUI
 {
+    /// <summary>
+    /// The logic used by the Windowing system to actually resize and move controls / their children.
+    /// </summary>
     public partial class ResizableWindow : Frame
     {
         public double lastW = 0, lastH = 0;

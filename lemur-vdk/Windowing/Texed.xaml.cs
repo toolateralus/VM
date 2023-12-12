@@ -16,7 +16,12 @@ using System.Windows.Input;
 namespace Lemur.GUI
 {
     /// <summary>
-    /// Interaction logic for TextEditor.xaml
+    /// The in app text editor / IDE. much of the great behavior comes from the use of AvaloniaEdit's TextEditor control.
+    /// it does a ton of heavy lifting.
+    /// 
+    /// Create, Load, Edit, & Save text files.
+    /// Syntax Highlighting & a few IDE functionalities.
+    /// support for around 20 languages, listing a few : JavaScript, C#, C++, JSON, Markdown, and XML/XAML,
     /// </summary>
     public partial class Texed : UserControl
     {

@@ -5,6 +5,9 @@ using System.Windows.Input;
 
 namespace Lemur.GUI
 {
+    /// <summary>
+    /// A WPF Control that contains the logic for moving, minimizing, opening, closing, resizing windows.
+    /// </summary>
     public class WindowManager : Canvas
     {
         private ResizableWindow? targetWindow;

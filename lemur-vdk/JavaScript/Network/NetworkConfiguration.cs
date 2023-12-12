@@ -86,10 +86,10 @@ namespace Lemur.JavaScript.Network
 
             foreach (var userWindow in Computer.ProcessClassTable.SelectMany(i => i.Value.Select(i => i)))
             {
-                if (userWindow?.UI.JavaScriptEngine?.EventHandlers == null)
+                if (userWindow?.UI.Engine?.EventHandlers == null)
                     continue;
 
-                foreach (var eventHandler in userWindow?.UI?.JavaScriptEngine.EventHandlers)
+                foreach (var eventHandler in userWindow?.UI?.Engine.EventHandlers)
                     if (eventHandler is NetworkEvent networkEventHandler)
                         networkEventHandler.InvokeEvent(channel, reply, msg);
             }

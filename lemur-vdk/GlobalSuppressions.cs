@@ -5,4 +5,4 @@
 
 using System.Diagnostics.CodeAnalysis;
 
-[assembly: SuppressMessage("Globalization", "CA1307:Specify StringComparison for clarity", Justification = "<Pending>", Scope = "member", Target = "~M:Lemur.GUI.ComputerWindow.RemoveDesktopIcon(System.String)")]
+[assembly: SuppressMessage("Globalization", "CA1307:Specify StringComparison for clarity", Justification = "<Pending>", Scope = "member", Target = "~M:Lemur.GUI.DesktopWindow.RemoveDesktopIcon(System.String)")]

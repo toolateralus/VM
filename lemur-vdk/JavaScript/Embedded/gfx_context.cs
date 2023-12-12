@@ -22,7 +22,7 @@ namespace Lemur.JS.Embedded
             Computer.Current.Window.Dispatcher.Invoke(() =>
             {
                 var content = Computer.GetProcess(pid).UI;
-                var app = content.JavaScriptEngine.AppModule;
+                var app = content.Engine.AppModule;
                 var control = app.GetUserContent();
 
                 image = Embedded.app.FindControl(control, TargetControl) as Image;

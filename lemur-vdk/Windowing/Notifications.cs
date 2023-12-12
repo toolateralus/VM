@@ -6,9 +6,19 @@ using System.Runtime.CompilerServices;
 
 namespace Lemur.Windowing
 {
+    /// <summary>
+    /// A quick way to throw a temporary notification up to the user GUI. appears in the bottom left and lasts for a number of seconds.
+    /// repeat notifications stack to the top of the screen then knock out the first to make room when full.
+    /// This can be very very slow.
+    /// </summary>
     public static class Notifications
     {
-
+        /// <summary>
+        /// Throws a notification.
+        /// </summary>
+        /// <param name="message"></param>
+        /// <param name="callerName"></param>
+        /// <param name="path"></param>
         public static void Now(string message, [CallerMemberName] string callerName = "", [CallerFilePath] string path = "")
         {
 
@@ -44,7 +54,9 @@ namespace Lemur.Windowing
 
             cw.Dispatcher.Invoke(send_notification_ui);
         }
-
+        /// <summary>
+        /// Clears all active notification controls.
+        /// </summary>
         internal static void Clear()
         {
             var stopped = new List<NotificationControl>();
@@ -72,7 +84,12 @@ namespace Lemur.Windowing
             // this is an incredibly hacky solution.
             return !(callerName == "Send" || callerName == "ExecuteAsync" || path.Contains("JS") || path.Contains("Terminal.xaml.cs") || path.Contains("Embedded"));
         }
-
+        /// <summary>
+        /// Throws an exception as a gently formatted notification.
+        /// </summary>
+        /// <param name="e"></param>
+        /// <param name="callerName"></param>
+        /// <param name="path"></param>
         internal static void Exception(Exception e, [CallerMemberName] string callerName = "", [CallerFilePath] string path = "")
         {
             if (!IsValid(callerName, path))
