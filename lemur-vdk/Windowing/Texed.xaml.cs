@@ -169,7 +169,7 @@ namespace Lemur.GUI
         }
         private void LoadButton_Click(object sender, RoutedEventArgs e)
         {
-            FileExplorer fileExplorer = new FileExplorer();
+            Explorer fileExplorer = new Explorer();
 
             Computer.Current.OpenApp(fileExplorer, "fileexplorer.app", Computer.GetNextProcessID());
 

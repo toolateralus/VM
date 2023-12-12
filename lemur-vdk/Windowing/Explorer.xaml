@@ -1,4 +1,4 @@
-﻿<UserControl x:Class="Lemur.GUI.FileExplorer"
+﻿<UserControl x:Class="Lemur.GUI.Explorer"
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
@@ -31,7 +31,7 @@
             <TextBox KeyDown="OnSearchBarkeyDown" Height="20" TextAlignment="Justify" MinWidth="250" Foreground="White" x:Name="SearchBar" Text="Search" Margin="2,5,5,5" BorderBrush="#FF43A7C1" Background="#FF272626" >
             </TextBox>
         </StackPanel>
-        <ListBox x:Name="FileBox" Margin="10,35,10,10" ContextMenu="{StaticResource ExplorerContextMenu}" Foreground="White" Background="#FF333030">
+        <ListBox x:Name="FileBox" Margin="10,35,10,10" FontSize="16" ContextMenu="{StaticResource ExplorerContextMenu}" Foreground="White" Background="#FF333030">
             <ListBox.ItemTemplate>
                 <DataTemplate>
                     <Grid ContextMenu="{Binding Menu}">

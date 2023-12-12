@@ -17,7 +17,7 @@ namespace Lemur.GUI
     /// browse, create, open, move, and delete files & directories.
     /// Rough around the edges, not the most refined tool.
     /// </summary>
-    public partial class FileExplorer : UserControl
+    public partial class Explorer : UserControl
     {
         public static string? DesktopIcon => FileSystem.GetResourcePath("folder.png");
         internal Action<string>? OnNavigated;
@@ -54,10 +54,9 @@ namespace Lemur.GUI
             menu.Items.Add(propertiesItem);
             return menu;
         }
-        public FileExplorer()
+        public Explorer()
         {
             InitializeComponent();
-            FileBox.FontSize = 16;
 
             FileBox.ItemsSource = FileViewerData;
             FileBox.SelectionChanged += PreviewPath;

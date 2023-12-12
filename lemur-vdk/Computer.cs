@@ -523,7 +523,7 @@ namespace Lemur
             };
 
             pc.InstallCSharpApp("terminal.app", typeof(Terminal));
-            pc.InstallCSharpApp("FileExplorer.app", typeof(FileExplorer));
+            pc.InstallCSharpApp("FileExplorer.app", typeof(Explorer));
             pc.InstallCSharpApp("texed.app", typeof(Texed));
 
             Runtime.LoadCustomSyntaxHighlighting();
