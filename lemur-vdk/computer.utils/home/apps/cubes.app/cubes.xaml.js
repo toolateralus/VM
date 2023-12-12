@@ -32,12 +32,6 @@ class cubes {
         	// remove works good, add is not working great yet, or at all.
         	App.removeChild('MainGrid', 'ProfilerPanel');
         	App.setRowSpan('renderTarget', 2);
-        	
-        	App.addChild('MainGrid', 'Label', 'labelAdd');
-        	App.setProperty('labelAdd', 'Content', 'i am string');
-            
-            App.setRowSpan('labelAdd', 1);
-            App.setProperty('labelAdd', 'Height', 100);
         }
     }
     m_render() {
