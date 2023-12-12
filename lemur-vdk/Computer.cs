@@ -639,5 +639,21 @@ namespace Lemur
                     return proc;
             return null;
         }
+
+        internal static List<T> TryGetAllProcessesOfTypeUnsafe<T>()
+        {
+            List<T> contents = [];
+            foreach (var process in ProcessClassTable.Values.SelectMany(i => i.Select(i => i))) // flatten array
+            {
+                if (process.UI.ContentsFrame is not Frame frame)
+                    continue;
+
+                if (frame.Content is not T instance)
+                    continue;
+
+                contents.Add(instance);
+            }
+            return contents;
+        }
     }
 }

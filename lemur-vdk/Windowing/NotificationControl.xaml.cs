@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Runtime.CompilerServices;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Media.Animation;
@@ -27,6 +28,7 @@ namespace Lemur.GUI
         }
         public NotificationControl()
         {
+            
             InitializeComponent();
             Loaded += OnLoaded;
             MouseEnter += OnMouseEnter;
