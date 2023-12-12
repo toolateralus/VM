@@ -81,25 +81,38 @@ class Vec2 {
     }
 
 }
+
 class Node {
 
-    constructor(scale, pos, points) {
+    constructor(scale, pos) {
         this.scale = scale ?? new Vec2(1, 1);
         this.pos = pos ?? new Vec2(0, 0);
-        this.points = points;
-
-        if (this.points) {
-            this.edges = this.createEdges(this.points);
-
-            // this should probably be removed.
-            this._cachedColorRatio = undefined;
-        }
-        
         this.velocity = new Vec2(0, 0);
         
         this.rotation = 0;
         this.angular = 0;
         this.drag = 0.98;
+    }
+    copy (other) {
+        this.scale = other.scale;
+        this.pos = other.pos;
+        this.velocity.x = -other.velocity.x;
+        this.velocity.y = -other.velocity.y;
+        this.rotation = other.rotation;
+        this.angular = other.angular;
+        this.drag = other.drag;
+        this.vertices = other.vertices;
+        this.edges = other.edges;
+        this.colorIndex = other.colorIndex;
+        this.primitveIndex = other.primitveIndex;
+        this.isProjectile = other.isProjectile;
+        this.isMesh = other.isMesh;
+    }
+    set_vertices (verts) {
+    	this.vertices = verts;
+    	if (this.vertices && this.vertices.length > 0) {
+            this.edges = this.createEdges(this.vertices);
+        }
     }
     clamp_position(min = new Vec2(0, 0), max = new Vec2(1, 1)) {
         const min_x = min.x;
@@ -194,7 +207,7 @@ class Node {
         const cosAngle = Math.cos(angle);
         const sinAngle = Math.sin(angle);
 
-        for (const Vec2 of this.points) {
+        for (const Vec2 of this.vertices) {
             const x = Vec2.x - this.pos.x;
             const y = Vec2.y - this.pos.y;
 

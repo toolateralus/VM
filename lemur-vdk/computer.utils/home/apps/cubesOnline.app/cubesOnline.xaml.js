@@ -14,11 +14,14 @@ class cubesOnline {
         this.width = 512;
         this.playing = true;
         
-        this.playerSpeed = 50;
+        this.playerSpeed = 1000;
 
         const nodes = [];
 
-        const go = new Node(new Vec2(50, 50), new Vec2(Math.floor(this.width / 2), this.width - 100));
+		const size = new Vec2(50, 50);
+		const pos = new Vec2(Math.floor(this.width / 2), this.width - 100);
+        const go = new Node(size, pos);
+        
         go.isMesh = true;
         go.colorIndex = Color.YELLOW;
         go.primitveIndex = Primitive.Rectangle;
@@ -43,6 +46,22 @@ class cubesOnline {
             max : new Vec2(this.width, this.width),
         };
 
+        this.player.onUpdate = (deltaTime) => {
+            let w = Key.isDown('W');
+            let a = Key.isDown('A');
+            let s = Key.isDown('S');
+            let d = Key.isDown('D');
+    
+            if (w || a || s || d) {
+                let strafe = (a ? -1 : 0) + (d ? 1 : 0);
+    
+                if (w || s)
+                    this.shoot();
+    
+                this.player.velocity.x = strafe * this.playerSpeed * deltaTime;
+            }
+        }
+
     }
     onCollision(node) {
 
@@ -61,7 +80,7 @@ class cubesOnline {
         network.send(this.opponent, this.channel, JSON.stringify(packet));
     }
 	onConnectPressed () {
-        network.connect('192.168.0.141');
+        //todo: rewrite this;
 	}
     
     onMessage(channel, reply, json) {
@@ -76,14 +95,8 @@ class cubesOnline {
         		return;
         	}
         	const obj = msg.bullet;
-            const bullet = new Node(obj.points, obj.scale, obj.pos);
-            bullet.isMesh = obj.isMesh;
-            bullet.colorIndex = (obj.colorIndex + 1) % palette.length;
-            bullet.primitveIndex = obj.primitveIndex;
-            bullet.velocity.x = -obj.velocity.x;
-            bullet.velocity.y = -obj.velocity.y;
-            bullet.drag = obj.drag;
-            bullet.isProjectile = obj.isProjectile;
+            const bullet = new Node();
+            bullet.copy(obj); // copies obj to bullet.
             this.scene.nodes.push(bullet);
         }
     }
@@ -100,6 +113,10 @@ class cubesOnline {
         this.opponent = parseInt(app.getProperty('channelBox', 'Text'));
 
 		this.startTime = time;
+        
+        this.draw();
+    }
+    draw() {
         gfx.clearColor(this.gfx_ctx, Color.BLACK);
 
         const nodes = this.scene.nodes;
@@ -125,8 +142,6 @@ class cubesOnline {
         };
 
         gfx.flushCtx(this.gfx_ctx);
-        
-     
     }
     update(deltaTime) {
         this.player.pos.y = this.width - 100;
@@ -139,6 +154,10 @@ class cubesOnline {
         const destroyed = [];
 
         this.scene.nodes.forEach (node => {
+
+            if (typeof node.onUpdate === 'function') {
+                node.onUpdate(deltaTime); 
+            }
             node.velocity.y += 0.0981 * deltaTime;
             node.update_physics(deltaTime);
             if (node.clamp_position(this.bounds.min, this.bounds.max))
@@ -150,20 +169,6 @@ class cubesOnline {
         });
     
 
-        let w = Key.isDown('W');
-        let a = Key.isDown('A');
-        let s = Key.isDown('S');
-        let d = Key.isDown('D');
-
-        if (w || a || s || d) {
-            let strafe = (a ? -1 : 0) + (d ? 1 : 0);
-
-            if (w || s)
-                this.shoot();
-
-            this.player.velocity.x = strafe * this.playerSpeed;
-        }
-
         const deltaTimeMillis = clamp(0, 16, Math.floor(deltaTime));
 
         sleep(16 - deltaTimeMillis);
@@ -174,13 +179,15 @@ class cubesOnline {
     		return;
     	}
     
-        const bullet = new Node(this.player.scale, new Vec2(this.player.pos.x - this.player.scale.x, this.player.pos.y - this.player.scale.x));
+        const bullet = new Node(this.player.scale,  // scale
+            new Vec2(this.player.pos.x - this.player.scale.x, this.player.pos.y - this.player.scale.x)); // pos
+            
         bullet.isMesh = true;
         bullet.colorIndex = Color.RED;
         bullet.primitveIndex = Primitive.Rectangle;
-        bullet.velocity.y = this.shotVelocity;
         bullet.isProjectile = true;
         bullet.drag = 0.999;
+        bullet.velocity.y = this.shotVelocity;
         
         this.scene.nodes.push(bullet);
     }

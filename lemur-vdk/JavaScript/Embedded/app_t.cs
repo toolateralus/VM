@@ -3,6 +3,7 @@ using Lemur.GUI;
 using Lemur.JavaScript.Api;
 using Lemur.Windowing;
 using Microsoft.ClearScript.JavaScript;
+using Newtonsoft.Json.Linq;
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
@@ -22,7 +23,7 @@ using Image = System.Windows.Controls.Image;
 
 namespace Lemur.JS.Embedded
 {
-    public class app
+    public class app_t
     {
         public delegate bool SetPropertyHandler(PropertyInfo? propertyInfo, object target, object? value);
         public delegate object? AppEvent(string target, object? value);
@@ -54,7 +55,7 @@ namespace Lemur.JS.Embedded
                 bgThread?.Join();
             }
         }
-        public app()
+        public app_t()
         {
             ExposedEvents["draw_pixels"] = DrawPixelsEvent; // somewhat deprecated, use the dedicated graphics module instead.
             ExposedEvents["draw_image"] = DrawImageEvent;
@@ -89,6 +90,50 @@ namespace Lemur.JS.Embedded
 
                 }
             }
+        }
+
+        public bool removeChild(string parent, string childName)
+        {
+            var didRemove = false;
+
+            Current.Window?.Dispatcher.Invoke(() =>
+            {
+                var userControl = GetUserContent();
+                var control = FindControl(userControl, parent);
+
+                if (control == null)
+                    return;
+
+                var childrenProperty = control.GetType().GetProperty("Children");
+                if (childrenProperty != null)
+                {
+                    var children = childrenProperty.GetValue(control) as System.Collections.IEnumerable;
+                    if (children != null)
+                    {
+                        object toRemove = null;
+                        foreach (var child in children)
+                        {
+                            if (child is FrameworkElement fwE && fwE.Name == childName)
+                            {
+                                toRemove = child;
+                                break;
+                            }
+                        }
+
+                        if (toRemove != null)
+                        {
+                            var removeMethod = children.GetType().GetMethod("Remove");
+                            if (removeMethod != null)
+                            {
+                                removeMethod.Invoke(children, new[] { toRemove });
+                                didRemove = !children.Cast<object>().Contains(toRemove);
+                            }
+                        }
+                    }
+                }
+            });
+
+            return didRemove;
         }
 
         public void deferEval(string code, int delay, string? identifier = null)

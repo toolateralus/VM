@@ -60,7 +60,7 @@ namespace Lemur.JS
         public interop InteropModule { get; }
         public graphics GraphicsModule { get; }
         public conv ConvModule { get; }
-        public app AppModule { get; }
+        public app_t AppModule { get; }
         public file_t FileModule { get; }
         public term_t TermModule { get; }
         public key KeyModule { get; }
@@ -80,7 +80,7 @@ namespace Lemur.JS
 
             GraphicsModule = new graphics();
             ConvModule = new conv();
-            AppModule = new app();
+            AppModule = new app_t();
             FileModule = new file_t();
             TermModule = new term_t();
             KeyModule = new key();
@@ -283,7 +283,7 @@ namespace Lemur.JS
                 if (targetControl.ToLower(CultureInfo.CurrentCulture).Trim() == "this")
                     element = content;
                 else
-                    element = Embedded.app.FindControl(content, targetControl)!;
+                    element = Embedded.app_t.FindControl(content, targetControl)!;
 
 
                 if (element == null)

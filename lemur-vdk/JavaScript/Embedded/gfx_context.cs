@@ -25,7 +25,7 @@ namespace Lemur.JS.Embedded
                 var app = content.Engine.AppModule;
                 var control = app.GetUserContent();
 
-                image = Embedded.app.FindControl(control, TargetControl) as Image;
+                image = Embedded.app_t.FindControl(control, TargetControl) as Image;
 
                 if (image == null) {
                     Notifications.Now($"{TargetControl} {image} target control not found when creating graphics context.");

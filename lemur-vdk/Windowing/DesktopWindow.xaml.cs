@@ -46,14 +46,30 @@ namespace Lemur.GUI
             // we can't get events for the desktop
             Keyboard.AddPreviewKeyDownHandler(App.Current.MainWindow, Computer_KeyDown);
 
+
+            var startTime = DateTime.Now;
+            var startupTime = startTime.ToString("\"MM/dd/yy || h:mm:ss\"");
+
+            TimeLabel.ToolTip = "";
+            TimeLabel.ToolTipOpening += TimeLabel_ToolTipOpening;
+
+            void TimeLabel_ToolTipOpening(object sender, ToolTipEventArgs e)
+            {
+                TimeLabel.ToolTip = $"startup time : {startupTime}\ncurrent time : {DateTime.Now.ToString("\"MM/dd/yy || h:mm:ss\"")}\nsession duration : {Math.Floor((DateTime.Now - startTime).TotalMinutes)} minutes";
+            }
             CompositionTarget.Rendering += delegate
             {
                 DateTime now = DateTime.Now;
                 string formattedDateTime = now.ToString("MM/dd/yy || h:mm:ss");
+                
+
                 TimeLabel.Content = formattedDateTime;
             };
 
         }
+
+        
+
         internal ContextMenu GetNativeContextMenu(string appName)
         {
             var contextMenu = new ContextMenu();

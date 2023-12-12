@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Linq;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
@@ -32,12 +33,15 @@ namespace Lemur.GUI
         }
         protected override void OnPreviewMouseMove(MouseEventArgs e)
         {
-            if (e is null)
-                throw new ArgumentNullException(nameof(e));
+            ArgumentNullException.ThrowIfNull(e);
 
             if (targetWindow == null || (!isResizing && !isDragging))
                 return;
 
+            foreach (var process in Computer.ProcessClassTable.SelectMany(i => i.Value.Select(p => p)))
+                process.UI.ResizableParent.WindowIsFocused = false;
+
+            targetWindow.WindowIsFocused = true;
 
             if (isResizing)
             {
@@ -109,25 +113,24 @@ namespace Lemur.GUI
 
         internal void BeginMove(ResizableWindow window, Point mousePos)
         {
-            if (!isDragging)
-            {
-                window.BringToTopOfDesktop();
-                startDragPosition = mousePos;
-                targetWindow = window;
-                isDragging = true;
-            }
+            if (isDragging)
+                return;
+
+            window.BringToTopOfDesktop();
+            startDragPosition = mousePos;
+            targetWindow = window;
+            isDragging = true;
         }
 
         internal void BeginResize(ResizableWindow window, ResizeEdge edge, Point relPos)
         {
-            if (!isResizing)
-            {
-                window.BringToTopOfDesktop();
-                PerformResize(window, edge, relPos);
-                resizingEdge = edge;
-                targetWindow = window;
-                isResizing = true;
-            }
+            if (isResizing)
+                return;
+            window.BringToTopOfDesktop();
+            PerformResize(window, edge, relPos);
+            resizingEdge = edge;
+            targetWindow = window;
+            isResizing = true;
         }
     }
 }

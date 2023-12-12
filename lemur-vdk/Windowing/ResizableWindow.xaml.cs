@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Input;
 
 namespace Lemur.GUI
 {
@@ -13,7 +14,7 @@ namespace Lemur.GUI
         public Point lastPos = new();
         public bool Maximized = false;
         public Action? OnAppClosed { get; internal set; }
-
+        public bool WindowIsFocused { get; internal set; }
         internal void BeginResize(ResizeEdge edge, Point relPos)
         {
             if (Parent is not WindowManager windowManager)
@@ -35,6 +36,9 @@ namespace Lemur.GUI
                 grid.Children.Remove(this);
                 grid.Children.Add(this);
                 Panel.SetZIndex(this, Computer.Current.Window.TopMostZIndex);
+
+                if (!Maximized)
+                    ToggleMaximize();
             }
         }
         internal void ToggleVisibility()

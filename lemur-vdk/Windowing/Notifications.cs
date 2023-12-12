@@ -81,8 +81,10 @@ namespace Lemur.Windowing
             ArgumentNullException.ThrowIfNull(callerName);
             ArgumentNullException.ThrowIfNull(path);
 
-            // this is an incredibly hacky solution.
-            return !(callerName == "Send" || callerName == "ExecuteAsync" || path.Contains("JS") || path.Contains("Terminal.xaml.cs") || path.Contains("Embedded"));
+            // this is an incredibly hacky solution, and has since been shoddily aborted
+            return true;
+
+            /*!(callerName == "Send" || callerName == "ExecuteAsync" || path.Contains("JS") || path.Contains("Terminal.xaml.cs") || path.Contains("Embedded")*/
         }
         /// <summary>
         /// Throws an exception as a gently formatted notification.

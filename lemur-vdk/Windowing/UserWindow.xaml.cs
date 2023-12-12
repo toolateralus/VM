@@ -24,6 +24,8 @@ namespace Lemur.GUI
         /// The JavaScript engine that powers this app.
         /// </summary>
         public Engine Engine { get; set; }
+        public bool WindowIsFocused => ResizableParent?.WindowIsFocused ?? false;
+
         /// <summary>
         /// called during Close to cleanup any extra UI, Threading, JavaScript resources etc.
         /// </summary>
@@ -58,6 +60,7 @@ namespace Lemur.GUI
         private void UserWindow_PreviewKeyDown(object sender, KeyEventArgs e)
         {
             if (e.Key == Key.C && 
+                WindowIsFocused &&
                 Keyboard.IsKeyDown(Key.LeftCtrl) && 
                 Keyboard.IsKeyDown(Key.LeftShift))
             {
