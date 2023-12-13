@@ -19,25 +19,23 @@ constructor(id) {
 
         this.resolution = 256;
 
-        this.gfx_ctx = Graphics.createCtx(this.id, 'RenderingTarget', this.resolution, this.resolution);
+        this.gfx_ctx = new GraphicsContext(this.id, 'RenderingTarget', this.resolution, this.resolution);
 		
 		this.deferred = 0;
 		this.primIndex = 0;
 	
         App.eventHandler('RenderingTarget', 'onMouseDown', Event.MouseDown);
         App.eventHandler('RenderingTarget', 'onMouseDown', Event.MouseUp);
-
         App.eventHandler('SaveButton', 'onSavePressed', Event.MouseDown);
         App.eventHandler('LoadButton', 'onLoadPressed', Event.MouseDown);
         App.eventHandler('ClearButton', 'onClearPressed', Event.MouseDown);
         App.eventHandler('FillButton', 'onFillPressed', Event.MouseDown);
-
         App.eventHandler('RenderingTarget', 'onMouseLeave', Event.MouseLeave);
         App.eventHandler('RenderingTarget', 'onMouseMoved', Event.MouseMove);
-
         App.eventHandler('RenderingTarget', 'onKeyDown', Event.KeyDown);
-
         App.eventHandler('colorPickerBox', 'onSelectionChanged', Event.SelectionChanged);
+        
+        this.onClearPressed()
 
     }
     draw() {
@@ -56,7 +54,7 @@ constructor(id) {
 			const x = Math.floor(msX - halfRad);
 			const y = Math.floor(msY - halfRad)
 
-			Graphics.drawFilledShape(this.gfx_ctx, x, y, radius, radius, rotation, brush, this.primIndex);
+			this.gfx_ctx.drawFilledShape(x, y, radius, radius, rotation, brush, this.primIndex);
 			
 		
         }
@@ -68,7 +66,7 @@ constructor(id) {
         this.mouseState.x = X;
         this.mouseState.y = Y;
         this.draw();
-    	Graphics.flushCtx(this.gfx_ctx);
+    	this.gfx_ctx.flushCtx();
     }
     onMouseDown(left, right) {
         this.mouseState.right = right;
@@ -103,21 +101,21 @@ constructor(id) {
         this.brushIndex = index;
     }
     onSavePressed() {
-        Graphics.flushCtx(this.gfx_ctx);
-        Graphics.saveToImage(this.gfx_ctx, 'home/test.bmp');
+        this.gfx_ctx.flushCtx();
+        this.gfx_ctx.saveToImage('home/test.bmp');
         print('saved to home/test.bmp');
     }
     onLoadPressed() {
-        Graphics.loadFromImage(this.gfx_ctx, 'home/test.bmp');
+        this.gfx_ctx.loadFromImage('home/test.bmp');
         print('Loaded from home/test.bmp');
     }
     onClearPressed() {
-        Graphics.clearColorIndexed(this.gfx_ctx, Color.WHITE);
-        Graphics.flushCtx(this.gfx_ctx);
+        this.gfx_ctx.clearColorIndex(Color.WHITE);
+        this.gfx_ctx.flushCtx();
     }
     onFillPressed() { 
-        Graphics.clearColorIndexed(this.gfx_ctx, this.brushIndex);
-        Graphics.flushCtx(this.gfx_ctx);
+        this.gfx_ctx.clearColorIndex(this.brushIndex);
+        this.gfx_ctx.flushCtx();
     }
 
 //#endregion

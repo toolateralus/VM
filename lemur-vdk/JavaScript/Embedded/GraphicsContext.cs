@@ -16,20 +16,56 @@ namespace Lemur.JS.Embedded
 {
     public class GraphicsContext
     {
-        public GraphicsContext(Computer computer, string pid, string TargetControl, int PixelFormatBpp)
+        public enum PrimitiveShape
         {
+            Rectangle,
+            Triangle,
+            Circle,
+        }
+        public static readonly List<byte[]> palette = new()
+        {
+            new byte[]{255, 0, 0, 255}, // Red 0
+            new byte[]{255, 128, 0, 255}, // Orange 1
+            new byte[]{255, 255, 0, 255}, // Yellow 2
+            new byte[]{128, 255, 0, 255}, // Lime Green 3
+            new byte[]{0, 255, 0, 255}, // Green 4
+            new byte[]{0, 255, 128, 255}, // Spring Green 5
+            new byte[]{0, 255, 255, 255}, // Cyan 6
+            new byte[]{0, 128, 255, 255}, // Sky Blue 7 
+            new byte[]{0, 0, 255, 255}, // Blue 8
+            new byte[]{128, 0, 255, 255}, // Purple 9 
+            new byte[]{255, 0, 255, 255}, // Magenta 10
+            new byte[]{255, 0, 128, 255}, // Pink 11
+            new byte[]{192, 192, 192, 255}, // Light Gray 12
+            new byte[]{128, 128, 128, 255}, // Medium Gray 13
+            new byte[]{64, 64, 64, 255}, // Dark Gray 14
+            new byte[]{0, 0, 0, 255}, // Black 15
+            new byte[]{255, 255, 255, 255}, // White 16
+            new byte[]{255, 69, 0, 255}, // Red-Orange 17
+            new byte[]{255, 215, 0, 255}, // Gold 18
+            new byte[]{0, 128, 0, 255}, // Dark Green 19
+            new byte[]{0, 128, 128, 255}, // Teal 20
+            new byte[]{0, 0, 128, 255}, // Navy 21
+            new byte[]{255, 20, 147, 255}, // Deep Pink 22
+            new byte[]{0, 250, 154, 255} // Medium Spring Green 23
+        };
+        public GraphicsContext(string pid, string targetControl, int width, int height ,int PixelFormatBpp = 4)
+        {
+
+            Width = width;
+            Height = height;
 
             Image image = null;
             Computer.Current.Window.Dispatcher.Invoke(() =>
             {
-                var content = computer.ProcessManager.GetProcess(pid).UI;
+                var content = Computer.Current.ProcessManager.GetProcess(pid).UI;
                 var app = content.Engine.AppModule;
                 var control = app.GetUserContent();
 
-                image = Embedded.app_t.FindControl(control, TargetControl) as Image;
+                image = Embedded.app_t.FindControl(control, targetControl) as Image;
 
                 if (image == null) {
-                    Notifications.Now($"{TargetControl} {image} target control not found when creating graphics context.");
+                    Notifications.Now($"{targetControl} {image} target control not found when creating graphics context.");
                     return;
                 }
 
@@ -37,21 +73,21 @@ namespace Lemur.JS.Embedded
             });
             this.image = new(image);
             this.PixelFormatBpp = PixelFormatBpp;
-        }
 
+            resize(Width, Height);
+        }
         internal int PixelFormatBpp;
         internal int Width, Height;
-
         private byte[] renderTexture = Array.Empty<byte>();
-
         private WriteableBitmap bitmap;
         private WriteableBitmap skybox;
         internal  readonly WeakReference<Image> image;
-        
-
         private byte[] cached_color = new byte[4];
-
-        public void Resize(double width, double height)
+        public void writePixel(double x, double y, double color)
+        {
+            writePixelPacked(x, y, color);
+        }
+        public void resize(double width, double height)
         {
             Width = (int)width;
             Height = (int)height;
@@ -65,15 +101,12 @@ namespace Lemur.JS.Embedded
                 bitmap = new WriteableBitmap(Width, Height, 1, 1, PixelFormats.Bgra32, null);
             });
         }
-
-
-
-        public void WritePixelIndexed(double x, double y, double index)
+        public void writePixelIndexed(double x, double y, double index)
         {
-            var col = graphics.palette[(int)index];
-            WritePixel(x, y, col[0], col[1], col[2], col[3]);
+            var col = palette[(int)index];
+            writePixel(x, y, col[0], col[1], col[2], col[3]);
         }
-        public void WritePixel(double x, double y, byte r, byte g, byte b, byte a)
+        public void writePixel(double x, double y, byte r, byte g, byte b, byte a)
         {
             var index = (int)((y * Width + x) * PixelFormatBpp);
 
@@ -85,11 +118,11 @@ namespace Lemur.JS.Embedded
             renderTexture[index + 2] = r;
             renderTexture[index + 3] = a;
         }
-        public void WritePixelPacked(double x, double y, double color)
+        public void writePixelPacked(double x, double y, double color)
         {
             byte r, g, b, a;
             ExtractColor(color, out r, out g, out b, out a);
-            WritePixel(x, y, r, g, b, a);
+            writePixel(x, y, r, g, b, a);
         }
         public static void ExtractColor(double color, out byte r, out byte g, out byte b, out byte a)
         {
@@ -133,50 +166,49 @@ namespace Lemur.JS.Embedded
             bitmap.Unlock();
             image.Source = bitmap;
         }
+        public bool flushCtx()
+        {
+            Computer.Current?.Window?.Dispatcher?.Invoke(() =>
+            {
+                if (this.image.TryGetTarget(out var image))
+                    Draw(image);
+            });
 
-        internal unsafe void ClearColor(double color)
+            return true;
+        }
+        public unsafe void clearColor(double color)
         {
             ExtractColorToCache(color);
             for (int i = 0; i < Width * Height; i++)
                 fixed (byte* ptr = renderTexture)
                     Marshal.Copy(cached_color, 0, (nint)ptr + i * PixelFormatBpp, PixelFormatBpp);
         }
-
-        internal unsafe void ClearColorIndex(double index)
+        public unsafe void clearColorIndex(double index)
         {
-            cached_color = graphics.palette[(int)index];
+            cached_color = palette[(int)index];
 
             for (int i = 0; i < Width * Height; i++)
                 fixed (byte* ptr = renderTexture)
                     Marshal.Copy(cached_color, 0, (nint)ptr + i * PixelFormatBpp, PixelFormatBpp);
         }
-
-        public enum PrimitiveShape
-        {
-            Rectangle,
-            Triangle,
-            Circle,
-        }
-
-        internal  void DrawFilledShape(double x, double y, double h, double w, double r, double colorIndex, PrimitiveShape primitiveShape)
+        public void drawFilledShape(double x, double y, double h, double w, double r, double colorIndex, PrimitiveShape primitiveShape)
         {
             switch (primitiveShape)
             {
                 case PrimitiveShape.Rectangle:
-                    WriteFilledRectangle(x, y, h, w, r, colorIndex);
+                    writeFilledRectangle(x, y, h, w, r, colorIndex);
                     break;
                 case PrimitiveShape.Circle:
-                    WriteFilledCircle(x, y, h, w, r, colorIndex);
+                    writeFilledCircle(x, y, h, w, r, colorIndex);
                     break;
                 case PrimitiveShape.Triangle:
-                    WriteFilledTriangle(x, y, h, w, r, colorIndex);
+                    writeFilledTriangle(x, y, h, w, r, colorIndex);
                     break;
                 default:
                     throw new NotSupportedException($"The shape {primitiveShape} is not supported");
             }
         }
-
-        private void WriteFilledRectangle(double x, double y, double h, double w, double r, double colorIndex)
+        public void writeFilledRectangle(double x, double y, double h, double w, double r, double colorIndex)
         {
             double cosR = Math.Cos(r);
             double sinR = Math.Sin(r);
@@ -200,12 +232,11 @@ namespace Lemur.JS.Embedded
                     double finalX = rotatedX + centerX;
                     double finalY = rotatedY + centerY;
 
-                    WritePixelIndexed(finalX, finalY, colorIndex);
+                    writePixelIndexed(finalX, finalY, colorIndex);
                 }
             }
         }
-
-        private void WriteFilledCircle(double x, double y, double h, double w, double r, double colorIndex)
+        public void writeFilledCircle(double x, double y, double h, double w, double r, double colorIndex)
         {
             double cosR = Math.Cos(r);
             double sinR = Math.Sin(r);
@@ -223,13 +254,12 @@ namespace Lemur.JS.Embedded
 
                     if (Math.Sqrt((rotatedX - centerX) * (rotatedX - centerX) + (rotatedY - centerY) * (rotatedY - centerY)) <= radius)
                     {
-                        WritePixelIndexed(rotatedX, rotatedY, colorIndex);
+                        writePixelIndexed(rotatedX, rotatedY, colorIndex);
                     }
                 }
             }
         }
-
-        private void WriteFilledTriangle(double x, double y, double h, double w, double r, double colorIndex)
+        public void writeFilledTriangle(double x, double y, double h, double w, double r, double colorIndex)
         {
             double cosR = Math.Cos(r);
             double sinR = Math.Sin(r);
@@ -247,16 +277,14 @@ namespace Lemur.JS.Embedded
                     double rotatedX = (double)(relativeX * cosR - relativeY * sinR) + centerX;
                     double rotatedY = (double)(relativeX * sinR + relativeY * cosR) + centerY;
 
-                    if (IsPodoubleInsideTriangle(rotatedX, rotatedY, x, y, x + w, y, x + w / 2, y + h))
+                    if (IsPointInsideTri(rotatedX, rotatedY, x, y, x + w, y, x + w / 2, y + h))
                     {
-                        WritePixelIndexed(rotatedX, rotatedY, colorIndex);
+                        writePixelIndexed(rotatedX, rotatedY, colorIndex);
                     }
                 }
             }
         }
-
-
-        private static bool IsPodoubleInsideTriangle(double x, double y, double x1, double y1, double x2, double y2, double x3, double y3)
+        public bool IsPointInsideTri(double x, double y, double x1, double y1, double x2, double y2, double x3, double y3)
         {
             double denominator = (y2 - y3) * (x1 - x3) + (x3 - x2) * (y1 - y3);
             double a = ((y2 - y3) * (x - x3) + (x3 - x2) * (y - y3)) / denominator;
@@ -265,7 +293,7 @@ namespace Lemur.JS.Embedded
 
             return a >= 0 && a <= 1 && b >= 0 && b <= 1 && c >= 0 && c <= 1;
         }
-        internal  void DrawSkybox()
+        public void drawSkybox()
         {
             lock(bitmap)
             Computer.Current.Window.Dispatcher.Invoke(() =>
@@ -287,7 +315,7 @@ namespace Lemur.JS.Embedded
             });
           
         }
-        internal void SaveToImage(string filePath)
+        public void saveToImage(string filePath)
         {
             try
             {
@@ -317,7 +345,7 @@ namespace Lemur.JS.Embedded
                 Notifications.Now($"Error saving image: {ex.Message}");
             }
         }
-        public void LoadSkybox(string filePath)
+        public void loadSkybox(string filePath)
         {
             try
             {
@@ -344,7 +372,7 @@ namespace Lemur.JS.Embedded
                 Notifications.Now($"Error loading skybox: {ex.Message}");
             }
         }
-        internal void LoadFromImage(string filePath)
+        public void loadFromImage(string filePath)
         {
             try
             {
@@ -369,7 +397,6 @@ namespace Lemur.JS.Embedded
                 Notifications.Now($"Error loading image: {ex.Message}");
             }
         }
-
     }
 }
 

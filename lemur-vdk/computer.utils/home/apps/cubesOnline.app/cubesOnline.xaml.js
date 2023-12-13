@@ -33,7 +33,7 @@ class cubesOnline {
 
         Network.addListener('onMessage');
 
-        this.gfx_ctx = Graphics.createCtx(this.id, 'RenderingTarget', this.width, this.width);
+        this.gfx_ctx = new GraphicsContext(this.id, 'RenderingTarget', this.width, this.width);
         App.eventHandler('this', 'm_Rendering', Event.Rendering);
 
         this.startTime = 0;
@@ -117,7 +117,7 @@ class cubesOnline {
         this.draw();
     }
     draw() {
-        Graphics.clearColorIndexed(this.gfx_ctx, Color.BLACK);
+        this.gfx_ctx.clearColorIndex(Color.BLACK);
 
         const nodes = this.scene.nodes;
 
@@ -138,10 +138,10 @@ class cubesOnline {
 
             const rot = node.rotation;
 
-            Graphics.drawFilledShape(this.gfx_ctx, Math.floor(x), Math.floor(y), width, height, rot, color, prim);
+            this.gfx_ctx.drawFilledShape(Math.floor(x), Math.floor(y), width, height, rot, color, prim);
         };
 
-        Graphics.flushCtx(this.gfx_ctx);
+        this.gfx_ctx.flushCtx();
     }
     update(deltaTime) {
         this.player.pos.y = this.width - 100;

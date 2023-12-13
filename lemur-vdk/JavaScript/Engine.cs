@@ -64,7 +64,6 @@ namespace Lemur.JS
 
         public network NetworkModule { get; }
         public interop InteropModule { get; }
-        public graphics GraphicsModule { get; }
         public conv ConvModule { get; }
         public app_t AppModule { get; }
         public file_t FileModule { get; }
@@ -81,7 +80,6 @@ namespace Lemur.JS
 
             NetworkModule = new network(computer);
             InteropModule = new interop(computer);
-            GraphicsModule = new graphics(computer);
             AppModule = new app_t(computer);
             TermModule = new term_t(computer);
             KeyModule = new key(computer);
@@ -94,15 +92,15 @@ namespace Lemur.JS
             EmbedObject("Convert", ConvModule);
             EmbedObject("Network", NetworkModule);
             EmbedObject("Interop", InteropModule);
-            EmbedObject("Graphics", GraphicsModule);
             EmbedObject("App", AppModule);
             EmbedObject("File", FileModule);
             EmbedObject("Terminal", TermModule);
             EmbedObject("Key", KeyModule);
             EmbedType("Stopwatch", typeof(System.Diagnostics.Stopwatch));
+            EmbedType("GraphicsContext", typeof(GraphicsContext));
             EmbedObject("config", Computer.Current.Config);
 
-            var joinedPalette = $"const palette = {JsonConvert.SerializeObject(graphics.palette)}";
+            var joinedPalette = $"const palette = {JsonConvert.SerializeObject(GraphicsContext.palette)}";
             Execute(joinedPalette);
 
 

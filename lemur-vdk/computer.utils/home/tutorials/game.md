@@ -1,7 +1,7 @@
 
 # making a game
 
-let's cover how we can setup a very simple software Renderinging setup.
+let's cover how we can setup a very simple software Rendering setup.
 
 ## Application boiler plate
 
@@ -17,9 +17,9 @@ You'll see an icon appear on the desktop. You can right click and select
 
 ## Including some helpful tools
 
-we have a (somewhat) node-like include/require system, and we will use that to heavily simplify the process of setting up our scene & Renderinger
+we have a (somewhat) node-like include/require system, and we will use that to heavily simplify the process of setting up our scene & Renderer
 
-> note that, in this tutorial, we will be using as much native Renderinging as possible for the best performance, meaning, we won't be controlling each and every pixel in javascript. however, there are many ways to Rendering pixels, images, or shapes in lemur, and it's rather flexible.
+> note that, in this tutorial, we will be using as much native Rendering as possible for the best performance, meaning, we won't be controlling each and every pixel in javascript. however, there are many ways to Rendering pixels, images, or shapes in lemur, and it's rather flexible.
 
 here's the include section of our document, 'game.xaml.js'
 
@@ -41,7 +41,7 @@ const { Profiler } = require('profiler.js');
 
 you may require any .js file underneath computer/home, see (nyi) tutorial, or check out the system/include files to see how exports are handled from source files.
 
-for now, we don't need to be super concerned with those types. instead, we can now focus on actually setting up our graphics context, then we can begin creating a scene and Renderinging it.
+for now, we don't need to be super concerned with those types. instead, we can now focus on actually setting up our graphics context, then we can begin creating a scene and Rendering it.
 
 ## Graphics Module & Context
 
@@ -94,8 +94,8 @@ this call creates our context, attaches our drawing surface to the control at sp
  `m_Rendering` is the name I've given to our Rendering loop callback function, but this could be anything.
  this function will get called as frequently as the environment allows, any framerate limiting or sleeping can be done in javascript.
 
-> this is not usually necessary though as we're typically struggling for performance, not limiting framerate. this is not surprising, though, since we're software Renderinging in two very high level languages.
-> we are working on an OpenGL hardware accelerated Renderinger, which will boost performance and possibilities _very much_. it's really low priority though.
+> this is not usually necessary though as we're typically struggling for performance, not limiting framerate. this is not surprising, though, since we're software Rendering in two very high level languages.
+> we are working on an OpenGL hardware accelerated Renderer, which will boost performance and possibilities _very much_. it's really low priority though.
 
 
 ```Javascript
@@ -147,7 +147,7 @@ constructor (id) {
         const node = new Node(scale, pos);
 
         // we are going to add some extra fields
-        // since we arent using vertex based Renderinging.
+        // since we arent using vertex based Rendering.
 
         // an index between 0 and 24
         // you can iterate over the 'palette' object
@@ -240,8 +240,8 @@ was used while it was originally designed
                   <Label Style="{StaticResource LabelStyle}" x:Name="framerateLabel" FontFamily="Consolas MS Bold" FontSize="20"
                         Foreground="Cyan" Background="#474354" Content="fps"/>
                         
-                  <Label Style="{StaticResource LabelStyle}" x:Name="Renderinging" FontFamily="Consolas MS Bold" FontSize="20"
-                        Foreground="Black" Background="DarkCyan" Content="Renderinging"/>
+                  <Label Style="{StaticResource LabelStyle}" x:Name="Rendering" FontFamily="Consolas MS Bold" FontSize="20"
+                        Foreground="Black" Background="DarkCyan" Content="Rendering"/>
 
                   <Label Style="{StaticResource LabelStyle}" x:Name="uploading" FontFamily="Consolas MS Bold" FontSize="20"
                         Foreground="Cyan" Background="Green" Content="upload"/>

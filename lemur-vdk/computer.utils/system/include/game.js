@@ -226,9 +226,8 @@ class Scene {
         this.nodes = nodes;
     }
 }
-class Renderinger {
+class Renderer {
     constructor(resolution, GraphicsCtx) {
-        // Renderinger data
         this.gfx_ctx = GraphicsCtx;
 
         if (this.gfx_ctx == undefined || this.gfx_ctx == null) {
@@ -254,12 +253,19 @@ class Renderinger {
         }
         return result;
     }
-    writePixel(x, y, color) {
-        Graphics.writePixel(this.gfx_ctx, Math.floor(x), Math.floor(y), to_color(color));
-    }
+    // writePixel(x, y, color) {
+    //     this.gfx_ctx.writePixel(Math.floor(x), Math.floor(y), to_color(color));
+    // }
     writePixelIndexed(x, y, index) {
-        Graphics.writePixelIndexed(this.gfx_ctx, Math.floor(x), Math.floor(y), index);
+        this.gfx_ctx.writePixelIndexed(Math.floor(x), Math.floor(y), index);
     }
+    writePixel = (steep, x, y, c) => {
+        if (steep) {
+            this.writePixelIndexed(y, x, c);
+        } else {
+            this.writePixelIndexed(x, y, c);
+        }
+    };
     // https://en.wikipedia.org/wiki/Bresenham's_line_algorithm
     // Bresenhams line drawing algorithm, adapted from stack overflow somewhere.
     drawLineIndexed(x0, x1, y0, y1, c0) {
@@ -281,19 +287,11 @@ class Renderinger {
         let error2 = 0;
         let y = y0;
 
-        const writePixel = (x, y, c) => {
-            if (steep) {
-                this.writePixelIndexed(y, x, c);
-            } else {
-                this.writePixelIndexed(x, y, c);
-            }
-        };
-
         const yStep = y1 > y0 ? 1 : -1;
         const error2Step = dx * 2;
 
         for (let x = x0; x <= x1; ++x) {
-            writePixel(x, y, c0);
+            this.writePixel(steep, x, y, c0);
             error2 += derror2;
 
             if (error2 > dx) {
@@ -369,7 +367,7 @@ class Renderinger {
     }
     m_drawScene(scene) {
 
-        Graphics.clearColor(this.gfx_ctx, this.bgColor);
+        this.gfx_ctx.clearColorIndex(this.bgColor);
 
         const nodes = scene.Nodes();
 
@@ -402,5 +400,5 @@ return {
     Line : Line, 
     Node : Node,
     Scene : Scene,
-    Renderinger: Renderinger,
+    Renderer: Renderer,
 };
