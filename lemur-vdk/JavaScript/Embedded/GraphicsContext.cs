@@ -5,6 +5,7 @@ using OpenTK.Mathematics;
 using System;
 using System.Collections.Generic;
 using System.Drawing;
+using System.Linq;
 using System.Runtime.InteropServices;
 using System.Windows;
 using System.Windows.Interop;
@@ -14,46 +15,60 @@ using Image = System.Windows.Controls.Image;
 
 namespace Lemur.JS.Embedded
 {
-    public class GraphicsContext
-    {
-        public enum PrimitiveShape
+    public enum PrimitiveShape
         {
             Rectangle,
             Triangle,
             Circle,
         }
-        public static readonly List<byte[]> palette = new()
-        {
-            new byte[]{255, 0, 0, 255}, // Red 0
-            new byte[]{255, 128, 0, 255}, // Orange 1
-            new byte[]{255, 255, 0, 255}, // Yellow 2
-            new byte[]{128, 255, 0, 255}, // Lime Green 3
-            new byte[]{0, 255, 0, 255}, // Green 4
-            new byte[]{0, 255, 128, 255}, // Spring Green 5
-            new byte[]{0, 255, 255, 255}, // Cyan 6
-            new byte[]{0, 128, 255, 255}, // Sky Blue 7 
-            new byte[]{0, 0, 255, 255}, // Blue 8
-            new byte[]{128, 0, 255, 255}, // Purple 9 
-            new byte[]{255, 0, 255, 255}, // Magenta 10
-            new byte[]{255, 0, 128, 255}, // Pink 11
-            new byte[]{192, 192, 192, 255}, // Light Gray 12
-            new byte[]{128, 128, 128, 255}, // Medium Gray 13
-            new byte[]{64, 64, 64, 255}, // Dark Gray 14
-            new byte[]{0, 0, 0, 255}, // Black 15
-            new byte[]{255, 255, 255, 255}, // White 16
-            new byte[]{255, 69, 0, 255}, // Red-Orange 17
-            new byte[]{255, 215, 0, 255}, // Gold 18
-            new byte[]{0, 128, 0, 255}, // Dark Green 19
-            new byte[]{0, 128, 128, 255}, // Teal 20
-            new byte[]{0, 0, 128, 255}, // Navy 21
-            new byte[]{255, 20, 147, 255}, // Deep Pink 22
-            new byte[]{0, 250, 154, 255} // Medium Spring Green 23
-        };
-        public GraphicsContext(string pid, string targetControl, int width, int height ,int PixelFormatBpp = 4)
+    public class GraphicsContext
+    {
+        internal int PixelFormatBpp;
+        internal int Width, Height;
+        private byte[] renderTexture = Array.Empty<byte>();
+        private WriteableBitmap bitmap;
+        private WriteableBitmap skybox;
+        internal readonly WeakReference<Image> image;
+        private byte[] cached_color = new byte[4];
+
+        public static readonly IReadOnlyList<byte[]> Palette =
+        [
+        // _________________________
+        //  | B  | R  |  G  |  A  |
+        //  ------------------------
+            [255,  0,    0,    255],        // Red 0
+            [255,  128,  0,    255],        // Orange 1
+            [255,  255,  0,    255],        // Yellow 2
+            [128,  255,  0,    255],        // Lime Green 3
+            [0,    255,  0,    255],        // Green 4
+            [0,    255,  128,  255],        // Spring Green 5
+            [0,    255,  255,  255],        // Cyan 6
+            [0,    128,  255,  255],        // Sky Blue 7 
+            [0,    0,    255,  255],        // Blue 8
+            [128,  0,    255,  255],        // Purple 9 
+            [255,  0,    255,  255],        // Magenta 10
+            [255,  0,    128,  255],        // Pink 11
+            [192,  192,  192,  255],        // Light Gray 12
+            [128,  128,  128,  255],        // Medium Gray 13
+            [64,   64,   64,   255],        // Dark Gray 14
+            [0,    0,    0,    255],        // Black 15
+            [255,  255,  255,  255],        // White 16
+            [255,  69,   0,    255],        // Red-Orange 17
+            [255,  215,  0,    255],        // Gold 18
+            [0,    128,  0,    255],        // Dark Green 19
+            [0,    128,  128,  255],        // Teal 20
+            [0,    0,    128,  255],        // Navy 21
+            [255,  20,   147,  255],        // Deep Pink 22
+            [0,    250,  154,  255]         // Medium Spring Green 23
+        ];
+
+        public GraphicsContext(string pid, string targetControl, int width, int height, int PixelFormatBpp = 4)
         {
 
             Width = width;
             Height = height;
+            this.PixelFormatBpp = PixelFormatBpp;
+            resize(Width, Height);
 
             Image image = null;
             Computer.Current.Window.Dispatcher.Invoke(() =>
@@ -64,25 +79,16 @@ namespace Lemur.JS.Embedded
 
                 image = Embedded.app_t.FindControl(control, targetControl) as Image;
 
-                if (image == null) {
+                if (image == null)
+                {
                     Notifications.Now($"{targetControl} {image} target control not found when creating graphics context.");
                     return;
                 }
-
-
             });
             this.image = new(image);
-            this.PixelFormatBpp = PixelFormatBpp;
 
-            resize(Width, Height);
         }
-        internal int PixelFormatBpp;
-        internal int Width, Height;
-        private byte[] renderTexture = Array.Empty<byte>();
-        private WriteableBitmap bitmap;
-        private WriteableBitmap skybox;
-        internal  readonly WeakReference<Image> image;
-        private byte[] cached_color = new byte[4];
+        
         public void writePixel(double x, double y, double color)
         {
             writePixelPacked(x, y, color);
@@ -103,7 +109,7 @@ namespace Lemur.JS.Embedded
         }
         public void writePixelIndexed(double x, double y, double index)
         {
-            var col = palette[(int)index];
+            var col = Palette[(int)index];
             writePixel(x, y, col[0], col[1], col[2], col[3]);
         }
         public void writePixel(double x, double y, byte r, byte g, byte b, byte a)
@@ -185,7 +191,7 @@ namespace Lemur.JS.Embedded
         }
         public unsafe void clearColorIndex(double index)
         {
-            cached_color = palette[(int)index];
+            cached_color = Palette[(int)index].ToArray();
 
             for (int i = 0; i < Width * Height; i++)
                 fixed (byte* ptr = renderTexture)

@@ -100,7 +100,7 @@ namespace Lemur.JS
             EmbedType("GraphicsContext", typeof(GraphicsContext));
             EmbedObject("config", Computer.Current.Config);
 
-            var joinedPalette = $"const palette = {JsonConvert.SerializeObject(GraphicsContext.palette)}";
+            var joinedPalette = $"const palette = {JsonConvert.SerializeObject(GraphicsContext.Palette)}";
             Execute(joinedPalette);
 
 
