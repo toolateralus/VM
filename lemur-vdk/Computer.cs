@@ -20,6 +20,7 @@ using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Media;
+using System.Windows.Media.Animation;
 using System.Windows.Media.Imaging;
 using System.Windows.Shapes;
 using static System.Runtime.InteropServices.JavaScript.JSType;
@@ -216,7 +217,6 @@ namespace Lemur
             void OnWindowClosed()
             {
 
-                // for pesky calls that arent from the UI thread, from javascript etc.
                 if (Thread.CurrentThread.GetApartmentState() != ApartmentState.STA)
                     App.Current.Dispatcher.Invoke(() => closeMethod());
                 else
@@ -275,7 +275,7 @@ namespace Lemur
             return null;
         }
 
-        public static void SetupIcon(string name, Button btn, object? image)
+        public static void StyleDesktopIcon(string name, Button btn, object? image)
         {
             btn.Background = Brushes.Transparent;
             var grid = new Grid() { Height = btn.Height, Width = btn.Width };
@@ -289,29 +289,27 @@ namespace Lemur
                 Text = name,
                 TextAlignment = TextAlignment.Left,
                 FontSize = 12,
+                FontFamily = new FontFamily("MS Gothic"),
                 Foreground = Brushes.Cyan,
-                Background = new SolidColorBrush(Color.FromArgb(65, 10, 10, 10)),
+                Background = Brushes.Transparent,
             };
 
             Grid.SetRow(textBlock, 0);
             grid.Children.Add(textBlock);
 
             FrameworkElement element;
-
             if (image is BitmapImage img)
             {
                 element = new Image
                 {
-                    Opacity = 0.5,
+                    Opacity = 0.95,
                     Source = img,
                     Stretch = Stretch.Fill,
-                    Style = Current.Window.FindResource("ImageOpacityStyle") as Style,
+                    Margin = new(5)
                 };
-
-
             }
             else
-                element = new Rectangle() { Fill = Brushes.Black };
+                element = new Rectangle() { Fill = Brushes.Black, Opacity = 0.15, Margin = new(5) };
 
             grid.Children.Add(element);
 
@@ -387,12 +385,12 @@ namespace Lemur
                     OpenCustom(type);
                 }
 
-                SetupIcon(type, btn, Runtime.GetAppIcon(appName));
+                StyleDesktopIcon(type, btn, Runtime.GetAppIcon(appName));
             }
             void InstallExtern(Button btn, string name, Type type)
             {
                 btn.MouseDoubleClick += OnDesktopIconPressed;
-                SetupIcon(appName, btn, GetExternIcon(type));
+                StyleDesktopIcon(appName, btn, GetExternIcon(type));
 
                 void OnDesktopIconPressed(object? sender, RoutedEventArgs e)
                 {

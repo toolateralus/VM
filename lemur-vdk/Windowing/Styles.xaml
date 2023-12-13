@@ -4,32 +4,13 @@
                     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
 
     <Brush x:Key="Foreground">#FFCFCFCF</Brush>
-    <Brush x:Key="Background">#000000</Brush>
-    <Style x:Key="ImageOpacityStyle" TargetType="Image">
-        <Setter Property="Opacity" Value="0.85" />
-        <Style.Triggers>
-            <EventTrigger RoutedEvent="UIElement.MouseEnter">
-                <BeginStoryboard>
-                    <Storyboard>
-                        <DoubleAnimation To="1.0" Duration="0:0:0.2" Storyboard.TargetProperty="Opacity" />
-                    </Storyboard>
-                </BeginStoryboard>
-            </EventTrigger>
-            <EventTrigger RoutedEvent="UIElement.MouseLeave">
-                <BeginStoryboard>
-                    <Storyboard>
-                        <DoubleAnimation To="0.85" Duration="0:0:0.2" Storyboard.TargetProperty="Opacity" />
-                    </Storyboard>
-                </BeginStoryboard>
-            </EventTrigger>
-        </Style.Triggers>
-    </Style>
+    <Brush x:Key="Background">#222222</Brush>
     <Style x:Key="ButtonStyle" TargetType="Button">
         <Setter Property="Background" Value="{StaticResource Background}"/>
         <Setter Property="Foreground" Value="{StaticResource Foreground}"/>
         <Setter Property="FontSize" Value="14"/>
-        <Setter Property="FontFamily" Value="Consolas"/>
-        <Setter Property="BorderBrush" Value="Transparent"/>
+        <Setter Property="FontFamily" Value="MS Gothic"/>
+        <Setter Property="BorderBrush" Value="#FF111111"/>
     </Style>
     <Style x:Key="DesktopButtonStyle" TargetType="Button">
         <Setter Property="Background" Value="{StaticResource Background}" />
@@ -37,6 +18,7 @@
         <Setter Property="FontSize" Value="14" />
         <Setter Property="FontFamily" Value="Consolas" />
         <Setter Property="BorderBrush" Value="Transparent" />
+        <Setter Property="Margin" Value="5" />
         <Setter Property="Template">
             <Setter.Value>
                 <ControlTemplate TargetType="Button">
@@ -52,14 +34,18 @@
             <EventTrigger RoutedEvent="UIElement.MouseEnter">
                 <BeginStoryboard>
                     <Storyboard>
-                        <DoubleAnimation To="1.0" Duration="0:0:0.2" Storyboard.TargetProperty="Opacity" />
+                        <DoubleAnimation To="90" Duration="0:0:0.2" Storyboard.TargetProperty="Width" />
+                        <DoubleAnimation To="90" Duration="0:0:0.2" Storyboard.TargetProperty="Height"/>
+                        <ThicknessAnimation To="5,15,5,5" Duration="0:0:0.2" Storyboard.TargetProperty="Margin"/>
                     </Storyboard>
                 </BeginStoryboard>
             </EventTrigger>
             <EventTrigger RoutedEvent="UIElement.MouseLeave">
                 <BeginStoryboard>
                     <Storyboard>
-                        <DoubleAnimation To="0.85" Duration="0:0:0.2" Storyboard.TargetProperty="Opacity" />
+                        <DoubleAnimation To="70" Duration="0:0:0.2" Storyboard.TargetProperty="Width" />
+                        <DoubleAnimation To="70" Duration="0:0:0.2" Storyboard.TargetProperty="Height" />
+                        <ThicknessAnimation To="5,5,5,5" Duration="0:0:0.2" Storyboard.TargetProperty="Margin"/>
                     </Storyboard>
                 </BeginStoryboard>
             </EventTrigger>
@@ -84,7 +70,7 @@
         <Setter Property="Background" Value="{StaticResource Background}"/>
         <Setter Property="Foreground" Value="{StaticResource Foreground}"/>
         <Setter Property="FontSize" Value="14"/>
-        <Setter Property="FontFamily" Value="Consolas"/>
+        <Setter Property="FontFamily" Value="MS Gothic"/>
     </Style>
     <Style x:Key="RectangleStyle" TargetType="Rectangle">
         <Setter Property="Fill" Value="#FF1F1F1F"/>
