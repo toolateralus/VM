@@ -137,38 +137,33 @@ namespace Lemur.OS.Language
     /// </summary>
     public partial class CommandLine : IDisposable
     {
-        internal Dictionary<string, Command> Commands = [];
-        internal Dictionary<string, string> Aliases = [];
-        private bool Disposing;
-        private Computer computer;
+        public Dictionary<string, Command> Commands = [];
+        public Dictionary<string, string> Aliases = [];
+        public bool Disposing;
+        public Computer computer;
 
         public CommandLine(Computer computer)
         {
             this.computer = computer;
 
             var assembly = Assembly.GetExecutingAssembly();
-            var bindingFlags = BindingFlags.Static | BindingFlags.Public | BindingFlags.NonPublic;
+            var bindingFlags = BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.Static;
 
-            var types = assembly.GetTypes();
-
-            foreach (var type in types)
+            foreach (var m in GetType().GetMethods(bindingFlags))
             {
-                var methods = type.GetMethods(bindingFlags);
-
-                foreach (var m in methods)
+                var attr = m.GetCustomAttribute<CommandAttribute>();
+                if (attr != null)
                 {
-                    var attr = m.GetCustomAttribute<CommandAttribute>(false);
-                    if (attr != null)
-                    {
-                        var cmd = new Command(attr.Identifier, (CommandAction)Delegate.CreateDelegate(typeof(CommandAction), m), attr.Info);
-                        Commands.Add(cmd.Identifier, cmd);
-                    }
+                    var del = (CommandAction)Delegate.CreateDelegate(typeof(CommandAction), this, m);
+
+                    var cmd = new Command(attr.Identifier, del, attr.Info);
+                    Commands.Add(cmd.Identifier, cmd);
                 }
             }
         }
         
         [Command("move", "moves a file / changes its name")]
-        private void MoveFile(SafeList<string> obj)
+        public void MoveFile(SafeList<string> obj)
         {
             if (obj.Length < 1)
             {
@@ -180,7 +175,7 @@ namespace Lemur.OS.Language
             Notifications.Now($"Moved {obj[0]}->{obj[1]}");
         }
         [Command("mangler", "mangles a javascript file's names & identifiers, or a range of lines. usage : mangler <filename> <optional lineStart> <optional lineEnd>")]
-        private void Mangler(SafeList<string> obj)
+        public void Mangler(SafeList<string> obj)
         {
             if (obj.Length == 0)
             {
@@ -223,7 +218,7 @@ namespace Lemur.OS.Language
 
         }
         [Command("setbg", "sets the desktop background")]
-        private void SetBackground(SafeList<string> obj)
+        public void SetBackground(SafeList<string> obj)
         {
             if (obj[0] is not string fileName)
             {
@@ -251,7 +246,7 @@ namespace Lemur.OS.Language
 
         }
         [Command("delete", "deletes a file / folder. use with caution!")]
-        private void DeleteFile(SafeList<string> obj)
+        public void DeleteFile(SafeList<string> obj)
         {
             if (obj[0] is string target)
             {
@@ -263,7 +258,7 @@ namespace Lemur.OS.Language
             }
         }
         [Command("ls", "list's the current directory's contents, or list's the provided target directory's contents.")]
-        private void ListDir(SafeList<string> obj)
+        public void ListDir(SafeList<string> obj)
         {
             var terminal = computer.ProcessManager.TryGetProcessOfType<Terminal>();
 
@@ -282,7 +277,7 @@ namespace Lemur.OS.Language
             terminal.output.AppendText(textList);
         }
         [Command("cd", "changes the computer-wide current directory.")]
-        private void ChangeDir(SafeList<string> obj)
+        public void ChangeDir(SafeList<string> obj)
         {
             if (obj[0] is string Path)
             {
@@ -294,7 +289,7 @@ namespace Lemur.OS.Language
             }
         }
         [Command("copy", "sets the command prompts font for this session. call this from a startup to set as default")]
-        private void CopyFile(SafeList<string> obj)
+        public void CopyFile(SafeList<string> obj)
         {
             if (obj[0] is string path)
             {
@@ -321,7 +316,7 @@ namespace Lemur.OS.Language
             }
         }
         [Command("mkdir", "creates a directory at the given path")]
-        private void MakeDir(SafeList<string> obj)
+        public void MakeDir(SafeList<string> obj)
         {
             if (obj[0] is string Path)
             {
@@ -339,12 +334,12 @@ namespace Lemur.OS.Language
             FileSystem.ChangeDirectory(FileSystem.Root);
         }
         [Command("unhost", "if a server is currently running on this machine this halts any active connections and closes the sever.")]
-        private void StopHosting(SafeList<string> obj)
+        public void StopHosting(SafeList<string> obj)
         {
             Computer.Current.Network.StopHosting();
         }
         [Command("--kill-all", "kills all the running processes on the computer, specify an app name like terminal to kill only those app instances, if any.")]
-        private void KillAllProcesses(SafeList<string> obj)
+        public void KillAllProcesses(SafeList<string> obj)
         {
             List<string> toKill = [];
 
@@ -372,7 +367,7 @@ namespace Lemur.OS.Language
 
         }
         [Command("host", "hosts a server on the provided <port>, none provided it will default to 8080")]
-        private void StartHosting(SafeList<string> obj)
+        public void StartHosting(SafeList<string> obj)
         {
             Task.Run(async () =>
             {
@@ -386,7 +381,7 @@ namespace Lemur.OS.Language
             });
         }
         [Command("lp", "lists all the running processes")]
-        private void ListProcesses(SafeList<string> obj)
+        public void ListProcesses(SafeList<string> obj)
         {
             foreach (var item in computer.ProcessManager.ProcessClassTable)
             {
@@ -394,13 +389,13 @@ namespace Lemur.OS.Language
             }
         }
         [Command("ip", "fetches the local ip address of your internet connection")]
-        private void GetIPAddress(SafeList<string> obj)
+        public void GetIPAddress(SafeList<string> obj)
         {
             var IP = LANIPFetcher.GetLocalIPAddress().MapToIPv4();
             Notifications.Now(IP.ToString());
         }
         [Command("edit", "reads / creates a .js file at provided path, and opens it in the text editor")]
-        private void EditTextFile(SafeList<string> obj)
+        public void EditTextFile(SafeList<string> obj)
         {
             if (obj[0] is string fileName)
             {
@@ -423,7 +418,7 @@ namespace Lemur.OS.Language
             }
         }
         [Command("config", "config <all|set|get|rm> <prop_name?> <value?>")]
-        private void ModifyConfig(SafeList<string> obj)
+        public void ModifyConfig(SafeList<string> obj)
         {
             // I am not sure if this is even possible.
             Computer.Current.Config ??= [];
@@ -550,7 +545,7 @@ namespace Lemur.OS.Language
 
         }
         [Command("clear", "clears the terminal(s), if open.")]
-        private void ClearTerminal(SafeList<string> obj)
+        public void ClearTerminal(SafeList<string> obj)
         {
             var cmd = computer.ProcessManager.TryGetProcessOfType<Terminal>()?.output;
 
@@ -562,7 +557,7 @@ namespace Lemur.OS.Language
                 Notifications.Now("failed to clear - no cmd prompt open");
         }
         [Command("help", "prints these help listings")]
-        private void ShowHelp(SafeList<string> obj)
+        public void ShowHelp(SafeList<string> obj)
         {
             var terminal = computer.ProcessManager.TryGetProcessOfType<Terminal>();
 
@@ -588,7 +583,7 @@ namespace Lemur.OS.Language
 
         }
         [Command("run", "runs a JavaScript file of specified path in the computers main engine.")]
-        private async void RunJsFile(SafeList<string> obj)
+        public async void RunJsFile(SafeList<string> obj)
         {
             if (obj[0] is string path && FileSystem.GetResourcePath(path.Replace(".js", "") + ".js") is string AbsPath && File.Exists(AbsPath))
             {
