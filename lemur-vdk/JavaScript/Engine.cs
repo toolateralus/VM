@@ -6,6 +6,7 @@ using Lemur.JavaScript.Api;
 using Lemur.JavaScript.Embedded;
 using Lemur.JS.Embedded;
 using Lemur.Windowing;
+using Newtonsoft.Json;
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
@@ -100,6 +101,10 @@ namespace Lemur.JS
             EmbedObject("Key", KeyModule);
             EmbedType("Stopwatch", typeof(System.Diagnostics.Stopwatch));
             EmbedObject("config", Computer.Current.Config);
+
+            var joinedPalette = $"const palette = {JsonConvert.SerializeObject(graphics.palette)}";
+            Execute(joinedPalette);
+
 
             EmbedAllObjects();
             executionThread = new Thread(ExecuteAsync);

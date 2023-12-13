@@ -34,6 +34,18 @@ namespace Lemur.JS.Embedded
                     Notifications.Now($"Couldn't 'call' {command}");
             });
         }
+        public void notify(params object[] message)
+        {
+            try
+            {
+                var msg = '\n' + string.Join('\n', message);
+                Notifications.Now(msg);
+            }
+            catch (Exception e)
+            {
+                Notifications.Exception(e);
+            }
+        }
         /// <summary>
         /// Prints to the terminal. there is a global function 'print' that wraps this.
         /// </summary>

@@ -13,9 +13,9 @@ using Image = System.Windows.Controls.Image;
 
 namespace Lemur.JS.Embedded
 {
-    public class Graphics_context
+    public class GraphicsContext
     {
-        public Graphics_context(Computer computer, string pid, string TargetControl, int PixelFormatBpp)
+        public GraphicsContext(Computer computer, string pid, string TargetControl, int PixelFormatBpp)
         {
 
             Image image = null;
@@ -46,33 +46,7 @@ namespace Lemur.JS.Embedded
         private WriteableBitmap bitmap;
         private WriteableBitmap skybox;
         internal readonly WeakReference<Image> image;
-        public static readonly List<byte[]> palette = new()
-        {
-            new byte[]{255, 0, 0, 255}, // Red 0
-            new byte[]{255, 128, 0, 255}, // Orange 1
-            new byte[]{255, 255, 0, 255}, // Yellow 2
-            new byte[]{128, 255, 0, 255}, // Lime Green 3
-            new byte[]{0, 255, 0, 255}, // Green 4
-            new byte[]{0, 255, 128, 255}, // Spring Green 5
-            new byte[]{0, 255, 255, 255}, // Cyan 6
-            new byte[]{0, 128, 255, 255}, // Sky Blue 7 
-            new byte[]{0, 0, 255, 255}, // Blue 8
-            new byte[]{128, 0, 255, 255}, // Purple 9 
-            new byte[]{255, 0, 255, 255}, // Magenta 10
-            new byte[]{255, 0, 128, 255}, // Pink 11
-            new byte[]{192, 192, 192, 255}, // Light Gray 12
-            new byte[]{128, 128, 128, 255}, // Medium Gray 13
-            new byte[]{64, 64, 64, 255}, // Dark Gray 14
-            new byte[]{0, 0, 0, 255}, // Black 15
-            new byte[]{255, 255, 255, 255}, // White 16
-            new byte[]{255, 69, 0, 255}, // Red-Orange 17
-            new byte[]{255, 215, 0, 255}, // Gold 18
-            new byte[]{0, 128, 0, 255}, // Dark Green 19
-            new byte[]{0, 128, 128, 255}, // Teal 20
-            new byte[]{0, 0, 128, 255}, // Navy 21
-            new byte[]{255, 20, 147, 255}, // Deep Pink 22
-            new byte[]{0, 250, 154, 255} // Medium Spring Green 23
-        };
+        
 
         private readonly byte[] cached_color = new byte[4];
 
@@ -95,7 +69,7 @@ namespace Lemur.JS.Embedded
 
         public void WritePixelIndexed(int x, int y, int index)
         {
-            var col = palette[index];
+            var col = graphics.palette[index];
             WritePixel(x, y, col[0], col[1], col[2], col[3]);
         }
         public void WritePixel(int x, int y, byte r, byte g, byte b, byte a)
@@ -167,7 +141,7 @@ namespace Lemur.JS.Embedded
         internal unsafe void ClearColorIndex(int index)
         {
             fixed (byte* ptr = cached_color)
-                Marshal.Copy(palette[index], 0, (nint)ptr, 3);
+                Marshal.Copy(graphics.palette[index], 0, (nint)ptr, 3);
 
             for (int i = 0; i < Width * Height; i++)
                 fixed (byte* ptr = renderTexture)

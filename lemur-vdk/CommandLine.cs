@@ -15,55 +15,13 @@ using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Text;
-using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using System.Xml.Linq;
 
 namespace Lemur.OS.Language
 {
-    public class JavaScriptPreProcessor
-    {
-        public static string MangleNames(string input)
-        {
-            var nameMap = new Dictionary<string, string>();
-            string pattern = @"\b(class|function|var|let|const)\s+(\w+)";
-            var counter = 0;
-            return Regex.Replace(input, pattern, m =>
-            {
-                string key = m.Groups[2].Value;
-                if (!nameMap.ContainsKey(key))
-                    nameMap[key] = $"x{counter++}";
-                return $"{m.Groups[1].Value} {nameMap[key]}";
-            });
-        }
-        public static string InjectCommandLineArgs(string[] str_args, string jsCode)
-        {
-            const string ArgsArrayReplacement = "[/***/]";
 
-            var index = jsCode.IndexOf(ArgsArrayReplacement);
-
-            if (index != -1)
-            {
-                var args = jsCode.Substring(index, ArgsArrayReplacement.Length);
-
-                var newArgs = $"[{string.Join("' ,'", str_args)}]";
-
-                jsCode = jsCode.Replace(args, newArgs);
-            }
-
-            return jsCode;
-        }
-    }
-    public record Command(string Identifier, CommandAction Action, params string[] Info); // oh well!
-
-    public delegate void CommandAction(SafeList<string> args);
-
-    [AttributeUsage(AttributeTargets.Method)]
-    public class CommandAttribute(string identifier, params string[] Info) : Attribute
-    {
-        public readonly string[] Info = Info;
-        public readonly string Identifier = identifier;
-    }
+    
 
     // todo: refactor all these commands and simplify for string args
     // for whatever reason i was using generic objects and there's a ton of
