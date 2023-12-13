@@ -27,7 +27,6 @@ namespace Lemur.JS
         public key(Computer computer) : base(computer)
         {
         }
-
         public void clearFocus() {
             Computer.Current.Window?.Dispatcher?.Invoke(() =>
             {
@@ -53,15 +52,6 @@ namespace Lemur.JS
     {
         internal IJsEngine m_engine_internal;
         IJsEngineSwitcher engineSwitcher;
-
-        private readonly Thread executionThread;
-        public readonly Dictionary<string, object?> Modules = new();
-
-        public readonly List<InteropFunction> EventHandlers = new();
-        public readonly Dictionary<string, object> EmbeddedObjects = new();
-        private readonly ConcurrentDictionary<int, (string code, Action<object?> output)> CodeDictionary = new();
-        public bool Disposing { get; private set; }
-
         public network NetworkModule { get; }
         public interop InteropModule { get; }
         public conv ConvModule { get; }
@@ -69,7 +59,13 @@ namespace Lemur.JS
         public file_t FileModule { get; }
         public term_t TermModule { get; }
         public key KeyModule { get; }
-
+        public string IncludedFiles = "";
+        private readonly Thread executionThread;
+        public readonly Dictionary<string, object?> Modules = new();
+        public readonly List<InteropFunction> EventHandlers = new();
+        public readonly Dictionary<string, object> EmbeddedObjects = new();
+        private readonly ConcurrentDictionary<int, (string code, Action<object?> output)> CodeDictionary = new();
+        public bool Disposing { get; private set; }
         public Engine(Computer computer, string name)
         {
 
@@ -150,7 +146,6 @@ await Execute(@$"
                 m_engine_internal.EmbedHostObject(item.Key, item.Value);
         }
         // Resource intensive loops
-
         private async void ExecuteAsync()
         {
             while (!Disposing)
@@ -183,7 +178,6 @@ await Execute(@$"
                 throw new JsEngineException("JavaScript execution thread died unexpectedly.");
             }
         }
-        public string IncludedFiles = "";
         public void ImportModule(string arg)
         {
             if (FileSystem.GetResourcePath(arg) is string AbsPath && !string.IsNullOrEmpty(AbsPath))
@@ -251,8 +245,6 @@ await Execute(@$"
 
             return result;
         }
-#pragma warning disable CA5394
-        // we don't need a cryptographically secure random number generator here
         private int GetUniqueHandle()
         {
             int handle = Random.Shared.Next();
@@ -262,7 +254,6 @@ await Execute(@$"
 
             return handle;
         }
-#pragma warning restore CA5394
         internal void ExecuteScript(string absPath)
         {
             if (string.IsNullOrEmpty(absPath))
@@ -271,8 +262,6 @@ await Execute(@$"
             var script = File.ReadAllText(absPath);
             Task.Run(() => Execute(script));
         }
-        
-
         public void Dispose()
         {
             Disposing = true;
@@ -282,7 +271,6 @@ await Execute(@$"
             AppModule.ReleaseThread();
             GC.Collect();
         }
-
         internal void CreateNetworkEventHandler(string processID, string methodName)
         {
             ArgumentNullException.ThrowIfNull(processID);
@@ -291,7 +279,6 @@ await Execute(@$"
             var nwEvent = new NetworkEvent(this, processID, methodName);
             EventHandlers.Add(nwEvent);
         }
-
         internal void RemoveNetworkEventHandler(string processID, string methodName)
         {
             ArgumentNullException.ThrowIfNull(processID);

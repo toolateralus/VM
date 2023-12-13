@@ -23,6 +23,17 @@ namespace Lemur.JS.Embedded
 {
     public class app_t : embedable
     {
+        public app_t(Computer computer) : base(computer)
+        {
+            ExposedEvents["draw_pixels"] = DrawPixelsEvent; // somewhat deprecated, use the dedicated graphics module instead.
+            ExposedEvents["draw_image"] = DrawImageEvent;
+            ExposedEvents["set_content"] = SetContent;
+            ExposedEvents["get_content"] = GetContent;
+        }
+        internal Thread bgThread;
+        private ConcurrentQueue<Action> deferredJobs = [];
+        internal string processID;
+        private bool Disposing { get; set; }
         public delegate bool SetPropertyHandler(PropertyInfo? propertyInfo, object target, object? value);
         public delegate object? AppEvent(string target, object? value);
         public static Dictionary<string, AppEvent> ExposedEvents = new();
@@ -38,13 +49,6 @@ namespace Lemur.JS.Embedded
             }},
 
         };
-
-        internal Thread bgThread;
-        private ConcurrentQueue<Action> deferredJobs = [];
-        internal string processID;
-
-        private bool Disposing { get;  set; }
-
         public void ReleaseThread()
         {
             if (!Disposing)
@@ -53,14 +57,6 @@ namespace Lemur.JS.Embedded
                 bgThread?.Join();
             }
         }
-        public app_t(Computer computer) : base (computer)
-        {
-            ExposedEvents["draw_pixels"] = DrawPixelsEvent; // somewhat deprecated, use the dedicated graphics module instead.
-            ExposedEvents["draw_image"] = DrawImageEvent;
-            ExposedEvents["set_content"] = SetContent;
-            ExposedEvents["get_content"] = GetContent;
-        }
-
         private async void __bg_threadLoop()
         {
             DateTime lastTime = DateTime.Now;
@@ -89,7 +85,6 @@ namespace Lemur.JS.Embedded
                 }
             }
         }
-
         public void setRow(string element, int row)
         {
             Current.Window.Dispatcher.Invoke(() =>
@@ -102,7 +97,6 @@ namespace Lemur.JS.Embedded
                 Grid.SetRow(control, row);
             });
         }
-
         public void setColumn(string element, int row)
         {
 
@@ -191,7 +185,6 @@ namespace Lemur.JS.Embedded
 
             return didAdd;
         }
-
         public bool removeChild(string parent, string childName)
         {
             var didRemove = false;
@@ -235,7 +228,6 @@ namespace Lemur.JS.Embedded
 
             return didRemove;
         }
-
         public void deferEval(string code, int delay, string? identifier = null)
         {
             WakeUpBackgroundThread();
@@ -260,7 +252,6 @@ namespace Lemur.JS.Embedded
                     _ = await engine.Execute(code).ConfigureAwait(false) ;
             }));
         }
-
         public void defer(string methodName, int delayMs, params object[]? args)
         {
             WakeUpBackgroundThread();
@@ -309,7 +300,6 @@ namespace Lemur.JS.Embedded
                 }
             }));
         }
-
         private void WakeUpBackgroundThread()
         {
             if (bgThread == null)
@@ -319,7 +309,6 @@ namespace Lemur.JS.Embedded
                 bgThread.Start();
             }
         }
-
         internal static void SetProperty(object target, string propertyName, object? value)
         {
             if (target == null)
@@ -364,7 +353,6 @@ namespace Lemur.JS.Embedded
 
             return propertyInfo?.GetValue(target);
         }
-
         private object? GetContent(string controlName, object? value)
         {
             object? output = null;
@@ -477,7 +465,6 @@ namespace Lemur.JS.Embedded
             });
             return output;
         }
-
         public static BitmapImage BitmapImageFromBase64(string base64String)
         {
             try
@@ -585,7 +572,6 @@ namespace Lemur.JS.Embedded
 
             image.Source = bitmap;
         }
-
         public object? getProperty(string controlName, object? property)
         {
             object? output = null;
@@ -619,7 +605,6 @@ namespace Lemur.JS.Embedded
             }));
 
         }
-
         public object? pushEvent(string targetControl, string eventType, object? data)
         {
             if (ExposedEvents.TryGetValue(eventType, out var handler))
@@ -720,7 +705,6 @@ namespace Lemur.JS.Embedded
             Notifications.Now("Incorrect path for uninstall");
 
         }
-
         internal void __Attach__Process__ID(string id)
         {
             this.processID = id;
