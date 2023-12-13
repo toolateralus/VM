@@ -159,7 +159,8 @@ await Execute(@$"
                     }
                     catch (Exception e)
                     {
-                        Notifications.Exception(e);
+                        if (e is not JsInterruptedException)
+                            Notifications.Exception(e);
                     }
                     finally
                     {
@@ -215,10 +216,9 @@ await Execute(@$"
                     if (!string.IsNullOrEmpty(code))
                         m_engine_internal.Execute(code);
                 }
-                catch (Exception e)
+                catch (Exception e) 
                 {
                     Notifications.Exception(e);
-
                 }
             }
         }
@@ -354,8 +354,6 @@ await Execute(@$"
 
         public void Dispose()
         {
-
-
             Disposing = true;
             m_engine_internal.Interrupt();
             m_engine_internal.Dispose();

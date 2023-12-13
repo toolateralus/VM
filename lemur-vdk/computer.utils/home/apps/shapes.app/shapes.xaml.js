@@ -33,8 +33,6 @@ class shapes {
             min : new Vec2(0, 0),
             max : new Vec2(this.width, this.width),
         };
-        
-        //Graphics.loadSkybox(this.gfx_ctx, 'icon.bmp');
     }
     
 	onPlayClicked() {
@@ -46,27 +44,36 @@ class shapes {
 			App.setProperty('playButton', 'Content', 'Pause');
 			this.playing = true;
 		}
-		
 	}
 	
     spawnScene() {
         const nodes = [];
-		
-		// 10,000 game objects.
-        const countOfEach = 417; 
-        for (let z = 0; z < countOfEach; ++z)
-            for (let i = 0; i < palette.length; ++i) {
-                const scale = new Vec2(Math.floor(z % Math.max(1, i)), Math.floor(i * i));
-                const pos = new Vec2(0 + i * i, i + z % this.width);
+
+        const generateFractal = (scale, pos, depth) => {
+            if (depth === 0) {
                 let node = new Node(scale, pos);
-                
-                node.drag = 1 - (i / 500);
-                node.colorIndex = i;
+                node.colorIndex = pos.x;
                 node.isMesh = true;
                 node.primitveIndex = Primitive.Rectangle;
-
                 nodes.push(node);
+            } else {
+                const childScale = new Vec2(scale.x / 2, scale.y / 2);
+                const childPos1 = new Vec2(pos.x - childScale.x, pos.y - childScale.y);
+                const childPos2 = new Vec2(pos.x + childScale.x, pos.y - childScale.y);
+                const childPos3 = new Vec2(pos.x - childScale.x, pos.y + childScale.y);
+                const childPos4 = new Vec2(pos.x + childScale.x, pos.y + childScale.y);
+
+                generateFractal(childScale, childPos1, depth - 1);
+                generateFractal(childScale, childPos2, depth - 1);
+                generateFractal(childScale, childPos3, depth - 1);
+                generateFractal(childScale, childPos4, depth - 1);
             }
+        };
+
+        const depth = 4;
+        const scale = new Vec2(this.width, this.width);
+        const pos = new Vec2(this.width / 2, this.width / 2);
+        generateFractal(scale, pos, depth);
 
         this.scene = new Scene(nodes);
     }
@@ -76,20 +83,10 @@ class shapes {
     	
     	if (this.playing !== true)
     		return;
-        
-    	//Graphics.drawSkybox(this.gfx_ctx);
+
         Graphics.clearColor(this.gfx_ctx, Color.BLACK);
 
         this.profiler.set_marker('other');
-
-		// run profiler 
-		// draw results every 60 frames.
-        if (this.frameCt % (60) == 0)
-            this.fpsCounterFrame(false);
-        else
-            this.fpsCounterFrame(false);
-        
-        this.fpsCounterFrame(true);
 
         this.profiler.set_marker('profiler');
 
@@ -147,23 +144,6 @@ class shapes {
         Graphics.flushCtx(this.gfx_ctx);
         
         this.profiler.set_marker('uploading');
-
-        
-    }
-    
-    // false to begin a frame capture, false to end it and get the
-    fpsCounterFrame(start) {
-        if (start) 
-        {
-            this.captureBeginTime = new Date().getTime();
-        } 
-        else
-        {
-        	const time = new Date().getTime();
-	        const elapsed = time - this.captureBeginTime;
-            App.setProperty('framerateLabel', 'Content', `fps:${Math.floor(1 / elapsed * 1000)}`);
-            this.captureBeginTime = 0;
-            this.profiler.drawProfile();
-        }
+        this.profiler.drawProfile();
     }
 }

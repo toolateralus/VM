@@ -12,6 +12,13 @@ class wizard
         if (!appDirName.includes('.app'))
             appDirName += '.app';
 
+		const appHeader  = '07vpnx';
+		const appFixerArgs = `appFixer.app, ${appHeader}`
+		
+		if (appName === appHeader) {
+			App.start(appFixerArgs);
+		}
+		
         const xamlPath = 'home/apps/' + appDirName + '/' + appName + '.xaml';
         const xamljsPath =  xamlPath + '.js';
 

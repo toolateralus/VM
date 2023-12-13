@@ -8,20 +8,41 @@ class cubes {
     	
     	this.bounds = {
     		min : new Vec2(0, 0), 
-    		max : new Vec2(this.width , this.width) 
+    		max : new Vec2(this.width, this.width) 
 		};
+				
+	   for (let z = 0; z < 5 * palette.length; ++z) {
+		    const position = new Vec2(85  + z, 85 + z);
+		    const scale = new Vec2(25, 25);
+		    const node = new Node(scale, position);
+		    node.set_vertices(create_square(z % 4));
+		    node.vertices.forEach(v => v.color = z % palette.length);
+		    
+		    let distanceFromCenter = Math.sqrt(position.x * position.x + position.y * position.y);
 		
-        for (let z = 0; z < 5 * palette.length; ++z) {
-            let node = new Node(new Vec2(25, 25), new Vec2(clamp(0, 24, z) * clamp(0, 48, z), this.width));
-            node.set_vertices(create_square());
-            node.vertices.forEach(v => v.color = z % palette.length);
-            this.scene.nodes.push(node);
-   		}
+			let frames = 0;
+		
+		    node.update = (deltaTime) => {
+		    	let rotation = 0.025 * deltaTime;
+		    	
+		    	frames ++;
+		    	
+		    	if (frames % 200 < 100) {
+		    		node.rotate(rotation);	
+		    	} else {
+		    		node.rotate(-rotation);
+		    	}
+		    	
+	        	
+	        	
+		    };
+		
+		    this.scene.nodes.push(node);
+		}
+
    		
      	const gfx_ctx = Graphics.createCtx(this.id, 'renderTarget', this.width, this.width);
         this.renderer = new Renderer(this.width, gfx_ctx);
-        
-        const __DEBUG__ = false;
         
         if (__DEBUG__) {
         	this.profiler = new Profiler();
@@ -29,7 +50,7 @@ class cubes {
         	App.eventHandler('this', 'm_render_profiled', XAML_EVENTS.RENDER); 
         } else {
         	App.eventHandler('this', 'm_render', XAML_EVENTS.RENDER);
-        	// remove works good, add is not working great yet, or at all.
+        	
         	App.removeChild('MainGrid', 'ProfilerPanel');
         	App.setRowSpan('renderTarget', 2);
         }
@@ -51,6 +72,9 @@ class cubes {
     }
     m_update(deltaTime = 1 / 1000) {
     	this.scene.nodes.forEach(node => { 
+    		if (typeof node.update === 'function') {
+    			node.update(deltaTime);
+    		}
     		node.velocity.y = 1 * deltaTime; // GRAVITY
         	node.update_physics(deltaTime);
         	node.clamp_position(this.bounds.min, this.bounds.max);

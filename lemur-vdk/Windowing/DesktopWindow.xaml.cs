@@ -110,12 +110,12 @@ namespace Lemur.GUI
         }
         public Button MakeDesktopButton(string appName)
         {
-            var btn = MakeButton(width: 90, height: 70);
+            var btn = MakeButton(width: 70, height: 70);
 
             btn.Margin = new Thickness(5, 5, 5, 5);
             btn.Content = appName;
 
-            btn.Style = FindResource("ButtonStyle") as Style; 
+            btn.Style = FindResource("DesktopButtonStyle") as Style; 
 
             string regexPattern = @"[_a-zA-Z][_a-zA-Z0-9]*";
 

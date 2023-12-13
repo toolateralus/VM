@@ -5,7 +5,25 @@
 
     <Brush x:Key="Foreground">#FFCFCFCF</Brush>
     <Brush x:Key="Background">#000000</Brush>
-
+    <Style x:Key="ImageOpacityStyle" TargetType="Image">
+        <Setter Property="Opacity" Value="0.85" />
+        <Style.Triggers>
+            <EventTrigger RoutedEvent="UIElement.MouseEnter">
+                <BeginStoryboard>
+                    <Storyboard>
+                        <DoubleAnimation To="1.0" Duration="0:0:0.2" Storyboard.TargetProperty="Opacity" />
+                    </Storyboard>
+                </BeginStoryboard>
+            </EventTrigger>
+            <EventTrigger RoutedEvent="UIElement.MouseLeave">
+                <BeginStoryboard>
+                    <Storyboard>
+                        <DoubleAnimation To="0.85" Duration="0:0:0.2" Storyboard.TargetProperty="Opacity" />
+                    </Storyboard>
+                </BeginStoryboard>
+            </EventTrigger>
+        </Style.Triggers>
+    </Style>
     <Style x:Key="ButtonStyle" TargetType="Button">
         <Setter Property="Background" Value="{StaticResource Background}"/>
         <Setter Property="Foreground" Value="{StaticResource Foreground}"/>
@@ -13,6 +31,41 @@
         <Setter Property="FontFamily" Value="Consolas"/>
         <Setter Property="BorderBrush" Value="Transparent"/>
     </Style>
+    <Style x:Key="DesktopButtonStyle" TargetType="Button">
+        <Setter Property="Background" Value="{StaticResource Background}" />
+        <Setter Property="Foreground" Value="{StaticResource Foreground}" />
+        <Setter Property="FontSize" Value="14" />
+        <Setter Property="FontFamily" Value="Consolas" />
+        <Setter Property="BorderBrush" Value="Transparent" />
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="Button">
+                    <Border Background="{TemplateBinding Background}"
+                        BorderBrush="{TemplateBinding BorderBrush}"
+                        BorderThickness="{TemplateBinding BorderThickness}">
+                        <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center" />
+                    </Border>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+        <Style.Triggers>
+            <EventTrigger RoutedEvent="UIElement.MouseEnter">
+                <BeginStoryboard>
+                    <Storyboard>
+                        <DoubleAnimation To="1.0" Duration="0:0:0.2" Storyboard.TargetProperty="Opacity" />
+                    </Storyboard>
+                </BeginStoryboard>
+            </EventTrigger>
+            <EventTrigger RoutedEvent="UIElement.MouseLeave">
+                <BeginStoryboard>
+                    <Storyboard>
+                        <DoubleAnimation To="0.85" Duration="0:0:0.2" Storyboard.TargetProperty="Opacity" />
+                    </Storyboard>
+                </BeginStoryboard>
+            </EventTrigger>
+        </Style.Triggers>
+    </Style>
+
     <Style x:Key="ToggleButtonStyle" TargetType="ToggleButton">
         <Setter Property="Background" Value="{StaticResource Background}"/>
         <Setter Property="Foreground" Value="{StaticResource Foreground}"/>

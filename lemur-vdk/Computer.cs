@@ -302,11 +302,17 @@ namespace Lemur
             FrameworkElement element;
 
             if (image is BitmapImage img)
+            {
                 element = new Image
                 {
+                    Opacity = 0.5,
                     Source = img,
                     Stretch = Stretch.Fill,
+                    Style = Current.Window.FindResource("ImageOpacityStyle") as Style,
                 };
+
+                
+            }
             else
                 element = new Rectangle() { Fill = Brushes.Black };
 
@@ -347,42 +353,10 @@ namespace Lemur
         }
         public void InstallIcon(AppType type, string appName, Type? runtime_type = null)
         {
-            void InstallNative(Button btn, string type)
-            {
-                btn.MouseDoubleClick += OnDesktopIconPressed;
-
-                var contextMenu = Window.GetNativeContextMenu(appName);
-
-                btn.ContextMenu = contextMenu;
-
-                async void OnDesktopIconPressed(object? sender, RoutedEventArgs e)
-                {
-                    await OpenCustom(type);
-                }
-
-                SetupIcon(type, btn, Runtime.GetAppIcon(appName));
-            }
-            void InstallExtern(Button btn, string name, Type type)
-            {
-                btn.MouseDoubleClick += OnDesktopIconPressed;
-                SetupIcon(appName, btn, GetExternIcon(type));
-
-                void OnDesktopIconPressed(object? sender, RoutedEventArgs e)
-                {
-                    if (Activator.CreateInstance(type) is object instance && instance is UserControl userControl)
-                    {
-                        Computer.Current.OpenApp(userControl, name, Computer.GetNextProcessID());
-                    }
-                    else
-                    {
-                        Notifications.Now("Failed to create instance of native application. the app is likely misconfigured");
-                    }
-                }
-            }
+            
 
             Window.Dispatcher?.Invoke(() =>
             {
-
                 var btn = Window.MakeDesktopButton(appName);
 
                 switch (type)
@@ -411,7 +385,7 @@ namespace Lemur
                     var answer = MessageBox.Show($"are you sure you want to uninstall {appName}?", "uninstall?", MessageBoxButton.YesNo);
 
                     if (answer == MessageBoxResult.Yes)
-                        Computer.Current.Uninstall(appName);
+                        Computer.Current.Uninstall(appName + ".app");
                 };
 
                 delete.Click += (sender, @event) =>
@@ -424,11 +398,44 @@ namespace Lemur
 
                 btn.ContextMenu ??= new();
                 btn.ContextMenu.Items.Add(uninstall);
+                btn.ContextMenu.Items.Add(delete);
 
                 Window.DesktopIconPanel.UpdateLayout();
                 Window.DesktopIconPanel.Children.Add(btn);
             });
 
+            void InstallNative(Button btn, string type)
+            {
+                btn.MouseDoubleClick += OnDesktopIconPressed;
+
+                var contextMenu = Window.GetNativeContextMenu(appName);
+
+                btn.ContextMenu = contextMenu;
+
+                void OnDesktopIconPressed(object? sender, RoutedEventArgs e)
+                {
+                    OpenCustom(type);
+                }
+
+                SetupIcon(type, btn, Runtime.GetAppIcon(appName));
+            }
+            void InstallExtern(Button btn, string name, Type type)
+            {
+                btn.MouseDoubleClick += OnDesktopIconPressed;
+                SetupIcon(appName, btn, GetExternIcon(type));
+
+                void OnDesktopIconPressed(object? sender, RoutedEventArgs e)
+                {
+                    if (Activator.CreateInstance(type) is object instance && instance is UserControl userControl)
+                    {
+                        Computer.Current.OpenApp(userControl, name, Computer.GetNextProcessID());
+                    }
+                    else
+                    {
+                        Notifications.Now("Failed to create instance of native application. the app is likely misconfigured");
+                    }
+                }
+            }
         }
         public void InstallFromType(string name, Type type)
         {
@@ -443,12 +450,20 @@ namespace Lemur
                 Window.RemoveDesktopIcon(name);
             });
         }
-        private static void LoadBackground(Computer pc, DesktopWindow wnd)
+        internal void LoadBackground()
         {
-            string backgroundPath = pc?.Config?.Value<string>("BACKGROUND") ?? "background.png";
-            wnd.desktopBackground.Source = Computer.LoadImage(FileSystem.GetResourcePath(backgroundPath) ?? "background.png");
+            string backgroundPath = Config?.Value<string>("BACKGROUND") ?? "background.png";
+            var fullPath = FileSystem.GetResourcePath(backgroundPath);
+
+            if (fullPath.Length == 0)
+            {
+                Notifications.Now($"Failed to find file for desktop background at path : {backgroundPath}");
+                return;
+            }
+
+            Window.desktopBackground.Source = LoadImage(fullPath);
         }
-        public async Task OpenCustom(string type, params object[] cmdLineArgs)
+        public async void OpenCustom(string type, params object[] cmdLineArgs)
         {
 
             if (!type.Contains(".app"))
@@ -503,7 +518,7 @@ namespace Lemur
         }
 
         [Command("restart", "restarts the computer")]
-        public void Restart(SafeList<object> _)
+        public void Restart(SafeList<string> _)
         {
             Current.Exit(0);
             Current.Dispose();
@@ -520,7 +535,7 @@ namespace Lemur
 
             Current.Window = wnd;
 
-            LoadBackground(pc, wnd);
+            Current.LoadBackground();
 
             wnd.Show();
 
@@ -531,7 +546,7 @@ namespace Lemur
             };
 
             pc.InstallCSharpApp("terminal.app", typeof(Terminal));
-            pc.InstallCSharpApp("FileExplorer.app", typeof(Explorer));
+            pc.InstallCSharpApp("explorer.app", typeof(Explorer));
             pc.InstallCSharpApp("texed.app", typeof(Texed));
 
             Runtime.LoadCustomSyntaxHighlighting();

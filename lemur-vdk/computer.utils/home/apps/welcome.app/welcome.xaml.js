@@ -13,7 +13,6 @@ class welcome {
 	}
 	tut02_click () {
 		let pid = App.start('texed', 'game.md', this.doRender);
-		let pid1 = App.start('texed', 'gamelib.md', this.doRender);
 		
 		App.close(pid);
 		App.close(pid1);

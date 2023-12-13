@@ -82,6 +82,12 @@ namespace Lemur.JavaScript.Network
             if (!NetworkEvents.TryGetValue(channel, out _))
                 NetworkEvents.TryAdd(channel, new());
 
+            // we would dequeue, but that would cause there to be an accumulated buffer of old data that never gets touched.
+            // lingering events suggests problems anyway, this shouldn't be happening, and programs written to store events on this
+            // as a buffer are probably misusing it, as interesting as that is :D
+            if (NetworkEvents[channel].Count > 10)
+                NetworkEvents[channel].Clear();
+
             NetworkEvents[channel].Enqueue((msg, reply));
 
             foreach (var userWindow in Computer.ProcessClassTable.SelectMany(i => i.Value.Select(i => i)))

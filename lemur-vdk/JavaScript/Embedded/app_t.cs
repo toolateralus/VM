@@ -645,7 +645,7 @@ namespace Lemur.JS.Embedded
             {
                 // this way of fetching a pid is very presumptuous and bad.
                 pid = $"p{__procId + 1}"; // the next to be created process. 
-                await Computer.Current.OpenCustom(path, args).ConfigureAwait(false);
+                Computer.Current.OpenCustom(path, args);
             }
 
             return pid;

@@ -13,6 +13,8 @@ using System.IO;
 using Newtonsoft.Json;
 using System.Security.Cryptography.Xml;
 using Lemur.JS.Embedded;
+using ICSharpCode.AvalonEdit.Search;
+using ICSharpCode.AvalonEdit;
 
 namespace Lemur.GUI
 {
@@ -54,6 +56,7 @@ namespace Lemur.GUI
                 commandHistory = jArray ?? [];
             }
 
+            SearchPanel.Install(output);
         }
 
         private void Output_TextChanged(object? sender, EventArgs e)

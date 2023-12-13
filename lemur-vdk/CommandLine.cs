@@ -55,7 +55,7 @@ namespace Lemur.OS.Language
     }
     public record Command(string Identifier, CommandAction Action, params string[] Info); // oh well!
 
-    public delegate void CommandAction(SafeList<object> args);
+    public delegate void CommandAction(SafeList<string> args);
 
     [AttributeUsage(AttributeTargets.Method)]
     public class CommandAttribute(string identifier, params string[] Info) : Attribute
@@ -63,6 +63,11 @@ namespace Lemur.OS.Language
         public readonly string[] Info = Info;
         public readonly string Identifier = identifier;
     }
+
+    // todo: refactor all these commands and simplify for string args
+    // for whatever reason i was using generic objects and there's a ton of
+    // unnecessary casting going on.
+
     /// <summary>
     /// command parser &amp; execution engine for Lemur.
     /// </summary>
@@ -70,14 +75,17 @@ namespace Lemur.OS.Language
     {
         public bool TryCommand(string termInput)
         {
-            var inputs = termInput.Split(';');
+            var inputs = termInput.Split(';').Select(i => i.Trim());
 
+            var executed = false;
             foreach (var input in inputs)
             {
-                if (Commands.FirstOrDefault(c => c.Identifier == input) is Command _cmd && _cmd.Identifier != null && _cmd.Identifier != "NULL" && _cmd.Action != null)
+                // no args, just execute literal input.
+                if (Commands.TryGetValue(input, out var _cmd))
                 {
-                    _cmd.Action.Invoke(new SafeList<object?>([]));
-                    return true;
+                    _cmd.Action.Invoke([]);
+                    executed = true;
+                    continue;
                 }
 
                 string[] split = input.Split(' ');
@@ -96,22 +104,27 @@ namespace Lemur.OS.Language
 
                     _ = Task.Run(async delegate { await Computer.Current.JavaScript.Execute(jsCode); });
 
-                    return true;
+                    executed = true;
+                    continue;
                 }
 
-                return TryInvoke(cmdName, str_args);
-
+                executed = TryInvoke(cmdName, str_args);
             }
 
-            return false; 
+            return executed; 
         }
 
        
 
         public bool TryInvoke(string name, params string[] args)
         {
-            Command? cmd = Commands.FirstOrDefault(c => c.Identifier == name);
-            cmd?.Action?.Invoke(args);
+            if (!Commands.TryGetValue(name, out var cmd))
+                return false;
+
+            SafeList<string> args1 = new(args);
+
+            cmd?.Action?.Invoke(args1);
+
             return cmd?.Action != null;
         }
         public void Dispose()
@@ -126,8 +139,8 @@ namespace Lemur.OS.Language
     /// </summary>
     public partial class CommandLine : IDisposable
     {
-        public List<Command> Commands = new();
-        public Dictionary<string, string> Aliases = new();
+        internal Dictionary<string, Command> Commands = [];
+        internal Dictionary<string, string> Aliases = [];
         private bool Disposing;
         public CommandLine()
         {
@@ -146,25 +159,26 @@ namespace Lemur.OS.Language
                     if (attr != null)
                     {
                         var cmd = new Command(attr.Identifier, (CommandAction)Delegate.CreateDelegate(typeof(CommandAction), m), attr.Info);
-                        Commands.Add(cmd);
+                        Commands.Add(cmd.Identifier, cmd);
                     }
                 }
             }
         }
+
         [Command("move", "moves a file / changes its name")]
-        private static void MoveFile(SafeList<object> obj)
+        private static void MoveFile(SafeList<string> obj)
         {
-            if (obj[0] is not string a || obj[1] is not string b)
+            if (obj.Length < 1)
             {
                 Notifications.Now("Bad arguments to : move");
                 return;
             }
 
-            FileSystem.Move(a, b);
-            Notifications.Now($"Moved {a}->{b}");
+            FileSystem.Move(obj[0], obj[1]);
+            Notifications.Now($"Moved {obj[0]}->{obj[1]}");
         }
         [Command("mangler", "mangles a javascript file's names & identifiers, or a range of lines. usage : mangler <filename> <optional lineStart> <optional lineEnd>")]
-        private static void Mangler(SafeList<object> obj)
+        private static void Mangler(SafeList<string> obj)
         {
             if (obj.Length == 0)
             {
@@ -172,20 +186,13 @@ namespace Lemur.OS.Language
                 return;
             }
 
-            if (obj[0] is string fileName)
+            var fileName = FileSystem.GetResourcePath(obj[0]);
+            if (!File.Exists (fileName))
             {
-                fileName = FileSystem.GetResourcePath(fileName);
-                if (!File.Exists (fileName))
-                {
-                    Notifications.Now("mangler::error : file did not exist");
-                    return;
-                } 
-            } 
-            else
-            {
-                Notifications.Now("mangler::error : invalid filename");
+                Notifications.Now("mangler::error : file did not exist");
                 return;
-            }
+            } 
+           
 
             var data = File.ReadAllText(fileName);
 
@@ -213,8 +220,36 @@ namespace Lemur.OS.Language
             }
 
         }
+        [Command("setbg", "sets the desktop background")]
+        private static void SetBackground(SafeList<string> obj)
+        {
+            if (obj[0] is not string fileName)
+            {
+                Notifications.Now($"invalid arg : {obj[0]}");
+                return;
+            }
+
+            if (fileName.Length == 0)
+            {
+                Notifications.Now($"invalid arg {fileName} : cannot provide an empty path ");
+                return;
+            }
+
+            if (FileSystem.GetResourcePath(fileName) is not string fullPath || string.IsNullOrEmpty(fullPath))
+            {
+                Notifications.Now($"invalid arg {fileName} : could not find file specified ");
+                return;
+            }
+
+            var computer = Computer.Current;
+
+            computer.Config["BACKGROUND"] = fullPath;
+            Computer.SaveConfig(computer.Config.ToString());
+            computer.LoadBackground();
+
+        }
         [Command("delete", "deletes a file / folder. use with caution!")]
-        private static void DeleteFile(SafeList<object> obj)
+        private static void DeleteFile(SafeList<string> obj)
         {
             if (obj[0] is string target)
             {
@@ -226,7 +261,7 @@ namespace Lemur.OS.Language
             }
         }
         [Command("ls", "list's the current directory's contents, or list's the provided target directory's contents.")]
-        private static void ListDir(SafeList<object> obj)
+        private static void ListDir(SafeList<string> obj)
         {
             var terminal = Computer.TryGetProcessOfType<Terminal>();
 
@@ -245,7 +280,7 @@ namespace Lemur.OS.Language
             terminal.output.AppendText(textList);
         }
         [Command("cd", "changes the computer-wide current directory.")]
-        private static void ChangeDir(SafeList<object> obj)
+        private static void ChangeDir(SafeList<string> obj)
         {
             if (obj[0] is string Path)
             {
@@ -257,7 +292,7 @@ namespace Lemur.OS.Language
             }
         }
         [Command("copy", "sets the command prompts font for this session. call this from a startup to set as default")]
-        private static void CopyFile(SafeList<object> obj)
+        private static void CopyFile(SafeList<string> obj)
         {
             if (obj[0] is string path)
             {
@@ -284,7 +319,7 @@ namespace Lemur.OS.Language
             }
         }
         [Command("mkdir", "creates a directory at the given path")]
-        private static void MakeDir(SafeList<object> obj)
+        private static void MakeDir(SafeList<string> obj)
         {
             if (obj[0] is string Path)
             {
@@ -297,17 +332,17 @@ namespace Lemur.OS.Language
             }
         }
         [Command("root", "navigates the open file explorer to the root directory of the computer.")]
-        public static void RootCmd(SafeList<object> obj)
+        public static void RootCmd(SafeList<string> obj)
         {
             FileSystem.ChangeDirectory(FileSystem.Root);
         }
         [Command("unhost", "if a server is currently running on this machine this halts any active connections and closes the sever.")]
-        private static void StopHosting(SafeList<object> obj)
+        private static void StopHosting(SafeList<string> obj)
         {
             Computer.Current.NetworkConfiguration.StopHosting();
         }
         [Command("--kill-all", "kills all the running processes on the computer, specify an app name like terminal to kill only those app instances, if any.")]
-        private static void KillAllProcesses(SafeList<object> obj)
+        private static void KillAllProcesses(SafeList<string> obj)
         {
             List<string> toKill = [];
 
@@ -334,23 +369,22 @@ namespace Lemur.OS.Language
             }
 
         }
-      
         [Command("host", "hosts a server on the provided <port>, none provided it will default to 8080")]
-        private static void StartHosting(SafeList<object> obj)
+        private static void StartHosting(SafeList<string> obj)
         {
             Task.Run(async () =>
             {
-                int? port = obj?[0] as int?;
-                if (await Computer.Current.NetworkConfiguration.StartHosting(port ?? NetworkConfiguration.defaultPort))
+                // todo: make it use any port;
+                if (await Computer.Current.NetworkConfiguration.StartHosting(NetworkConfiguration.defaultPort))
                 {
                     Notifications.Now($"Hosting on {Computer.Current.NetworkConfiguration.GetIPPortString()}");
                     return;
                 }
-                Notifications.Now($"Failed to begin hosting on {LANIPFetcher.GetLocalIPAddress().MapToIPv4()}:{port}");
+                Notifications.Now($"Failed to begin hosting on {LANIPFetcher.GetLocalIPAddress().MapToIPv4()}:{NetworkConfiguration.defaultPort}");
             });
         }
         [Command("lp", "lists all the running processes")]
-        private static void ListProcesses(SafeList<object> obj)
+        private static void ListProcesses(SafeList<string> obj)
         {
             foreach (var item in Computer.ProcessClassTable)
             {
@@ -358,13 +392,13 @@ namespace Lemur.OS.Language
             }
         }
         [Command("ip", "fetches the local ip address of your internet connection")]
-        private static void GetIPAddress(SafeList<object> obj)
+        private static void GetIPAddress(SafeList<string> obj)
         {
             var IP = LANIPFetcher.GetLocalIPAddress().MapToIPv4();
             Notifications.Now(IP.ToString());
         }
         [Command("edit", "reads / creates a .js file at provided path, and opens it in the text editor")]
-        private static void EditTextFile(SafeList<object> obj)
+        private static void EditTextFile(SafeList<string> obj)
         {
             if (obj[0] is string fileName)
             {
@@ -387,7 +421,7 @@ namespace Lemur.OS.Language
             }
         }
         [Command("config", "config <all|set|get|rm> <prop_name?> <value?>")]
-        private static void ModifyConfig(SafeList<object> obj)
+        private static void ModifyConfig(SafeList<string> obj)
         {
             // I am not sure if this is even possible.
             Computer.Current.Config ??= [];
@@ -508,28 +542,25 @@ namespace Lemur.OS.Language
 
                         Computer.Current.Config[propname] = arg;
                         break;
-
-                   
                 }
-
 
             }
 
-
-          
-
         }
         [Command("clear", "clears the terminal(s), if open.")]
-        private static void ClearTerminal(SafeList<object> obj)
+        private static void ClearTerminal(SafeList<string> obj)
         {
             var cmd = Computer.TryGetProcessOfType<Terminal>()?.output;
-            Computer.Current.Window.Dispatcher.Invoke(() => { cmd?.Clear(); });
+
+            Computer.Current.Window.Dispatcher.Invoke(() => { 
+                cmd?.Clear(); 
+            });
 
             if (cmd is null)
                 Notifications.Now("failed to clear - no cmd prompt open");
         }
         [Command("help", "prints these help listings")]
-        private static void ShowHelp(SafeList<object> obj)
+        private static void ShowHelp(SafeList<string> obj)
         {
             var terminal = Computer.TryGetProcessOfType<Terminal>();
 
@@ -538,12 +569,11 @@ namespace Lemur.OS.Language
 
             // todo: make this easier to read, add a manual.
             foreach (var item in Computer.Current.CmdLine.Commands)
-                cmdbuilder?.Append($"\n{{{item.Identifier}}} \t\n\'{string.Join(",", item.Info)}\'");
+                cmdbuilder?.Append($"\n{{{item.Value.Identifier}}} \t\n\'{string.Join(",", item.Value.Info)}\'");
 
             // todo: add better alias info
             foreach (var item in Computer.Current.CmdLine.Aliases)
                 aliasbuilder.Append($"\n{item.Key} -> {item.Value.Split('\\').Last()}");
-
 
             terminal.Dispatcher.Invoke(() =>
             {
@@ -554,10 +584,9 @@ namespace Lemur.OS.Language
                 terminal?.output.AppendText(aliasbuilder.ToString());
             });
 
-
         }
         [Command("run", "runs a JavaScript file of specified path in the computers main engine.")]
-        private static async void RunJsFile(SafeList<object> obj)
+        private static async void RunJsFile(SafeList<string> obj)
         {
             if (obj[0] is string path && FileSystem.GetResourcePath(path.Replace(".js", "") + ".js") is string AbsPath && File.Exists(AbsPath))
             {
@@ -569,8 +598,6 @@ namespace Lemur.OS.Language
                 Notifications.Now("failed run: bad args. usage : run 'path.js'");
             }
         }
-       
-       
      }
 }
 

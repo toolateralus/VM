@@ -33,14 +33,15 @@ namespace Lemur.JS.Embedded
         /// Prints to the terminal. there is a global function 'print' that wraps this.
         /// </summary>
         /// <param name="message"></param>
-        public void print(object message)
+        public void print(params object[] message)
         {
             try
             {
+                var msg = '\n' + string.Join('\n', message);
                 Computer.Current.Window?.Dispatcher.Invoke(() =>
                 {
-                    Debug.WriteLine(message);
-                    Notifications.Now(message?.ToString() ?? "null");
+                    foreach (var cmd in Computer.TryGetAllProcessesOfTypeUnsafe<Terminal>())
+                        cmd.output.AppendText(msg);
                 });
             }
             catch (Exception e)

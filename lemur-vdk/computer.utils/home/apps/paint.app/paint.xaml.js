@@ -23,7 +23,17 @@ class paint {
 			
 			const halfRad = radius / 2;
 			
-			Graphics.drawFilledShape(this.gfx_ctx, Math.floor(msX - halfRad), Math.floor(msY - halfRad), radius, radius, rotation, brush, primitive);
+			let last = this.undoCache[this.undoIndex];
+			
+			const x = Math.floor(msX - halfRad);
+			const y = Math.floor(msY - halfRad)
+			
+			last[x * y] = { 
+				radius:radius, 
+				brush:brush
+			};
+			
+			Graphics.drawFilledShape(this.gfx_ctx, x, y, radius, radius, rotation, brush, primitive);
 
             Graphics.flushCtx(this.gfx_ctx);
         }
@@ -34,7 +44,11 @@ class paint {
         this.mouseState.right = right;
         this.mouseState.left = left;
         this.draw();
+        
+        this.undoCache.push([]);
+        this.undoIndex++;
     }
+    
     onMouseLeave() {
         this.mouseState.right = false;
         this.mouseState.left = false;
@@ -71,7 +85,8 @@ class paint {
         this.id = id;
 
         this.pickerOpen = 0;
-
+		this.undoCache = [[]];
+		this.undoIndex = 0;
         this.mouseState = 
         {
             x: 0,
@@ -86,7 +101,6 @@ class paint {
 
         this.resolution = 256;
 
- 
         this.gfx_ctx = Graphics.createCtx(this.id, 'renderTarget', this.resolution, this.resolution);
 
         Graphics.flushCtx(this.gfx_ctx);

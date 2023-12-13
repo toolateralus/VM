@@ -33,7 +33,7 @@ function create_square() {
     return verts;
 }
 
-// ------------------------- functions added to intrinsics / embeddeds
+// ------------------------- functions added to intrinsics
 
 function get_set (controlName, propName, func) {
     if (typeof func !== 'function') {
