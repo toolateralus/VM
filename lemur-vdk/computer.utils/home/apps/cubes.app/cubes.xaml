@@ -5,7 +5,7 @@
       xmlns:local="clr-namespace:System.Windows.Controls;assembly=PresentationFramework"
       mc:Ignorable="d"
       d:DesignHeight="450" d:DesignWidth="800" Background="#474354" BorderBrush="White"
-      BorderThickness="5">
+      BorderThickness="5"  Opacity="0.1">
       <Grid x:Name="MainGrid">
             <Grid.RowDefinitions>
                   <RowDefinition Height="*" />
@@ -16,8 +16,8 @@
                   <Label Style="{StaticResource LabelStyle}" x:Name="framerateLabel" FontFamily="Consolas MS Bold" FontSize="20"
                         Foreground="Cyan" Background="#474354" Content="fps"/>
                         
-                  <Label Style="{StaticResource LabelStyle}" x:Name="rendering" FontFamily="Consolas MS Bold" FontSize="20"
-                        Foreground="Black" Background="DarkCyan" Content="rendering"/>
+                  <Label Style="{StaticResource LabelStyle}" x:Name="Renderinging" FontFamily="Consolas MS Bold" FontSize="20"
+                        Foreground="Black" Background="DarkCyan" Content="Renderinging"/>
 
                   <Label Style="{StaticResource LabelStyle}" x:Name="uploading" FontFamily="Consolas MS Bold" FontSize="20"
                         Foreground="Cyan" Background="Green" Content="upload"/>
@@ -31,7 +31,7 @@
 
             <Image Grid.Row="0"
                   Margin="5"
-                  x:Name="renderTarget"
+                  x:Name="RenderingTarget"
                   HorizontalAlignment="Stretch"
                   VerticalAlignment="Stretch"
                   Stretch="Fill"

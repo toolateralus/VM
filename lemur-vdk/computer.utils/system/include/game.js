@@ -75,7 +75,7 @@ class Vec2 {
         }
         return this;
     }
-    set(x, y) {
+    set(x = this.x, y = this.y) {
         this.x = x;
         this.y = y;
     }
@@ -226,9 +226,9 @@ class Scene {
         this.nodes = nodes;
     }
 }
-class Renderer {
+class Renderinger {
     constructor(resolution, GraphicsCtx) {
-        // Renderer data
+        // Renderinger data
         this.gfx_ctx = GraphicsCtx;
 
         if (this.gfx_ctx == undefined || this.gfx_ctx == null) {
@@ -402,5 +402,5 @@ return {
     Line : Line, 
     Node : Node,
     Scene : Scene,
-    Renderer: Renderer,
+    Renderinger: Renderinger,
 };

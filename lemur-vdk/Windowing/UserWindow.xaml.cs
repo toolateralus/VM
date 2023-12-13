@@ -98,7 +98,7 @@ namespace Lemur.GUI
                 return;
 
             var events = Engine.EventHandlers.Where(e => e is InteropEvent iE
-                                                                && iE.Event == XAML_EVENTS.KEY_DOWN).ToList();
+                                                                && iE.Event == Event.KeyDown).ToList();
 
             if (events.Count == 0)
                 return;

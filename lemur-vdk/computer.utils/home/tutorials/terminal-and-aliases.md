@@ -31,7 +31,7 @@ ideas surrounding writing console commands for the OS in JavaScript.
 }
 
 ```
-Then, to have the command loaded up every time we start our computer, we can add it as an alias in `computer[id]/startup.js`
+Then, to have the command Loaded up every time we start our computer, we can add it as an alias in `computer[id]/startup.js`
 
 ```javascript 
 //'startup.js'
@@ -96,7 +96,7 @@ calling this function allows you to load all command files within a specified di
 // in 'startup.js'
 {
 	const commandDirectory = "/path/to/commands";
-	// note : this reloads the currently loaded 
+	// note : this reloads the currently Loaded 
 	// aliases and only loads under this dir.
 
 	TerminalsetAliasDirectory(commandDirectory);

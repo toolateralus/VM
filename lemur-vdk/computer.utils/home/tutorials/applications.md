@@ -91,8 +91,8 @@ Just for ease of use here, these are the provided xaml / js files.
             <TextBox BorderBrush="Black" Margin="2,2,2,2" x:Name="textBox" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Text="C://>.."/>
             <!-- Js hooks into the event to handle it -->
             <Button Style="{StaticResource ButtonStyle}" BorderBrush="Black" Margin="2,2,2,2" x:Name="showImageBtn" HorizontalAlignment="Left" VerticalAlignment="Top" Content="Load Image"/>
-            <!-- We use this to draw / render the image. can also be used for game development, see `cubes.app` -->
-            <Image Margin="10,10,10,10" x:Name="renderTarget" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Stretch="Fill"/>
+            <!-- We use this to draw / Rendering the image. can also be used for game development, see `cubes.app` -->
+            <Image Margin="10,10,10,10" x:Name="RenderingTarget" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Stretch="Fill"/>
         </StackPanel>
     </Grid>
 </UserControl>
@@ -132,11 +132,11 @@ class base_app {
             return;
         }
 
-        // call to the wpf application to search this classes XAML for 'renderTarget', and call a
+        // call to the wpf application to search this classes XAML for 'RenderingTarget', and call a
         // 'draw_image' event on it with 'background' as data.
         // in the case of 'draw_image' you must provide a base64 string representing a common file-format image. (.png, .jpg, .bmp)
         // this is achieved with the `Interop.base64FromFile(filePath)` function
-        App.pushEvent(this.id, 'renderTarget', 'draw_image', background);
+        App.pushEvent(this.id, 'RenderingTarget', 'draw_image', background);
     }
 
     
@@ -153,7 +153,7 @@ class base_app {
         // call to the wpf to search this class's XAML for an element 'showImageBtn' 
         // and subscribe the javascript function (which is present in this class) called 'loadImage' to the 'MouseDown'
         // event of that 'showImageBtn' control/element.
-        App.eventHandler(this.id, 'showImageBtn', 'loadImage', XAML_EVENTS.MOUSE_DOWN);
+        App.eventHandler(this.id, 'showImageBtn', 'loadImage', Event.MouseDown);
 
         // call to the wpf to search this class's XAML for a control/element 'textBlock' and call the 'set_content' event
         // with that control as an argument, along with our string data we want to fill that label.

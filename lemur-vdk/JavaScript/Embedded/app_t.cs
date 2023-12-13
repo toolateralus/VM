@@ -69,12 +69,14 @@ namespace Lemur.JS.Embedded
             {
                 if (deferredJobs.TryDequeue(out var job))
                 {
-                    job?.Invoke();
+                    using var cts = new CancellationTokenSource();
+                    var task = Task.Run(job.Invoke, cts.Token);
+                    await Task.WhenAny(task, Task.Delay(100_000)).ConfigureAwait(false);
                     lastTime = DateTime.Now;
                 } 
                 else
                 {
-                    await Task.Delay(1).ConfigureAwait(false);
+                    await Task.Delay(16).ConfigureAwait(false);
 
                     // kill thread if no jobs for 30 seconds
                     if (deferredJobs.IsEmpty && (DateTime.Now - lastTime).TotalSeconds > 10)

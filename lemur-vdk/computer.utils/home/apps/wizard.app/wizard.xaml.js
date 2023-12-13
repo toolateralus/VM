@@ -2,7 +2,7 @@ class wizard
 {
     constructor(id) {
         this.id = id;
-        App.eventHandler('createBtn', 'create', XAML_EVENTS.MOUSE_DOWN);
+        App.eventHandler('createBtn', 'create', Event.MouseDown);
     }
     create() {
         var appName = App.getProperty('nameBox', 'Text');

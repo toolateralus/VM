@@ -7,9 +7,9 @@ namespace Lemur.JS.Embedded
     public class graphics : embedable
     {
 
-        private int ctxIndex;
+        private double ctxIndex;
 
-        public Dictionary<int, GraphicsContext> GraphicsContext = [];
+        public Dictionary<double, GraphicsContext> GraphicsContext = [];
         public static readonly List<byte[]> palette = new()
         {
             new byte[]{255, 0, 0, 255}, // Red 0
@@ -41,7 +41,7 @@ namespace Lemur.JS.Embedded
         {
         }
 
-        public bool writePixel(int gfx_ctx, int x, int y, int color)
+        public bool writePixel(double gfx_ctx, double x, double y, double color)
         {
             if (!GraphicsContext.TryGetValue(gfx_ctx, out var ctx))
             {
@@ -54,7 +54,7 @@ namespace Lemur.JS.Embedded
 
             return true;
         }
-        public bool writePixelRGBA(int gfx_ctx, int x, int y, byte r, byte g, byte b, byte a)
+        public bool writePixelRGBA(double gfx_ctx, double x, double y, byte r, byte g, byte b, byte a)
         {
             if (!GraphicsContext.TryGetValue(gfx_ctx, out var ctx))
             {
@@ -66,7 +66,7 @@ namespace Lemur.JS.Embedded
 
             return true;
         }
-        public bool drawFilledShape(int gfx_ctx, int x, int y, int w, int h, double r, int colorIndex, int primitveIndex)
+        public bool drawFilledShape(double gfx_ctx, double x, double y, double w, double h, double r, double colorIndex, double primitveIndex)
         {
             if (!GraphicsContext.TryGetValue(gfx_ctx, out var ctx))
             {
@@ -76,7 +76,7 @@ namespace Lemur.JS.Embedded
             ctx.DrawFilledShape(x, y, h, w, r, colorIndex, (GraphicsContext.PrimitiveShape)primitveIndex);
             return true;
         }
-        public bool writePixelIndexed(int gfx_ctx, int x, int y, int index)
+        public bool writePixelIndexed(double gfx_ctx, double x, double y, double index)
         {
             if (!GraphicsContext.TryGetValue(gfx_ctx, out var ctx))
             {
@@ -86,7 +86,7 @@ namespace Lemur.JS.Embedded
             ctx.WritePixelIndexed(x, y, index);
             return true;
         }
-        public void clearColor(int gfx_ctx, int color)
+        public void clearColor(double gfx_ctx, double color)
         {
             if (!GraphicsContext.TryGetValue(gfx_ctx, out var ctx))
             {
@@ -95,7 +95,7 @@ namespace Lemur.JS.Embedded
             }
             ctx.ClearColor(color);
         }
-        public void clearColorIndexed(int gfx_ctx, int index)
+        public void clearColorIndexed(double gfx_ctx, double index)
         {
             if (!GraphicsContext.TryGetValue(gfx_ctx, out var ctx))
             {
@@ -104,7 +104,7 @@ namespace Lemur.JS.Embedded
             }
             ctx.ClearColorIndex(index);
         }
-        public bool flushCtx(int gfx_ctx)
+        public bool flushCtx(double gfx_ctx)
         {
             if (!GraphicsContext.TryGetValue(gfx_ctx, out var context))
             {
@@ -121,7 +121,7 @@ namespace Lemur.JS.Embedded
 
             return true;
         }
-        public void saveToImage(int gfx_ctx, string path)
+        public void saveToImage(double gfx_ctx, string path)
         {
             if (!GraphicsContext.TryGetValue(gfx_ctx, out var context))
             {
@@ -131,7 +131,7 @@ namespace Lemur.JS.Embedded
 
             context.SaveToImage(path);
         }
-        public void drawSkybox(int gfx_ctx)
+        public void drawSkybox(double gfx_ctx)
         {
             if (!GraphicsContext.TryGetValue(gfx_ctx, out var context))
             {
@@ -148,7 +148,7 @@ namespace Lemur.JS.Embedded
 
             context.DrawSkybox();
         }
-        public void loadSkybox(int gfx_ctx, string path)
+        public void loadSkybox(double gfx_ctx, string path)
         {
             if (!GraphicsContext.TryGetValue(gfx_ctx, out var context))
             {
@@ -159,7 +159,7 @@ namespace Lemur.JS.Embedded
 
             context.LoadSkybox(path);
         }
-        public void loadFromImage(int gfx_ctx, string path)
+        public void loadFromImage(double gfx_ctx, string path)
         {
             if (!GraphicsContext.TryGetValue(gfx_ctx, out var context))
             {
@@ -170,16 +170,13 @@ namespace Lemur.JS.Embedded
 
             context.LoadFromImage(path);
         }
-        public int createCtx(string id, string target, int width, int height)
+        public double createCtx(string id, string target, double width, double height)
         {
-            int bpp = 4;
-
+            const int bpp = 4;
 
             var ctx = new GraphicsContext(GetComputer(), id, target, bpp);
 
             ctx.Resize(width, height);
-
-            int i = 0;
 
             while (GraphicsContext.ContainsKey(ctxIndex))
                 ctxIndex++;

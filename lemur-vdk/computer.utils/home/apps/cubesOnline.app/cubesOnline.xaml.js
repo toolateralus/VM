@@ -14,7 +14,7 @@ class cubesOnline {
         this.width = 512;
         this.playing = true;
         
-        this.playerSpeed = 1000;
+        this.playerSpeed = 250;
 
         const nodes = [];
 
@@ -33,9 +33,8 @@ class cubesOnline {
 
         Network.addListener('onMessage');
 
-        this.gfx_ctx = Graphics.createCtx(this.id, 'renderTarget', this.width, this.width);
-        App.eventHandler('this', 'm_render', XAML_EVENTS.RENDER);
-		App.eventHandler('connectBtn', 'onConnectPressed', XAML_EVENTS.MOUSE_DOWN);
+        this.gfx_ctx = Graphics.createCtx(this.id, 'RenderingTarget', this.width, this.width);
+        App.eventHandler('this', 'm_Rendering', Event.Rendering);
 
         this.startTime = 0;
         
@@ -58,31 +57,32 @@ class cubesOnline {
                 if (w || s)
                     this.shoot();
     
-                this.player.velocity.x = strafe * this.playerSpeed * deltaTime;
+                this.player.velocity.x = strafe * this.playerSpeed;
             }
         }
 
     }
     onCollision(node) {
 
-        if (node.isProjectile !== true) {
+        if (node.isProjectile !== true)
             return;
-        }
     
+    	// remove
         const index = this.scene.nodes.indexOf(node);
         this.scene.nodes.splice(index, 1);
+	
+		
+		if (Network.IsConnected || this.channel == this.opponent) {
+			const packet = {
+    	        type: 'bullet',
+    	        bullet: node,
+	        };
 
-        const packet = {
-            type: 'bullet',
-            bullet: node,
-        };
-
-        Network.send(this.opponent, this.channel, JSON.stringify(packet));
+        	Network.send(this.opponent, this.channel, JSON.stringify(packet));
+		}
+		
+        
     }
-	onConnectPressed () {
-        //todo: rewrite this;
-	}
-    
     onMessage(channel, reply, json) {
     	const data = JSON.parse(json).data;
         if (channel === this.channel) {
@@ -100,7 +100,7 @@ class cubesOnline {
             this.scene.nodes.push(bullet);
         }
     }
-    m_render() {
+    m_Rendering() {
         if (this.playing !== true)
             return;
 
@@ -117,7 +117,7 @@ class cubesOnline {
         this.draw();
     }
     draw() {
-        Graphics.clearColor(this.gfx_ctx, Color.BLACK);
+        Graphics.clearColorIndexed(this.gfx_ctx, Color.BLACK);
 
         const nodes = this.scene.nodes;
 
@@ -153,21 +153,19 @@ class cubesOnline {
 
         const destroyed = [];
 
-        this.scene.nodes.forEach (node => {
+        for (let i = 0; i < this.scene.nodes.length; ++i) {
+        	const node = this.scene.nodes[i];
 
-            if (typeof node.onUpdate === 'function') {
+            if (typeof node.onUpdate === 'function')
                 node.onUpdate(deltaTime); 
-            }
+                
             node.velocity.y += 0.0981 * deltaTime;
+            
             node.update_physics(deltaTime);
+            
             if (node.clamp_position(this.bounds.min, this.bounds.max))
-                destroyed.push(node);
-        });
-
-        destroyed.forEach(node => {
-            this.onCollision(node);
-        });
-    
+                this.onCollision(node);
+        };
 
         const deltaTimeMillis = clamp(0, 16, Math.floor(deltaTime));
 
@@ -175,12 +173,11 @@ class cubesOnline {
     }
     shoot() {
     
-    	if (this.scene.nodes.length > 2) {
+    	if (this.scene.nodes.length > 1) {
     		return;
     	}
     
-        const bullet = new Node(this.player.scale,  // scale
-            new Vec2(this.player.pos.x - this.player.scale.x, this.player.pos.y - this.player.scale.x)); // pos
+        const bullet = new Node(this.player.scale, new Vec2(this.player.pos.x, this.player.pos.y - this.player.scale.y));
             
         bullet.isMesh = true;
         bullet.colorIndex = Color.RED;

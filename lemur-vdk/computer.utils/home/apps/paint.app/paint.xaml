@@ -5,7 +5,7 @@
              mc:Ignorable="d" 
              d:DesignHeight="450" d:DesignWidth="800" Background="#474354" BorderBrush="White" BorderThickness="5" FontFamily="Consolas Bold MS">
     <Grid Cursor="Cross">
-        <Image x:Name="renderTarget" 
+        <Image x:Name="RenderingTarget" 
                HorizontalAlignment="Stretch" 
                VerticalAlignment="Stretch"
                Stretch="Fill" 
@@ -324,4 +324,3 @@
         </StackPanel>
     </Grid>
 </UserControl>
-

@@ -1,6 +1,7 @@
 ﻿using Lemur.FS;
 using Lemur.GUI;
 using Lemur.Windowing;
+using OpenTK.Mathematics;
 using System;
 using System.Collections.Generic;
 using System.Drawing;
@@ -45,15 +46,15 @@ namespace Lemur.JS.Embedded
 
         private WriteableBitmap bitmap;
         private WriteableBitmap skybox;
-        internal readonly WeakReference<Image> image;
+        internal  readonly WeakReference<Image> image;
         
 
-        private readonly byte[] cached_color = new byte[4];
+        private byte[] cached_color = new byte[4];
 
-        public void Resize(int width, int height)
+        public void Resize(double width, double height)
         {
-            Width = width;
-            Height = height;
+            Width = (int)width;
+            Height = (int)height;
             renderTexture = new byte[Width * Height * 4];
 
             for (int i = 0; i < Width * Height * PixelFormatBpp; ++i)
@@ -67,14 +68,14 @@ namespace Lemur.JS.Embedded
 
 
 
-        public void WritePixelIndexed(int x, int y, int index)
+        public void WritePixelIndexed(double x, double y, double index)
         {
-            var col = graphics.palette[index];
+            var col = graphics.palette[(int)index];
             WritePixel(x, y, col[0], col[1], col[2], col[3]);
         }
-        public void WritePixel(int x, int y, byte r, byte g, byte b, byte a)
+        public void WritePixel(double x, double y, byte r, byte g, byte b, byte a)
         {
-            var index = (y * Width + x) * PixelFormatBpp;
+            var index = (int)((y * Width + x) * PixelFormatBpp);
 
             if (x < 0 || y < 0 || x >= Width || y >= Height)
                 return;
@@ -84,25 +85,28 @@ namespace Lemur.JS.Embedded
             renderTexture[index + 2] = r;
             renderTexture[index + 3] = a;
         }
-        public void WritePixelPacked(int x, int y, int color)
+        public void WritePixelPacked(double x, double y, double color)
         {
             byte r, g, b, a;
             ExtractColor(color, out r, out g, out b, out a);
             WritePixel(x, y, r, g, b, a);
         }
-        public static void ExtractColor(int color, out byte r, out byte g, out byte b, out byte a)
+        public static void ExtractColor(double color, out byte r, out byte g, out byte b, out byte a)
         {
-            r = (byte)(color >> 24 & 0xFF);
-            g = (byte)(color >> 16 & 0xFF);
-            b = (byte)(color >> 8 & 0xFF);
-            a = (byte)(color & 0xFF);
+            var col = (byte)color;
+
+            r = (byte)(col >> 24 & 0xFF);
+            g = (byte)(col >> 16 & 0xFF);
+            b = (byte)(col >> 8 & 0xFF);
+            a = (byte)(col & 0xFF);
         }
-        public void ExtractColorToCache(int color)
+        public void ExtractColorToCache(double color)
         {
-            cached_color[0 + 0] = (byte)(color >> 24 & 0xFF);
-            cached_color[0 + 1] = (byte)(color >> 16 & 0xFF);
-            cached_color[0 + 2] = (byte)(color >> 8 & 0xFF);
-            cached_color[0 + 3] = (byte)(color & 0xFF);
+            var col = (int)color;
+            cached_color[0 + 0] = (byte)(col >> 24 & 0xFF);
+            cached_color[0 + 1] = (byte)(col >> 16 & 0xFF);
+            cached_color[0 + 2] = (byte)(col >> 8 & 0xFF);
+            cached_color[0 + 3] = (byte)(col & 0xFF);
         }
         public void Draw(Image image)
         {
@@ -130,7 +134,7 @@ namespace Lemur.JS.Embedded
             image.Source = bitmap;
         }
 
-        internal unsafe void ClearColor(int color)
+        internal unsafe void ClearColor(double color)
         {
             ExtractColorToCache(color);
             for (int i = 0; i < Width * Height; i++)
@@ -138,10 +142,9 @@ namespace Lemur.JS.Embedded
                     Marshal.Copy(cached_color, 0, (nint)ptr + i * PixelFormatBpp, PixelFormatBpp);
         }
 
-        internal unsafe void ClearColorIndex(int index)
+        internal unsafe void ClearColorIndex(double index)
         {
-            fixed (byte* ptr = cached_color)
-                Marshal.Copy(graphics.palette[index], 0, (nint)ptr, 3);
+            cached_color = graphics.palette[(int)index];
 
             for (int i = 0; i < Width * Height; i++)
                 fixed (byte* ptr = renderTexture)
@@ -155,7 +158,7 @@ namespace Lemur.JS.Embedded
             Circle,
         }
 
-        internal void DrawFilledShape(int x, int y, int h, int w, double r, int colorIndex, PrimitiveShape primitiveShape)
+        internal  void DrawFilledShape(double x, double y, double h, double w, double r, double colorIndex, PrimitiveShape primitiveShape)
         {
             switch (primitiveShape)
             {
@@ -173,50 +176,50 @@ namespace Lemur.JS.Embedded
             }
         }
 
-        private void WriteFilledRectangle(int x, int y, int h, int w, double r, int colorIndex)
+        private void WriteFilledRectangle(double x, double y, double h, double w, double r, double colorIndex)
         {
             double cosR = Math.Cos(r);
             double sinR = Math.Sin(r);
 
             // Adjust the coordinates to rotate around the center
-            int centerX = x + w / 2;
-            int centerY = y + h / 2;
+            double centerX = x + w / 2;
+            double centerY = y + h / 2;
 
-            for (int i = x; i < x + w; i++)
+            for (double i = x; i < x + w; i++)
             {
                 // Calculate the relative position from the center
-                int relativeX = i - centerX;
+                double relativeX = i - centerX;
 
-                for (int j = y; j < y + h; j++)
+                for (double j = y; j < y + h; j++)
                 {
-                    int relativeY = j - centerY;
+                    double relativeY = j - centerY;
 
-                    int rotatedX = (int)(relativeX * cosR - relativeY * sinR);
-                    int rotatedY = (int)(relativeX * sinR + relativeY * cosR);
+                    double rotatedX = (double)(relativeX * cosR - relativeY * sinR);
+                    double rotatedY = (double)(relativeX * sinR + relativeY * cosR);
 
-                    int finalX = rotatedX + centerX;
-                    int finalY = rotatedY + centerY;
+                    double finalX = rotatedX + centerX;
+                    double finalY = rotatedY + centerY;
 
                     WritePixelIndexed(finalX, finalY, colorIndex);
                 }
             }
         }
 
-        private void WriteFilledCircle(int x, int y, int h, int w, double r, int colorIndex)
+        private void WriteFilledCircle(double x, double y, double h, double w, double r, double colorIndex)
         {
             double cosR = Math.Cos(r);
             double sinR = Math.Sin(r);
 
-            int radius = Math.Min(h, w) / 2;
-            int centerX = x + w / 2;
-            int centerY = y + h / 2;
+            double radius = Math.Min(h, w) / 2;
+            double centerX = x + w / 2;
+            double centerY = y + h / 2;
 
-            for (int i = centerX - radius; i <= centerX + radius; i++)
+            for (double i = centerX - radius; i <= centerX + radius; i++)
             {
-                for (int j = centerY - radius; j <= centerY + radius; j++)
+                for (double j = centerY - radius; j <= centerY + radius; j++)
                 {
-                    int rotatedX = (int)Math.Round((i - centerX) * cosR - (j - centerY) * sinR) + centerX;
-                    int rotatedY = (int)Math.Round((i - centerX) * sinR + (j - centerY) * cosR) + centerY;
+                    double rotatedX = (double)Math.Round((i - centerX) * cosR - (j - centerY) * sinR) + centerX;
+                    double rotatedY = (double)Math.Round((i - centerX) * sinR + (j - centerY) * cosR) + centerY;
 
                     if (Math.Sqrt((rotatedX - centerX) * (rotatedX - centerX) + (rotatedY - centerY) * (rotatedY - centerY)) <= radius)
                     {
@@ -226,25 +229,25 @@ namespace Lemur.JS.Embedded
             }
         }
 
-        private void WriteFilledTriangle(int x, int y, int h, int w, double r, int colorIndex)
+        private void WriteFilledTriangle(double x, double y, double h, double w, double r, double colorIndex)
         {
             double cosR = Math.Cos(r);
             double sinR = Math.Sin(r);
 
-            int centerX = x + w / 2;
-            int centerY = y + h / 2;
+            double centerX = x + w / 2;
+            double centerY = y + h / 2;
 
-            for (int i = x; i < x + w; i++)
+            for (double i = x; i < x + w; i++)
             {
-                for (int j = y; j < y + h; j++)
+                for (double j = y; j < y + h; j++)
                 {
-                    int relativeX = i - centerX;
-                    int relativeY = j - centerY;
+                    double relativeX = i - centerX;
+                    double relativeY = j - centerY;
 
-                    int rotatedX = (int)(relativeX * cosR - relativeY * sinR) + centerX;
-                    int rotatedY = (int)(relativeX * sinR + relativeY * cosR) + centerY;
+                    double rotatedX = (double)(relativeX * cosR - relativeY * sinR) + centerX;
+                    double rotatedY = (double)(relativeX * sinR + relativeY * cosR) + centerY;
 
-                    if (IsPointInsideTriangle(rotatedX, rotatedY, x, y, x + w, y, x + w / 2, y + h))
+                    if (IsPodoubleInsideTriangle(rotatedX, rotatedY, x, y, x + w, y, x + w / 2, y + h))
                     {
                         WritePixelIndexed(rotatedX, rotatedY, colorIndex);
                     }
@@ -253,16 +256,16 @@ namespace Lemur.JS.Embedded
         }
 
 
-        private static bool IsPointInsideTriangle(int x, int y, int x1, int y1, int x2, int y2, int x3, int y3)
+        private static bool IsPodoubleInsideTriangle(double x, double y, double x1, double y1, double x2, double y2, double x3, double y3)
         {
-            int denominator = (y2 - y3) * (x1 - x3) + (x3 - x2) * (y1 - y3);
-            int a = ((y2 - y3) * (x - x3) + (x3 - x2) * (y - y3)) / denominator;
-            int b = ((y3 - y1) * (x - x3) + (x1 - x3) * (y - y3)) / denominator;
-            int c = 1 - a - b;
+            double denominator = (y2 - y3) * (x1 - x3) + (x3 - x2) * (y1 - y3);
+            double a = ((y2 - y3) * (x - x3) + (x3 - x2) * (y - y3)) / denominator;
+            double b = ((y3 - y1) * (x - x3) + (x1 - x3) * (y - y3)) / denominator;
+            double c = 1 - a - b;
 
             return a >= 0 && a <= 1 && b >= 0 && b <= 1 && c >= 0 && c <= 1;
         }
-        internal void DrawSkybox()
+        internal  void DrawSkybox()
         {
             lock(bitmap)
             Computer.Current.Window.Dispatcher.Invoke(() =>
@@ -288,18 +291,18 @@ namespace Lemur.JS.Embedded
         {
             try
             {
-                using Bitmap bitmap = new(Width, Height);
-                for (int y = 0; y < Height; y++)
+                using Bitmap bitmap = new((int)Width, (int)Height);
+                for (double y = 0; y < Height; y++)
                 {
-                    for (int x = 0; x < Width; x++)
+                    for (double x = 0; x < Width; x++)
                     {
-                        int index = (y * Width + x) * PixelFormatBpp;
-                        byte r = renderTexture[index + 2];
-                        byte g = renderTexture[index + 1];
-                        byte b = renderTexture[index];
-                        byte a = renderTexture[index + 3];
+                        double index = (y * Width + x) * PixelFormatBpp;
+                        byte r = renderTexture[(int)index + 2];
+                        byte g = renderTexture[(int)index + 1];
+                        byte b = renderTexture[(int)index];
+                        byte a = renderTexture[(int)index + 3];
                         System.Drawing.Color color = System.Drawing.Color.FromArgb(a, r, g, b);
-                        bitmap.SetPixel(x, y, color);
+                        bitmap.SetPixel((int)x, (int)y, color);
                     }
                 }
 
@@ -323,7 +326,7 @@ namespace Lemur.JS.Embedded
                     using var bmp = new Bitmap(FileSystem.GetResourcePath(filePath));
 
                     // Resize the skybox image to match the dimensions of your render texture
-                    bmp.SetResolution(Width, Height);
+                    bmp.SetResolution((int)Width, (int)Height);
 
                     BitmapSource bitmapSource = Imaging.CreateBitmapSourceFromHBitmap(
                         bmp.GetHbitmap(),

@@ -1,4 +1,4 @@
-const { Vec2, Node, Scene, Renderer, } = require('game.js');
+const { Vec2, Node, Scene, Renderinger, } = require('game.js');
 const { Profiler } = require('profiler.js');
 class cubes {
     constructor(id) {
@@ -10,12 +10,15 @@ class cubes {
     		min : new Vec2(0, 0), 
     		max : new Vec2(this.width, this.width) 
 		};
-				
+			
+	   notify(palette)
 	   for (let z = 0; z < 5 * palette.length; ++z) {
 		    const position = new Vec2(85  + z, 85 + z);
 		    const scale = new Vec2(25, 25);
 		    const node = new Node(scale, position);
 		    node.set_vertices(create_square(z % 4));
+		    
+		    
 		    node.vertices.forEach(v => v.color = z % palette.length);
 		    
 		    let distanceFromCenter = Math.sqrt(position.x * position.x + position.y * position.y);
@@ -41,30 +44,30 @@ class cubes {
 		}
 
    		
-     	const gfx_ctx = Graphics.createCtx(this.id, 'renderTarget', this.width, this.width);
-        this.renderer = new Renderer(this.width, gfx_ctx);
+     	const gfx_ctx = Graphics.createCtx(this.id, 'RenderingTarget', this.width, this.width);
+        this.Renderinger = new Renderinger(this.width, gfx_ctx);
         
         if (__DEBUG__) {
         	this.profiler = new Profiler();
         	this.profiler.start();
-        	App.eventHandler('this', 'm_render_profiled', XAML_EVENTS.RENDER); 
+        	App.eventHandler('this', 'm_Rendering_profiled', Event.Rendering); 
         } else {
-        	App.eventHandler('this', 'm_render', XAML_EVENTS.RENDER);
+        	App.eventHandler('this', 'm_Rendering', Event.Rendering);
         	
         	App.removeChild('MainGrid', 'ProfilerPanel');
-        	App.setRowSpan('renderTarget', 2);
+        	App.setRowSpan('RenderingTarget', 2);
         }
     }
-    m_render() {
-        this.renderer.m_drawScene(this.scene, this.gfx_ctx);
-        Graphics.flushCtx(this.renderer.gfx_ctx);
+    m_Rendering() {
+        this.Renderinger.m_drawScene(this.scene, this.gfx_ctx);
+        Graphics.flushCtx(this.Renderinger.gfx_ctx);
         this.m_update(16 / 1000);
     }
-    m_render_profiled() {
+    m_Rendering_profiled() {
         this.profiler.set_marker('other');
-        this.renderer.m_drawScene(this.scene, this.gfx_ctx);
-        this.profiler.set_marker('rendering');
-        Graphics.flushCtx(this.renderer.gfx_ctx);
+        this.Renderinger.m_drawScene(this.scene, this.gfx_ctx);
+        this.profiler.set_marker('Renderinging');
+        Graphics.flushCtx(this.Renderinger.gfx_ctx);
         this.profiler.set_marker('uploading');
         this.m_update(16 / 1000);
         this.profiler.set_marker('collision');

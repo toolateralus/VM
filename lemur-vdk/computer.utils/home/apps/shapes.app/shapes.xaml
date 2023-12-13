@@ -12,37 +12,9 @@
                   <RowDefinition Height="35" />
             </Grid.RowDefinitions>
 
-            <StackPanel Style="{StaticResource StackPanelStyle}" Grid.Row="1" x:Name="ProfilerPanel" Orientation="Horizontal">
-            	<Button Width="100" Content="Play" Style="{StaticResource ButtonStyle}" x:Name="playButton"/>
-        		<Slider x:Name="frequencySlider" Maximum="10000" Value="50" Width="500" 	FontSize="16" Height="25">
-	                <Slider.Background>
-		                    <ImageBrush/>
-		                </Slider.Background>
-		                <Slider.Effect>
-		                    <DropShadowEffect/>
-		                </Slider.Effect>
-            	</Slider>
-        		<Label Style="{StaticResource LabelStyle}" x:Name="nodeCountLabel" FontFamily="Consolas MS Bold" FontSize="20"
-                        Foreground="Cyan" Background="#474354" Content="paused"/>
-            
-             	 <Label Style="{StaticResource LabelStyle}" x:Name="framerateLabel" FontFamily="Consolas MS Bold" FontSize="20"
-                        Foreground="Cyan" Background="#474354" Content="fps"/>
-                        
-                  <Label Style="{StaticResource LabelStyle}" x:Name="rendering" FontFamily="Consolas MS Bold" FontSize="20"
-                        Foreground="Black" Background="DarkCyan" Content="rendering"/>
-
-                  <Label Style="{StaticResource LabelStyle}" x:Name="uploading" FontFamily="Consolas MS Bold" FontSize="20"
-                        Foreground="Cyan" Background="Green" Content="upload"/>
-
-                  <Label Style="{StaticResource LabelStyle}" x:Name="other" FontFamily="Consolas MS Bold" FontSize="20"
-                        Foreground="Cyan" Background="Black" Content="other"/>
-                        
-                
-            </StackPanel>
-
             <Image Grid.Row="0"
                   Margin="5"
-                  x:Name="renderTarget"
+                  x:Name="RenderingTarget"
                   HorizontalAlignment="Stretch"
                   VerticalAlignment="Stretch"
                   Stretch="Fill"

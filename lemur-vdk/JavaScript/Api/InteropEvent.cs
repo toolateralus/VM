@@ -13,10 +13,10 @@ namespace Lemur.JavaScript.Api
 {
     public class InteropEvent : InteropFunction
     {
-        public XAML_EVENTS Event = XAML_EVENTS.RENDER;
+        internal Event Event = Event.Rendering;
         FrameworkElement element;
 
-        public InteropEvent(FrameworkElement control, XAML_EVENTS @event, Engine js, string id, string method)
+        internal InteropEvent(FrameworkElement control, Event @event, Engine js, string id, string method)
         {
             Event = @event;
             javaScriptEngine = js;
@@ -29,12 +29,12 @@ namespace Lemur.JavaScript.Api
             });
         }
 
-        private void CreateHook(FrameworkElement control, XAML_EVENTS @event)
+        private void CreateHook(FrameworkElement control, Event @event)
         {
             // todo: fix these potential / likely memory leaks
             switch (@event)
             {
-                case XAML_EVENTS.MOUSE_DOWN:
+                case Event.MouseDown:
                     {
                         if (control is Button button)
                         {
@@ -46,43 +46,43 @@ namespace Lemur.JavaScript.Api
                         OnEventDisposed += () => control.MouseDown -= InvokeGeneric;
                     }
                     break;
-                case XAML_EVENTS.MOUSE_UP:
+                case Event.MouseUp:
                     {
                         control.MouseUp += InvokeGeneric;
                         OnEventDisposed += () => control.MouseUp -= InvokeGeneric;
                     }
                     break;
-                case XAML_EVENTS.MOUSE_MOVE:
+                case Event.MouseMove:
                     {
                         control.MouseMove += InvokeMouse;
                         OnEventDisposed += () => control.MouseMove -= InvokeMouse;
                     }
                     break;
-                case XAML_EVENTS.KEY_DOWN:
+                case Event.KeyDown:
                     {
                         control.KeyDown += InvokeKeyboard;
                         OnEventDisposed += () => control.KeyDown -= InvokeKeyboard;
                     }
                     break;
-                case XAML_EVENTS.KEY_UP:
+                case Event.KeyUp:
                     {
                         control.KeyUp += InvokeKeyboard;
                         OnEventDisposed += () => control.KeyUp -= InvokeKeyboard;
                     }
                     break;
-                case XAML_EVENTS.LOADED:
+                case Event.Loaded:
                     {
                         control.Loaded += InvokeGeneric;
                         OnEventDisposed += () => control.Loaded -= InvokeGeneric;
                     }
                     break;
-                case XAML_EVENTS.WINDOW_CLOSE:
+                case Event.WindowClose:
                     {
                         control.Unloaded += InvokeGeneric;
                         OnEventDisposed += () => control.Unloaded -= InvokeGeneric;
                     }
                     break;
-                case XAML_EVENTS.SELECTION_CHANGED:
+                case Event.SelectionChanged:
                     {
                         if (control is Selector lb)
                         {
@@ -96,19 +96,18 @@ namespace Lemur.JavaScript.Api
                         }
                         else
                         {
-                            Notifications.Now($"Invalid hook: {control.Name} did not have the 'SELECTION_CHANGED' event to hook into");
+                            Notifications.Now($"Invalid hook: {control.Name} did not have the 'SelectionChanged' event to hook into");
                         }
                     }
                     break;
-                case XAML_EVENTS.MOUSE_LEAVE:
+                case Event.MouseLeave:
                     {
                         control.MouseLeave += InvokeGeneric;
                         OnEventDisposed += () => control.MouseLeave -= InvokeGeneric;
                     }
                     break;
 
-                case XAML_EVENTS.PHYSICS: /// deprecated, use RENDER instead.
-                case XAML_EVENTS.RENDER:
+                case Event.Rendering:
                     executionThread = new(RenderLoop);
                     executionThread.Start();
 

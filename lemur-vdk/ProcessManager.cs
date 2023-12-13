@@ -111,7 +111,7 @@ namespace Lemur
                 }
 
                 // this hooks up the event & finalizes setup.
-                eh = new InteropEvent(element, (XAML_EVENTS)type, engine, identifier, methodName);
+                eh = new InteropEvent(element, (Event)type, engine, identifier, methodName);
 
             });
 

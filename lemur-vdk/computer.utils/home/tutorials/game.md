@@ -1,7 +1,7 @@
 
 # making a game
 
-let's cover how we can setup a very simple software rendering setup.
+let's cover how we can setup a very simple software Renderinging setup.
 
 ## Application boiler plate
 
@@ -17,9 +17,9 @@ You'll see an icon appear on the desktop. You can right click and select
 
 ## Including some helpful tools
 
-we have a (somewhat) node-like include/require system, and we will use that to heavily simplify the process of setting up our scene & renderer
+we have a (somewhat) node-like include/require system, and we will use that to heavily simplify the process of setting up our scene & Renderinger
 
-> note that, in this tutorial, we will be using as much native rendering as possible for the best performance, meaning, we won't be controlling each and every pixel in javascript. however, there are many ways to render pixels, images, or shapes in lemur, and it's rather flexible.
+> note that, in this tutorial, we will be using as much native Renderinging as possible for the best performance, meaning, we won't be controlling each and every pixel in javascript. however, there are many ways to Rendering pixels, images, or shapes in lemur, and it's rather flexible.
 
 here's the include section of our document, 'game.xaml.js'
 
@@ -41,7 +41,7 @@ const { Profiler } = require('profiler.js');
 
 you may require any .js file underneath computer/home, see (nyi) tutorial, or check out the system/include files to see how exports are handled from source files.
 
-for now, we don't need to be super concerned with those types. instead, we can now focus on actually setting up our graphics context, then we can begin creating a scene and rendering it.
+for now, we don't need to be super concerned with those types. instead, we can now focus on actually setting up our graphics context, then we can begin creating a scene and Renderinging it.
 
 ## Graphics Module & Context
 
@@ -52,14 +52,14 @@ a `graphics context` is a drawing surface provided by the `graphics module`. it 
 > `ctx` is often used as an abbreviation for context. it's to keep the scripts simple since I often write them in the Text Editor in Lemur.
 
 so our first step is to call to the `Graphics` module, and create a context.
-we can simply call `Graphics.createCtx()`, but to provide valid parameters, we will have to have an existing `Image` in our WPF layout. we'll call our's `renderTarget`.
+we can simply call `Graphics.createCtx()`, but to provide valid parameters, we will have to have an existing `Image` in our WPF layout. we'll call our's `RenderingTarget`.
 
 ```XAML
 <!-- in your 'game.xaml' file, within the control grid... -->
 <Grid>
     <Image
             Margin="5"
-            x:Name="renderTarget"
+            x:Name="RenderingTarget"
             HorizontalAlignment="Stretch"
             VerticalAlignment="Stretch"
             Stretch="Fill"
@@ -71,31 +71,31 @@ we can simply call `Graphics.createCtx()`, but to provide valid parameters, we w
 then, back in the JavaScript, we can actually register our context.
 for the purpose of this simplified tutorial, we will just used a fixed resolution.
 
-Also, while we're at it, we're going to add a `App.eventHandler` for our render loop. this is covered in another tutorial.
+Also, while we're at it, we're going to add a `App.eventHandler` for our Rendering loop. this is covered in another tutorial.
 
 so, in our constructor  we will add :
 ---
 1. `this.resolution = new Vec2(256, 256);`
-1. `this.gfx_ctx = Graphics.createCtx(id, 'renderTarget', this.resolution.x, this.resolution.y);`
-3. `App.eventHandler('this', 'm_render', XAML_EVENTS.RENDER);`
+1. `this.gfx_ctx = Graphics.createCtx(id, 'RenderingTarget', this.resolution.x, this.resolution.y);`
+3. `App.eventHandler('this', 'm_Rendering', Event.Rendering);`
  ---
     this.resolution = new Vec2(256, 256);
 this will be the pixel width & height of our drawing context.
 the image, as shown above, will automatically scale to the size of the window.
 
-    this.gfx_ctx = Graphics.createCtx(id, 'renderTarget', this.resolution.x, this.resolution.y);
+    this.gfx_ctx = Graphics.createCtx(id, 'RenderingTarget', this.resolution.x, this.resolution.y);
 this call creates our context, attaches our drawing surface to the control at specified size, and returns us a handle we can use for many graphics functions.
  `id` is our process id
- `renderTarget` is the wpf image we wil draw to
+ `RenderingTarget` is the wpf image we wil draw to
  and we pass our resolution in as `width, height`.
 
-    App.eventHandler('this', 'm_render', XAML_EVENTS.RENDER);
+    App.eventHandler('this', 'm_Rendering', Event.Rendering);
 `this` is passed in as a special keyword, but it would otherwise be a wpf control. `this`, when passed as a control, references the window itself.
- `m_render` is the name I've given to our render loop callback function, but this could be anything.
+ `m_Rendering` is the name I've given to our Rendering loop callback function, but this could be anything.
  this function will get called as frequently as the environment allows, any framerate limiting or sleeping can be done in javascript.
 
-> this is not usually necessary though as we're typically struggling for performance, not limiting framerate. this is not surprising, though, since we're software rendering in two very high level languages.
-> we are working on an OpenGL hardware accelerated renderer, which will boost performance and possibilities _very much_. it's really low priority though.
+> this is not usually necessary though as we're typically struggling for performance, not limiting framerate. this is not surprising, though, since we're software Renderinging in two very high level languages.
+> we are working on an OpenGL hardware accelerated Renderinger, which will boost performance and possibilities _very much_. it's really low priority though.
 
 
 ```Javascript
@@ -103,17 +103,17 @@ constructor(id){
     
     this.resolution = new Vec2(256, 256);
 
-    this.gfx_ctx = Graphics.createCtx(id, 'renderTarget', 
+    this.gfx_ctx = Graphics.createCtx(id, 'RenderingTarget', 
                         this.resolution.x, this.resolution.y);
 
-    // create a render loop function that will get called 
+    // create a Rendering loop function that will get called 
     // as frequently as possible, in a loop. this persists until the app closes.
-    // make sure the m_render function is defined.
-    App.eventHandler('this', 'm_render', XAML_EVENTS.RENDER);
+    // make sure the m_Rendering function is defined.
+    App.eventHandler('this', 'm_Rendering', Event.Rendering);
 }
 
-// the render loop function.
-m_render() {
+// the Rendering loop function.
+m_Rendering() {
 
 }
 
@@ -147,7 +147,7 @@ constructor (id) {
         const node = new Node(scale, pos);
 
         // we are going to add some extra fields
-        // since we arent using vertex based rendering.
+        // since we arent using vertex based Renderinging.
 
         // an index between 0 and 24
         // you can iterate over the 'palette' object
@@ -170,10 +170,10 @@ constructor (id) {
 }
 ```
 
-then in our `m_render` member function, we can add the neccesary code to render & draw our scene.. which is not much.
+then in our `m_Rendering` member function, we can add the neccesary code to Rendering & draw our scene.. which is not much.
 ```Javascript
 
-m_render () {
+m_Rendering () {
 
 // clear the screen to black every frame, so we don't get trails and smudge.
 Graphics.clearColor(this.gfx_ctx, Color.BLACK);
@@ -218,7 +218,7 @@ Graphics.flushCtx(this.gfx_ctx);
 
 now, if you've followed correctly, you should be able to save up your xaml & .xaml.js file, and run your App. You should see 5 pretty tiny triangles or rectangles (whatever primitive you used) in the bottom left. Epic!
 
-Now, you can just add whatever you want during your render loop to create your game logic.
+Now, you can just add whatever you want during your Rendering loop to create your game logic.
 
 ### Profiling
 
@@ -240,8 +240,8 @@ was used while it was originally designed
                   <Label Style="{StaticResource LabelStyle}" x:Name="framerateLabel" FontFamily="Consolas MS Bold" FontSize="20"
                         Foreground="Cyan" Background="#474354" Content="fps"/>
                         
-                  <Label Style="{StaticResource LabelStyle}" x:Name="rendering" FontFamily="Consolas MS Bold" FontSize="20"
-                        Foreground="Black" Background="DarkCyan" Content="rendering"/>
+                  <Label Style="{StaticResource LabelStyle}" x:Name="Renderinging" FontFamily="Consolas MS Bold" FontSize="20"
+                        Foreground="Black" Background="DarkCyan" Content="Renderinging"/>
 
                   <Label Style="{StaticResource LabelStyle}" x:Name="uploading" FontFamily="Consolas MS Bold" FontSize="20"
                         Foreground="Cyan" Background="Green" Content="upload"/>
@@ -255,7 +255,7 @@ was used while it was originally designed
 
             <Image Grid.Row="0"
                   Margin="5"
-                  x:Name="renderTarget"
+                  x:Name="RenderingTarget"
                   HorizontalAlignment="Stretch"
                   VerticalAlignment="Stretch"
                   Stretch="Fill"
@@ -264,6 +264,6 @@ was used while it was originally designed
       </Grid>
 ```
 
-This just creates a `renderTarget` on the main grid, and has a sub-section below for showing latency stats using colored & named regions that change size and report latency.
+This just creates a `RenderingTarget` on the main grid, and has a sub-section below for showing latency stats using colored & named regions that change size and report latency.
 
 in the javascript, we also need to take a few steps to support this, mainly adjusting the texts / sizes of elements, and actually recording the latency stats.

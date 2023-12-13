@@ -1,8 +1,35 @@
 
 
 // terminal -------------------------
-function print(obj) {
-    Terminal.print(obj);
+function range(start, end, step = 1) {
+  if (start === undefined || end === undefined) {
+    throw new Error('Both start and end values must be provided.');
+  }
+
+  if (step === 0) {
+    throw new Error('Step value cannot be zero.');
+  }
+
+  const result = [];
+  
+  if (step > 0) {
+    for (let i = start; i < end; i += step) {
+      result.push(i);
+    }
+  } else {
+    for (let i = start; i > end; i += step) {
+      result.push(i);
+    }
+  }
+
+  return result;
+}
+
+function print(args) {
+    Terminal.print(args);
+}
+function notify(obj) {
+    Terminal.notify(obj);
 }
 function alias(cmd, path) {
     Terminal.alias(cmd, path)
@@ -62,6 +89,11 @@ JSON.tryParse = (msg) => {
 
 
 // general -------------------------
+function random_color() {
+	let index = Math.floor(random() * palette.length);
+	return index;
+}
+
 function random(max = 1) {
     return Interop.random(max);
 }

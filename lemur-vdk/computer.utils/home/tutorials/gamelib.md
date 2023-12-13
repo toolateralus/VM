@@ -1,6 +1,6 @@
 ```Javascript
 class Vec2 {
-    // you do NOT need to provide a color. only when using Vec2() for vertices with the provided line renderers, or your own vertex color / shading.
+    // you do NOT need to provide a color. only when using Vec2() for vertices with the provided line Renderingers, or your own vertex color / shading.
     constructor(x, y, color) {
         this.x = x;
         this.y = y;
@@ -48,7 +48,7 @@ class Node {
         this.drag = 0.95;
     }
 
-    // clamps the position of the game object between 0 and width, which should be in pixel space, ie the resolution of the renderer.
+    // clamps the position of the game object between 0 and width, which should be in pixel space, ie the resolution of the Renderinger.
     clamp_position(min : Vec2, max : Vec2);
 
     update_physics(deltaTime : number);
@@ -56,7 +56,7 @@ class Node {
     rotate(angle : number);
 }
 ```
-this one's not quite neccesary, but is useful as the line renderer's use it as a unified way to accept a collection of Nodes.
+this one's not quite neccesary, but is useful as the line Renderinger's use it as a unified way to accept a collection of Nodes.
 ``` JavaScript
 class Scene {
     // array of all Nodes in Scene.
@@ -67,11 +67,11 @@ class Scene {
 }
 ```
 
-This renderer is mostly for drawing vertex based shapes in Scene objects, with vertex color.
+This Renderinger is mostly for drawing vertex based shapes in Scene objects, with vertex color.
 ```Javascript
-class Renderer {
+class Renderinger {
     constructor(resolution, GraphicsCtx) {
-        // Renderer data
+        // Renderinger data
         this.gfx_ctx = GraphicsCtx;
 
         if (this.gfx_ctx == undefined || this.gfx_ctx == null) {

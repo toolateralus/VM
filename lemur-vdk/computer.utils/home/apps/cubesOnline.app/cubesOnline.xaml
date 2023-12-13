@@ -13,7 +13,6 @@
             </Grid.RowDefinitions>
 
             <StackPanel Grid.Row="1" Orientation="Horizontal">
-            	  <Button x:Name="connectBtn" Content="Connect"/>
                   <Label FontFamily="Cascadia Code Light" Content="Opponent Channel:" Foreground="White"/>
                   <TextBox MinWidth="60" MaxWidth="100" x:Name="channelBox" Text="0" />
                   <Label FontFamily="Cascadia Code Light" Content="Your Channel:" Foreground="White"/>
@@ -23,7 +22,7 @@
 
             <Image Grid.Row="0"
                   Margin="5"
-                  x:Name="renderTarget"
+                  x:Name="RenderingTarget"
                   HorizontalAlignment="Stretch"
                   VerticalAlignment="Stretch"
                   Stretch="Fill"
