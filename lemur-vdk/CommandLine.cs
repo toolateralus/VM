@@ -8,6 +8,7 @@ using Microsoft.Windows.Themes;
 using Newtonsoft.Json.Linq;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Diagnostics.Metrics;
 using System.Globalization;
 using System.IO;
@@ -113,9 +114,6 @@ namespace Lemur.OS.Language
 
             return executed; 
         }
-
-       
-
         public bool TryInvoke(string name, params string[] args)
         {
             if (!Commands.TryGetValue(name, out var cmd))
@@ -142,8 +140,12 @@ namespace Lemur.OS.Language
         internal Dictionary<string, Command> Commands = [];
         internal Dictionary<string, string> Aliases = [];
         private bool Disposing;
-        public CommandLine()
+        private Computer computer;
+
+        public CommandLine(Computer computer)
         {
+            this.computer = computer;
+
             var assembly = Assembly.GetExecutingAssembly();
             var bindingFlags = BindingFlags.Static | BindingFlags.Public | BindingFlags.NonPublic;
 
@@ -164,9 +166,9 @@ namespace Lemur.OS.Language
                 }
             }
         }
-
+        
         [Command("move", "moves a file / changes its name")]
-        private static void MoveFile(SafeList<string> obj)
+        private void MoveFile(SafeList<string> obj)
         {
             if (obj.Length < 1)
             {
@@ -178,7 +180,7 @@ namespace Lemur.OS.Language
             Notifications.Now($"Moved {obj[0]}->{obj[1]}");
         }
         [Command("mangler", "mangles a javascript file's names & identifiers, or a range of lines. usage : mangler <filename> <optional lineStart> <optional lineEnd>")]
-        private static void Mangler(SafeList<string> obj)
+        private void Mangler(SafeList<string> obj)
         {
             if (obj.Length == 0)
             {
@@ -221,7 +223,7 @@ namespace Lemur.OS.Language
 
         }
         [Command("setbg", "sets the desktop background")]
-        private static void SetBackground(SafeList<string> obj)
+        private void SetBackground(SafeList<string> obj)
         {
             if (obj[0] is not string fileName)
             {
@@ -249,7 +251,7 @@ namespace Lemur.OS.Language
 
         }
         [Command("delete", "deletes a file / folder. use with caution!")]
-        private static void DeleteFile(SafeList<string> obj)
+        private void DeleteFile(SafeList<string> obj)
         {
             if (obj[0] is string target)
             {
@@ -261,9 +263,9 @@ namespace Lemur.OS.Language
             }
         }
         [Command("ls", "list's the current directory's contents, or list's the provided target directory's contents.")]
-        private static void ListDir(SafeList<string> obj)
+        private void ListDir(SafeList<string> obj)
         {
-            var terminal = Computer.TryGetProcessOfType<Terminal>();
+            var terminal = computer.ProcessManager.TryGetProcessOfType<Terminal>();
 
             if (terminal == default)
             {
@@ -280,7 +282,7 @@ namespace Lemur.OS.Language
             terminal.output.AppendText(textList);
         }
         [Command("cd", "changes the computer-wide current directory.")]
-        private static void ChangeDir(SafeList<string> obj)
+        private void ChangeDir(SafeList<string> obj)
         {
             if (obj[0] is string Path)
             {
@@ -292,7 +294,7 @@ namespace Lemur.OS.Language
             }
         }
         [Command("copy", "sets the command prompts font for this session. call this from a startup to set as default")]
-        private static void CopyFile(SafeList<string> obj)
+        private void CopyFile(SafeList<string> obj)
         {
             if (obj[0] is string path)
             {
@@ -319,7 +321,7 @@ namespace Lemur.OS.Language
             }
         }
         [Command("mkdir", "creates a directory at the given path")]
-        private static void MakeDir(SafeList<string> obj)
+        private void MakeDir(SafeList<string> obj)
         {
             if (obj[0] is string Path)
             {
@@ -332,23 +334,23 @@ namespace Lemur.OS.Language
             }
         }
         [Command("root", "navigates the open file explorer to the root directory of the computer.")]
-        public static void RootCmd(SafeList<string> obj)
+        public void RootCmd(SafeList<string> obj)
         {
             FileSystem.ChangeDirectory(FileSystem.Root);
         }
         [Command("unhost", "if a server is currently running on this machine this halts any active connections and closes the sever.")]
-        private static void StopHosting(SafeList<string> obj)
+        private void StopHosting(SafeList<string> obj)
         {
-            Computer.Current.NetworkConfiguration.StopHosting();
+            Computer.Current.Network.StopHosting();
         }
         [Command("--kill-all", "kills all the running processes on the computer, specify an app name like terminal to kill only those app instances, if any.")]
-        private static void KillAllProcesses(SafeList<string> obj)
+        private void KillAllProcesses(SafeList<string> obj)
         {
             List<string> toKill = [];
 
             if (obj != null && obj.Length == 1)
             {
-                if (obj[0] is string name && Computer.ProcessClassTable.TryGetValue(name, out var procClass))
+                if (obj[0] is string name && computer.ProcessManager.ProcessClassTable.TryGetValue(name, out var procClass))
                     toKill.AddRange(procClass.Select(i => i.ID));
                 else
                 {
@@ -358,47 +360,47 @@ namespace Lemur.OS.Language
             }
             else
             {
-                foreach (var procClass in Computer.ProcessClassTable.Values)
+                foreach (var procClass in computer.ProcessManager.ProcessClassTable.Values)
                     toKill.AddRange(procClass.Select(i => i.ID));
             }
 
             foreach (var pid in toKill)
             {
-                var proc = Computer.GetProcess(pid);
+                var proc = computer.ProcessManager.GetProcess(pid);
                 proc?.Terminate();
             }
 
         }
         [Command("host", "hosts a server on the provided <port>, none provided it will default to 8080")]
-        private static void StartHosting(SafeList<string> obj)
+        private void StartHosting(SafeList<string> obj)
         {
             Task.Run(async () =>
             {
                 // todo: make it use any port;
-                if (await Computer.Current.NetworkConfiguration.StartHosting(NetworkConfiguration.defaultPort))
+                if (await Computer.Current.Network.StartHosting(NetworkConfiguration.defaultPort))
                 {
-                    Notifications.Now($"Hosting on {Computer.Current.NetworkConfiguration.GetIPPortString()}");
+                    Notifications.Now($"Hosting on {Computer.Current.Network.GetIPPortString()}");
                     return;
                 }
                 Notifications.Now($"Failed to begin hosting on {LANIPFetcher.GetLocalIPAddress().MapToIPv4()}:{NetworkConfiguration.defaultPort}");
             });
         }
         [Command("lp", "lists all the running processes")]
-        private static void ListProcesses(SafeList<string> obj)
+        private void ListProcesses(SafeList<string> obj)
         {
-            foreach (var item in Computer.ProcessClassTable)
+            foreach (var item in computer.ProcessManager.ProcessClassTable)
             {
                 Notifications.Now($"Process: {item.Key} \n\t PIDs: {string.Join(",", item.Value.Select(i => i.ID))}");
             }
         }
         [Command("ip", "fetches the local ip address of your internet connection")]
-        private static void GetIPAddress(SafeList<string> obj)
+        private void GetIPAddress(SafeList<string> obj)
         {
             var IP = LANIPFetcher.GetLocalIPAddress().MapToIPv4();
             Notifications.Now(IP.ToString());
         }
         [Command("edit", "reads / creates a .js file at provided path, and opens it in the text editor")]
-        private static void EditTextFile(SafeList<string> obj)
+        private void EditTextFile(SafeList<string> obj)
         {
             if (obj[0] is string fileName)
             {
@@ -412,7 +414,7 @@ namespace Lemur.OS.Language
                     }
                     var wnd = Computer.Current.Window;
                     var tEdit = new Texed(AbsPath);
-                    Computer.Current.OpenApp(tEdit, "texed.app", Computer.GetNextProcessID());
+                    Computer.Current.OpenApp(tEdit, "texed.app", computer.ProcessManager.GetNextProcessID());
                 }
             }
             else
@@ -421,7 +423,7 @@ namespace Lemur.OS.Language
             }
         }
         [Command("config", "config <all|set|get|rm> <prop_name?> <value?>")]
-        private static void ModifyConfig(SafeList<string> obj)
+        private void ModifyConfig(SafeList<string> obj)
         {
             // I am not sure if this is even possible.
             Computer.Current.Config ??= [];
@@ -446,7 +448,7 @@ namespace Lemur.OS.Language
                         Computer.LoadConfig();
                         return;
                     case "all":
-                        var terminal = Computer.TryGetProcessOfType<Terminal>();
+                        var terminal = computer.ProcessManager.TryGetProcessOfType<Terminal>();
 
                         if (terminal == default)
                         {
@@ -492,7 +494,7 @@ namespace Lemur.OS.Language
 
 
                     case "get":
-                        var terminal = Computer.TryGetProcessOfType<Terminal>();
+                        var terminal = computer.ProcessManager.TryGetProcessOfType<Terminal>();
 
                         if (terminal == default)
                         {
@@ -548,9 +550,9 @@ namespace Lemur.OS.Language
 
         }
         [Command("clear", "clears the terminal(s), if open.")]
-        private static void ClearTerminal(SafeList<string> obj)
+        private void ClearTerminal(SafeList<string> obj)
         {
-            var cmd = Computer.TryGetProcessOfType<Terminal>()?.output;
+            var cmd = computer.ProcessManager.TryGetProcessOfType<Terminal>()?.output;
 
             Computer.Current.Window.Dispatcher.Invoke(() => { 
                 cmd?.Clear(); 
@@ -560,19 +562,19 @@ namespace Lemur.OS.Language
                 Notifications.Now("failed to clear - no cmd prompt open");
         }
         [Command("help", "prints these help listings")]
-        private static void ShowHelp(SafeList<string> obj)
+        private void ShowHelp(SafeList<string> obj)
         {
-            var terminal = Computer.TryGetProcessOfType<Terminal>();
+            var terminal = computer.ProcessManager.TryGetProcessOfType<Terminal>();
 
             StringBuilder cmdbuilder = new();
             StringBuilder aliasbuilder = new();
 
             // todo: make this easier to read, add a manual.
-            foreach (var item in Computer.Current.CmdLine.Commands)
+            foreach (var item in Computer.Current.CLI.Commands)
                 cmdbuilder?.Append($"\n{{{item.Value.Identifier}}} \t\n\'{string.Join(",", item.Value.Info)}\'");
 
             // todo: add better alias info
-            foreach (var item in Computer.Current.CmdLine.Aliases)
+            foreach (var item in Computer.Current.CLI.Aliases)
                 aliasbuilder.Append($"\n{item.Key} -> {item.Value.Split('\\').Last()}");
 
             terminal.Dispatcher.Invoke(() =>
@@ -586,7 +588,7 @@ namespace Lemur.OS.Language
 
         }
         [Command("run", "runs a JavaScript file of specified path in the computers main engine.")]
-        private static async void RunJsFile(SafeList<string> obj)
+        private async void RunJsFile(SafeList<string> obj)
         {
             if (obj[0] is string path && FileSystem.GetResourcePath(path.Replace(".js", "") + ".js") is string AbsPath && File.Exists(AbsPath))
             {

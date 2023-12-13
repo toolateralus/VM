@@ -26,9 +26,10 @@ using static System.Runtime.InteropServices.JavaScript.JSType;
 
 namespace Lemur
 {
-    public record Process(UserWindow UI, string ID, string Type)
+    public record Process(Computer computer, UserWindow UI, string ID, string Type)
     {
         public Action? OnProcessTermination { get; internal set; }
+        public readonly Computer computer = computer;
 
         /// <summary>
         /// Anything that wants to close a process MUST call this method to do so.
@@ -44,13 +45,14 @@ namespace Lemur
             // dispose of the js execution context
             UI.Engine?.Dispose();
 
+            // TODO: put in process manager.
             // remove the process and or type from process table.
-            var procList = Computer.ProcessClassTable[Type];
+            var procList = computer.ProcessManager.ProcessClassTable[Type];
             procList.Remove(this);
 
             if (procList.Count == 0)
-                Computer.ProcessClassTable.Remove(Type);
-            else Computer.ProcessClassTable[Type] = procList; // unnecessary? probably.
+                computer.ProcessManager.ProcessClassTable.Remove(Type);
+            else computer.ProcessManager.ProcessClassTable[Type] = procList; // unnecessary? probably.
 
         }
     }
@@ -59,48 +61,54 @@ namespace Lemur
         internal string WorkingDir { get; private set; }
         internal uint ID { get; private set; }
         internal static uint __procId;
-        internal NetworkConfiguration NetworkConfiguration { get; set; }
+        internal NetworkConfiguration Network { get; set; }
         internal DesktopWindow Window { get; set; }
         internal FileSystem FileSystem { get; set; }
         internal Engine JavaScript { get; set; }
-        internal CommandLine CmdLine { get; set; }
+        internal CommandLine CLI { get; set; }
         internal JObject Config { get; set; }
 
         private static Computer? current;
         private int startupTimeoutMs = 20_000;
         public static Computer Current => current;
 
-        public static IEnumerable<Process> AllProcesses()
-        {
-            return ProcessClassTable.Values.SelectMany(i => i);
-        }
+        public required ProcessManager ProcessManager { get; init; }
 
         // type : process(es)
-        internal static Dictionary<string, List<Process>> ProcessClassTable = [];
         internal readonly Dictionary<string, Type> csApps = [];
-
         internal readonly List<string> jsApps = new();
-
         internal bool disposing;
   
         public Computer(FileSystem fs)
         {
             current = this;
 
+            Notifications.Current = this;
+
             FileSystem = fs;
 
-            CmdLine = new();
+            CLI = new(this);
 
-            NetworkConfiguration = new();
+            Network = new();
 
             Config = LoadConfig();
 
-            JavaScript = new("Computer");
+            JavaScript = new(this, "Computer");
 
             if (FileSystem.GetResourcePath("startup.js") is string AbsPath)
                 JavaScript.ExecuteScript(AbsPath);
 
         }
+        internal void Exit(int exitCode)
+        {
+            if (exitCode != 0)
+            {
+                Notifications.Now($"Computer {ID} has exited, most likely due to an error. code:{exitCode}");
+            }
+            Dispose();
+
+        }
+        
         internal static JObject? LoadConfig()
         {
             if (FileSystem.GetResourcePath("config.json") is string AbsPath)
@@ -142,39 +150,41 @@ namespace Lemur
                 }
             }
         }
-        internal void Exit(int exitCode)
+        
+        public async void OpenCustom(string type, params object[] cmdLineArgs)
         {
-            if (exitCode != 0)
+            // todo: move this to the process manager.
+            if (!type.Contains(".app"))
+                type += ".app";
+
+            var data = Runtime.GetAppDefinition(type);
+
+            var control = XamlHelper.ParseUserControl(data.XAML);
+
+            if (control == null)
             {
-                Notifications.Now($"Computer {ID} has exited, most likely due to an error. code:{exitCode}");
+                if (csApps.TryGetValue(type, out var csType))
+                {
+                    OpenApp((UserControl)Activator.CreateInstance(csType, cmdLineArgs)!, type, ProcessManager.GetNextProcessID());
+                    return;
+                }
+
+                Notifications.Now($"Error : either the app was not found or there was an error parsing xaml or js for {type}.");
+                return;
             }
-            Dispose();
 
-        }
-        internal static void TryRunLateInit(object instance, ResizableWindow? resizableWindow = null)
-        {
-            var method = instance.GetType().GetMethods()
-             .FirstOrDefault(method =>
-                 method.Name.Contains("LateInit") &&
+            string processID = ProcessManager.GetNextProcessID();
 
-                 ((method.GetParameters().Length > 0 && method.GetParameters()[0].ParameterType == typeof(Computer)) ||
+            Engine engine = new(this, $"App__{processID}");
 
-                 method.GetParameters().Length > 1 &&
-                 method.GetParameters()[0].ParameterType == typeof(Computer) ||
-                 method.GetParameters()[1].ParameterType == typeof(ResizableWindow))
-             );
+            engine.NetworkModule.processID = processID;
+            engine.AppModule.processID = processID;
 
-            var parameters = method.GetParameters();
+            var code = await ProcessManager.CreateJavaScriptBackend(type, processID, cmdLineArgs, data, engine).ConfigureAwait(true);
 
-            method?.Invoke(instance, parameters.Length == 1
-                ? new[] { Computer.Current }
-                : new object[] { Computer.Current, resizableWindow }
-            );
+            OpenApp(control, type, processID, engine);
 
-        }
-        internal static bool IsValidExternAppType(IEnumerable<MemberInfo> members)
-        {
-            return members.Any(member => member.Name == "LateInit");
+            await engine.Execute(code).ConfigureAwait(true);
         }
         public void OpenApp(UserControl control, string pClass, string processID, Engine? engine = null)
         {
@@ -200,9 +210,8 @@ namespace Lemur
             // also, having this more organized will make it much easier to safely expose it to JavaScript
             // so we can allow the user to add to their window's toolbar, title, close the app programmatically, etc.
 
-            var process = new Process(userWindow, processID, pClass);
-
-            RegisterNewProcess(process, out var procList);
+            var process = new Process(this, userWindow, processID, pClass);
+            ProcessManager.RegisterNewProcess(process, out var procList);
 
             void OnWindowClosed()
             {
@@ -239,45 +248,33 @@ namespace Lemur
             Canvas.SetTop(resizable_window, 200);
             Canvas.SetLeft(resizable_window, 200);
         }
-        private static void RegisterNewProcess(Process process, out List<Process> procList)
+
+        public static BitmapImage LoadImage(string path)
         {
-            GetProcessesOfType(process.Type, out procList);
-
-            procList.Add(process);
-
-            ProcessClassTable[process.Type] = procList;
-
-           
+            BitmapImage bitmapImage = new BitmapImage();
+            bitmapImage.BeginInit();
+            bitmapImage.UriSource = new Uri(path, UriKind.RelativeOrAbsolute);
+            bitmapImage.EndInit();
+            return bitmapImage;
         }
-        private static void GetProcessesOfType(string name, out List<Process> processes)
+        public static BitmapImage? GetExternIcon(Type type)
         {
-            if (!ProcessClassTable.TryGetValue(name, out processes!))
-                processes= [];
-        }
-        public void InstallCSharpApp(string exePath, Type type)
-        {
-            if (csApps.TryGetValue(exePath, out _))
+            var properties = type.GetProperties();
+
+            foreach (var property in properties)
             {
-                Notifications.Now("Tried to install an app that already exists on the computer, try renaming it if this was intended");
-                return;
+                if (property.Name.Contains("DesktopIcon") &&
+                    property.PropertyType == typeof(string) &&
+                    property.GetValue(null) is string path &&
+                    !string.IsNullOrEmpty(path))
+                {
+                    return LoadImage(path);
+                }
             }
 
-            csApps[exePath] = type;
-
-            Notifications.Now($"{exePath} installed!");
-
-            InstallFromType(exePath, type);
+            return null;
         }
-        public void InstallNative(string type)
-        {
-            if (disposing)
-                return;
 
-            type = type.Replace(".app", "");
-            jsApps.Add(type);
-
-            InstallIcon(AppType.Native, type);
-        }
         public static void SetupIcon(string name, Button btn, object? image)
         {
             btn.Background = Brushes.Transparent;
@@ -311,7 +308,7 @@ namespace Lemur
                     Style = Current.Window.FindResource("ImageOpacityStyle") as Style,
                 };
 
-                
+
             }
             else
                 element = new Rectangle() { Fill = Brushes.Black };
@@ -324,36 +321,9 @@ namespace Lemur
             btn.Content = grid;
             btn.ToolTip = name;
         }
-
-
-        public static BitmapImage LoadImage(string path)
-        {
-            BitmapImage bitmapImage = new BitmapImage();
-            bitmapImage.BeginInit();
-            bitmapImage.UriSource = new Uri(path, UriKind.RelativeOrAbsolute);
-            bitmapImage.EndInit();
-            return bitmapImage;
-        }
-        public static BitmapImage? GetExternIcon(Type type)
-        {
-            var properties = type.GetProperties();
-
-            foreach (var property in properties)
-            {
-                if (property.Name.Contains("DesktopIcon") &&
-                    property.PropertyType == typeof(string) &&
-                    property.GetValue(null) is string path &&
-                    !string.IsNullOrEmpty(path))
-                {
-                    return LoadImage(path);
-                }
-            }
-
-            return null;
-        }
         public void InstallIcon(AppType type, string appName, Type? runtime_type = null)
         {
-            
+
 
             Window.Dispatcher?.Invoke(() =>
             {
@@ -366,7 +336,7 @@ namespace Lemur
                         break;
                     case AppType.Extern:
                         if (runtime_type != null)
-                        InstallExtern(btn, appName, runtime_type);
+                            InstallExtern(btn, appName, runtime_type);
                         break;
                 }
 
@@ -428,7 +398,7 @@ namespace Lemur
                 {
                     if (Activator.CreateInstance(type) is object instance && instance is UserControl userControl)
                     {
-                        Computer.Current.OpenApp(userControl, name, Computer.GetNextProcessID());
+                        Computer.Current.OpenApp(userControl, name, ProcessManager.GetNextProcessID());
                     }
                     else
                     {
@@ -442,6 +412,59 @@ namespace Lemur
             name = name.Replace(".app", string.Empty);
             InstallIcon(AppType.Extern, name, type);
         }
+
+        internal static bool IsValidExternAppType(IEnumerable<MemberInfo> members)
+        {
+            return members.Any(member => member.Name == "LateInit");
+        }
+        internal static void TryRunLateInit(object instance, ResizableWindow? resizableWindow = null)
+        {
+            var method = instance.GetType().GetMethods()
+             .FirstOrDefault(method =>
+                 method.Name.Contains("LateInit") &&
+
+                 ((method.GetParameters().Length > 0 && method.GetParameters()[0].ParameterType == typeof(Computer)) ||
+
+                 method.GetParameters().Length > 1 &&
+                 method.GetParameters()[0].ParameterType == typeof(Computer) ||
+                 method.GetParameters()[1].ParameterType == typeof(ResizableWindow))
+             );
+
+            var parameters = method.GetParameters();
+
+            method?.Invoke(instance, parameters.Length == 1
+                ? new[] { Computer.Current }
+                : new object[] { Computer.Current, resizableWindow }
+            );
+
+        }
+
+
+        public void InstallCSharpApp(string exePath, Type type)
+        {
+            if (csApps.TryGetValue(exePath, out _))
+            {
+                Notifications.Now("Tried to install an app that already exists on the computer, try renaming it if this was intended");
+                return;
+            }
+
+            csApps[exePath] = type;
+
+            Notifications.Now($"{exePath} installed!");
+
+            InstallFromType(exePath, type);
+        }
+        public void InstallNative(string type)
+        {
+            if (disposing)
+                return;
+
+            type = type.Replace(".app", "");
+            jsApps.Add(type);
+
+            InstallIcon(AppType.Native, type);
+        }
+
         public void Uninstall(string name)
         {
             jsApps.Remove(name);
@@ -463,157 +486,9 @@ namespace Lemur
 
             Window.desktopBackground.Source = LoadImage(fullPath);
         }
-        public async void OpenCustom(string type, params object[] cmdLineArgs)
-        {
+        
+    
 
-            if (!type.Contains(".app"))
-                type += ".app";
-
-            var data = Runtime.GetAppDefinition(type);
-
-            var control = XamlHelper.ParseUserControl(data.XAML);
-
-            if (control == null)
-            {
-                if (csApps.TryGetValue(type, out var csType))
-                {
-                    OpenApp((UserControl)Activator.CreateInstance(csType, cmdLineArgs)!, type, GetNextProcessID());
-                    return;
-                }
-
-                Notifications.Now($"Error : either the app was not found or there was an error parsing xaml or js for {type}.");
-                return;
-            }
-
-            string processID = GetNextProcessID();
-
-            Engine engine = new($"App__{processID}");
-
-            engine.NetworkModule.processID = processID;
-            engine.AppModule.processID = processID;
-
-            var code = await InstantiateWindowClass(type, processID, cmdLineArgs, data, engine).ConfigureAwait(true);
-
-            OpenApp(control, type, processID, engine);
-
-            await engine.Execute(code).ConfigureAwait(true);
-        }
-        internal static string GetNextProcessID()
-        {
-            return $"p{__procId++}";
-        }
-        public static string GetProcessClass(string identifier)
-        {
-            var processClass = "Unknown process";
-
-            foreach (var procList in ProcessClassTable)
-                foreach (var proc in from proc in procList.Value
-                                     where proc.ID == identifier
-                                     select proc)
-                {
-                    processClass = proc.Type;
-                }
-
-            return processClass;
-        }
-
-        [Command("restart", "restarts the computer")]
-        public void Restart(SafeList<string> _)
-        {
-            Current.Exit(0);
-            Current.Dispose();
-            Boot(Current.ID);
-        }
-        internal protected static void Boot(uint cpu_id)
-        {
-            var workingDir = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData) + $"\\Lemur\\computer{cpu_id}";
-            var FileSystem = new FileSystem(workingDir);
-
-            Computer pc = new Computer(FileSystem);
-
-            DesktopWindow wnd = new();
-
-            Current.Window = wnd;
-
-            Current.LoadBackground();
-
-            wnd.Show();
-
-            wnd.Closed += (o, e) =>
-            {
-                Task.Run(() => SaveConfig(pc.Config?.ToString() ?? ""));
-                pc.Dispose();
-            };
-
-            pc.InstallCSharpApp("terminal.app", typeof(Terminal));
-            pc.InstallCSharpApp("explorer.app", typeof(Explorer));
-            pc.InstallCSharpApp("texed.app", typeof(Texed));
-
-            Runtime.LoadCustomSyntaxHighlighting();
-        }
-        public static IReadOnlyCollection<T> TryGetAllProcessesOfType<T>() where T : UserControl
-        {
-            List<T> contents = [];
-            foreach (var process in ProcessClassTable.Values.SelectMany(i => i.Select(i => i))) // flatten array
-            {
-                process.UI.Dispatcher.Invoke(() =>
-                {
-                    if (process.UI.ContentsFrame is not Frame frame)
-                        return;
-
-                    if (frame.Content is not T instance)
-                        return;
-
-                    contents.Add(instance);
-                });
-            }
-            return contents;
-        }
-        public static T? TryGetProcessOfTypeUnsafe<T>() where T : UserControl
-        {
-            T? matchingWindow = default(T);
-
-            foreach (var pclass in ProcessClassTable)
-                foreach (var proc in pclass.Value)
-                    if (proc.UI.ContentsFrame is Frame frame && frame.Content is T instance)
-                        matchingWindow = instance;
-
-            return matchingWindow;
-        }
-        public static T? TryGetProcessOfType<T>() where T : UserControl
-        {
-            T? content = default(T);
-
-            Current.Window.Dispatcher.Invoke(() =>
-            {
-                content = TryGetProcessOfTypeUnsafe<T>();
-            });
-
-            return content;
-        }
-        private static async Task<string> InstantiateWindowClass(string type, string processID, object[] cmdLineArgs, (string XAML, string JS) data, Engine engine)
-        {
-            var name = type.Split('.')[0];
-
-            var JS = new string(data.JS);
-
-            _ = await engine.Execute(JS);
-
-            string instantiation_code;
-
-
-            if (cmdLineArgs.Length != 0)
-            {
-                var args = string.Join(", ", cmdLineArgs);
-                instantiation_code = $"const {processID} = new {name}('{processID}, {args}')";
-            }
-            else
-                instantiation_code = $"const {processID} = new {name}('{processID}')";
-
-
-
-            return instantiation_code;
-        }
         protected virtual void Dispose(bool disposing)
         {
             if (!this.disposing)
@@ -622,12 +497,12 @@ namespace Lemur
                 {
                     JavaScript?.Dispose();
                     Window?.Dispose();
-                    NetworkConfiguration?.StopHosting();
-                    NetworkConfiguration?.StopClient();
-                    CmdLine?.Dispose();
+                    Network?.StopHosting();
+                    Network?.StopClient();
+                    CLI?.Dispose();
 
                     List<Process> procs = [];
-                    foreach (var item in ProcessClassTable.Values.SelectMany(i => i))
+                    foreach (var item in ProcessManager.ProcessClassTable.Values.SelectMany(i => i))
                         procs.Add(item);
 
                     foreach (var item in procs)
@@ -637,9 +512,9 @@ namespace Lemur
 
                 JavaScript = null!;
                 Window = null!;
-                NetworkConfiguration = null!;
+                Network = null!;
                 FileSystem = null!;
-                CmdLine = null!;
+                CLI = null!;
 
                 this.disposing = true;
             }
@@ -648,35 +523,6 @@ namespace Lemur
         {
             Dispose(disposing: true);
             GC.SuppressFinalize(this);
-        }
-        internal void CloseApp(string pID)
-        {
-            if (GetProcess(pID) is Process p)
-                p.Terminate();
-            else Notifications.Now($"Could not find process {pID}");
-        }
-        internal static Process? GetProcess(string pid)
-        {
-            foreach (var pclass in ProcessClassTable)
-                if (pclass.Value.FirstOrDefault(p => p.ID == pid) is Process proc)
-                    return proc;
-            return null;
-        }
-
-        internal static List<T> TryGetAllProcessesOfTypeUnsafe<T>()
-        {
-            List<T> contents = [];
-            foreach (var process in ProcessClassTable.Values.SelectMany(i => i.Select(i => i))) // flatten array
-            {
-                if (process.UI.ContentsFrame is not Frame frame)
-                    continue;
-
-                if (frame.Content is not T instance)
-                    continue;
-
-                contents.Add(instance);
-            }
-            return contents;
         }
     }
 }

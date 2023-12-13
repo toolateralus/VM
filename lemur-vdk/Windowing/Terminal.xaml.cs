@@ -33,6 +33,9 @@ namespace Lemur.GUI
 
         public Action<string> OnTerminalSend { get; internal set; }
         public ResizableWindow Window { get; private set; }
+
+        private Computer computer;
+
         public bool IsReading { get; internal set; }
 
         public static string? LastSentInput;
@@ -64,11 +67,12 @@ namespace Lemur.GUI
             output.ScrollToLine(output.Text.Length);
         }
 
-        public void LateInit(Computer _, ResizableWindow rsz)
+        public void LateInit(Computer computer, ResizableWindow rsz)
         {
-            Engine ??= new("Terminal");
+            Engine ??= new(computer, "Terminal");
             Window = rsz;
 
+            this.computer = computer;
             rsz.OnApplicationClose += () =>
             {
                 var json = JsonConvert.SerializeObject(commandHistory, Formatting.Indented);
@@ -123,7 +127,7 @@ namespace Lemur.GUI
                     var path = FileSystem.Root + "/home/ide/temp.js";
                     File.WriteAllText(path, text + "\n this file can be found at 'computer/home/ide/temp.js'");
                     var textEditor = new Texed(path);
-                    Computer.Current.OpenApp(textEditor, "temp.js", Computer.GetNextProcessID());
+                    Computer.Current.OpenApp(textEditor, "temp.js", computer.ProcessManager.GetNextProcessID());
                     break;
 
 
@@ -188,7 +192,7 @@ namespace Lemur.GUI
                     if (IsReading)
                         return;
 
-                    var success = Computer.Current.CmdLine.TryCommand(inputText);
+                    var success = Computer.Current.CLI.TryCommand(inputText);
 
                     if (!success)
                     {
@@ -285,7 +289,7 @@ namespace Lemur.GUI
 
         private void ClearButtonClicked(object sender, System.Windows.RoutedEventArgs e)
         {
-            Computer.Current.CmdLine.TryCommand("clear");
+            Computer.Current.CLI.TryCommand("clear");
         }
 
         private void Button_MouseEnter(object sender, MouseEventArgs e)

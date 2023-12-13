@@ -15,13 +15,13 @@ namespace Lemur.JS.Embedded
 {
     public class Graphics_context
     {
-        public Graphics_context(string pid, string TargetControl, int PixelFormatBpp)
+        public Graphics_context(Computer computer, string pid, string TargetControl, int PixelFormatBpp)
         {
 
             Image image = null;
             Computer.Current.Window.Dispatcher.Invoke(() =>
             {
-                var content = Computer.GetProcess(pid).UI;
+                var content = computer.ProcessManager.GetProcess(pid).UI;
                 var app = content.Engine.AppModule;
                 var control = app.GetUserContent();
 

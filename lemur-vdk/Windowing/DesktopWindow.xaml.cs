@@ -31,11 +31,14 @@ namespace Lemur.GUI
         public bool Disposing;
 
         public static event Action<Key, bool> OnKeyDown;
-
         public int TopMostZIndex { get; internal set; }
         private int ctrlTabIndex;
-        public DesktopWindow()
+
+        Computer computer;
+        public DesktopWindow(Computer computer)
         {
+            this.computer = computer;
+
             InitializeComponent();
 
             desktopBackground.Source = Computer.LoadImage(FileSystem.GetResourcePath("Background.png") ?? "background.png");
@@ -67,9 +70,6 @@ namespace Lemur.GUI
             };
 
         }
-
-        
-
         internal ContextMenu GetNativeContextMenu(string appName)
         {
             var contextMenu = new ContextMenu();
@@ -159,7 +159,7 @@ namespace Lemur.GUI
 
             void Close_Click(object sender, RoutedEventArgs e)
             {
-                Computer.Current.CloseApp(pID);
+                Computer.Current.ProcessManager.TerminateProcess(pID);
                 TaskbarStackPanel.Children.Remove(btn);
             }
 
@@ -174,7 +174,7 @@ namespace Lemur.GUI
         {
             TopMostZIndex++;
 
-            var window = new UserWindow(pID);
+            var window = new UserWindow(computer, pID);
 
             // TODO: add a way for users to add buttons and toolbars easily through
             // their js code, that would be very helpful.
@@ -201,7 +201,6 @@ namespace Lemur.GUI
 
             return window;
         }
-
         internal void RemoveDesktopIcon(string name)
         {
 
@@ -248,7 +247,6 @@ namespace Lemur.GUI
                 }
             }
         }
-
         private void ClearNotificaionsClicked(object sender, RoutedEventArgs e)
         {
             Notifications.Clear();
@@ -261,13 +259,13 @@ namespace Lemur.GUI
         {
             var name = appName + ".xaml";
             var editor = new Texed(name);
-            Computer.Current.OpenApp(editor, name, Computer.GetNextProcessID());
+            Computer.Current.OpenApp(editor, name, computer.ProcessManager.GetNextProcessID());
         }
         private void JsSource_Click(object? sender, RoutedEventArgs e, string appName)
         {
             var name = appName + ".xaml.js";
             var editor = new Texed(name);
-            Computer.Current.OpenApp(editor, name, Computer.GetNextProcessID());
+            Computer.Current.OpenApp(editor, name, computer.ProcessManager.GetNextProcessID());
         }
         public void Computer_KeyDown(object sender, KeyEventArgs e)
         {
@@ -280,7 +278,7 @@ namespace Lemur.GUI
                     if (Keyboard.IsKeyDown(Key.LeftCtrl))
                     {
                         var cmd = new Terminal();
-                        Computer.Current.OpenApp(cmd, "Cmd", Computer.GetNextProcessID());
+                        Computer.Current.OpenApp(cmd, "Cmd", computer.ProcessManager.GetNextProcessID());
                     }
                     break;
 
@@ -288,7 +286,8 @@ namespace Lemur.GUI
                     if (Keyboard.IsKeyDown(Key.LeftCtrl))
                     {
 
-                        var windows = Computer.ProcessClassTable.Values.SelectMany(i => i).ToList();
+                        // todo : make a function to do this.
+                        var windows = computer.ProcessManager.ProcessClassTable.Values.SelectMany(i => i).ToList();
 
                         if (windows.Count == 0)
                             return;
@@ -310,7 +309,7 @@ namespace Lemur.GUI
         }
         public void ShutdownClick(object sender, RoutedEventArgs e)
         {
-            if (Computer.ProcessClassTable.Count > 0)
+            if (computer.ProcessManager.ProcessClassTable.Count > 0)
             {
                 var answer = MessageBox.Show("Are you sure you want to shut down? all unsaved changes will be lost.",
                                             "Shutdown",
@@ -327,7 +326,6 @@ namespace Lemur.GUI
             App.Current.Shutdown();
             Close();
         }
-
         public void Dispose()
         {
             if (!Disposing)
@@ -341,7 +339,5 @@ namespace Lemur.GUI
                 Disposing = true;
             }
         }
-       
-
     }
 }

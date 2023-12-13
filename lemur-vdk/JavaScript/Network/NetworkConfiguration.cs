@@ -90,7 +90,7 @@ namespace Lemur.JavaScript.Network
 
             NetworkEvents[channel].Enqueue((msg, reply));
 
-            foreach (var userWindow in Computer.ProcessClassTable.SelectMany(i => i.Value.Select(i => i)))
+            foreach (var userWindow in Computer.Current.ProcessManager.ProcessClassTable.SelectMany(i => i.Value.Select(i => i)))
             {
                 if (userWindow?.UI.Engine?.EventHandlers == null)
                     continue;
@@ -114,7 +114,7 @@ namespace Lemur.JavaScript.Network
 
             bool messageNotRecieved() => !NetworkEvents.TryGetValue(channel, out queue) || queue is null || queue.Count == 0;
 
-            bool shouldWait() => !timedOut && !Computer.Current.disposing && Computer.Current.NetworkConfiguration.IsConnected();
+            bool shouldWait() => !timedOut && !Computer.Current.disposing && Computer.Current.Network.IsConnected();
 
             while (shouldWait() && messageNotRecieved())
             {/* ----------------------------------------------- */
@@ -143,7 +143,7 @@ namespace Lemur.JavaScript.Network
                         || queue is null
                         || queue.Count == 0
                         && !Computer.Current.disposing
-                        && Computer.Current.NetworkConfiguration.IsConnected())
+                        && Computer.Current.Network.IsConnected())
                 {/* ----------------------------------------------- */
                     Task.Delay(16);
                 }

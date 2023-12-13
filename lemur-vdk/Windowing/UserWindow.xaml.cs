@@ -33,10 +33,13 @@ namespace Lemur.GUI
         /// </summary>
         internal event Action? OnApplicationClose;
         readonly string pID;
-        public UserWindow(string pID)
+        private readonly Computer computer;
+
+        public UserWindow(Computer computer, string pID)
         {
             InitializeComponent();
             this.pID = pID;
+            this.computer = computer;
             xBtn.Click += CloseWindow;
 
             // TODO: fix this up
@@ -79,7 +82,7 @@ namespace Lemur.GUI
                 Keyboard.IsKeyDown(System.Windows.Input.Key.LeftCtrl) &&
                 Keyboard.IsKeyDown(System.Windows.Input.Key.LeftShift))
             {
-                if (Computer.GetProcess(pID) is not Process proc)
+                if (computer.ProcessManager.GetProcess(pID) is not Process proc)
                 {
                     Notifications.Now("Failed to find process from user window terminate.. this is not good.");
                     return;
@@ -130,7 +133,7 @@ namespace Lemur.GUI
         /// <param name="e"></param>
         private void CloseWindow(object sender, RoutedEventArgs e)
         {
-            var proc = Computer.GetProcess(pID) ?? throw new InvalidOperationException("Failed to find process on window close. What?");
+            var proc = computer.ProcessManager.GetProcess(pID) ?? throw new InvalidOperationException("Failed to find process on window close. What?");
             proc.Terminate();
             e.Handled = true;
         }

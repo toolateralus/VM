@@ -122,7 +122,33 @@ namespace Lemur.GUI
                     return;
                 }
 
-                Computer.Boot(cpu_id);
+                var workingDir = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData) + $"\\Lemur\\computer{cpu_id}";
+                var FileSystem = new FileSystem(workingDir);
+
+                Computer pc = new Computer(FileSystem)
+                {
+                    ProcessManager = new(),
+                };
+
+                DesktopWindow wnd = new(pc);
+
+                pc.Window = wnd;
+
+                pc.LoadBackground();
+
+                wnd.Show();
+
+                wnd.Closed += (o, e) =>
+                {
+                    Task.Run(() => Computer.SaveConfig(pc.Config?.ToString() ?? ""));
+                    pc.Dispose();
+                };
+
+                pc.InstallCSharpApp("terminal.app", typeof(Terminal));
+                pc.InstallCSharpApp("explorer.app", typeof(Explorer));
+                pc.InstallCSharpApp("texed.app", typeof(Texed));
+
+                Runtime.LoadCustomSyntaxHighlighting();
             }
         }
         internal static BitmapImage? GetAppIcon(string type)

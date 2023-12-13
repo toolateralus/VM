@@ -21,8 +21,12 @@ using static Lemur.Computer;
 
 namespace Lemur.JS
 {
-    public class key
+    public class key : embedable
     {
+        public key(Computer computer) : base(computer)
+        {
+        }
+
         public void clearFocus() {
             Computer.Current.Window?.Dispatcher?.Invoke(() =>
             {
@@ -66,7 +70,7 @@ namespace Lemur.JS
         public term_t TermModule { get; }
         public key KeyModule { get; }
 
-        public Engine(string name)
+        public Engine(Computer computer, string name)
         {
 
             engineSwitcher = JsEngineSwitcher.Current;
@@ -74,17 +78,17 @@ namespace Lemur.JS
             engineSwitcher.DefaultEngineName = V8JsEngine.EngineName;
             m_engine_internal = engineSwitcher.CreateDefaultEngine();
 
-            NetworkModule = new network();
+            NetworkModule = new network(computer);
+            InteropModule = new interop(computer);
+            GraphicsModule = new graphics(computer);
+            AppModule = new app_t(computer);
+            TermModule = new term_t(computer);
+            KeyModule = new key(computer);
 
-            InteropModule = new interop();
             InteropModule.OnModuleImported += ImportModule;
 
-            GraphicsModule = new graphics();
             ConvModule = new conv();
-            AppModule = new app_t();
             FileModule = new file_t();
-            TermModule = new term_t();
-            KeyModule = new key();
 
             EmbedObject("Convert", ConvModule);
             EmbedObject("Network", NetworkModule);
@@ -264,93 +268,7 @@ await Execute(@$"
             var script = File.ReadAllText(absPath);
             Task.Run(() => Execute(script));
         }
-        internal async Task CreateEventHandler(string identifier, string targetControl, string methodName, int type)
-        {
-            var wnd = Computer.Current.Window;
-
-            // check if this event already exists
-            var result = await Execute($"{identifier} != null").ConfigureAwait(true);
-
-            if (result is not bool ID_EXISTS || !ID_EXISTS)
-            {
-                Notifications.Now($"App not found : {identifier}..  that is NOT good...");
-                return;
-            }
-
-            // check if this method already exists
-            result = await Execute($"{identifier}.{methodName} != null").ConfigureAwait(true);
-
-            string processClass = Computer.GetProcessClass(identifier).Replace(".app", "", StringComparison.CurrentCulture);
-
-            if (result is not bool METHOD_EXISTS || !METHOD_EXISTS)
-            {
-                Notifications.Now($"'app.eventHandler(...)' threw an exception : {processClass}.{methodName} not found. Make sure {methodName} is defined and spelled correctly in both the hook function call and the definition.");
-                return;
-            }
-
-            InteropEvent? eh = default;
-
-            wnd.Dispatcher.Invoke(() =>
-            {
-                var content = Computer.GetProcess(identifier)?.UI?.Engine?.AppModule?.GetUserContent();
-
-                if (content == null)
-                {
-                    Notifications.Now($"control {identifier} not found!");
-                    return;
-                }
-
-                FrameworkElement? element = null;
-
-                if (targetControl.ToLower(CultureInfo.CurrentCulture).Trim() == "this")
-                    element = content;
-                else
-                    element = Embedded.app_t.FindControl(content, targetControl)!;
-
-
-                if (element == null)
-                {
-                    Notifications.Now($"control {targetControl} of {content.Name} not found.");
-                    return;
-                }
-
-                eh = new InteropEvent(element, (XAML_EVENTS)type, this, identifier, methodName);
-
-            });
-
-            if (GetProcess(identifier) is not Process p)
-            {
-                Notifications.Now("Creating an event handler failed : this is an engine bug. report it on GitHub if you'd like");
-                return;
-            }
-
-            var disposed = false;
-
-            /// this was an attempt to force close the app on too many errors
-            /// stack overflow, trying to finally decouple UI.
-            /// 
-            //eh.OnEventDisposed += () => {
-            //    if (disposed)
-            //        return; 
-
-            //    App.Current.Dispatcher.Invoke(app.Close);
-            //    disposed = true;
-            //};
-
-            p.OnProcessTermination += () =>
-            {
-                if (disposed)
-                    return;
-
-                if (EventHandlers.Contains(eh))
-                    EventHandlers.Remove(eh);
-
-                eh?.ForceDispose();
-                disposed = true;
-            };
-
-            EventHandlers.Add(eh);
-        }
+        
 
         public void Dispose()
         {

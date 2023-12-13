@@ -160,7 +160,7 @@ namespace Lemur.JavaScript.Network
             string message = $"\nReceived data, listener: {listener}, ch: {channel}, reply: {reply}, size: {FormatBytes(bytesLength)}";
 
             Computer.Current.Window.Dispatcher.Invoke(() => {
-                foreach (var cmd in Computer.TryGetAllProcessesOfType<Terminal>())
+                foreach (var cmd in Computer.Current.ProcessManager.TryGetAllProcessesOfType<Terminal>())
                     cmd.output.AppendText(message);
             });
             return new(metadata, dataString, client, stream);

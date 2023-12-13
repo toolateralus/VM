@@ -11,8 +11,9 @@ namespace Lemur.Windowing
     /// repeat notifications stack to the top of the screen then knock out the first to make room when full.
     /// This can be very very slow.
     /// </summary>
-    public static class Notifications
+    public class Notifications
     {
+        public static Computer Current { get; set; }
         /// <summary>
         /// Throws a notification.
         /// </summary>
@@ -29,7 +30,7 @@ namespace Lemur.Windowing
 
             void send_notification_ui()
             {
-                var terminals = Computer.TryGetAllProcessesOfTypeUnsafe<Terminal>();
+                var terminals = Current.ProcessManager.TryGetAllProcessesOfTypeUnsafe<Terminal>();
 
                 foreach (var term in terminals)
                 {

@@ -4,11 +4,17 @@ using System.Collections.Generic;
 
 namespace Lemur.JS.Embedded
 {
-    public class graphics
+    public class graphics : embedable
     {
+
         private int ctxIndex;
 
         public Dictionary<int, Graphics_context> GraphicsContext = [];
+
+        public graphics(Computer computer) : base(computer)
+        {
+        }
+
         public bool writePixel(int gfx_ctx, int x, int y, int color)
         {
             if (!GraphicsContext.TryGetValue(gfx_ctx, out var ctx))
@@ -143,7 +149,7 @@ namespace Lemur.JS.Embedded
             int bpp = 4;
 
 
-            var ctx = new Graphics_context(id, target, bpp);
+            var ctx = new Graphics_context(GetComputer(), id, target, bpp);
 
             ctx.Resize(width, height);
 

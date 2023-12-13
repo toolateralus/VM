@@ -21,7 +21,7 @@ namespace Lemur.GUI
     {
         public static string? DesktopIcon => FileSystem.GetResourcePath("folder.png");
         internal Action<string>? OnNavigated;
-
+        private Computer computer;
         private readonly ObservableCollection<FileSystemEntry> FileViewerData = new();
         private readonly Dictionary<string, string> OriginalPaths = new();
         private ContextMenu CreateMenu(string extension)
@@ -56,6 +56,7 @@ namespace Lemur.GUI
         }
         public Explorer()
         {
+            
             InitializeComponent();
             FileBox.FontSize = 16;
 
@@ -108,6 +109,10 @@ namespace Lemur.GUI
 
         }
 
+        public void LateInit(Computer c)
+        {
+            this.computer = c;
+        }
         private void UpdateView()
         {
             SearchBar.Text = FileSystem.CurrentDirectory.Replace(FileSystem.Root + "\\", "");
@@ -204,7 +209,7 @@ namespace Lemur.GUI
         {
             var path = SearchBar.Text;
 
-            if (Computer.Current.CmdLine.TryCommand(path))
+            if (Computer.Current.CLI.TryCommand(path))
             {
                 Notifications.Now($"Command {path} succeeded.");
                 return;
@@ -216,7 +221,7 @@ namespace Lemur.GUI
             {
                 if (FileSystem.FileExists(path))
                 {
-                    Computer.Current.OpenApp(new Texed(path), "texed.app", Computer.GetNextProcessID());
+                    Computer.Current.OpenApp(new Texed(path), "texed.app", computer.ProcessManager.GetNextProcessID());
                     OnNavigated?.Invoke(path);
                 }
 
