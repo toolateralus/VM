@@ -95,7 +95,7 @@ namespace Lemur
 
             Config = LoadConfig();
 
-            JavaScript = new();
+            JavaScript = new("Computer");
 
             if (FileSystem.GetResourcePath("startup.js") is string AbsPath)
                 JavaScript.ExecuteScript(AbsPath);
@@ -472,7 +472,7 @@ namespace Lemur
 
             string processID = GetNextProcessID();
 
-            Engine engine = new();
+            Engine engine = new($"App__{processID}");
 
             engine.NetworkModule.processID = processID;
             engine.AppModule.processID = processID;

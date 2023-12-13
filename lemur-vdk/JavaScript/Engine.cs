@@ -66,7 +66,7 @@ namespace Lemur.JS
         public term_t TermModule { get; }
         public key KeyModule { get; }
 
-        public Engine()
+        public Engine(string name)
         {
 
             engineSwitcher = JsEngineSwitcher.Current;
@@ -105,6 +105,24 @@ namespace Lemur.JS
             // this differs from 'include' where that's a deferred loading strategy
             // aka lazy loading on demand.
             LoadModules(FileSystem.GetResourcePath("do_not_delete"));
+
+            Task.Run(async () =>
+            {
+
+
+#if DEBUG
+await Execute(@$"
+    const __NAME__ = '{name}'
+    const __DEBUG__ = true;
+");
+#else
+await Execute(@$"
+    const __NAME__ = '{name}'
+    const __DEBUG__ = false;
+");
+#endif
+
+            });
 
             InteropModule.OnModuleExported = (path, obj) =>
             {
@@ -336,7 +354,10 @@ namespace Lemur.JS
 
         public void Dispose()
         {
+
+
             Disposing = true;
+            m_engine_internal.Interrupt();
             m_engine_internal.Dispose();
             executionThread.Join();
             AppModule.ReleaseThread();

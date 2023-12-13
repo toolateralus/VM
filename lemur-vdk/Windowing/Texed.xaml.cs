@@ -253,7 +253,7 @@ namespace Lemur.GUI
                     {
                         terminal = new Terminal();
 
-                        var jsEngine = new Engine();
+                        var jsEngine = new Engine("Auxillary__Terminal");
                         Computer.Current.OpenApp(terminal, "cmd.app", Computer.GetNextProcessID(), engine: jsEngine);
                     }
                     var code = string.IsNullOrEmpty(textEditor.Text) ? "print('You must provide some javascript to execute...')" : textEditor.Text;

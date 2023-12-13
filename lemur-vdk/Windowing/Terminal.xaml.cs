@@ -63,7 +63,7 @@ namespace Lemur.GUI
 
         public void LateInit(Computer _, ResizableWindow rsz)
         {
-            Engine ??= new();
+            Engine ??= new("Terminal");
             Window = rsz;
 
             rsz.OnApplicationClose += () =>
