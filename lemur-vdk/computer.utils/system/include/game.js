@@ -240,7 +240,7 @@ class Renderer {
         this.newWidth = this.width;
         this.isDirty = true;
 
-        this.bgColor = palette_indexed[Color.BLACK];
+        this.bgColor = Color.BLACK;
     }
     setWidth(width) {
         this.newWidth = width;
