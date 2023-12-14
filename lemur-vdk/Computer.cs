@@ -19,6 +19,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Markup;
 using System.Windows.Media;
 using System.Windows.Media.Animation;
 using System.Windows.Media.Imaging;
@@ -29,9 +30,15 @@ namespace Lemur
 {
     public class AppConfig
     {
-        public string @class = "no class found", title = "no title", version = "0.0.0a", description = "An undescribed app";
-        public bool isWpf = false, terminal = true;
-        public List<Dictionary<string, string[]>> requires = [[]];
+        public string @class { get; set; } = "no class found";
+        public string title { get; set; } = "no title";
+        public string version { get; set; } = "0.0.0a";
+        public string description { get; set; } = "An undescribed app";
+        public bool isWpf { get; set; }
+        public bool terminal { get; set; }
+        public string? entryPoint { get; set; }
+        public string? frontEnd { get; set; }
+        public List<Dictionary<string, string[]>> requires { get; set; }  = [[]];
     } 
 
     public record Process(Computer computer, UserWindow UI, string ID, string Type)
@@ -178,46 +185,14 @@ namespace Lemur
                 return;
             }
 
-
             if (string.IsNullOrEmpty(name))
             {
                 Notifications.Now($"invalid name for app {type}");
                 return;
             }
-
-            // setup some names.
-            string xamlFile = System.IO.Path.Combine(absPath, name + xamlExt);
-            string jsFile = System.IO.Path.Combine(absPath, name + xamlJsExt);
-
-            (string XAML, string js) data = ("", "");
-
-            // read the actual code files.
-            if (File.Exists(xamlFile) && File.Exists(jsFile))
-            {
-                var xaml = File.ReadAllText(xamlFile);
-                var js = File.ReadAllText(jsFile);
-                data = (xaml, js);
-            }
-            else
-            {
-                Notifications.Now("Invalid application structure : your xaml & .xaml.js & .app files/folder must be the same name.");
-                return;
-            }
-
+            
             // todo: run pre-processor here? have that be optional.
             // homemade typescript? or something more experimental even :D
-
-            // get the dynamic xaml objects.
-            var control = XamlHelper.ParseUserControl(data.XAML);
-
-            if (control == null)
-            {
-                if (!TryOpenCSAppByName(type, cmdLineArgs)) // open app or error cuz control should never be null.
-                {
-                    Notifications.Now($"Error : either the app was not found or there was an error parsing xaml or js for {type}.");
-                    return;
-                }
-            }
 
             AppConfig? appConfig = new()
             {
@@ -233,9 +208,9 @@ namespace Lemur
 
             if (exists)
             {
-                var file = File.ReadAllText(FileSystem.GetResourcePath(conf));
                 try
                 {
+                    var file = File.ReadAllText(FileSystem.GetResourcePath(conf));
                     appConfig = JsonConvert.DeserializeObject<AppConfig>(file);
                 } 
                 catch (Exception e)
@@ -250,20 +225,71 @@ namespace Lemur
                 Notifications.Now($"Warning : No '.appconfig' file found for app {name}. using a default.");
             }
 
-            string code = await ProcessManager.CreateJavaScriptBackend(appConfig.@class, processID, cmdLineArgs, data, engine).ConfigureAwait(true);
+            string instantiation_code;
+
+            if (cmdLineArgs?.Length != 0)
+            {
+                // for varargs
+                var args = "[" + string.Join(", ", cmdLineArgs) + "]";
+                instantiation_code = $"const {processID} = new {name}('{processID}, {args}')";
+            }
+            else
+            {
+                // normal pid ctor
+                instantiation_code = $"const {processID} = new {name}('{processID}')";
+            }
+
+            string jsFile = System.IO.Path.Combine(absPath, appConfig.entryPoint ?? (name + xamlJsExt));
+
+            if (!File.Exists(jsFile))
+            {
+                Notifications.Now("Invalid application structure : your xaml & .xaml.js & .app files/folder must be the same name.");
+                return;
+            }
+
+            var js = File.ReadAllText(jsFile);
+
+            _ = await engine.Execute(js).ConfigureAwait(true);
 
             if (appConfig.isWpf)
             {
+                // setup some names.
+                string xamlFile = System.IO.Path.Combine(absPath, appConfig.frontEnd ?? (name + xamlExt));
+
+                if (!File.Exists(xamlFile))
+                {
+                    Notifications.Now("Invalid application structure : your xaml & .xaml.js & .app files/folder must be the same name.");
+                    return;
+                }
+
+                var xaml = File.ReadAllText(xamlFile);
+                var control = XamlHelper.ParseUserControl(xaml);
+
+                if (control == null)
+                    if (!TryOpenCSAppByName(type, cmdLineArgs)) // open app or error cuz control should never be null.
+                    {
+                        Notifications.Now($"Error : either the app was not found or there was an error parsing xaml or js for {type}.");
+                        return;
+                    }
+                
+                // todo: add a way to make a purely functional version of this. we don't want to force the user to use a class.
+                // i don't know how we'd do this but i know it's easy(ish)
                 OpenAppGUI(control, appConfig.title, processID, engine);
             } 
             if (appConfig.terminal)
             {
                 Terminal term = new();
                 term.Engine = engine;
-                OpenAppGUI(term, appConfig.title, Computer.Current.ProcessManager.GetNextProcessID(), engine);
+
+                // if we're using both wpf and a terminal we need to spawn a nw process for this.
+                // todo: verify that we don't need an entire new process object, or that this creates one.
+                var pid = appConfig.isWpf ? Current.ProcessManager.GetNextProcessID() : processID;
+
+                OpenAppGUI(term, appConfig.title, pid, engine);
             }
 
-            await engine.Execute(code).ConfigureAwait(true);
+            await engine.Execute(instantiation_code).ConfigureAwait(true);
+
         }
 
         private bool TryOpenCSAppByName(string type, object[] cmdLineArgs)

@@ -194,29 +194,7 @@ namespace Lemur
             }
             return contents;
         }
-        internal static async Task<string> CreateJavaScriptBackend(string type, string processID, object[] cmdLineArgs, (string XAML, string JS) data, Engine engine)
-        {
-            var name = type.Replace(".app", "");
-
-            var JS = new string(data.JS);
-
-            _ = await engine.Execute(JS).ConfigureAwait(true);
-
-            string instantiation_code;
-
-
-            if (cmdLineArgs.Length != 0)
-            {
-                var args = string.Join(", ", cmdLineArgs);
-                instantiation_code = $"const {processID} = new {name}('{processID}, {args}')";
-            }
-            else
-                instantiation_code = $"const {processID} = new {name}('{processID}')";
-
-
-
-            return instantiation_code;
-        }
+        
         internal void GetProcessesOfType(string name, out List<Process> processes)
         {
             if (!ProcessClassTable.TryGetValue(name, out processes!))
