@@ -15,8 +15,8 @@
   "install 'paint.app' ; uninstall 'paint.app'",
   "setbg background.png",
   "setbg epic_background.png",
+  "clear",
   "help ; clear",
   "clear ; help",
-  "help",
-  "clear"
+  "help"
 ]
