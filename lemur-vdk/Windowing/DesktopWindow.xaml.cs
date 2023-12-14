@@ -106,7 +106,7 @@ namespace Lemur.GUI
 
                 var explorer = new Explorer();
                 var pid = Computer.Current.ProcessManager.GetNextProcessID();
-                Computer.Current.OpenApp(explorer, appName + ".app", pid);
+                Computer.Current.OpenAppGUI(explorer, appName + ".app", pid);
                 
             };
 
@@ -276,13 +276,13 @@ namespace Lemur.GUI
         {
             var name = appName + ".xaml";
             var editor = new Texed(name);
-            Computer.Current.OpenApp(editor, name, computer.ProcessManager.GetNextProcessID());
+            Computer.Current.OpenAppGUI(editor, name, computer.ProcessManager.GetNextProcessID());
         }
         private void JsSource_Click(object? sender, RoutedEventArgs e, string appName)
         {
             var name = appName + ".xaml.js";
             var editor = new Texed(name);
-            Computer.Current.OpenApp(editor, name, computer.ProcessManager.GetNextProcessID());
+            Computer.Current.OpenAppGUI(editor, name, computer.ProcessManager.GetNextProcessID());
         }
         public void Computer_KeyDown(object sender, KeyEventArgs e)
         {
@@ -295,7 +295,7 @@ namespace Lemur.GUI
                     if (Keyboard.IsKeyDown(Key.LeftCtrl))
                     {
                         var cmd = new Terminal();
-                        Computer.Current.OpenApp(cmd, "Cmd", computer.ProcessManager.GetNextProcessID());
+                        Computer.Current.OpenAppGUI(cmd, "Cmd", computer.ProcessManager.GetNextProcessID());
                     }
                     break;
 

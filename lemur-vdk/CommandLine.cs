@@ -367,7 +367,7 @@ namespace Lemur.OS.Language
                     }
                     var wnd = Computer.Current.Window;
                     var tEdit = new Texed(AbsPath);
-                    Computer.Current.OpenApp(tEdit, "texed.app", computer.ProcessManager.GetNextProcessID());
+                    Computer.Current.OpenAppGUI(tEdit, "texed.app", computer.ProcessManager.GetNextProcessID());
                 }
             }
             else

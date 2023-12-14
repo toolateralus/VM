@@ -7,6 +7,7 @@ using Lemur.JavaScript.Embedded;
 using Lemur.JS.Embedded;
 using Lemur.Windowing;
 using Newtonsoft.Json;
+using OpenTK.Graphics.Egl;
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
@@ -268,10 +269,28 @@ await Execute(@$"
         public void Dispose()
         {
             Disposing = true;
-            m_engine_internal.Interrupt();
-            m_engine_internal.Dispose();
-            executionThread.Join();
-            AppModule.ReleaseThread();
+            try
+            {
+                m_engine_internal.Interrupt();
+            }
+            catch (Exception e)
+            {
+                Notifications.Exception(e);
+            }
+            try
+            {
+                m_engine_internal.Dispose();
+                executionThread.Join();
+                AppModule.ReleaseThread();
+
+            } catch (Exception e) 
+            {
+                Notifications.Exception(e);
+                var ans = MessageBox.Show("The application has encountered a serious problem. You should restart. Do you want to quit now?", "Please exit now.", MessageBoxButton.YesNo);
+
+                if (ans == MessageBoxResult.Yes)
+                    Environment.Exit(1);
+            }
             GC.Collect();
         }
         internal void CreateNetworkEventHandler(string processID, string methodName)

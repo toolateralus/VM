@@ -124,10 +124,10 @@ namespace Lemur.GUI
 
                     // todo: fix up temp file.
                     var text = input.Text;
-                    var path = FileSystem.Root + "/home/ide/temp.js";
-                    File.WriteAllText(path, text + "\n this file can be found at 'computer/home/ide/temp.js'");
+                    var path = FileSystem.Root + "/appdata/ide/temp.js";
+                    File.WriteAllText(path, text + "\n this file can be found at 'computer/appdata/ide/temp.js'");
                     var textEditor = new Texed(path);
-                    Computer.Current.OpenApp(textEditor, "temp.js", computer.ProcessManager.GetNextProcessID());
+                    Computer.Current.OpenAppGUI(textEditor, "temp.js", computer.ProcessManager.GetNextProcessID());
                     break;
 
 

@@ -168,8 +168,6 @@ namespace Lemur
         {
             CreateJavaScriptRuntime(out var processID, out var engine);
 
-            (string XAML, string js) data = ("", "");
-
             string name = type.Replace(".app", "");
 
             var absPath = FileSystem.GetResourcePath(name + ".app");
@@ -187,12 +185,13 @@ namespace Lemur
                 return;
             }
 
+            // setup some names.
             string xamlFile = System.IO.Path.Combine(absPath, name + xamlExt);
             string jsFile = System.IO.Path.Combine(absPath, name + xamlJsExt);
 
-            var conf = name + appConfigExt;
+            (string XAML, string js) data = ("", "");
 
-
+            // read the actual code files.
             if (File.Exists(xamlFile) && File.Exists(jsFile))
             {
                 var xaml = File.ReadAllText(xamlFile);
@@ -205,11 +204,15 @@ namespace Lemur
                 return;
             }
 
+            // todo: run pre-processor here? have that be optional.
+            // homemade typescript? or something more experimental even :D
+
+            // get the dynamic xaml objects.
             var control = XamlHelper.ParseUserControl(data.XAML);
 
             if (control == null)
             {
-                if (TryOpenCSAppByName(type, cmdLineArgs))
+                if (!TryOpenCSAppByName(type, cmdLineArgs)) // open app or error cuz control should never be null.
                 {
                     Notifications.Now($"Error : either the app was not found or there was an error parsing xaml or js for {type}.");
                     return;
@@ -225,6 +228,7 @@ namespace Lemur
                 title = name,
             };
 
+            string conf = name + appConfigExt;
             var exists = FileSystem.FileExists(conf);
 
             if (exists)
@@ -240,15 +244,24 @@ namespace Lemur
                     return;
                 }
                
-            } else
+            } 
+            else
             {
-                Notifications.Now($"Warning : No '.appconfig' file found for app {name}");
+                Notifications.Now($"Warning : No '.appconfig' file found for app {name}. using a default.");
             }
 
-            var code = await ProcessManager.CreateJavaScriptBackend(type, processID, cmdLineArgs, data, engine).ConfigureAwait(true);
+            string code = await ProcessManager.CreateJavaScriptBackend(appConfig.@class, processID, cmdLineArgs, data, engine).ConfigureAwait(true);
 
-                OpenApp(control, type, processID, engine);
-
+            if (appConfig.isWpf)
+            {
+                OpenAppGUI(control, appConfig.title, processID, engine);
+            } 
+            if (appConfig.terminal)
+            {
+                Terminal term = new();
+                term.Engine = engine;
+                OpenAppGUI(term, appConfig.title, Computer.Current.ProcessManager.GetNextProcessID(), engine);
+            }
 
             await engine.Execute(code).ConfigureAwait(true);
         }
@@ -257,7 +270,7 @@ namespace Lemur
         {
             if (csApps.TryGetValue(type, out var csType))
             {
-                OpenApp((UserControl)Activator.CreateInstance(csType, cmdLineArgs)!, type, ProcessManager.GetNextProcessID());
+                OpenAppGUI((UserControl)Activator.CreateInstance(csType, cmdLineArgs)!, type, ProcessManager.GetNextProcessID());
                 return true;
             }
             return false;
@@ -271,7 +284,7 @@ namespace Lemur
             engine.AppModule.processID = processID;
         }
 
-        public void OpenApp(UserControl control, string pClass, string processID, Engine? engine = null)
+        public void OpenAppGUI(UserControl control, string pClass, string processID, Engine? engine = null)
         {
             ArgumentNullException.ThrowIfNull(control);
             ArgumentNullException.ThrowIfNull(pClass);
@@ -481,7 +494,7 @@ namespace Lemur
                 {
                     if (Activator.CreateInstance(type) is object instance && instance is UserControl userControl)
                     {
-                        Computer.Current.OpenApp(userControl, name, ProcessManager.GetNextProcessID());
+                        Computer.Current.OpenAppGUI(userControl, name, ProcessManager.GetNextProcessID());
                     }
                     else
                     {

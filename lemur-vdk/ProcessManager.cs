@@ -196,7 +196,7 @@ namespace Lemur
         }
         internal static async Task<string> CreateJavaScriptBackend(string type, string processID, object[] cmdLineArgs, (string XAML, string JS) data, Engine engine)
         {
-            var name = type.Split('.')[0];
+            var name = type.Replace(".app", "");
 
             var JS = new string(data.JS);
 
