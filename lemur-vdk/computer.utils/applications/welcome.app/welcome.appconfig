@@ -1,0 +1,8 @@
+{
+    "title" : "Welcome",
+    "description" : "a welcome splash screen for new users & a game-like tutorial/achievement system. (nyi, wip)",
+    "version" : "0.0.1",
+    "terminal": "false",
+    "isWpf": "true",
+    "class": "welcome"
+}

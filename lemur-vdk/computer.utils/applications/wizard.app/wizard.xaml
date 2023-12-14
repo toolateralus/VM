@@ -8,7 +8,7 @@
     <Grid>
         <!-- We use a StackPanel for easy alignment -->
         <StackPanel Orientation="Vertical">
-            <TextBox BorderBrush="Black" Margin="2,2,2,2" x:Name="nameBox" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Text="Enter your apps name (it will be created under home/apps/)"/>
+            <TextBox BorderBrush="Black" Margin="2,2,2,2" x:Name="nameBox" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Text="Enter your apps name (it will be created under home/myApps/)"/>
             <Button BorderBrush="Black" Margin="2,2,2,2" x:Name="createBtn" HorizontalAlignment="Left" VerticalAlignment="Top" Content="Create App"/>
         </StackPanel>
     </Grid>

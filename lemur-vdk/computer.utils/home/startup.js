@@ -1,6 +1,6 @@
 // load commands from dir.
 Terminal.setAliasDirectory('commands');
 
-App.loadApps('home/apps');
+App.loadApps('applications');
 
 App.start('welcome.app');

@@ -132,10 +132,15 @@ namespace Lemur
 
             string name = type.Replace(".app", "");
 
+            
+
             var absPath = FileSystem.GetResourcePath(name + ".app");
 
             if (!Directory.Exists(absPath))
             {
+                if (TryOpenCSAppByName(type, cmdLineArgs)) // try fallback open csharp app or error.
+                    return;
+
                 Notifications.Now($"directory for app {type} not found");
                 return;
             }
@@ -221,11 +226,11 @@ namespace Lemur
                 var control = XamlHelper.ParseUserControl(xaml);
 
                 if (control == null)
-                    if (!TryOpenCSAppByName(type, cmdLineArgs)) // open app or error cuz control should never be null.
-                    {
-                        Notifications.Now($"Error : either the app was not found or there was an error parsing xaml or js for {type}.");
-                        return;
-                    }
+                {
+                    Notifications.Now($"Error : either the app was not found or there was an error parsing xaml or js for {type}.");
+                    return;
+                }
+                   
                 
                 // todo: add a way to make a purely functional version of this. we don't want to force the user to use a class.
                 // i don't know how we'd do this but i know it's easy(ish)
@@ -483,7 +488,6 @@ namespace Lemur
         }
         public void InstallFromType(string name, Type type)
         {
-            name = name.Replace(".app", string.Empty);
             InstallIcon(AppType.Extern, name, type);
         }
         internal static bool IsValidExternAppType(IEnumerable<MemberInfo> members)

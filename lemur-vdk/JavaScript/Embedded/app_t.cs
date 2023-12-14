@@ -617,7 +617,7 @@ namespace Lemur.JS.Embedded
             var procMgr = pc.ProcessManager;
             var proc = procMgr.GetProcess(processID);
             if (proc is Process p)
-                Task.Run(async () => await procMgr.CreateEventHandler(proc.UI.Engine, processID, targetControl, methodName, type));
+                Task.Run(async () => await procMgr.CreateEventHandler(proc.UI.Engine, processID, targetControl, methodName, type).ConfigureAwait(false));
         }
         public void close(string pid)
         {

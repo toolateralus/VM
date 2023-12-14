@@ -11,7 +11,7 @@ class wizard
 
     	appDirName += '.app';
             
-        const xamlPath = 'home/apps/' + appDirName + '/' + appName + '.xaml';
+        const xamlPath = 'home/myApps/' + appDirName + '/' + appName + '.xaml';
         const xamljsPath =  xamlPath + '.js';
 
 		const xamljsCode = 

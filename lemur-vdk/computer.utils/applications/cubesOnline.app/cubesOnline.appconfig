@@ -1,0 +1,11 @@
+{
+    "isWpf": "true",
+    "terminal": "true",
+    "description" : "a tiny test of an online (lan) game",
+    "title" : "CubesOnline",
+    "version" : "0.0.1",
+    "requires": [
+        {"game.js" : ["Vec2", "Node", "Scene"]}
+    ],
+    "class": "cubesOnline"
+}

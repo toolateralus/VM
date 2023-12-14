@@ -8,7 +8,7 @@ const { Profiler } = require('profiler.js');
 
 class cubesOnline {
     constructor(id) {
-
+		notify(id);
         this.id = id;
 
         this.width = 512;

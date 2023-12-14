@@ -1,0 +1,8 @@
+{
+    "title" : "Application Wizard",
+    "description" : "an app creation wizard : useful for quickly generating app boiler plate / file structure for new projects.",
+    "version" : "0.0.1",
+    "terminal": "false",
+    "isWpf": "true",
+    "class": "wizard"
+}

@@ -134,7 +134,7 @@ namespace Lemur.GUI
 
             btn.Style = FindResource("DesktopButtonStyle") as Style; 
 
-            string regexPattern = @"[_a-zA-Z][_a-zA-Z0-9]*";
+            string regexPattern = @"[_a-zA-Z][_azA-Z0-9]*";
 
             string[] splitName = appName.Split(".");
             if (splitName.Length > 0)

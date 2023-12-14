@@ -1,22 +1,4 @@
 [
-  "--kill-all appFixer",
-  "--kill-all 'appFixer.app'",
-  "--kill-all appFixer.xaml.js",
-  "lp",
-  "host ; connect",
-  "connect ; host",
-  "config set background 'epic_background.png'",
-  "config set background epic_background.png",
-  "ip",
-  "edit",
-  "config",
-  "config all",
-  "install 'paint.app'",
-  "install 'paint.app' ; uninstall 'paint.app'",
-  "setbg background.png",
-  "setbg epic_background.png",
   "clear",
-  "help ; clear",
-  "clear ; help",
   "help"
 ]

@@ -1,0 +1,11 @@
+{
+    "isWpf": "true",
+    "description" : "a lightweight test of the 2D line renderer",
+    "title" : "Cubes",
+    "version" : "0.0.1",
+    "requires": [
+        {"game.js" : ["Vec2", "Node", "Scene", "Renderer"]},
+        {"profiler.js" : ["Profiler"]}
+    ],
+    "class": "cubes"
+}
