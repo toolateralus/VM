@@ -90,14 +90,20 @@ namespace Lemur.JavaScript.Network
 
             NetworkEvents[channel].Enqueue((msg, reply));
 
-            foreach (var userWindow in Computer.Current.ProcessManager.ProcessClassTable.SelectMany(i => i.Value.Select(i => i)))
+            var processes = Computer.Current.ProcessManager.ProcessClassTable.SelectMany(i => i.Value.Select(i => i)).AsParallel();
+
+            foreach (var process in processes)
             {
-                if (userWindow?.UI.Engine?.EventHandlers == null)
+                if (process?.UI.Engine?.EventHandlers == null)
                     continue;
 
-                foreach (var eventHandler in userWindow?.UI?.Engine.EventHandlers)
+                List<InteropFunction>? list = process?.UI?.Engine.EventHandlers;
+                for (int i = 0; i < list?.Count; i++)
+                {
+                    InteropFunction? eventHandler = list[i];
                     if (eventHandler is NetworkEvent networkEventHandler)
                         networkEventHandler.InvokeEvent(channel, reply, msg);
+                }
             }
         }
         public static (object? value, int reply) PullEvent(int channel, int timeout = 20_000, [CallerMemberName] string callerName = "unknown")

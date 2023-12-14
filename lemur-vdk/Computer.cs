@@ -28,57 +28,12 @@ using static System.Runtime.InteropServices.JavaScript.JSType;
 
 namespace Lemur
 {
-    public class AppConfig
-    {
-        public string @class { get; set; } = "no class found";
-        public string title { get; set; } = "no title";
-        public string version { get; set; } = "0.0.0a";
-        public string description { get; set; } = "An undescribed app";
-        public bool isWpf { get; set; }
-        public bool terminal { get; set; }
-        public string? entryPoint { get; set; }
-        public string? frontEnd { get; set; }
-        public List<Dictionary<string, string[]>> requires { get; set; }  = [[]];
-    } 
-
-    public record Process(Computer computer, UserWindow UI, string ID, string Type)
-    {
-        public Action? OnProcessTermination { get; internal set; }
-        public readonly Computer computer = computer;
-
-        /// <summary>
-        /// Anything that wants to close a process MUST call this method to do so.
-        /// </summary>
-        internal void Terminate()
-        {
-            // destroy event handlers mostly.
-            OnProcessTermination?.Invoke();
-
-            // close visual UI.
-            UI.Close();
-
-            // dispose of the js execution context
-            UI.Engine?.Dispose();
-
-            // TODO: put in process manager.
-            // remove the process and or type from process table.
-            var procList = computer.ProcessManager.ProcessClassTable[Type];
-            procList.Remove(this);
-
-            if (procList.Count == 0)
-                computer.ProcessManager.ProcessClassTable.Remove(Type);
-            else computer.ProcessManager.ProcessClassTable[Type] = procList; // unnecessary? probably.
-
-        }
-    }
     public class Computer : IDisposable
     {
         const string xamlExt = ".xaml";
         const string xamlJsExt = ".xaml.js";
-
         internal string WorkingDir { get; private set; }
         internal uint ID { get; private set; }
-
         private const string appConfigExt = ".appconfig";
         internal static uint __procId;
         internal NetworkConfiguration Network { get; set; }
@@ -88,17 +43,20 @@ namespace Lemur
         internal CommandLine CLI { get; set; }
         internal JObject Config { get; set; }
 
+
         private static Computer? current;
-        private int startupTimeoutMs = 20_000;
         public static Computer Current => current;
 
         public required ProcessManager ProcessManager { get; init; }
-
-        // type : process(es)
+        
+        // todo :: make a more firm, observable way to install applications.
+        // right now, the only real thing that attaches the app startup to the comptuer is the button.
         internal readonly Dictionary<string, Type> csApps = [];
         internal readonly List<string> jsApps = new();
+
+        private int startupTimeoutMs = 20_000;
+
         internal bool disposing;
-  
         public Computer(FileSystem fs)
         {
             current = this;
@@ -126,9 +84,7 @@ namespace Lemur
                 Notifications.Now($"Computer {ID} has exited, most likely due to an error. code:{exitCode}");
             }
             Dispose();
-
         }
-        
         internal static JObject? LoadConfig()
         {
             if (FileSystem.GetResourcePath("config.json") is string AbsPath)
@@ -170,7 +126,6 @@ namespace Lemur
                 }
             }
         }
-
         public async void OpenCustom(string type, params object[] cmdLineArgs)
         {
             CreateJavaScriptRuntime(out var processID, out var engine);
@@ -291,7 +246,6 @@ namespace Lemur
             await engine.Execute(instantiation_code).ConfigureAwait(true);
 
         }
-
         private bool TryOpenCSAppByName(string type, object[] cmdLineArgs)
         {
             if (csApps.TryGetValue(type, out var csType))
@@ -301,7 +255,6 @@ namespace Lemur
             }
             return false;
         }
-
         private void CreateJavaScriptRuntime(out string processID, out Engine engine)
         {
             processID = ProcessManager.GetNextProcessID();
@@ -309,7 +262,6 @@ namespace Lemur
             engine.NetworkModule.processID = processID;
             engine.AppModule.processID = processID;
         }
-
         public void OpenAppGUI(UserControl control, string pClass, string processID, Engine? engine = null)
         {
             ArgumentNullException.ThrowIfNull(control);
