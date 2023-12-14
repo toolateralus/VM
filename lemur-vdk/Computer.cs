@@ -291,7 +291,7 @@ namespace Lemur
                 FontSize = 12,
                 FontFamily = new FontFamily("MS Gothic"),
                 Foreground = Brushes.Cyan,
-                Background = Brushes.Transparent,
+                Background = new SolidColorBrush(Color.FromArgb(155, 0, 0, 0)),
             };
 
             Grid.SetRow(textBlock, 0);
