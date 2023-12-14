@@ -1,4 +1,5 @@
-﻿using Lemur.FS;
+﻿using ICSharpCode.AvalonEdit.Search;
+using Lemur.FS;
 using Lemur.Windowing;
 using System;
 using System.Collections.Generic;

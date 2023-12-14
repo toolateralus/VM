@@ -251,10 +251,12 @@ namespace Lemur
 
         public static BitmapImage LoadImage(string path)
         {
-            BitmapImage bitmapImage = new BitmapImage();
+            BitmapImage bitmapImage = new();
             bitmapImage.BeginInit();
+            bitmapImage.CacheOption = BitmapCacheOption.OnLoad;
             bitmapImage.UriSource = new Uri(path, UriKind.RelativeOrAbsolute);
             bitmapImage.EndInit();
+            bitmapImage.Freeze();
             return bitmapImage;
         }
         public static BitmapImage? GetExternIcon(Type type)
@@ -361,7 +363,10 @@ namespace Lemur
                     var answer = System.Windows.MessageBox.Show($"are you sure you want to delete {appName}?", "Delete PERMANENTLY??", MessageBoxButton.YesNo, System.Windows.MessageBoxImage.Warning);
 
                     if (answer == MessageBoxResult.Yes)
-                        FileSystem.Delete(appName);
+                    {
+                        Computer.Current.Uninstall(appName + ".app");
+                        FileSystem.Delete(FileSystem.GetResourcePath(appName + ".app"));
+                    }
                 };
 
                 btn.ContextMenu ??= new();
