@@ -27,6 +27,13 @@ using static System.Runtime.InteropServices.JavaScript.JSType;
 
 namespace Lemur
 {
+    public class AppConfig
+    {
+        public string @class = "no class found", title = "no title", version = "0.0.0a", description = "An undescribed app";
+        public bool isWpf = false, terminal = true;
+        public List<Dictionary<string, string[]>> requires = [[]];
+    } 
+
     public record Process(Computer computer, UserWindow UI, string ID, string Type)
     {
         public Action? OnProcessTermination { get; internal set; }
@@ -59,8 +66,13 @@ namespace Lemur
     }
     public class Computer : IDisposable
     {
+        const string xamlExt = ".xaml";
+        const string xamlJsExt = ".xaml.js";
+
         internal string WorkingDir { get; private set; }
         internal uint ID { get; private set; }
+
+        private const string appConfigExt = ".appconfig";
         internal static uint __procId;
         internal NetworkConfiguration Network { get; set; }
         internal DesktopWindow Window { get; set; }
@@ -151,42 +163,114 @@ namespace Lemur
                 }
             }
         }
-        
+
         public async void OpenCustom(string type, params object[] cmdLineArgs)
         {
-            // todo: move this to the process manager.
-            if (!type.Contains(".app"))
-                type += ".app";
+            CreateJavaScriptRuntime(out var processID, out var engine);
 
-            var data = Runtime.GetAppDefinition(type);
+            (string XAML, string js) data = ("", "");
+
+            string name = type.Replace(".app", "");
+
+            var absPath = FileSystem.GetResourcePath(name + ".app");
+
+            if (!Directory.Exists(absPath))
+            {
+                Notifications.Now($"directory for app {type} not found");
+                return;
+            }
+
+
+            if (string.IsNullOrEmpty(name))
+            {
+                Notifications.Now($"invalid name for app {type}");
+                return;
+            }
+
+            string xamlFile = System.IO.Path.Combine(absPath, name + xamlExt);
+            string jsFile = System.IO.Path.Combine(absPath, name + xamlJsExt);
+
+            var conf = name + appConfigExt;
+
+
+            if (File.Exists(xamlFile) && File.Exists(jsFile))
+            {
+                var xaml = File.ReadAllText(xamlFile);
+                var js = File.ReadAllText(jsFile);
+                data = (xaml, js);
+            }
+            else
+            {
+                Notifications.Now("Invalid application structure : your xaml & .xaml.js & .app files/folder must be the same name.");
+                return;
+            }
 
             var control = XamlHelper.ParseUserControl(data.XAML);
 
             if (control == null)
             {
-                if (csApps.TryGetValue(type, out var csType))
+                if (TryOpenCSAppByName(type, cmdLineArgs))
                 {
-                    OpenApp((UserControl)Activator.CreateInstance(csType, cmdLineArgs)!, type, ProcessManager.GetNextProcessID());
+                    Notifications.Now($"Error : either the app was not found or there was an error parsing xaml or js for {type}.");
                     return;
                 }
-
-                Notifications.Now($"Error : either the app was not found or there was an error parsing xaml or js for {type}.");
-                return;
             }
 
-            string processID = ProcessManager.GetNextProcessID();
+            AppConfig? appConfig = new()
+            {
+                requires = [],
+                @class = name,
+                isWpf = true,
+                terminal = false,
+                title = name,
+            };
 
-            Engine engine = new(this, $"App__{processID}");
+            var exists = FileSystem.FileExists(conf);
 
-            engine.NetworkModule.processID = processID;
-            engine.AppModule.processID = processID;
+            if (exists)
+            {
+                var file = File.ReadAllText(FileSystem.GetResourcePath(conf));
+                try
+                {
+                    appConfig = JsonConvert.DeserializeObject<AppConfig>(file);
+                } 
+                catch (Exception e)
+                {
+                    Notifications.Exception(e);
+                    return;
+                }
+               
+            } else
+            {
+                Notifications.Now($"Warning : No '.appconfig' file found for app {name}");
+            }
 
             var code = await ProcessManager.CreateJavaScriptBackend(type, processID, cmdLineArgs, data, engine).ConfigureAwait(true);
 
-            OpenApp(control, type, processID, engine);
+                OpenApp(control, type, processID, engine);
+
 
             await engine.Execute(code).ConfigureAwait(true);
         }
+
+        private bool TryOpenCSAppByName(string type, object[] cmdLineArgs)
+        {
+            if (csApps.TryGetValue(type, out var csType))
+            {
+                OpenApp((UserControl)Activator.CreateInstance(csType, cmdLineArgs)!, type, ProcessManager.GetNextProcessID());
+                return true;
+            }
+            return false;
+        }
+
+        private void CreateJavaScriptRuntime(out string processID, out Engine engine)
+        {
+            processID = ProcessManager.GetNextProcessID();
+            engine = new(this, $"App__{processID}");
+            engine.NetworkModule.processID = processID;
+            engine.AppModule.processID = processID;
+        }
+
         public void OpenApp(UserControl control, string pClass, string processID, Engine? engine = null)
         {
             ArgumentNullException.ThrowIfNull(control);
@@ -216,8 +300,6 @@ namespace Lemur
 
             void OnWindowClosed()
             {
-                foreach (var item in process.UI.Engine.EventHandlers.Where(e => e is InteropEvent iE && iE.Event == Event.WindowClose))
-                    item.InvokeEventImmediate();
 
                 if (Thread.CurrentThread.GetApartmentState() != ApartmentState.STA)
                     App.Current.Dispatcher.Invoke(() => closeMethod());
@@ -250,7 +332,6 @@ namespace Lemur
             Canvas.SetTop(resizable_window, 200);
             Canvas.SetLeft(resizable_window, 200);
         }
-
         public static BitmapImage LoadImage(string path)
         {
             BitmapImage bitmapImage = new();
@@ -278,7 +359,6 @@ namespace Lemur
 
             return null;
         }
-
         public static void StyleDesktopIcon(string name, Button btn, object? image)
         {
             btn.Background = Brushes.Transparent;
@@ -325,8 +405,6 @@ namespace Lemur
         }
         public void InstallIcon(AppType type, string appName, Type? runtime_type = null)
         {
-
-
             Window.Dispatcher?.Invoke(() =>
             {
                 var btn = Window.MakeDesktopButton(appName);
@@ -417,7 +495,6 @@ namespace Lemur
             name = name.Replace(".app", string.Empty);
             InstallIcon(AppType.Extern, name, type);
         }
-
         internal static bool IsValidExternAppType(IEnumerable<MemberInfo> members)
         {
             return members.Any(member => member.Name == "LateInit");
@@ -443,8 +520,6 @@ namespace Lemur
             );
 
         }
-
-
         public void InstallCSharpApp(string exePath, Type type)
         {
             if (csApps.TryGetValue(exePath, out _))
@@ -469,7 +544,6 @@ namespace Lemur
 
             InstallIcon(AppType.Native, type);
         }
-
         public void Uninstall(string name)
         {
             jsApps.Remove(name);
@@ -491,9 +565,6 @@ namespace Lemur
 
             Window.desktopBackground.Source = LoadImage(fullPath);
         }
-        
-    
-
         protected virtual void Dispose(bool disposing)
         {
             if (!this.disposing)

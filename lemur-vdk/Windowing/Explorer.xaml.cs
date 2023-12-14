@@ -21,6 +21,9 @@ namespace Lemur.GUI
     public partial class Explorer : UserControl
     {
         public static string? DesktopIcon => FileSystem.GetResourcePath("folder.png");
+
+        public bool IsChildProcess { get; private set; }
+
         internal Action<string>? OnNavigated;
         private Computer computer;
         private readonly ObservableCollection<FileSystemEntry> FileViewerData = new();
@@ -54,6 +57,13 @@ namespace Lemur.GUI
             menu.Items.Add(deleteItem);
             menu.Items.Add(propertiesItem);
             return menu;
+        }
+
+        public static Explorer LoadFilePrompt ()
+        {
+            Explorer explorer = new Explorer();
+            explorer.IsChildProcess = true;
+            return explorer;
         }
         public Explorer()
         {
@@ -222,8 +232,12 @@ namespace Lemur.GUI
             {
                 if (FileSystem.FileExists(path))
                 {
-                    Computer.Current.OpenApp(new Texed(path), "texed.app", computer.ProcessManager.GetNextProcessID());
                     OnNavigated?.Invoke(path);
+
+                    if (IsChildProcess)
+                        return;
+
+                    Computer.Current.OpenApp(new Texed(path), "texed.app", computer.ProcessManager.GetNextProcessID());
                 }
 
                 FileSystem.ChangeDirectory(path);

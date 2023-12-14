@@ -139,6 +139,9 @@ namespace Lemur
                 if (disposed)
                     return;
 
+                if (eh is InteropEvent iE && iE.Event == Event.WindowClose)
+                    iE.InvokeEventImmediate();
+
                 if (engine.EventHandlers.Contains(eh))
                     engine.EventHandlers.Remove(eh);
 

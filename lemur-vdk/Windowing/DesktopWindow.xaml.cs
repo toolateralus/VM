@@ -89,11 +89,28 @@ namespace Lemur.GUI
                 Header = "view source : XAML",
             };
 
+            MenuItem folder = new()
+            {
+                Header = "open containing folder : explorer",
+            };
+
             xamlSource.Click += (sender, @event) =>
             {
                 XamlSource_Click(sender, @event, appName);
             };
 
+            folder.Click += (sender, @event) =>
+            {
+                var path = FileSystem.GetResourcePath(appName + ".app");
+                FileSystem.ChangeDirectory(path);
+
+                var explorer = new Explorer();
+                var pid = Computer.Current.ProcessManager.GetNextProcessID();
+                Computer.Current.OpenApp(explorer, appName + ".app", pid);
+                
+            };
+
+            contextMenu.Items.Add(folder);
             contextMenu.Items.Add(jsSource);
             contextMenu.Items.Add(xamlSource);
 

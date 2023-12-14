@@ -316,8 +316,8 @@ namespace Lemur.FS
         {
             try
             {
-                fileName = GetRelativeOrAbsolute(fileName);
-                return File.Exists(fileName);
+                fileName = GetResourcePath(fileName);
+                return fileName.Length > 0 && File.Exists(fileName);
             }
             catch (Exception e)
             {

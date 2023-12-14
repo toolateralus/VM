@@ -8,6 +8,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Security.Cryptography;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
@@ -52,6 +53,8 @@ namespace Lemur.GUI
         };
         // reflection grabs this later.
         public static string? DesktopIcon => FileSystem.GetResourcePath("texed.png");
+
+
         public MarkdownViewer? mdViewer;
         public Terminal? terminal;
         private Computer computer;
@@ -171,13 +174,16 @@ namespace Lemur.GUI
         }
         private void LoadButton_Click(object sender, RoutedEventArgs e)
         {
-            Explorer fileExplorer = new Explorer();
+            var fileExplorer = Explorer.LoadFilePrompt();
 
-            Computer.Current.OpenApp(fileExplorer, "fileexplorer.app", computer.ProcessManager.GetNextProcessID());
-
+            var pid = computer.ProcessManager.GetNextProcessID();
+            Computer.Current.OpenApp(fileExplorer, "explorer.app", pid);
+            var proc = Computer.Current.ProcessManager.GetProcess(pid);
+            
             fileExplorer.OnNavigated += (file) =>
             {
                 LoadFile(file);
+                proc.Terminate();
             };
         }
         private void SaveButton_Click(object sender, RoutedEventArgs e)
