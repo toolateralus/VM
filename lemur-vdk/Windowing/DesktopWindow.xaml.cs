@@ -41,7 +41,7 @@ namespace Lemur.GUI
 
             InitializeComponent();
 
-            desktopBackground.Source = Computer.LoadImage(FileSystem.GetResourcePath("Background.png") ?? "background.png");
+            //desktopBackground.Source = Computer.LoadImage();
 
             Keyboard.AddPreviewKeyDownHandler(this, Computer_KeyDown);
 

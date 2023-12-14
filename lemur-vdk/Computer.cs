@@ -216,6 +216,8 @@ namespace Lemur
 
             void OnWindowClosed()
             {
+                foreach (var item in process.UI.Engine.EventHandlers.Where(e => e is InteropEvent iE && iE.Event == Event.WindowClose))
+                    item.InvokeEventImmediate();
 
                 if (Thread.CurrentThread.GetApartmentState() != ApartmentState.STA)
                     App.Current.Dispatcher.Invoke(() => closeMethod());

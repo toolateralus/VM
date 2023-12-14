@@ -212,12 +212,15 @@ await Execute(@$"
             {
                 try
                 {
+                    if (!f.EndsWith(".js"))
+                        return;
+
                     var code = File.ReadAllText(f);
 
                     if (!string.IsNullOrEmpty(code))
                         m_engine_internal.Execute(code);
                 }
-                catch (Exception e) 
+                catch (Exception e)  // todo: remove al the catchall exceptions in our solution.
                 {
                     Notifications.Exception(e);
                 }

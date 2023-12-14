@@ -5,19 +5,53 @@
              xmlns:local="clr-namespace:Lemur.GUI"
              mc:Ignorable="d" 
              d:DesignHeight="450" d:DesignWidth="800" Background="#AA3000a0" BorderBrush="White" BorderThickness="5" >
+      <UserControl.Resources>
+        <Style x:Key="StarRatingStyle" TargetType="StackPanel">
+            <Setter Property="Orientation" Value="Horizontal"/>
+            <Setter Property="Margin" Value="0,5"/>
+            <Setter Property="HorizontalAlignment" Value="Center"/>
+        </Style>
+        <Style x:Key="StarStyle" TargetType="Polygon">
+            <Setter Property="Points" Value="16,0 20,12 32,12 22,20 26,32 16,24 6,32 10,20 0,12 12,12"/>
+            <Setter Property="Fill" Value="MediumSpringGreen"/>
+            <Setter Property="Stroke" Value="Black"/>
+            <Setter Property="StrokeThickness" Value="1"/>
+        </Style>
+        <StackPanel x:Key="StarContainer" Orientation="Horizontal">
+            <Polygon Style="{StaticResource StarStyle}" Fill="Black" Opacity="0.1"/>
+            <Polygon Style="{StaticResource StarStyle}" Fill="Black" Opacity="0.1"/>
+            <Polygon Style="{StaticResource StarStyle}" Fill="Black" Opacity="0.1"/>
+            <Polygon Style="{StaticResource StarStyle}" Fill="Black" Opacity="0.1"/>
+            <Polygon Style="{StaticResource StarStyle}" Fill="Black" Opacity="0.1"/>
+        </StackPanel>
+    </UserControl.Resources>
     <Grid>
-    
     	 <Grid.ColumnDefinitions>
 		     <ColumnDefinition Width="*"/>
 		     <ColumnDefinition Width="*"/>
 		 </Grid.ColumnDefinitions>
 		 
        <StackPanel Grid.Column="0" Orientation="Vertical">
-       		<Label Style="{StaticResource LabelStyle}" Content="Tutorials &amp; Documentation"/>
-        	<Button Style="{StaticResource ButtonStyle}" x:Name="tut01" Content="Making an App"/>
-        	<Button Style="{StaticResource ButtonStyle}" x:Name="tut02" Content="Drawing Graphics"/>
+	 		<Label Style="{StaticResource LabelStyle}" Content="Tutorials &amp; Documentation"/>
+        	<StackPanel HorizontalAlignment="Stretch" Margin="10,2,0,0" Orientation="Horizontal">
+        		<Button Width="200" Style="{StaticResource ButtonStyle}" x:Name="tut01" Content="Making an App"/>
+	            <Polygon x:Name="t1s0" Style="{StaticResource StarStyle}" Fill="Black" Opacity="0.1"/>
+	            <Polygon x:Name="t1s1" Style="{StaticResource StarStyle}" Fill="Black" Opacity="0.1"/>
+	            <Polygon x:Name="t1s2" Style="{StaticResource StarStyle}" Fill="Black" Opacity="0.1"/>
+	            <Polygon x:Name="t1s3" Style="{StaticResource StarStyle}" Fill="Black" Opacity="0.1"/>
+	            <Polygon x:Name="t1s4" Style="{StaticResource StarStyle}" Fill="Black" Opacity="0.1"/>
+        	</StackPanel>
+        	
+        	<StackPanel HorizontalAlignment="Stretch" Margin="10,2,0,0" Orientation="Horizontal">
+        		<Button Width="200" Style="{StaticResource ButtonStyle}" x:Name="tut02" Content="Drawing Graphics"/>
+	            <Polygon x:Name="t2s0" Style="{StaticResource StarStyle}" Fill="Black" Opacity="0.1"/>
+	            <Polygon x:Name="t2s1" Style="{StaticResource StarStyle}" Fill="Black" Opacity="0.1"/>
+	            <Polygon x:Name="t2s2" Style="{StaticResource StarStyle}" Fill="Black" Opacity="0.1"/>
+	            <Polygon x:Name="t2s3" Style="{StaticResource StarStyle}" Fill="Black" Opacity="0.1"/>
+	            <Polygon x:Name="t2s4" Style="{StaticResource StarStyle}" Fill="Black" Opacity="0.1"/>
+        	</StackPanel>
     	</StackPanel>
-    
+    	
         <RichTextBox x:Name="textBox" FontFamily="Cascadia Code Light" FontSize="24" Grid.Column="1" Background="#FF3A3838" Foreground="#FFC5C5C5" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Auto">
             <FlowDocument>
                 <Paragraph>
