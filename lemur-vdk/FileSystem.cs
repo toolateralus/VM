@@ -94,7 +94,7 @@ namespace Lemur.FS
 
                 if (Directory.Exists(Root))
                 {
-                    string[] entries = Directory.GetFileSystemEntries(Root, '*'+name+'*', new EnumerationOptions
+                    string[] entries = Directory.GetFileSystemEntries(Root, name, new EnumerationOptions
                     {
                         RecurseSubdirectories = true,
                         MaxRecursionDepth = 100,
