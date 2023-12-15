@@ -70,9 +70,12 @@ namespace Lemur.GUI
             };
 
         }
-        internal ContextMenu GetNativeContextMenu(string appName)
+        internal ContextMenu GetNativeContextMenu(string appName, AppConfig? config = null)
         {
             var contextMenu = new ContextMenu();
+
+            // judges the file extension for JsSource_Click & whether to create a XAML source view button.
+            var isTerminal = config?.terminal ?? false;
 
             MenuItem jsSource = new()
             {
@@ -81,22 +84,44 @@ namespace Lemur.GUI
 
             jsSource.Click += (sender, @event) =>
             {
-                JsSource_Click(sender, @event, appName);
+                JsSource_Click(sender, @event, appName, isTerminal);
             };
+            contextMenu.Items.Add(jsSource);
 
-            MenuItem xamlSource = new()
+            // for gui apps, view XAML source button.
+            if (!isTerminal || config?.isWpf == true)
             {
-                Header = "view source : XAML",
-            };
+                MenuItem xamlSource = new()
+                {
+                    Header = "view source : XAML",
+                };
+                xamlSource.Click += (sender, @event) =>
+                {
+                    XamlSource_Click(sender, @event, appName);
+                };
+                contextMenu.Items.Add(xamlSource);
+
+            }
+
+            // view .appconfig button
+            if (config is not null)
+            {
+                MenuItem configMenu = new()
+                {
+                    Header = "view .appconfig",
+                };
+                configMenu.Click += delegate
+                {
+                    string name = appName + ".appconfig";
+                    var editor = new Texed(name);
+                    Computer.Current.OpenAppGUI(editor, name, computer.ProcessManager.GetNextProcessID());
+                };
+                contextMenu.Items.Add(configMenu);
+            }
 
             MenuItem folder = new()
             {
                 Header = "open containing folder : explorer",
-            };
-
-            xamlSource.Click += (sender, @event) =>
-            {
-                XamlSource_Click(sender, @event, appName);
             };
 
             folder.Click += (sender, @event) =>
@@ -107,12 +132,9 @@ namespace Lemur.GUI
                 var explorer = new Explorer();
                 var pid = Computer.Current.ProcessManager.GetNextProcessID();
                 Computer.Current.OpenAppGUI(explorer, appName + ".app", pid);
-                
-            };
 
+            };
             contextMenu.Items.Add(folder);
-            contextMenu.Items.Add(jsSource);
-            contextMenu.Items.Add(xamlSource);
 
             return contextMenu;
         }
@@ -278,9 +300,14 @@ namespace Lemur.GUI
             var editor = new Texed(name);
             Computer.Current.OpenAppGUI(editor, name, computer.ProcessManager.GetNextProcessID());
         }
-        private void JsSource_Click(object? sender, RoutedEventArgs e, string appName)
+        private void JsSource_Click(object? sender, RoutedEventArgs e, string appName, bool isTerminal)
         {
-            var name = appName + ".xaml.js";
+            string name;
+            if (isTerminal)
+                name = appName + ".js";
+            else
+                name = appName + ".xaml.js";
+
             var editor = new Texed(name);
             Computer.Current.OpenAppGUI(editor, name, computer.ProcessManager.GetNextProcessID());
         }

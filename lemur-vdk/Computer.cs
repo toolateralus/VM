@@ -131,7 +131,6 @@ namespace Lemur
             CreateJavaScriptRuntime(out var processID, out var engine);
 
             string name = type.Replace(".app", "");
-
             
 
             var absPath = FileSystem.GetResourcePath(name + ".app");
@@ -261,7 +260,11 @@ namespace Lemur
         {
             if (csApps.TryGetValue(type, out var csType))
             {
-                OpenAppGUI((UserControl)Activator.CreateInstance(csType, cmdLineArgs)!, type, ProcessManager.GetNextProcessID());
+                // at least esablish the pid before constructing. ideally, we should be done with creating the app &
+                // presenting the UI when this constructor (activator call) gets run.
+                var pid = ProcessManager.GetNextProcessID();
+                var app = (UserControl)Activator.CreateInstance(csType, cmdLineArgs)!;
+                OpenAppGUI(app, type, pid);
                 return true;
             }
             return false;
@@ -285,10 +288,11 @@ namespace Lemur
             // open up a window.
             UserWindow userWindow = Window.CreateWindow(processID, pClass, out var resizable_window);
 
-            // run late init on valid extern apps.
-            var allMembers = control.GetType().GetMembers().Where(i => i is MethodInfo);
-            if (IsValidExternAppType(allMembers))
-                TryRunLateInit(control, resizable_window);
+            // register process now, because it depends on the other pieces. this should not be in this function.
+            var process = new Process(this, userWindow, processID, pClass);
+            ProcessManager.RegisterNewProcess(process, out var procList);
+
+            
 
             userWindow.InitializeContent(resizable_window, control, engine);
 
@@ -296,10 +300,6 @@ namespace Lemur
             // such as the taskbar button, the desktop icon, etc.
             // also, having this more organized will make it much easier to safely expose it to JavaScript
             // so we can allow the user to add to their window's toolbar, title, close the app programmatically, etc.
-
-            var process = new Process(this, userWindow, processID, pClass);
-
-            ProcessManager.RegisterNewProcess(process, out var procList);
 
             void OnWindowClosed()
             {
@@ -317,16 +317,14 @@ namespace Lemur
                 }
             }
 
-
-            // todo: remove a lot of the hard to reach behavior from the userWindow class and move it here.
-            // this will allow us to much easier control when & how things get disposed of, and more as described above.
             userWindow.OnApplicationClose += OnWindowClosed;
 
-            // todo: make a unified interface for windowing, we have a window manager and window classes but
-            // the behavior feels scattered and disorganized. fetching weird references for controls should not be a thing : 
-            // we should have a query system or just methods exposing behavior directly on easy to get to objects.
             resizable_window.BringIntoViewAndToTop();
 
+            // run late init on valid extern apps.
+            var allMembers = control.GetType().GetMembers().Where(i => i is MethodInfo);
+            if (IsValidExternAppType(allMembers))
+                TryRunLateInit(control, resizable_window);
 
             // todo : change this, works for now but it's annoying.
             // we could have a much smarter windowing system that opens apps to the emptiest space or something.
@@ -406,31 +404,53 @@ namespace Lemur
             btn.Content = grid;
             btn.ToolTip = name;
         }
-        public void InstallIcon(AppType type, string appName, Type? runtime_type = null)
+        public void InstallIcon(AppType type, string appName, Type? runtime_type = null, AppConfig? config = null)
         {
             Window.Dispatcher?.Invoke(() =>
             {
-                var btn = Window.MakeDesktopButton(appName);
+            var btn = Window.MakeDesktopButton(appName);
 
-                switch (type)
+            switch (type)
+            {
+                case AppType.Native:
+                    InstallNative(btn, appName);
+                    break;
+                case AppType.Extern:
+                    if (runtime_type != null)
+                        InstallExtern(btn, appName, runtime_type);
+                    break;
+            }
+
+
+
+            // if we don't stop this, it deletes the whole computer xD
+            if (runtime_type == null)
+            {
+                MenuItem delete = new()
                 {
-                    case AppType.Native:
-                        InstallNative(btn, appName);
-                        break;
-                    case AppType.Extern:
-                        if (runtime_type != null)
-                            InstallExtern(btn, appName, runtime_type);
-                        break;
+                    Header = "delete app (no undo)"
+                };
+                delete.Click += (sender, @event) =>
+                {
+                var answer = System.Windows.MessageBox.Show($"are you sure you want to delete {appName}?", "Delete PERMANENTLY??", MessageBoxButton.YesNo, System.Windows.MessageBoxImage.Warning);
+
+                if (answer == MessageBoxResult.Yes)
+                {
+                    Computer.Current.Uninstall(appName + ".app");
+                        var path = FileSystem.GetResourcePath(appName + ".app");
+                            if (!string.IsNullOrEmpty(path))
+                                FileSystem.Delete(path);
+                        }
+                    };
+                    btn.ContextMenu.Items.Add(delete);
                 }
+
+                Window.DesktopIconPanel.UpdateLayout();
+                Window.DesktopIconPanel.Children.Add(btn);
 
                 MenuItem uninstall = new()
                 {
                     Header = "uninstall app"
-                };
-
-                MenuItem delete = new()
-                {
-                    Header = "delete app (no undo)"
                 };
 
                 uninstall.Click += (sender, @event) =>
@@ -440,24 +460,8 @@ namespace Lemur
                     if (answer == MessageBoxResult.Yes)
                         Computer.Current.Uninstall(appName + ".app");
                 };
-
-                delete.Click += (sender, @event) =>
-                {
-                    var answer = System.Windows.MessageBox.Show($"are you sure you want to delete {appName}?", "Delete PERMANENTLY??", MessageBoxButton.YesNo, System.Windows.MessageBoxImage.Warning);
-
-                    if (answer == MessageBoxResult.Yes)
-                    {
-                        Computer.Current.Uninstall(appName + ".app");
-                        FileSystem.Delete(FileSystem.GetResourcePath(appName + ".app"));
-                    }
-                };
-
                 btn.ContextMenu ??= new();
                 btn.ContextMenu.Items.Add(uninstall);
-                btn.ContextMenu.Items.Add(delete);
-
-                Window.DesktopIconPanel.UpdateLayout();
-                Window.DesktopIconPanel.Children.Add(btn);
             });
 
             void InstallNative(Button btn, string type)
@@ -544,7 +548,33 @@ namespace Lemur
             type = type.Replace(".app", "");
             jsApps.Add(type);
 
-            InstallIcon(AppType.Native, type);
+            var conf = type + ".appconfig";
+
+            var path = FileSystem.GetResourcePath(conf);
+
+            AppConfig? config = null;
+
+            if (path.Length != 0)
+            {
+                try
+                {
+                    var data = File.ReadAllText(path);
+                    config = JsonConvert.DeserializeObject<AppConfig>(data);
+                }
+                catch (Exception e)
+                {
+                    Notifications.Exception(e);
+                }
+            }
+
+            if (config is null)
+            {
+                InstallIcon(AppType.Native, type);
+            } else
+            {
+                InstallIcon(AppType.Native, type, runtime_type: null, config);
+            }
+
         }
         public void Uninstall(string name)
         {
