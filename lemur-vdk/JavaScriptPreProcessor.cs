@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Text.RegularExpressions;
 
 namespace Lemur.OS.Language
@@ -18,9 +19,19 @@ namespace Lemur.OS.Language
                 return $"{m.Groups[1].Value} {nameMap[key]}";
             });
         }
-        public static string InjectCommandLineArgs(string[] str_args, string jsCode)
+        public static string InjectCommandLineArgs(string[] inputArgs, string jsCode)
         {
             const string ArgsArrayReplacement = "[/***/]";
+
+            string[] validArgs = new string[inputArgs.Length];
+
+            Array.Copy(inputArgs, validArgs, validArgs.Length);
+                ;
+            for (int i = 0; i < validArgs.Length; i++)
+            {
+                string? arg = inputArgs[i];
+                validArgs[i] = arg.Replace("\"", string.Empty).Replace("\'", string.Empty).Replace("`", string.Empty);
+            }
 
             var index = jsCode.IndexOf(ArgsArrayReplacement);
 
@@ -28,7 +39,16 @@ namespace Lemur.OS.Language
             {
                 var args = jsCode.Substring(index, ArgsArrayReplacement.Length);
 
-                var newArgs = $"[{string.Join("' ,'", str_args)}]";
+                var newArgs = "";
+
+                if (validArgs.Length > 1) {
+                    var args_InQuotes = string.Join("' ,'", validArgs);
+                    newArgs = $"[{args_InQuotes}]";
+                } 
+                else
+                {
+                    newArgs = "['" + string.Join(" ,", validArgs) + "']"; 
+                }
 
                 jsCode = jsCode.Replace(args, newArgs);
             }
