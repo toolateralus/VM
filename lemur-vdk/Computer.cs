@@ -162,14 +162,15 @@ namespace Lemur
                 title = name,
             };
 
-            string conf = name + appConfigExt;
+            string conf = FileSystem.GetResourcePath(name + appConfigExt);
+
             var exists = FileSystem.FileExists(conf);
 
             if (exists)
             {
                 try
                 {
-                    var file = File.ReadAllText(FileSystem.GetResourcePath(conf));
+                    var file = File.ReadAllText(conf);
                     appConfig = JsonConvert.DeserializeObject<AppConfig>(file);
                 } 
                 catch (Exception e)
@@ -184,19 +185,6 @@ namespace Lemur
                 Notifications.Now($"Warning : No '.appconfig' file found for app {name}. using a default.");
             }
 
-            string instantiation_code;
-
-            if (cmdLineArgs?.Length != 0)
-            {
-                // for varargs
-                var args = "[" + string.Join(", ", cmdLineArgs) + "]";
-                instantiation_code = $"const {processID} = new {name}('{processID}, {args}')";
-            }
-            else
-            {
-                // normal pid ctor
-                instantiation_code = $"const {processID} = new {name}('{processID}')";
-            }
 
             string jsFile = System.IO.Path.Combine(absPath, appConfig.entryPoint ?? (name + xamlJsExt));
 
@@ -206,12 +194,21 @@ namespace Lemur
                 return;
             }
 
-            var js = File.ReadAllText(jsFile);
 
-            _ = await engine.Execute(js).ConfigureAwait(true);
+            string allIncludes = "";
+            foreach (var item in appConfig?.requires)
+                allIncludes += $"const {{{string.Join("\n,", item.Value)}}} = require('{item.Key}')\n";
+            
+            if (allIncludes.Length > 0)
+                await engine.Execute(allIncludes).ConfigureAwait(true);
+
+            var js = File.ReadAllText(jsFile);
 
             if (appConfig.isWpf)
             {
+                // run & create class, in-source requires, etc.
+                _ = await engine.Execute(js).ConfigureAwait(true);
+
                 // setup some names.
                 string xamlFile = System.IO.Path.Combine(absPath, appConfig.frontEnd ?? (name + xamlExt));
 
@@ -245,16 +242,32 @@ namespace Lemur
                 var pid = appConfig.isWpf ? Current.ProcessManager.GetNextProcessID() : processID;
 
                 OpenAppGUI(term, appConfig.title, pid, engine);
+
+                await engine.Execute($"""const my_pid = () => '{processID}'""");
+
+                await engine.Execute(js).ConfigureAwait(true);
             }
 
-            string allIncludes = "";
-            foreach (var item in appConfig?.requires)
-                allIncludes += $"const {{{string.Join("\n,",item.Value)}}} = require('{item.Key}')\n";
+            // class style wpf app
+            if (appConfig?.isWpf == true || appConfig?.@class != null)
+            {
+                string instantiation_code;
 
+                if (cmdLineArgs?.Length != 0)
+                {
+                    // for varargs
+                    var args = "[" + string.Join(", ", cmdLineArgs) + "]";
+                    instantiation_code = $"const {processID} = new {name}('{processID}, {args}')";
+                }
+                else
+                {
+                    // normal pid ctor
+                    instantiation_code = $"const {processID} = new {name}('{processID}')";
+                }
 
-
-            await engine.Execute(allIncludes + instantiation_code).ConfigureAwait(true);
-
+                await engine.Execute(instantiation_code).ConfigureAwait(true);
+            }
+          
         }
         private bool TryOpenCSAppByName(string type, object[] cmdLineArgs)
         {
@@ -291,8 +304,6 @@ namespace Lemur
             // register process now, because it depends on the other pieces. this should not be in this function.
             var process = new Process(this, userWindow, processID, pClass);
             ProcessManager.RegisterNewProcess(process, out var procList);
-
-            
 
             userWindow.InitializeContent(resizable_window, control, engine);
 
@@ -468,7 +479,7 @@ namespace Lemur
             {
                 btn.MouseDoubleClick += OnDesktopIconPressed;
 
-                var contextMenu = Window.GetNativeContextMenu(appName);
+                var contextMenu = Window.GetNativeContextMenu(appName, config);
 
                 btn.ContextMenu = contextMenu;
 

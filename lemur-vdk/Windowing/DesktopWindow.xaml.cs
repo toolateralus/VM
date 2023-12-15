@@ -79,7 +79,7 @@ namespace Lemur.GUI
 
             MenuItem jsSource = new()
             {
-                Header = "view source : JavaScript",
+                Header = "source -> javascript",
             };
 
             jsSource.Click += (sender, @event) =>
@@ -93,7 +93,7 @@ namespace Lemur.GUI
             {
                 MenuItem xamlSource = new()
                 {
-                    Header = "view source : XAML",
+                    Header = "source -> xaml",
                 };
                 xamlSource.Click += (sender, @event) =>
                 {
@@ -108,7 +108,7 @@ namespace Lemur.GUI
             {
                 MenuItem configMenu = new()
                 {
-                    Header = "view .appconfig",
+                    Header = "source -> config",
                 };
                 configMenu.Click += delegate
                 {
@@ -121,7 +121,7 @@ namespace Lemur.GUI
 
             MenuItem folder = new()
             {
-                Header = "open containing folder : explorer",
+                Header = "open containing folder",
             };
 
             folder.Click += (sender, @event) =>

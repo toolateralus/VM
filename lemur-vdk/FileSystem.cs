@@ -300,6 +300,11 @@ namespace Lemur.FS
                 if (!ValidateAccess(fileName, out var path))
                     return;
 
+                var parent = Directory.GetParent(path);
+
+                if (parent != null && !Directory.Exists(parent.FullName))
+                    parent.Create();
+
                 File.WriteAllText(path, content);
             }
             catch (Exception e)
