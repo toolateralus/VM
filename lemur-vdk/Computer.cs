@@ -248,14 +248,13 @@ namespace Lemur
                 OpenAppGUI(term, appConfig.title, pid, engine);
             }
 
-
+            string allIncludes = "";
             foreach (var item in appConfig?.requires)
-            {
-                string code = "const {";
+                allIncludes += $"const {{{string.Join("\n,",item.Value)}}} = require('{item.Key}')\n";
 
-            }
 
-            await engine.Execute(instantiation_code).ConfigureAwait(true);
+
+            await engine.Execute(allIncludes + instantiation_code).ConfigureAwait(true);
 
         }
         private bool TryOpenCSAppByName(string type, object[] cmdLineArgs)
