@@ -194,20 +194,11 @@ namespace Lemur
                 return;
             }
 
-
-            string allIncludes = "";
-            foreach (var item in appConfig?.requires)
-                allIncludes += $"const {{{string.Join(", ", item.Value)}}} = require('{item.Key}')\n";
-            
-            if (allIncludes.Length > 0)
-                await engine.Execute(allIncludes).ConfigureAwait(true);
-
             var js = File.ReadAllText(jsFile);
 
             if (appConfig.isWpf)
             {
                 // run & create class, in-source requires, etc.
-                _ = await engine.Execute(js).ConfigureAwait(true);
 
                 // setup some names.
                 string xamlFile = System.IO.Path.Combine(absPath, appConfig.frontEnd ?? (name + xamlExt));
@@ -250,10 +241,19 @@ namespace Lemur
                     await engine.Execute(js).ConfigureAwait(true);
 
             }
+            string allIncludes = ""; 
+            foreach (var item in appConfig?.requires)
+                allIncludes += $"const {{{string.Join(", ", item.Value)}}} = require('{item.Key}')\n";
+
+            if (allIncludes.Length > 0)
+                await engine.Execute(allIncludes).ConfigureAwait(true);
 
             // class style wpf app
             if (appConfig?.isWpf == true || appConfig?.@class != null)
             {
+                _ = await engine.Execute(js).ConfigureAwait(true);
+                
+
                 string instantiation_code;
 
                 if (cmdLineArgs?.Length != 0)

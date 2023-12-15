@@ -1,6 +1,20 @@
 ### see github issues for more info.
 ### this is not very well-maintained, and probably contains things that are already done.
 
+#### achievement system
+
+- i want to gameify learning the system and make it not obnoxious to people who just want to learn. I think the best way to do this is to just provide tutorials, then offer a way to grade solutions. 
+
+-my first thought was to do something like AoC where we would just provide unique input data & validate a result, but that's not applicable for every solution, and I don't want to only reward programming challenges.
+
+-You should get some points for doing even the most basic tutorials like opening a window & hello world. To achieve this, i predict we might need some kind of parser or program validator. 
+
+-maybe we can use some minimalized but specific requirements, comprimising some hackiness for not having to make a full javascript parser.
+
+-for example, the 'hello world' validator could check that the config has the terminal flag and theres a "print('hello world')" in the program etc.
+
+obviously you could cheat this but it's so light-hearted it's not a huge concern to me lol. the progress is in a json in the computer install, it's not a big deal.
+
 #### app api
 
 - make some api for creating & removing child buttons, labels, checkboxes.

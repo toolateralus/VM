@@ -94,7 +94,7 @@ namespace Lemur.FS
 
                 if (Directory.Exists(Root))
                 {
-                    string[] entries = Directory.GetFileSystemEntries(Root, name, new EnumerationOptions
+                    string[] entries = Directory.GetFileSystemEntries(Root, '*'+name+'*', new EnumerationOptions
                     {
                         RecurseSubdirectories = true,
                         MaxRecursionDepth = 100,
@@ -369,7 +369,10 @@ namespace Lemur.FS
 
         private static bool ValidateAccess(string directoryName, out string path)
         {
-            path = GetRelativeOrAbsolute(directoryName);
+            path = GetResourcePath(directoryName);
+
+            if (string.IsNullOrEmpty(path))
+                path = GetRelativeOrAbsolute(directoryName);
             var contents = path.Length == 0 ? "was empty" : path;
 
             if (!WithinFileSystemBounds(path) || path.Length == 0)

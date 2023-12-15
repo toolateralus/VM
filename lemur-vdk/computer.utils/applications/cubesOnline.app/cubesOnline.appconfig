@@ -6,7 +6,7 @@
     "version" : "0.0.1",
     "requires": {
         "game.js" : ["Vec2", "Node", "Scene"],
-        "ShapeRenderer.js" : ["ShapeRenderer"],
+        "ShapeRenderer.js" : ["ShapeRenderer"]
     },
     "class": "cubesOnline"
 }
