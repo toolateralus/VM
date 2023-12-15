@@ -94,7 +94,9 @@ constructor(id) {
         	this.brushIndex = (this.brushIndex + 1) % palette.length;
         }
         if (Key.isDown('S')) {
-        	this.primIndex = (this.primIndex + 1) % 3;
+        	this.primIndex++;
+        	if (this.primIndex > 3)	
+        		this.primIndex = 0;
         }
     }
     onSelectionChanged(index) {

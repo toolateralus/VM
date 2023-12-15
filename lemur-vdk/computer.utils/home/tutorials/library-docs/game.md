@@ -38,9 +38,9 @@ class Vec2 {
 ```Javascript
 class Node {
 
-    constructor(scale, pos) {
+    constructor(scale, position) {
         this.scale = scale ?? new Vec2(1, 1);
-        this.pos = pos ?? new Vec2(0, 0);
+        this.position = position ?? new Vec2(0, 0);
         this.velocity = new Vec2(0, 0);
 
         this.rotation = 0;

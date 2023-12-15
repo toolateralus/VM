@@ -140,11 +140,11 @@ constructor (id) {
     // let's make a couple nodes to just statically draw
     for (let i = 0; i < 5; ++i) {
         const scale = new Vec2(5,5)
-        const pos = new Vec2(i, this.resolution.y - scale.y);
+        const position = new Vec2(i, this.resolution.y - scale.y);
         // we can just pass in an empty array for vertices
         // won't be using them.
         // for a long time, it was not optional.
-        const node = new Node(scale, pos);
+        const node = new Node(scale, position);
 
         // we are going to add some extra fields
         // since we arent using vertex based Rendering.
@@ -185,8 +185,8 @@ nodes.forEach(node => {
 
     // if we found our special object
     if (node.isMesh === true) {
-        const x = node.pos.x;
-        const y = node.pos.y;
+        const x = node.position.x;
+        const y = node.position.y;
 
         const width = node.scale.x;
         const height = node.scale.y;

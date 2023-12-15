@@ -97,17 +97,18 @@
             <Word>Node</Word>
             <Word>Vec2</Word>
             
-            <Word>pos</Word>
+            <Word>position</Word>
             <Word>rotation</Word>
             <Word>scale</Word>
 
             <Word>Interop</Word>
             <Word>Network</Word>
-            <Word>app</Word>
-            <Word>term</Word>
+            <Word>App</Word>
+            <Word>Terminal</Word>
             <Word>Graphics</Word>
-            <Word>file</Word>
-
+            <Word>File</Word>
+            <Word>Convert</Word>
+            
             <Word>Function</Word>
             <Word>Global</Word>
             <Word>Math</Word>

@@ -12,6 +12,6 @@ namespace Lemur
         public bool terminal { get; set; }
         public string? entryPoint { get; set; }
         public string? frontEnd { get; set; }
-        public List<Dictionary<string, string[]>> requires { get; set; }  = [[]];
+        public Dictionary<string, string[]> requires { get; set; } = [];
     } 
 }

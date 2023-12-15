@@ -248,6 +248,13 @@ namespace Lemur
                 OpenAppGUI(term, appConfig.title, pid, engine);
             }
 
+
+            foreach (var item in appConfig?.requires)
+            {
+                string code = "const {";
+
+            }
+
             await engine.Execute(instantiation_code).ConfigureAwait(true);
 
         }
@@ -292,6 +299,7 @@ namespace Lemur
             // so we can allow the user to add to their window's toolbar, title, close the app programmatically, etc.
 
             var process = new Process(this, userWindow, processID, pClass);
+
             ProcessManager.RegisterNewProcess(process, out var procList);
 
             void OnWindowClosed()

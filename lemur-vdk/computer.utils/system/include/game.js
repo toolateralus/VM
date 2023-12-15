@@ -84,9 +84,9 @@ class Vec2 {
 
 class Node {
 
-    constructor(scale, pos) {
+    constructor(scale, position) {
         this.scale = scale ?? new Vec2(1, 1);
-        this.pos = pos ?? new Vec2(0, 0);
+        this.position = position ?? new Vec2(0, 0);
         this.velocity = new Vec2(0, 0);
         
         this.rotation = 0;
@@ -95,7 +95,7 @@ class Node {
     }
     copy (other) {
         this.scale = other.scale;
-        this.pos = other.pos;
+        this.position = other.position;
         this.velocity.x = -other.velocity.x;
         this.velocity.y = -other.velocity.y;
         this.rotation = other.rotation;
@@ -120,10 +120,10 @@ class Node {
         const max_x = max.x - this.scale.x;
         const max_y = max.y - this.scale.y;
         
-        var collided = this.pos.x < min_x || this.pos.x > max_x || this.pos.y < min_y || this.pos.y > max_y;
+        var collided = this.position.x < min_x || this.position.x > max_x || this.position.y < min_y || this.position.y > max_y;
         
-        this.pos.x = Math.min(Math.max(this.pos.x, min_x), max_x);
-        this.pos.y = Math.min(Math.max(this.pos.y, min_y), max_y);
+        this.position.x = Math.min(Math.max(this.position.x, min_x), max_x);
+        this.position.y = Math.min(Math.max(this.position.y, min_y), max_y);
         
         return collided;
     }
@@ -168,10 +168,10 @@ class Node {
         for (let i = 0, j = this.edges.length - 1; i < this.edges.length; j = i++) {
             const edge = this.edges[i];
 
-            const x1 = edge.start.x * this.scale.x + this.pos.x;
-            const y1 = edge.start.y * this.scale.y + this.pos.y;
-            const x2 = edge.end.x * this.scale.x + this.pos.x;
-            const y2 = edge.end.y * this.scale.y + this.pos.y;
+            const x1 = edge.start.x * this.scale.x + this.position.x;
+            const y1 = edge.start.y * this.scale.y + this.position.y;
+            const x2 = edge.end.x * this.scale.x + this.position.x;
+            const y2 = edge.end.y * this.scale.y + this.position.y;
 
             if ((y1 > y) !== (y2 > y) && x < ((x2 - x1) * (y - y1)) / (y2 - y1) + x1) {
                 isInside = !isInside;
@@ -196,8 +196,8 @@ class Node {
             return;
 
 		this.rotation  += this.angular    * deltaTime;
-        this.pos.x     += this.velocity.x * deltaTime;
-        this.pos.y     += this.velocity.y * deltaTime;
+        this.position.x     += this.velocity.x * deltaTime;
+        this.position.y     += this.velocity.y * deltaTime;
 		
 		this.angular    *= this.drag;
         this.velocity.x *= this.drag;
@@ -208,14 +208,14 @@ class Node {
         const sinAngle = Math.sin(angle);
 
         for (const Vec2 of this.vertices) {
-            const x = Vec2.x - this.pos.x;
-            const y = Vec2.y - this.pos.y;
+            const x = Vec2.x - this.position.x;
+            const y = Vec2.y - this.position.y;
 
             const rotatedX = x * cosAngle - y * sinAngle;
             const rotatedY = x * sinAngle + y * cosAngle;
 
-            Vec2.x = rotatedX + this.pos.x;
-            Vec2.y = rotatedY + this.pos.y;
+            Vec2.x = rotatedX + this.position.x;
+            Vec2.y = rotatedY + this.position.y;
         }
     }
 }
@@ -376,18 +376,18 @@ class Renderer {
             const node = nodes[z];
             const edges = node.edges;
             const scale = node.scale;
-            const pos = node.pos;
+            const position = node.position;
             
             edges.forEach(edge => {
                 const start = edge.start;
                 const end = edge.end;
 
-                const x0 = start.x * scale.x + pos.x;
-                const y0 = start.y * scale.y + pos.y;
+                const x0 = start.x * scale.x + position.x;
+                const y0 = start.y * scale.y + position.y;
                 const c0 = start.color;
 
-                const x1 = end.x * scale.x + pos.x;
-                const y1 = end.y * scale.y + pos.y;
+                const x1 = end.x * scale.x + position.x;
+                const y1 = end.y * scale.y + position.y;
 
                 this.drawLineIndexed(x0, x1, y0, y1, c0);
             });

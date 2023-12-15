@@ -36,7 +36,7 @@ class cubes {
 
         this.renderer = new Renderer(this.width, this.gfx_ctx);
         
-        if (__DEBUG__) {
+        if (!__DEBUG__) {
         	this.profiler = new Profiler();
         	this.profiler.start();
         	App.eventHandler('this', 'm_Rendering_profiled', Event.Rendering); 
