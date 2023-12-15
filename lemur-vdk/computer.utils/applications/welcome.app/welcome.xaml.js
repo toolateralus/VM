@@ -7,6 +7,7 @@ class progressEntry {
 		this.special = [];
 	}
 }
+
 class welcome {
     constructor() {
     	
@@ -33,13 +34,11 @@ class welcome {
 		File.write(this.dataPath, JSON.stringify(this.progress, true));
 	}
 	tut01_click() {
-		let pid = App.start('texed.app', 'applications.md', this.doRendering);
+		let pid = App.start('texed.app', 'hello-world.md', this.doRendering);
 		App.close(pid);
 	}
 	tut02_click () {
 		let pid = App.start('texed.app', 'game.md', this.doRendering);
-		
 		App.close(pid);
-		App.close(pid1);
 	}
 }

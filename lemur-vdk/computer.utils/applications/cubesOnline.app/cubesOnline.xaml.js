@@ -1,9 +1,6 @@
-
-const { ShapeRenderer } = require('ShapeRenderer.js');
-const { Vec2, Node, Scene } = require('game.js');
-
 class cubesOnline {
     constructor(id) {
+    	notify(id);
         this.id = id;
         this.playerSpeed = 250;
         this.shotVelocity = 0 - 500;

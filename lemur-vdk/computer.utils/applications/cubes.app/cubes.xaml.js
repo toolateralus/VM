@@ -1,5 +1,3 @@
-const { Vec2, Node, Scene, Renderer, } = require('game.js');
-const { Profiler } = require('profiler.js');
 class cubes {
     constructor(id) {
         this.scene = new Scene([]);

@@ -197,7 +197,7 @@ namespace Lemur
 
             string allIncludes = "";
             foreach (var item in appConfig?.requires)
-                allIncludes += $"const {{{string.Join("\n,", item.Value)}}} = require('{item.Key}')\n";
+                allIncludes += $"const {{{string.Join(", ", item.Value)}}} = require('{item.Key}')\n";
             
             if (allIncludes.Length > 0)
                 await engine.Execute(allIncludes).ConfigureAwait(true);
@@ -245,7 +245,10 @@ namespace Lemur
 
                 await engine.Execute($"""const my_pid = () => '{processID}'""");
 
-                await engine.Execute(js).ConfigureAwait(true);
+
+                if (appConfig?.isWpf == false)
+                    await engine.Execute(js).ConfigureAwait(true);
+
             }
 
             // class style wpf app
