@@ -27,6 +27,7 @@ class welcome {
     	App.eventHandler('tut01', 'tut01_click', Event.MouseDown);
     	App.eventHandler('tut02', 'tut02_click', Event.MouseDown);
     	App.eventHandler('tut03', 'tut03_click', Event.MouseDown);
+    	App.eventHandler('tut04', 'tut04_click', Event.MouseDown);
     	
     	App.setProperty('textBox', 'FontSize', 18);
     	App.eventHandler('this', 'on_close', Event.WindowClose);
@@ -34,6 +35,10 @@ class welcome {
 	
 	on_close () {
 		File.write(this.dataPath, JSON.stringify(this.progress, true));
+	}
+	tut04_click() {
+		let pid = App.start('texed.app', 'hello-world.md', this.doRendering);
+		App.close(pid);
 	}
 	tut01_click() {
 		let pid = App.start('texed.app', 'hello-world.md', this.doRendering);
@@ -44,7 +49,7 @@ class welcome {
 		App.close(pid);
 	}
 	tut03_click() {
-		let pid = App.start('texed.app', 'magic-8-ball.md', this.doRendering);
+		let pid = App.start('texed.app', 'wpf-tut0.md', this.doRendering);
 		App.close(pid);
 	}
 }
