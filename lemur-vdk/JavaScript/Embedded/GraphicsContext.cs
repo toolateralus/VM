@@ -197,9 +197,9 @@ namespace Lemur.JS.Embedded
                 fixed (byte* ptr = renderTexture)
                     Marshal.Copy(cached_color, 0, (nint)ptr + i * PixelFormatBpp, PixelFormatBpp);
         }
-        public void drawFilledShape(double x, double y, double h, double w, double r, double colorIndex, PrimitiveShape primitiveShape)
+        public void drawFilledShape(double x, double y, double h, double w, double r, double colorIndex, int primitiveShape)
         {
-            switch (primitiveShape)
+            switch ((PrimitiveShape)primitiveShape)
             {
                 case PrimitiveShape.Rectangle:
                     writeFilledRectangle(x, y, h, w, r, colorIndex);

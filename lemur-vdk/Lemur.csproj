@@ -14,13 +14,9 @@
 
   <ItemGroup>
     <Compile Remove="computer.utils\downloads\**" />
-    <Compile Remove="computer.utils\home\myApps\**" />
     <EmbeddedResource Remove="computer.utils\downloads\**" />
-    <EmbeddedResource Remove="computer.utils\home\myApps\**" />
     <None Remove="computer.utils\downloads\**" />
-    <None Remove="computer.utils\home\myApps\**" />
     <Page Remove="computer.utils\downloads\**" />
-    <Page Remove="computer.utils\home\myApps\**" />
   </ItemGroup>
 
   <ItemGroup>
@@ -44,6 +40,10 @@
 
   <ItemGroup>
     <Page Include="App.xaml" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Folder Include="computer.utils\home\myApps\" />
   </ItemGroup>
 
 	<Target Name="PostBuild" AfterTargets="PostBuildEvent">

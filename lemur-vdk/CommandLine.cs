@@ -20,14 +20,7 @@ using System.Xml.Linq;
 
 namespace Lemur.OS.Language
 {
-
-    
-
-    // todo: refactor all these commands and simplify for string args
-    // for whatever reason i was using generic objects and there's a ton of
-    // unnecessary casting going on.
-
-    /// <summary>
+     /// <summary>
     /// command parser &amp; execution engine for Lemur.
     /// </summary>
     public partial class CommandLine
