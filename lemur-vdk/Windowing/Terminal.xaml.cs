@@ -190,7 +190,10 @@ namespace Lemur.GUI
 
                     // for Terminalread
                     if (IsReading)
+                    {
+                        input.AppendText("\n" + outputText);
                         return;
+                    }
 
                     var success = Computer.Current.CLI.TryCommand(inputText);
 
