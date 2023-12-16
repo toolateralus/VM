@@ -3,7 +3,7 @@ class cubesOnline {
     	notify(id);
         this.id = id;
         this.playerSpeed = 250;
-        this.shotVelocity = 0 - 500;
+        this.shotVelocity = new Vec2(500, 0);
         this.width = 512;
         const nodes = [];
 
@@ -50,7 +50,7 @@ class cubesOnline {
                                                 this.scene, this.on_collision);  // scene, collision callback
 
         App.eventHandler('this', 'renderLoop', Event.Rendering);
-        Network.addListener('onMessage');
+       // Network.addListener('onMessage');
     }
     renderLoop() {
         this.renderer.cycle(); // advance the renderer 1 frame.
@@ -105,8 +105,8 @@ class cubesOnline {
         bullet.colorIndex = Color.RED;
         bullet.primitveIndex = Primitive.Rectangle;
         bullet.isProjectile = true;
-        bullet.drag = 0.999;
-        bullet.velocity.y = this.shotVelocity;
+        bullet.drag = 0.98;
+        bullet.velocity = this.shotVelocity;
         
         this.scene.nodes.push(bullet);
     }

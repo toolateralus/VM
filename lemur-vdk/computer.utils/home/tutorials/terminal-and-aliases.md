@@ -1,125 +1,58 @@
-### Terminal Aliases and Scripts
-##### this is old.
----
+### terminal commands and aliases
 
-Writing console commands can be helpful to make a non-gui task into a single command line call
+### about commands.
 
+you can install a 'program' which is referred to as a command, in which is accessible by an identifier in the terminal. for example, 'help', 'clear' etc.
 
-To define a console command, first you must make a .js command file, write a script to be executed when the command is called.
-in your startup.js file, include an alias call that declares the identifier for the alias (command name) 
-and the relative/absoluet path to the file, which is always valid as long as it's underneath the `computer[id]` directory.(id is the number after the computer in the file strucutre)
-<details>
-<summary> Basics/Tutorial </summary>
+we can create these programs by simply defining a `<command_name>.js` file
 
----
+so far the only distinct feature command aliases get is command line arguments.
+by declaring a field as such,
+`foo = [/***/]` regardless of keyword, so
 
-#### Hello world script
+`let foo = [/***/]` or
 
-let's make a short example script to explore a few of the basic
-ideas surrounding writing console commands for the OS in JavaScript.
+`var foo = [/***/]` or 
 
-```javascript 
-//'helloworldcmd.js'
+`const foo = [/***/]`
 
-// our js engine doesn't manage the scope of variables when you run a script, and this means that variables defined with 'let' and 'const' will also be treated as global if this step isn't taken, so as to not create memory leaks/lack of garbage collection in the OS's main js engine, it's advised to just wrap the script in a body. this is due to the way we are using the engine, not the engine itself.
+are all valid.
 
-// this applies to the command Line and the interactive environment, which are both always running through the cmd prompts.
+then, when a command is invoked, the input is broken up into chunks at the spaces, and each chunk is considered one argument. 
 
-{
-	print('hello world command:');
-	print(`server connected : ${Network.IsConnected}`)
-}
-
-```
-Then, to have the command Loaded up every time we start our computer, we can add it as an alias in `computer[id]/startup.js`
-
-```javascript 
-//'startup.js'
-alias('helloWorld', 'helloWorld')
-```
+arguments are always a string data type when coming into javascript, to prevent hacky args from executing any arbitrary code.
 
 
-</details>
+### creating a command
 
-<details>
-<summary>Getting Command Line Arguments</summary>
+in this tutorial, we're going to create a command called `echo`, and it will just print any arguments to the terminal.
 
----
 
-#### Getting Command Line Arguments
-You can declare an array in js to recieve any command Line arguments for your script. so, 
-if you declare an appropriate array as such : 
+#### the javascript : 
 
-``` javascript
-//Fetching command Line arguments 
-	let args = [/***/]
-```
+create & open a new file called `cmd-echo.js`.
 
-You must include `/***/` in the array you want filled with arguments.
+> (temporarily, just use vscode or the file explorer in windows to create a new single file. you can otherwise go into the lemur file explorer, right click, press new file, then use the copy command to rename it, then delete the old one.)
 
-and the command is called with arguments like so 
+to open a text file, you can just double click in the file explorer.
 
-``` javascript
--command arg1 0 'my Value'
-```
+now, our command is very simple. we will declare command line args, iterate over them and print each of them on a new line.
 
-your JS array will look like this
-
-```javascript
- print(args[0]) // result : arg1
- print(args[1]) // result : 0
- print(args[2]) // result : "my Value"
-```
-
-note that the behavior surrounding strings vs identifiers into
-the command Line is sketchy and somewhat unclear. the problem is a command can be implemented in
-javascript or c#, and they behave differently. C# commands are deprecated and should not be added.
-
-also, be aware that the commands that are written natively into
-the os (the commands that have descriptions and help infos)
-must follow C style data formats, such as double quoted strings `"mystring"` etc.
-
-</details>
-
-<details>
-<summary>Improving your setup </summary>
-
----
-### Improving the Setup
-To enhance your console command system, consider dynamically
-loading your commands.
-``` javascript
-TerminalsetAliasDirectory($path)
-```
-calling this function allows you to load all command files within a specified directory to avoid modifying the startup script for every new command.
-```javascript startup.js
-// in 'startup.js'
-{
-	const commandDirectory = "/path/to/commands";
-	// note : this reloads the currently Loaded 
-	// aliases and only loads under this dir.
-
-	TerminalsetAliasDirectory(commandDirectory);
-	// By default, the method will just get the file name
-	// as in ::
-	// C//Users//MyPath.js
-	// would result in
-	// -> MyPath
-	
-	// optionally, you can provide regex to control the 
-	// file naming Convertention. you MUST use C# Regex Format!!
-	
-	if (/*overriding the naming Convertention*/)
-	{
-		const regex = '^(.*?)_(.*?)_(.*?)\.js$';
-		TerminalsetAliasDirectory(commandDirectory, regex)
-	}
+```{JavaScript
+const args = [/***/];
+for (let i = 0; i < args.length; ++i) {
+	print(args[i]);
 }
 ```
-However, this just assumes your command file is named exactly what you want the alias to be represented by, and that's not always desirable, so if you prefer, you can load and name
-your commands dynamically just using the function:
-``` javascript
-alias(cmdName, path/to/cmd.js)
-```
----
-</details>
+
+#### registering the new command
+
+there are two easy ways to add a command to the runtime:
+
+- including it in the `commands` directory, and it will be present next start-up.
+
+- manually add the single alias. we can call `Terminal.alias(string identifier, string path)` to provide the identifer the command will be invoked by, and the path the command file is loaded from on invocation.
+
+the first option is probably prefered, and you could even make a `commands/user/ directory to place yours in.
+
+

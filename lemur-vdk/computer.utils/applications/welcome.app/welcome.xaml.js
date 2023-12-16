@@ -26,6 +26,8 @@ class welcome {
     	this.doRendering = true;
     	App.eventHandler('tut01', 'tut01_click', Event.MouseDown);
     	App.eventHandler('tut02', 'tut02_click', Event.MouseDown);
+    	App.eventHandler('tut03', 'tut03_click', Event.MouseDown);
+    	
     	App.setProperty('textBox', 'FontSize', 18);
     	App.eventHandler('this', 'on_close', Event.WindowClose);
 	}
@@ -38,7 +40,11 @@ class welcome {
 		App.close(pid);
 	}
 	tut02_click () {
-		let pid = App.start('texed.app', 'game.md', this.doRendering);
+		let pid = App.start('texed.app', 'terminal-and-aliases.md', this.doRendering);
+		App.close(pid);
+	}
+	tut03_click() {
+		let pid = App.start('texed.app', 'magic-8-ball.md', this.doRendering);
 		App.close(pid);
 	}
 }

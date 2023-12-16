@@ -22,7 +22,7 @@ function read() {
 // api -------------------------
 function require(path) {
 	if (File.exists(path) !== true) {
-		throw new Error (Date.now() + ' :: failed to include file ' + path);
+		throw new Error(' :: failed to include file ' + path);
 	}
     const fn = new Function(File.read(path));
     const result = fn();

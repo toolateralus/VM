@@ -34,7 +34,7 @@
        <StackPanel Grid.Column="0" Orientation="Vertical">
 	 		<Label Style="{StaticResource LabelStyle}" Content="Tutorials &amp; Documentation"/>
         	<StackPanel HorizontalAlignment="Stretch" Margin="10,2,0,0" Orientation="Horizontal">
-        		<Button Width="200" Style="{StaticResource ButtonStyle}" x:Name="tut01" Content="Making an App"/>
+        		<Button Width="200" Style="{StaticResource ButtonStyle}" x:Name="tut01" Content="hello world  (terminal)"/>
 	            <Polygon x:Name="t1s0" Style="{StaticResource StarStyle}" Fill="Black" Opacity="0.1"/>
 	            <Polygon x:Name="t1s1" Style="{StaticResource StarStyle}" Fill="Black" Opacity="0.1"/>
 	            <Polygon x:Name="t1s2" Style="{StaticResource StarStyle}" Fill="Black" Opacity="0.1"/>
@@ -43,12 +43,20 @@
         	</StackPanel>
         	
         	<StackPanel HorizontalAlignment="Stretch" Margin="10,2,0,0" Orientation="Horizontal">
-        		<Button Width="200" Style="{StaticResource ButtonStyle}" x:Name="tut02" Content="Drawing Graphics"/>
+        		<Button Width="200" Style="{StaticResource ButtonStyle}" x:Name="tut02" Content="making commands (terminal)"/>
 	            <Polygon x:Name="t2s0" Style="{StaticResource StarStyle}" Fill="Black" Opacity="0.1"/>
 	            <Polygon x:Name="t2s1" Style="{StaticResource StarStyle}" Fill="Black" Opacity="0.1"/>
 	            <Polygon x:Name="t2s2" Style="{StaticResource StarStyle}" Fill="Black" Opacity="0.1"/>
 	            <Polygon x:Name="t2s3" Style="{StaticResource StarStyle}" Fill="Black" Opacity="0.1"/>
 	            <Polygon x:Name="t2s4" Style="{StaticResource StarStyle}" Fill="Black" Opacity="0.1"/>
+        	</StackPanel>
+        	<StackPanel HorizontalAlignment="Stretch" Margin="10,2,0,0" Orientation="Horizontal">
+        		<Button Width="200" Style="{StaticResource ButtonStyle}" x:Name="tut03" Content="magic 8 ball (terminal)"/>
+	            <Polygon x:Name="t3s0" Style="{StaticResource StarStyle}" Fill="Black" Opacity="0.1"/>
+	            <Polygon x:Name="t3s1" Style="{StaticResource StarStyle}" Fill="Black" Opacity="0.1"/>
+	            <Polygon x:Name="t3s2" Style="{StaticResource StarStyle}" Fill="Black" Opacity="0.1"/>
+	            <Polygon x:Name="t3s3" Style="{StaticResource StarStyle}" Fill="Black" Opacity="0.1"/>
+	            <Polygon x:Name="t3s4" Style="{StaticResource StarStyle}" Fill="Black" Opacity="0.1"/>
         	</StackPanel>
     	</StackPanel>
     	

@@ -1,6 +1,6 @@
 {
     "isWpf": "true",
-    "terminal": "true",
+    "terminal": "false",
     "description" : "a tiny test of an online (lan) game",
     "title" : "CubesOnline",
     "version" : "0.0.1",

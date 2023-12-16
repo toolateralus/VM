@@ -50,7 +50,7 @@ constructor(id) {
             const brush = this.brushIndex;
 			const rotation = 0;
 			
-			const halfRad = radius / 2;
+			const halfRad = Math.max(0.1, radius / 2);
 			const x = Math.floor(msX - halfRad);
 			const y = Math.floor(msY - halfRad)
 
@@ -94,9 +94,7 @@ constructor(id) {
         	this.brushIndex = (this.brushIndex + 1) % palette.length;
         }
         if (Key.isDown('S')) {
-        	this.primIndex++;
-        	if (this.primIndex > 3)	
-        		this.primIndex = 0;
+        	this.primIndex = (this.primIndex + 1) % 3;
         }
     }
     onSelectionChanged(index) {
