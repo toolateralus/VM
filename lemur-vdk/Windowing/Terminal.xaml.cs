@@ -207,7 +207,6 @@ namespace Lemur.GUI
                     break;
 
                 case Interpreter.JavaScript:
-
                     // for newlines
                     if (!Keyboard.IsKeyDown(System.Windows.Input.Key.LeftShift) && !Keyboard.IsKeyDown(System.Windows.Input.Key.F5))
                         return;
