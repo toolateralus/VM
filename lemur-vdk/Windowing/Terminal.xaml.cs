@@ -191,7 +191,7 @@ namespace Lemur.GUI
                     // for Terminalread
                     if (IsReading)
                     {
-                        input.AppendText("\n" + outputText);
+                        output.AppendText("\n" + inputText);
                         return;
                     }
 
