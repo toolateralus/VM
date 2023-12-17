@@ -53,6 +53,7 @@ namespace Lemur.JS
     {
         internal IJsEngine m_engine_internal;
         IJsEngineSwitcher engineSwitcher;
+        CancellationTokenSource cts = new();
         public network NetworkModule { get; }
         public interop InteropModule { get; }
         public conv ConvModule { get; }
@@ -69,7 +70,6 @@ namespace Lemur.JS
         public bool Disposing { get; private set; }
         public Engine(Computer computer, string name)
         {
-
             engineSwitcher = JsEngineSwitcher.Current;
             engineSwitcher.EngineFactories.AddV8();
             engineSwitcher.DefaultEngineName = V8JsEngine.EngineName;
@@ -86,6 +86,7 @@ namespace Lemur.JS
             ConvModule = new conv();
             FileModule = new file_t();
 
+            EmbedObject("deferCached", (object)Defer);
             EmbedObject("Convert", ConvModule);
             EmbedObject("Network", NetworkModule);
             EmbedObject("Interop", InteropModule);
@@ -132,6 +133,18 @@ await Execute(@$"
             {
                 Modules[path] = obj;
             };
+        }
+        public void Defer(int delay, int index)
+        {
+            try
+            {
+                Task.Run(async delegate
+                {
+                    await Task.Delay(delay, cts.Token).ConfigureAwait(false);
+                    m_engine_internal.Evaluate($"__executeDeferredFunc({index});");
+                }, cts.Token);
+            }
+            catch (OperationCanceledException) { }
         }
         public void EmbedObject(string name, object? obj)
         {
@@ -279,6 +292,8 @@ await Execute(@$"
             }
             try
             {
+                cts.Cancel();
+                cts.Dispose();
                 m_engine_internal.Dispose();
                 executionThread.Join();
                 AppModule.ReleaseThread();

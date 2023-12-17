@@ -252,17 +252,15 @@ namespace Lemur.JS.Embedded
                     _ = await engine.Execute(code).ConfigureAwait(false) ;
             }));
         }
-        public void defer(string methodName, int delayMs, params object[]? args)
+        public void defer(string methodName, int delayMs, params object[] args)
         {
             WakeUpBackgroundThread();
 
-            deferredJobs.Enqueue((Action)(async () =>
+            deferredJobs.Enqueue(async () =>
             {
-                
-
                 await Task.Delay(delayMs).ConfigureAwait(true);
 
-                if (GetComputer().ProcessManager.GetProcess((string)this.processID) is not Process p)
+                if (GetComputer().ProcessManager.GetProcess(processID) is not Process p)
                 {
                     Notifications.Now($"Failed to defer {methodName} because the process was not found.");
                     return;
@@ -270,7 +268,7 @@ namespace Lemur.JS.Embedded
 
                 var engine = p.UI?.Engine;
 
-                var callHandle = $"{this.processID}.{methodName}";
+                var callHandle = $"{processID}.{methodName}";
 
                 if (engine is null || engine.Disposing)
                     return;
@@ -286,7 +284,25 @@ namespace Lemur.JS.Embedded
 
                     if (args.Length > 0)
                     {
-                        var argsString = string.Join(", ", args);
+                        var argStrings = new List<string>();
+                        foreach ( var arg in args )
+                        {
+                            switch (arg)
+                            {
+                                case string:
+                                    argStrings.Add($"\"{arg}\"");
+                                    break;
+                                case double:
+                                case bool:
+                                case DateTime:
+                                    argStrings.Add(arg.ToString()!);
+                                    break;
+                                default:
+                                    argStrings.Add($"throw new Error('App.defer cannot take {arg}')");
+                                    break;
+                            }
+                        }
+                        var argsString = string.Join(", ", argStrings);
                         engine.m_engine_internal.Evaluate($"{callHandle}({argsString})");
                     }
                     else
@@ -294,11 +310,11 @@ namespace Lemur.JS.Embedded
                         engine.m_engine_internal.Evaluate($"{callHandle}()");
                     }
                 }
-                catch(Exception e)
+                catch (Exception e)
                 {
                     Notifications.Exception(e);
                 }
-            }));
+            });
         }
         private void WakeUpBackgroundThread()
         {

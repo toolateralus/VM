@@ -127,3 +127,27 @@ function describe(obj) {
 
     print(string);
 }
+let __deferedFuncs = {
+	index : 0
+};
+function __executeDeferredFunc(index) {
+    let func = __deferedFuncs[index].func;
+    let args = __deferedFuncs[index].args;
+    func(...args);
+    delete __deferedFuncs[index];
+}
+function defer(func, delay, ...args)
+{
+	if (typeof func != 'function') {
+		throw new Error('defer: first arg must be function');
+	}
+	if (typeof delay != 'number') {
+		throw new Error('defer: second arg must be number');
+	}
+	let index = __deferedFuncs.index++;
+	__deferedFuncs[index] = {
+		'func' : func,
+		'args' : args
+	};
+	deferCached(Math.floor(delay), index);
+}
