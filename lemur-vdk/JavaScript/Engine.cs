@@ -6,6 +6,8 @@ using Lemur.JavaScript.Api;
 using Lemur.JavaScript.Embedded;
 using Lemur.JS.Embedded;
 using Lemur.Windowing;
+using Newtonsoft.Json;
+using OpenTK.Graphics.Egl;
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
@@ -21,8 +23,11 @@ using static Lemur.Computer;
 
 namespace Lemur.JS
 {
-    public class key
+    public class key : embedable
     {
+        public key(Computer computer) : base(computer)
+        {
+        }
         public void clearFocus() {
             Computer.Current.Window?.Dispatcher?.Invoke(() =>
             {
@@ -48,54 +53,54 @@ namespace Lemur.JS
     {
         internal IJsEngine m_engine_internal;
         IJsEngineSwitcher engineSwitcher;
-
-        private readonly Thread executionThread;
-        public readonly Dictionary<string, object?> Modules = new();
-
-        public readonly List<InteropFunction> EventHandlers = new();
-        public readonly Dictionary<string, object> EmbeddedObjects = new();
-        private readonly ConcurrentDictionary<int, (string code, Action<object?> output)> CodeDictionary = new();
-        public bool Disposing { get; private set; }
-
+        CancellationTokenSource cts = new();
         public network NetworkModule { get; }
         public interop InteropModule { get; }
-        public graphics GraphicsModule { get; }
         public conv ConvModule { get; }
         public app_t AppModule { get; }
         public file_t FileModule { get; }
         public term_t TermModule { get; }
         public key KeyModule { get; }
-
-        public Engine()
+        public string IncludedFiles = "";
+        private readonly Thread executionThread;
+        public readonly Dictionary<string, object?> Modules = new();
+        public readonly List<InteropFunction> EventHandlers = new();
+        public readonly Dictionary<string, object> EmbeddedObjects = new();
+        private readonly ConcurrentDictionary<int, (string code, Action<object?> output)> CodeDictionary = new();
+        public bool Disposing { get; private set; }
+        public Engine(Computer computer, string name)
         {
-
             engineSwitcher = JsEngineSwitcher.Current;
             engineSwitcher.EngineFactories.AddV8();
             engineSwitcher.DefaultEngineName = V8JsEngine.EngineName;
             m_engine_internal = engineSwitcher.CreateDefaultEngine();
 
-            NetworkModule = new network();
+            NetworkModule = new network(computer);
+            InteropModule = new interop(computer);
+            AppModule = new app_t(computer);
+            TermModule = new term_t(computer);
+            KeyModule = new key(computer);
 
-            InteropModule = new interop();
             InteropModule.OnModuleImported += ImportModule;
 
-            GraphicsModule = new graphics();
             ConvModule = new conv();
-            AppModule = new app_t();
             FileModule = new file_t();
-            TermModule = new term_t();
-            KeyModule = new key();
 
+            EmbedObject("deferCached", (object)Defer);
             EmbedObject("Convert", ConvModule);
             EmbedObject("Network", NetworkModule);
             EmbedObject("Interop", InteropModule);
-            EmbedObject("Graphics", GraphicsModule);
             EmbedObject("App", AppModule);
             EmbedObject("File", FileModule);
             EmbedObject("Terminal", TermModule);
             EmbedObject("Key", KeyModule);
             EmbedType("Stopwatch", typeof(System.Diagnostics.Stopwatch));
+            EmbedType("GraphicsContext", typeof(GraphicsContext));
             EmbedObject("config", Computer.Current.Config);
+
+            var joinedPalette = $"const palette = {JsonConvert.SerializeObject(GraphicsContext.Palette)}";
+            Execute(joinedPalette);
+
 
             EmbedAllObjects();
             executionThread = new Thread(ExecuteAsync);
@@ -106,10 +111,40 @@ namespace Lemur.JS
             // aka lazy loading on demand.
             LoadModules(FileSystem.GetResourcePath("do_not_delete"));
 
+            Task.Run(async () =>
+            {
+
+
+#if DEBUG
+await Execute(@$"
+    const __NAME__ = '{name}'
+    const __DEBUG__ = true;
+");
+#else
+await Execute(@$"
+    const __NAME__ = '{name}'
+    const __DEBUG__ = false;
+");
+#endif
+
+            });
+
             InteropModule.OnModuleExported = (path, obj) =>
             {
                 Modules[path] = obj;
             };
+        }
+        public void Defer(int delay, int index)
+        {
+            try
+            {
+                Task.Run(async delegate
+                {
+                    await Task.Delay(delay, cts.Token).ConfigureAwait(false);
+                    m_engine_internal.Evaluate($"__executeDeferredFunc({index});");
+                }, cts.Token);
+            }
+            catch (OperationCanceledException) { }
         }
         public void EmbedObject(string name, object? obj)
         {
@@ -125,7 +160,6 @@ namespace Lemur.JS
                 m_engine_internal.EmbedHostObject(item.Key, item.Value);
         }
         // Resource intensive loops
-
         private async void ExecuteAsync()
         {
             while (!Disposing)
@@ -141,7 +175,8 @@ namespace Lemur.JS
                     }
                     catch (Exception e)
                     {
-                        Notifications.Exception(e);
+                        if (e is not JsInterruptedException)
+                            Notifications.Exception(e);
                     }
                     finally
                     {
@@ -157,7 +192,6 @@ namespace Lemur.JS
                 throw new JsEngineException("JavaScript execution thread died unexpectedly.");
             }
         }
-        public string IncludedFiles = "";
         public void ImportModule(string arg)
         {
             if (FileSystem.GetResourcePath(arg) is string AbsPath && !string.IsNullOrEmpty(AbsPath))
@@ -182,7 +216,7 @@ namespace Lemur.JS
         {
             if (string.IsNullOrEmpty(sourceDir))
             {
-                // Notifications.Now("require was called with an empty string and aborted");
+                //Notifications.Now("require was called with an empty string and aborted");
                 return;
             }
 
@@ -192,15 +226,17 @@ namespace Lemur.JS
             {
                 try
                 {
+                    if (!f.EndsWith(".js"))
+                        return;
+
                     var code = File.ReadAllText(f);
 
                     if (!string.IsNullOrEmpty(code))
                         m_engine_internal.Execute(code);
                 }
-                catch (Exception e)
+                catch (Exception e)  // todo: remove al the catchall exceptions in our solution.
                 {
                     Notifications.Exception(e);
-
                 }
             }
         }
@@ -226,8 +262,6 @@ namespace Lemur.JS
 
             return result;
         }
-#pragma warning disable CA5394
-        // we don't need a cryptographically secure random number generator here
         private int GetUniqueHandle()
         {
             int handle = Random.Shared.Next();
@@ -237,7 +271,6 @@ namespace Lemur.JS
 
             return handle;
         }
-#pragma warning restore CA5394
         internal void ExecuteScript(string absPath)
         {
             if (string.IsNullOrEmpty(absPath))
@@ -246,103 +279,35 @@ namespace Lemur.JS
             var script = File.ReadAllText(absPath);
             Task.Run(() => Execute(script));
         }
-        internal async Task CreateEventHandler(string identifier, string targetControl, string methodName, int type)
-        {
-            var wnd = Computer.Current.Window;
-
-            // check if this event already exists
-            var result = await Execute($"{identifier} != null").ConfigureAwait(true);
-
-            if (result is not bool ID_EXISTS || !ID_EXISTS)
-            {
-                Notifications.Now($"App not found : {identifier}..  that is NOT good...");
-                return;
-            }
-
-            // check if this method already exists
-            result = await Execute($"{identifier}.{methodName} != null").ConfigureAwait(true);
-
-            string processClass = Computer.GetProcessClass(identifier).Replace(".app", "", StringComparison.CurrentCulture);
-
-            if (result is not bool METHOD_EXISTS || !METHOD_EXISTS)
-            {
-                Notifications.Now($"'app.eventHandler(...)' threw an exception : {processClass}.{methodName} not found. Make sure {methodName} is defined and spelled correctly in both the hook function call and the definition.");
-                return;
-            }
-
-            InteropEvent? eh = default;
-
-            wnd.Dispatcher.Invoke(() =>
-            {
-                var content = Computer.GetProcess(identifier)?.UI?.Engine?.AppModule?.GetUserContent();
-
-                if (content == null)
-                {
-                    Notifications.Now($"control {identifier} not found!");
-                    return;
-                }
-
-                FrameworkElement? element = null;
-
-                if (targetControl.ToLower(CultureInfo.CurrentCulture).Trim() == "this")
-                    element = content;
-                else
-                    element = Embedded.app_t.FindControl(content, targetControl)!;
-
-
-                if (element == null)
-                {
-                    Notifications.Now($"control {targetControl} of {content.Name} not found.");
-                    return;
-                }
-
-                eh = new InteropEvent(element, (XAML_EVENTS)type, this, identifier, methodName);
-
-            });
-
-            if (GetProcess(identifier) is not Process p)
-            {
-                Notifications.Now("Creating an event handler failed : this is an engine bug. report it on GitHub if you'd like");
-                return;
-            }
-
-            var disposed = false;
-
-            /// this was an attempt to force close the app on too many errors
-            /// stack overflow, trying to finally decouple UI.
-            /// 
-            //eh.OnEventDisposed += () => {
-            //    if (disposed)
-            //        return; 
-
-            //    App.Current.Dispatcher.Invoke(app.Close);
-            //    disposed = true;
-            //};
-
-            p.OnProcessTermination += () =>
-            {
-                if (disposed)
-                    return;
-
-                if (EventHandlers.Contains(eh))
-                    EventHandlers.Remove(eh);
-
-                eh?.ForceDispose();
-                disposed = true;
-            };
-
-            EventHandlers.Add(eh);
-        }
-
         public void Dispose()
         {
             Disposing = true;
-            m_engine_internal.Dispose();
-            executionThread.Join();
-            AppModule.ReleaseThread();
+            try
+            {
+                m_engine_internal.Interrupt();
+            }
+            catch (Exception e)
+            {
+                Notifications.Exception(e);
+            }
+            try
+            {
+                cts.Cancel();
+                cts.Dispose();
+                m_engine_internal.Dispose();
+                executionThread.Join();
+                AppModule.ReleaseThread();
+
+            } catch (Exception e) 
+            {
+                Notifications.Exception(e);
+                var ans = MessageBox.Show("The application has encountered a serious problem. You should restart. Do you want to quit now?", "Please exit now.", MessageBoxButton.YesNo);
+
+                if (ans == MessageBoxResult.Yes)
+                    Environment.Exit(1);
+            }
             GC.Collect();
         }
-
         internal void CreateNetworkEventHandler(string processID, string methodName)
         {
             ArgumentNullException.ThrowIfNull(processID);
@@ -351,7 +316,6 @@ namespace Lemur.JS
             var nwEvent = new NetworkEvent(this, processID, methodName);
             EventHandlers.Add(nwEvent);
         }
-
         internal void RemoveNetworkEventHandler(string processID, string methodName)
         {
             ArgumentNullException.ThrowIfNull(processID);

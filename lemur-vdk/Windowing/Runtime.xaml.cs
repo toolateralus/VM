@@ -122,58 +122,43 @@ namespace Lemur.GUI
                     return;
                 }
 
-                Computer.Boot(cpu_id);
+                var workingDir = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData) + $"\\Lemur\\computer{cpu_id}";
+                var FileSystem = new FileSystem(workingDir);
+
+                Computer pc = new Computer(FileSystem)
+                {
+                    ProcessManager = new(),
+                };
+
+                DesktopWindow wnd = new(pc);
+
+                pc.Window = wnd;
+
+                pc.LoadBackground();
+
+                wnd.Show();
+
+                wnd.Closed += (o, e) =>
+                {
+                    Task.Run(() => Computer.SaveConfig(pc.Config?.ToString() ?? ""));
+                    pc.Dispose();
+                };
+
+                pc.InstallCSharpApp("terminal.app", typeof(Terminal));
+                pc.InstallCSharpApp("explorer.app", typeof(Explorer));
+                pc.InstallCSharpApp("texed.app", typeof(Texed));
+
+                Runtime.LoadCustomSyntaxHighlighting();
             }
         }
         internal static BitmapImage? GetAppIcon(string type)
         {
-            var absPath = FileSystem.GetResourcePath(type + ".app") + "\\icon.bmp";
+            var absPath = FileSystem.GetResourcePath(type + ".app") + $"\\{type}.ico";
 
             if (string.IsNullOrEmpty(absPath) || !File.Exists(absPath))
                 return null;
 
             return Computer.LoadImage(absPath);
-        }
-        /// <summary>
-        /// This will validate paths and load the respective js and xaml code from provided 'mydir.app' directory (any .app dir with at least one .xaml and .xaml.js file pair)
-        /// Note that loading multiple JS files or even having multiple present in an app is not tested whatsoever, it may cause problems.
-        /// </summary>
-        /// <param name="dir"></param>
-        /// <returns></returns>
-        internal static (string XAML, string JS) GetAppDefinition(string dir)
-        {
-            const string xamlExt = ".xaml";
-            const string xamlJsExt = ".xaml.js";
-            (string, string) failmsg = ("Not found!", "Not Found!");
-
-            var absPath = FileSystem.GetResourcePath(dir);
-
-            if (Directory.Exists(absPath))
-            {
-                string name = dir.Split('.').First();
-
-                if (string.IsNullOrEmpty(name))
-                {
-                    Notifications.Now("");
-                    return failmsg;
-                }
-
-                string xamlFile = Path.Combine(absPath, name + xamlExt);
-                string jsFile = Path.Combine(absPath, dir.Split('.')[0] + xamlJsExt);
-
-                if (File.Exists(xamlFile) && File.Exists(jsFile))
-                {
-                    var xaml = File.ReadAllText(xamlFile);
-                    var js = File.ReadAllText(jsFile);
-                    return (xaml, js);
-                }
-                else
-                {
-                    Notifications.Now("Matching XAML and XAML.js files not found.");
-                }
-            }
-
-            return failmsg;
         }
 
     }

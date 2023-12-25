@@ -15,8 +15,13 @@ namespace Lemur.JS.Embedded
     /// 
     /// Provides interaction with the terminal and OS 'terminal'
     /// </summary>
-    public class term_t
+    public class term_t : embedable
     {
+        public term_t(Computer computer) : base(computer)
+        {
+
+        }
+
         /// <summary>
         /// Tries to invoke a terminal command, in the background.
         /// </summary>
@@ -25,22 +30,35 @@ namespace Lemur.JS.Embedded
         {
             Task.Run(() =>
             {
-                if (!Computer.Current.CmdLine.TryCommand(command))
+                if (!Computer.Current.CLI.TryCommand(command))
                     Notifications.Now($"Couldn't 'call' {command}");
             });
+        }
+        public void notify(params object[] message)
+        {
+            try
+            {
+                var msg = '\n' + string.Join('\n', message);
+                Notifications.Now(msg);
+            }
+            catch (Exception e)
+            {
+                Notifications.Exception(e);
+            }
         }
         /// <summary>
         /// Prints to the terminal. there is a global function 'print' that wraps this.
         /// </summary>
         /// <param name="message"></param>
-        public void print(object message)
+        public void print(params object[] message)
         {
             try
             {
+                var msg = '\n' + string.Join('\n', message);
                 Computer.Current.Window?.Dispatcher.Invoke(() =>
                 {
-                    Debug.WriteLine(message);
-                    Notifications.Now(message?.ToString() ?? "null");
+                    foreach (var cmd in GetComputer().ProcessManager.TryGetAllProcessesOfTypeUnsafe<Terminal>())
+                        cmd.output.AppendText(msg);
                 });
             }
             catch (Exception e)
@@ -55,7 +73,7 @@ namespace Lemur.JS.Embedded
         public string? read()
         {
             Terminal cmd = null;
-            cmd = Computer.TryGetProcessOfType<Terminal>();
+            cmd = GetComputer().ProcessManager.TryGetProcessOfType<Terminal>();
 
             var waiting = true;
             string result = "";
@@ -103,7 +121,7 @@ namespace Lemur.JS.Embedded
                 }
             }
 
-            Computer.Current.CmdLine.Aliases[alias] = FileSystem.GetResourcePath(path) ?? "not found";
+            Computer.Current.CLI.Aliases[alias] = FileSystem.GetResourcePath(path) ?? "not found";
         }
         public void setAliasDirectory(string path, string regex = "")
         {
@@ -135,7 +153,7 @@ namespace Lemur.JS.Embedded
                     name = Path.GetFileName(file).Replace(Path.GetExtension(file), "");
                 }
 
-                Computer.Current.CmdLine.Aliases[name] = file;
+                Computer.Current.CLI.Aliases[name] = file;
             };
             Action<string, string> procDir = delegate { };
             FileSystem.ProcessDirectoriesAndFilesRecursively(path, /*UNUSED*/ procDir, procFile);

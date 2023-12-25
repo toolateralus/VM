@@ -11,6 +11,7 @@ namespace Lemur.GUI
     /// </summary>
     public class WindowManager : Canvas
     {
+        private Computer computer => Computer.Current;
         private ResizableWindow? targetWindow;
         private static double resizeMargin = 10;
         private ResizeEdge resizingEdge;
@@ -38,7 +39,7 @@ namespace Lemur.GUI
             if (targetWindow == null || (!isResizing && !isDragging))
                 return;
 
-            foreach (var process in Computer.ProcessClassTable.SelectMany(i => i.Value.Select(p => p)))
+            foreach (var process in computer.ProcessManager.ProcessClassTable.SelectMany(i => i.Value.Select(p => p)))
                 process.UI.ResizableParent.WindowIsFocused = false;
 
             targetWindow.WindowIsFocused = true;

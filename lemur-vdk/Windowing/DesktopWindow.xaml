@@ -26,8 +26,9 @@
         <Image Grid.ColumnSpan="2" Grid.RowSpan="1" x:Name="desktopBackground" Stretch="UniformToFill"/>
 
         <gui:WindowManager ClipToBounds="True" Focusable="False" x:Name="Desktop" Grid.Row="0" Grid.Column="0" Grid.ColumnSpan="2" Grid.RowSpan="1" Background="Transparent">
-            <WrapPanel Focusable="False" x:Name="DesktopIconPanel" Orientation="Vertical"/>
+            <StackPanel VerticalAlignment="Bottom" HorizontalAlignment="Center" Focusable="False" x:Name="DesktopIconPanel" Orientation="Horizontal" />
         </gui:WindowManager>
+
 
         <StackPanel Focusable="False" Style="{StaticResource StackPanelStyle}"  x:Name="NotificationStackPanel" Grid.Column="1" Orientation="Vertical" VerticalAlignment="Bottom" CanVerticallyScroll="True" CanHorizontallyScroll="True" ScrollViewer.VerticalScrollBarVisibility="Visible" ScrollViewer.CanContentScroll="True"/>
         <Grid Focusable="False" x:Name="Taskbar" Grid.Row="1" Grid.Column="0" Grid.ColumnSpan="2">
@@ -36,13 +37,21 @@
                 <ColumnDefinition  Width="auto"/>
             </Grid.ColumnDefinitions>
 
-            <StackPanel Focusable="False" Style="{StaticResource StackPanelStyle}" x:Name="TaskbarStackPanel" Orientation="Horizontal" Width="Auto" Height="25">
-                <Label Focusable="False" Style="{StaticResource LabelStyle}" x:Name="TimeLabel" Content="no time or date."/>
+            <StackPanel  Focusable="False" Style="{StaticResource StackPanelStyle}" x:Name="TaskbarStackPanel" Orientation="Horizontal" Width="Auto" Height="25" Background="#18000000">
+                <Label  FontFamily="MS Gothic" Focusable="False" Style="{StaticResource LabelStyle}" x:Name="TimeLabel" Content="no time or date." Background="#19222222"/>
             </StackPanel>
 
             <StackPanel Focusable="False" Style="{StaticResource StackPanelStyle}" Grid.Row="1" Grid.Column="2" x:Name="RightSideTaskbarPanel" Orientation="Horizontal">
-                <Button Focusable="False" Style="{StaticResource ButtonStyle}" BorderBrush="Gray" Margin="0,0,5,0" x:Name="ShutdownBtn" Click="ShutdownClick" Content="Shut down"/>
-                <Button Focusable="False" Style="{StaticResource ButtonStyle}" BorderBrush="Gray" Margin="0,0,5,0" Content="Clear Notifications" Click="ClearNotificaionsClicked"/>
+                <Button Focusable="False" Style="{StaticResource ButtonStyle}" BorderBrush="Gray" Margin="0,0,5,0" x:Name="ShutdownBtn" Click="ShutdownClick" Content="Shut down" Background="#19222222">
+                    <Button.Effect>
+                        <DropShadowEffect/>
+                    </Button.Effect>
+                </Button>
+                <Button Focusable="False" Style="{StaticResource ButtonStyle}" BorderBrush="Gray" Margin="0,0,5,0" Content="Clear Notifications" Click="ClearNotificaionsClicked" Background="#19222222">
+                    <Button.Effect>
+                        <DropShadowEffect/>
+                    </Button.Effect>
+                </Button>
             </StackPanel>
         </Grid>
     </Grid>

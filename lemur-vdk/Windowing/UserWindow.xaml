@@ -6,7 +6,7 @@
       xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
       xmlns:s="clr-namespace:System;assembly=mscorlib"
       xmlns:gui="clr-namespace:Lemur.GUI"
-      mc:Ignorable="d" 
+      mc:Ignorable="d" Background="Transparent" 
       >
     <UserControl.Resources>
         <s:Double x:Key="resizeEdgeMargin">10</s:Double>
@@ -23,7 +23,7 @@
             <ColumnDefinition Width="{Binding Source={StaticResource resizeEdgeMargin}}" />
         </Grid.ColumnDefinitions>
         
-        <Grid Background="#FF1F1F1F" Grid.Row="1" Grid.Column="1">
+        <Grid Grid.Row="1" Grid.Column="1">
             <Grid.RowDefinitions>
                 <RowDefinition Height="25"/>
                 <RowDefinition Height="*"/>

@@ -31,14 +31,17 @@ namespace Lemur.GUI
         public bool Disposing;
 
         public static event Action<Key, bool> OnKeyDown;
-
         public int TopMostZIndex { get; internal set; }
         private int ctrlTabIndex;
-        public DesktopWindow()
+
+        Computer computer;
+        public DesktopWindow(Computer computer)
         {
+            this.computer = computer;
+
             InitializeComponent();
 
-            desktopBackground.Source = Computer.LoadImage(FileSystem.GetResourcePath("Background.png") ?? "background.png");
+            //desktopBackground.Source = Computer.LoadImage();
 
             Keyboard.AddPreviewKeyDownHandler(this, Computer_KeyDown);
 
@@ -67,35 +70,71 @@ namespace Lemur.GUI
             };
 
         }
-
-        
-
-        internal ContextMenu GetNativeContextMenu(string appName)
+        internal ContextMenu GetNativeContextMenu(string appName, AppConfig? config = null)
         {
             var contextMenu = new ContextMenu();
 
+            // judges the file extension for JsSource_Click & whether to create a XAML source view button.
+            var isTerminal = config?.terminal ?? false;
+
             MenuItem jsSource = new()
             {
-                Header = "view source : JavaScript",
+                Header = "source -> javascript",
             };
 
             jsSource.Click += (sender, @event) =>
             {
-                JsSource_Click(sender, @event, appName);
+                JsSource_Click(sender, @event, appName, isTerminal);
             };
-
-            MenuItem xamlSource = new()
-            {
-                Header = "view source : XAML",
-            };
-
-            xamlSource.Click += (sender, @event) =>
-            {
-                XamlSource_Click(sender, @event, appName);
-            };
-
             contextMenu.Items.Add(jsSource);
-            contextMenu.Items.Add(xamlSource);
+
+            // for gui apps, view XAML source button.
+            if (!isTerminal || config?.isWpf == true)
+            {
+                MenuItem xamlSource = new()
+                {
+                    Header = "source -> xaml",
+                };
+                xamlSource.Click += (sender, @event) =>
+                {
+                    XamlSource_Click(sender, @event, appName);
+                };
+                contextMenu.Items.Add(xamlSource);
+
+            }
+
+            // view .appconfig button
+            if (config is not null)
+            {
+                MenuItem configMenu = new()
+                {
+                    Header = "source -> config",
+                };
+                configMenu.Click += delegate
+                {
+                    string name = appName + ".appconfig";
+                    var editor = new Texed(name);
+                    Computer.Current.OpenAppGUI(editor, name, computer.ProcessManager.GetNextProcessID());
+                };
+                contextMenu.Items.Add(configMenu);
+            }
+
+            MenuItem folder = new()
+            {
+                Header = "open containing folder",
+            };
+
+            folder.Click += (sender, @event) =>
+            {
+                var path = FileSystem.GetResourcePath(appName + ".app");
+                FileSystem.ChangeDirectory(path);
+
+                var explorer = new Explorer();
+                var pid = Computer.Current.ProcessManager.GetNextProcessID();
+                Computer.Current.OpenAppGUI(explorer, appName + ".app", pid);
+
+            };
+            contextMenu.Items.Add(folder);
 
             return contextMenu;
         }
@@ -110,14 +149,14 @@ namespace Lemur.GUI
         }
         public Button MakeDesktopButton(string appName)
         {
-            var btn = MakeButton(width: 90, height: 70);
+            var btn = MakeButton(width: 70, height: 70);
 
             btn.Margin = new Thickness(5, 5, 5, 5);
             btn.Content = appName;
 
-            btn.Style = FindResource("ButtonStyle") as Style; 
+            btn.Style = FindResource("DesktopButtonStyle") as Style; 
 
-            string regexPattern = @"[_a-zA-Z][_a-zA-Z0-9]*";
+            string regexPattern = @"[_a-zA-Z][_azA-Z0-9]*";
 
             string[] splitName = appName.Split(".");
             if (splitName.Length > 0)
@@ -159,7 +198,7 @@ namespace Lemur.GUI
 
             void Close_Click(object sender, RoutedEventArgs e)
             {
-                Computer.Current.CloseApp(pID);
+                Computer.Current.ProcessManager.TerminateProcess(pID);
                 TaskbarStackPanel.Children.Remove(btn);
             }
 
@@ -174,7 +213,7 @@ namespace Lemur.GUI
         {
             TopMostZIndex++;
 
-            var window = new UserWindow(pID);
+            var window = new UserWindow(computer, pID);
 
             // TODO: add a way for users to add buttons and toolbars easily through
             // their js code, that would be very helpful.
@@ -201,7 +240,6 @@ namespace Lemur.GUI
 
             return window;
         }
-
         internal void RemoveDesktopIcon(string name)
         {
 
@@ -248,7 +286,6 @@ namespace Lemur.GUI
                 }
             }
         }
-
         private void ClearNotificaionsClicked(object sender, RoutedEventArgs e)
         {
             Notifications.Clear();
@@ -261,13 +298,18 @@ namespace Lemur.GUI
         {
             var name = appName + ".xaml";
             var editor = new Texed(name);
-            Computer.Current.OpenApp(editor, name, Computer.GetNextProcessID());
+            Computer.Current.OpenAppGUI(editor, name, computer.ProcessManager.GetNextProcessID());
         }
-        private void JsSource_Click(object? sender, RoutedEventArgs e, string appName)
+        private void JsSource_Click(object? sender, RoutedEventArgs e, string appName, bool isTerminal)
         {
-            var name = appName + ".xaml.js";
+            string name;
+            if (isTerminal)
+                name = appName + ".js";
+            else
+                name = appName + ".xaml.js";
+
             var editor = new Texed(name);
-            Computer.Current.OpenApp(editor, name, Computer.GetNextProcessID());
+            Computer.Current.OpenAppGUI(editor, name, computer.ProcessManager.GetNextProcessID());
         }
         public void Computer_KeyDown(object sender, KeyEventArgs e)
         {
@@ -280,7 +322,7 @@ namespace Lemur.GUI
                     if (Keyboard.IsKeyDown(Key.LeftCtrl))
                     {
                         var cmd = new Terminal();
-                        Computer.Current.OpenApp(cmd, "Cmd", Computer.GetNextProcessID());
+                        Computer.Current.OpenAppGUI(cmd, "Cmd", computer.ProcessManager.GetNextProcessID());
                     }
                     break;
 
@@ -288,7 +330,8 @@ namespace Lemur.GUI
                     if (Keyboard.IsKeyDown(Key.LeftCtrl))
                     {
 
-                        var windows = Computer.ProcessClassTable.Values.SelectMany(i => i).ToList();
+                        // todo : make a function to do this.
+                        var windows = computer.ProcessManager.ProcessClassTable.Values.SelectMany(i => i).ToList();
 
                         if (windows.Count == 0)
                             return;
@@ -310,7 +353,7 @@ namespace Lemur.GUI
         }
         public void ShutdownClick(object sender, RoutedEventArgs e)
         {
-            if (Computer.ProcessClassTable.Count > 0)
+            if (computer.ProcessManager.ProcessClassTable.Count > 0)
             {
                 var answer = MessageBox.Show("Are you sure you want to shut down? all unsaved changes will be lost.",
                                             "Shutdown",
@@ -327,7 +370,6 @@ namespace Lemur.GUI
             App.Current.Shutdown();
             Close();
         }
-
         public void Dispose()
         {
             if (!Disposing)
@@ -341,7 +383,5 @@ namespace Lemur.GUI
                 Disposing = true;
             }
         }
-       
-
     }
 }

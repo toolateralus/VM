@@ -1,0 +1,8 @@
+{
+    "title" : "Paint",
+    "description" : "a very basic low resolution bmp editor.",
+    "version" : "0.0.1",
+    "terminal": "false",
+    "isWpf": "true",
+    "class": "paint"
+}

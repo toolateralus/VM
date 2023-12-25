@@ -8,6 +8,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Security.Cryptography;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
@@ -52,15 +53,19 @@ namespace Lemur.GUI
         };
         // reflection grabs this later.
         public static string? DesktopIcon => FileSystem.GetResourcePath("texed.png");
+
+
         public MarkdownViewer? mdViewer;
         public Terminal? terminal;
+        private Computer computer;
+
         public Texed(string path, bool renderMarkdown) : this(path)
         {
             if (renderMarkdown)
             {
                 mdViewer = new MarkdownViewer();
                 mdViewer.RenderMarkdown(Contents);
-                Computer.Current.OpenApp(mdViewer, "md.app", Computer.GetNextProcessID());
+                Computer.Current.OpenAppGUI(mdViewer, "md.app", Computer.Current.ProcessManager.GetNextProcessID());
             }
         }
         /// <summary>
@@ -101,7 +106,7 @@ namespace Lemur.GUI
         }
         public void LateInit(Computer c, ResizableWindow win)
         {
-
+            this.computer = c;
         }
         protected override void OnKeyUp(KeyEventArgs e)
         {
@@ -169,13 +174,16 @@ namespace Lemur.GUI
         }
         private void LoadButton_Click(object sender, RoutedEventArgs e)
         {
-            Explorer fileExplorer = new Explorer();
+            var fileExplorer = Explorer.LoadFilePrompt();
 
-            Computer.Current.OpenApp(fileExplorer, "fileexplorer.app", Computer.GetNextProcessID());
-
+            var pid = computer.ProcessManager.GetNextProcessID();
+            Computer.Current.OpenAppGUI(fileExplorer, "explorer.app", pid);
+            var proc = Computer.Current.ProcessManager.GetProcess(pid);
+            
             fileExplorer.OnNavigated += (file) =>
             {
                 LoadFile(file);
+                proc.Terminate();
             };
         }
         private void SaveButton_Click(object sender, RoutedEventArgs e)
@@ -231,7 +239,7 @@ namespace Lemur.GUI
                 case ".md":
                     mdViewer = new MarkdownViewer();
                     mdViewer.RenderMarkdown(Contents);
-                    Computer.Current.OpenApp(mdViewer, "md.app", Computer.GetNextProcessID());
+                    Computer.Current.OpenAppGUI(mdViewer, "md.app", computer.ProcessManager.GetNextProcessID());
                     break;
 
                 case ".xaml.js":
@@ -253,8 +261,8 @@ namespace Lemur.GUI
                     {
                         terminal = new Terminal();
 
-                        var jsEngine = new Engine();
-                        Computer.Current.OpenApp(terminal, "cmd.app", Computer.GetNextProcessID(), engine: jsEngine);
+                        var jsEngine = new Engine(computer, "Auxillary__Terminal");
+                        Computer.Current.OpenAppGUI(terminal, "cmd.app", computer.ProcessManager.GetNextProcessID(), engine: jsEngine);
                     }
                     var code = string.IsNullOrEmpty(textEditor.Text) ? "print('You must provide some javascript to execute...')" : textEditor.Text;
                     Task.Run(async () => { await terminal.Engine.Execute(code); });

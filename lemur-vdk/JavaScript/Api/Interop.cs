@@ -1,4 +1,5 @@
-﻿using Lemur.Windowing;
+﻿using Lemur.JS.Embedded;
+using Lemur.Windowing;
 using System;
 using System.Collections.Generic;
 using System.Threading;
@@ -6,10 +7,14 @@ using System.Threading.Tasks;
 
 namespace Lemur.JavaScript.Api
 {
-    public class interop
+    public class interop : embedable
     {
         internal Action<string, object?>? OnModuleExported;
         internal Action<string>? OnModuleImported;
+
+        public interop(Computer computer) : base(computer)
+        {
+        }
 
         public double random(double max = 1.0)
         {

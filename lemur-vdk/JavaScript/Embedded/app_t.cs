@@ -21,8 +21,19 @@ using Image = System.Windows.Controls.Image;
 
 namespace Lemur.JS.Embedded
 {
-    public class app_t
+    public class app_t : embedable
     {
+        public app_t(Computer computer) : base(computer)
+        {
+            ExposedEvents["draw_pixels"] = DrawPixelsEvent; // somewhat deprecated, use the dedicated graphics module instead.
+            ExposedEvents["draw_image"] = DrawImageEvent;
+            ExposedEvents["set_content"] = SetContent;
+            ExposedEvents["get_content"] = GetContent;
+        }
+        internal Thread bgThread;
+        private ConcurrentQueue<Action> deferredJobs = [];
+        internal string processID;
+        private bool Disposing { get; set; }
         public delegate bool SetPropertyHandler(PropertyInfo? propertyInfo, object target, object? value);
         public delegate object? AppEvent(string target, object? value);
         public static Dictionary<string, AppEvent> ExposedEvents = new();
@@ -38,13 +49,6 @@ namespace Lemur.JS.Embedded
             }},
 
         };
-
-        internal Thread bgThread;
-        private ConcurrentQueue<Action> deferredJobs = [];
-        internal string processID;
-
-        private bool Disposing { get;  set; }
-
         public void ReleaseThread()
         {
             if (!Disposing)
@@ -53,16 +57,6 @@ namespace Lemur.JS.Embedded
                 bgThread?.Join();
             }
         }
-        public app_t()
-        {
-            ExposedEvents["draw_pixels"] = DrawPixelsEvent; // somewhat deprecated, use the dedicated graphics module instead.
-            ExposedEvents["draw_image"] = DrawImageEvent;
-            ExposedEvents["set_content"] = SetContent;
-            ExposedEvents["get_content"] = GetContent;
-
-           
-        }
-
         private async void __bg_threadLoop()
         {
             DateTime lastTime = DateTime.Now;
@@ -71,12 +65,14 @@ namespace Lemur.JS.Embedded
             {
                 if (deferredJobs.TryDequeue(out var job))
                 {
-                    job?.Invoke();
+                    using var cts = new CancellationTokenSource();
+                    var task = Task.Run(job.Invoke, cts.Token);
+                    await Task.WhenAny(task, Task.Delay(100_000)).ConfigureAwait(false);
                     lastTime = DateTime.Now;
                 } 
                 else
                 {
-                    await Task.Delay(1).ConfigureAwait(false);
+                    await Task.Delay(16).ConfigureAwait(false);
 
                     // kill thread if no jobs for 30 seconds
                     if (deferredJobs.IsEmpty && (DateTime.Now - lastTime).TotalSeconds > 10)
@@ -89,7 +85,6 @@ namespace Lemur.JS.Embedded
                 }
             }
         }
-
         public void setRow(string element, int row)
         {
             Current.Window.Dispatcher.Invoke(() =>
@@ -102,7 +97,6 @@ namespace Lemur.JS.Embedded
                 Grid.SetRow(control, row);
             });
         }
-
         public void setColumn(string element, int row)
         {
 
@@ -191,7 +185,6 @@ namespace Lemur.JS.Embedded
 
             return didAdd;
         }
-
         public bool removeChild(string parent, string childName)
         {
             var didRemove = false;
@@ -235,7 +228,6 @@ namespace Lemur.JS.Embedded
 
             return didRemove;
         }
-
         public void deferEval(string code, int delay, string? identifier = null)
         {
             WakeUpBackgroundThread();
@@ -244,32 +236,31 @@ namespace Lemur.JS.Embedded
             {
                 await Task.Delay(delay);
 
-                var proc = Computer.GetProcess((string)this.processID);
+                var computer = GetComputer();
+
+                var proc = computer.ProcessManager.GetProcess((string)this.processID);
 
                 var engine = proc?.UI?.Engine;
 
                 // for command line apps.
                 if (proc is null || engine is null)
-                    engine = Computer.Current.JavaScript;
-                
+                    engine = computer.JavaScript;
+
                 if (identifier != null)
-                    await engine.Execute($"{identifier} = {code}");
+                    await engine.Execute($"{identifier} = {code}").ConfigureAwait(false);
                 else
-                    _ = await engine.Execute(code);
+                    _ = await engine.Execute(code).ConfigureAwait(false) ;
             }));
         }
-
-        public void defer(string methodName, int delayMs, params object[]? args)
+        public void defer(string methodName, int delayMs, params object[] args)
         {
             WakeUpBackgroundThread();
 
-            deferredJobs.Enqueue((Action)(async () =>
+            deferredJobs.Enqueue(async () =>
             {
-                
-
                 await Task.Delay(delayMs).ConfigureAwait(true);
 
-                if (GetProcess((string)this.processID) is not Process p)
+                if (GetComputer().ProcessManager.GetProcess(processID) is not Process p)
                 {
                     Notifications.Now($"Failed to defer {methodName} because the process was not found.");
                     return;
@@ -277,9 +268,7 @@ namespace Lemur.JS.Embedded
 
                 var engine = p.UI?.Engine;
 
-                
-
-                var callHandle = $"{this.processID}.{methodName}";
+                var callHandle = $"{processID}.{methodName}";
 
                 if (engine is null || engine.Disposing)
                     return;
@@ -295,7 +284,25 @@ namespace Lemur.JS.Embedded
 
                     if (args.Length > 0)
                     {
-                        var argsString = string.Join(", ", args);
+                        var argStrings = new List<string>();
+                        foreach ( var arg in args )
+                        {
+                            switch (arg)
+                            {
+                                case string:
+                                    argStrings.Add($"\"{arg}\"");
+                                    break;
+                                case double:
+                                case bool:
+                                case DateTime:
+                                    argStrings.Add(arg.ToString()!);
+                                    break;
+                                default:
+                                    argStrings.Add($"throw new Error('App.defer cannot take {arg}')");
+                                    break;
+                            }
+                        }
+                        var argsString = string.Join(", ", argStrings);
                         engine.m_engine_internal.Evaluate($"{callHandle}({argsString})");
                     }
                     else
@@ -303,13 +310,12 @@ namespace Lemur.JS.Embedded
                         engine.m_engine_internal.Evaluate($"{callHandle}()");
                     }
                 }
-                catch(Exception e)
+                catch (Exception e)
                 {
                     Notifications.Exception(e);
                 }
-            }));
+            });
         }
-
         private void WakeUpBackgroundThread()
         {
             if (bgThread == null)
@@ -319,7 +325,6 @@ namespace Lemur.JS.Embedded
                 bgThread.Start();
             }
         }
-
         internal static void SetProperty(object target, string propertyName, object? value)
         {
             if (target == null)
@@ -364,12 +369,11 @@ namespace Lemur.JS.Embedded
 
             return propertyInfo?.GetValue(target);
         }
-
         private object? GetContent(string controlName, object? value)
         {
             object? output = null;
 
-            Computer.Current.Window?.Dispatcher.Invoke(() =>
+            GetComputer().Window?.Dispatcher.Invoke(() =>
             {
                 var userControl = GetUserContent();
                 var control = FindControl(userControl, controlName);
@@ -391,7 +395,7 @@ namespace Lemur.JS.Embedded
         }
         public UserControl? GetUserContent()
         {
-            var window = GetProcess(processID)?.UI;
+            var window = GetComputer().ProcessManager.GetProcess(processID)?.UI;
 
             if (window != null)
             {
@@ -452,7 +456,7 @@ namespace Lemur.JS.Embedded
         {
             object? output = null;
 
-            var wnd = Computer.Current.Window;
+            var wnd = GetComputer().Window;
 
             wnd?.Dispatcher.Invoke(() =>
             {
@@ -477,7 +481,6 @@ namespace Lemur.JS.Embedded
             });
             return output;
         }
-
         public static BitmapImage BitmapImageFromBase64(string base64String)
         {
             try
@@ -506,7 +509,7 @@ namespace Lemur.JS.Embedded
             if (value is null)
                 return null;
 
-            Computer.Current.Window?.Dispatcher.Invoke(() =>
+            GetComputer().Window?.Dispatcher.Invoke(() =>
             {
                 var control = GetUserContent();
 
@@ -532,7 +535,7 @@ namespace Lemur.JS.Embedded
 
             interop.ForEachCast<int>(value.ToEnumerable(), (item) => colorData.Add((byte)item));
 
-            Computer.Current.Window?.Dispatcher.Invoke(() =>
+            GetComputer().Window?.Dispatcher.Invoke(() =>
             {
                 var control = GetUserContent();
                 if (control?.Content is Grid grid)
@@ -585,12 +588,11 @@ namespace Lemur.JS.Embedded
 
             image.Source = bitmap;
         }
-
         public object? getProperty(string controlName, object? property)
         {
             object? output = null;
 
-            Computer.Current.Window?.Dispatcher.Invoke(() =>
+            GetComputer().Window?.Dispatcher.Invoke(() =>
             {
                 var userControl = GetUserContent();
                 var control = FindControl(userControl, controlName);
@@ -607,7 +609,7 @@ namespace Lemur.JS.Embedded
         {
             object? output = null;
 
-            Computer.Current.Window?.Dispatcher.Invoke((Delegate)(() =>
+            GetComputer().Window?.Dispatcher.Invoke((Delegate)(() =>
             {
                 var userControl = GetUserContent();
                 var control = FindControl(userControl, controlName);
@@ -619,7 +621,6 @@ namespace Lemur.JS.Embedded
             }));
 
         }
-
         public object? pushEvent(string targetControl, string eventType, object? data)
         {
             if (ExposedEvents.TryGetValue(eventType, out var handler))
@@ -628,24 +629,27 @@ namespace Lemur.JS.Embedded
         }
         public void eventHandler(string targetControl, string methodName, int type)
         {
-            if (GetProcess(processID) is Process p)
-                Task.Run(async () => await p.UI.Engine?.CreateEventHandler(processID, targetControl, methodName, type));
+            var pc = GetComputer();
+            var procMgr = pc.ProcessManager;
+            var proc = procMgr.GetProcess(processID);
+            if (proc is Process p)
+                Task.Run(async () => await procMgr.CreateEventHandler(proc.UI.Engine, processID, targetControl, methodName, type).ConfigureAwait(false));
         }
         public void close(string pid)
         {
-            Computer.Current.CloseApp(pid);
+            GetComputer().ProcessManager.TerminateProcess(pid);
         }
         public string start(string path, params object[] args)
         {
             string pid = "PROC_START_FAILURE";
 
-            Computer.Current.Window.Dispatcher.Invoke(start_app);
+            GetComputer().Window.Dispatcher.Invoke(start_app);
 
             async void start_app()
             {
                 // this way of fetching a pid is very presumptuous and bad.
                 pid = $"p{__procId + 1}"; // the next to be created process. 
-                await Computer.Current.OpenCustom(path, args).ConfigureAwait(false);
+                GetComputer().OpenCustom(path, args);
             }
 
             return pid;
@@ -665,7 +669,7 @@ namespace Lemur.JS.Embedded
                     try
                     {
                         if (Path.GetExtension(file) is string ext && ext == ".app")
-                            Computer.Current.InstallNative(Path.GetFileName(file));
+                            GetComputer().InstallNative(Path.GetFileName(file));
 
                     }
                     catch
@@ -693,31 +697,30 @@ namespace Lemur.JS.Embedded
 
             if (dir.Contains(".app"))
             {
-                Computer.Current.InstallNative(dir);
+                GetComputer().InstallNative(dir);
             }
         }
         public void uninstall(string dir)
         {
-            DesktopWindow window = Computer.Current.Window;
+            DesktopWindow window = GetComputer().Window;
 
             // js/html app
             if (dir.Contains(".web"))
             {
-                Computer.Current.Uninstall(dir);
+                GetComputer().Uninstall(dir);
                 return;
             }
 
             // wpf app
             if (dir.Contains(".app"))
             {
-                Computer.Current.Uninstall(dir);
+                GetComputer().Uninstall(dir);
                 return;
             }
 
             Notifications.Now("Incorrect path for uninstall");
 
         }
-
         internal void __Attach__Process__ID(string id)
         {
             this.processID = id;

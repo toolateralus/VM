@@ -1,6 +1,7 @@
 ﻿using Lemur.FS;
 using Lemur.JavaScript.Api;
 using Lemur.JavaScript.Network;
+using Lemur.JS.Embedded;
 using Lemur.Windowing;
 using Newtonsoft.Json.Linq;
 using System;
@@ -16,20 +17,20 @@ using System.Windows.Documents;
 namespace Lemur.JavaScript.Embedded
 {
     public delegate void TransmissionStream(string data, TransmissionType type, int outCh, int replyCh, bool isDir);
-    public class network
+    public class network : embedable
     {
         public event TransmissionStream OnTransmit;
         private int size;
         internal string processID;
         private List<string> attachedListeners = [];
-        public network()
+        public network(Computer computer) : base(computer)
         {
-            OnTransmit = Computer.Current.NetworkConfiguration.OnSendMessage;
+            OnTransmit = Computer.Current.Network.OnSendMessage;
         }
 
         public void addListener(string methodName)
         {
-            if (Computer.GetProcess(processID) is Process p)
+            if (GetComputer().ProcessManager.GetProcess(processID) is Process p)
             {
                 if (p.UI.Engine.Disposing)
                 {
@@ -45,7 +46,7 @@ namespace Lemur.JavaScript.Embedded
 
         public void removeListener(string methodName)
         {
-            if (Computer.GetProcess(processID) is Process p)
+            if (GetComputer().ProcessManager.GetProcess(processID) is Process p)
             {
                 attachedListeners.Remove(methodName);
 
@@ -60,7 +61,7 @@ namespace Lemur.JavaScript.Embedded
         }
         public void disconnect()
         {
-            Computer.Current.NetworkConfiguration.StopClient();
+            Computer.Current.Network.StopClient();
             Notifications.Now("Stopping connection to client");
         }
 
@@ -81,13 +82,13 @@ namespace Lemur.JavaScript.Embedded
         {
             Notifications.Now($"Trying to connect to: {ipString}");
 
-            Computer.Current?.NetworkConfiguration?.StopClient();
+            Computer.Current?.Network?.StopClient();
 
             try
             {
-                Computer.Current?.NetworkConfiguration?.StartClient(targetIP);
+                Computer.Current?.Network?.StartClient(targetIP);
 
-                if (Computer.Current.NetworkConfiguration.IsConnected())
+                if (Computer.Current.Network.IsConnected())
                 {
                     Notifications.Now($"Successfully connected to {ipString}.");
                 }
@@ -167,7 +168,7 @@ namespace Lemur.JavaScript.Embedded
         public async void download(string path)
         {
 
-            if (!Computer.Current.NetworkConfiguration.IsConnected())
+            if (!Computer.Current.Network.IsConnected())
             {
                 Notifications.Now("Not connected to network");
                 return;
@@ -191,7 +192,7 @@ namespace Lemur.JavaScript.Embedded
 
             OnTransmit?.Invoke(path, TransmissionType.Download, 0, Server.DownloadReplyChannel, false);
 
-            while (Computer.Current.NetworkConfiguration.IsConnected())
+            while (Computer.Current.Network.IsConnected())
             {
                 (object? value, int reply) = await NetworkConfiguration.PullEventAsync(Server.DownloadReplyChannel);
 
@@ -241,7 +242,7 @@ namespace Lemur.JavaScript.Embedded
             Notifications.Now("Not connected to network, or download failed");
         }
 
-        public bool IsConnected => Computer.Current.NetworkConfiguration.IsConnected();
+        public bool IsConnected => Computer.Current.Network.IsConnected();
         public void send(params object?[]? parameters)
         {
             if (parameters is null || parameters.Length <= 2)

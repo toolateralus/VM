@@ -82,16 +82,28 @@ namespace Lemur.JavaScript.Network
             if (!NetworkEvents.TryGetValue(channel, out _))
                 NetworkEvents.TryAdd(channel, new());
 
+            // we would dequeue, but that would cause there to be an accumulated buffer of old data that never gets touched.
+            // lingering events suggests problems anyway, this shouldn't be happening, and programs written to store events on this
+            // as a buffer are probably misusing it, as interesting as that is :D
+            if (NetworkEvents[channel].Count > 10)
+                NetworkEvents[channel].Clear();
+
             NetworkEvents[channel].Enqueue((msg, reply));
 
-            foreach (var userWindow in Computer.ProcessClassTable.SelectMany(i => i.Value.Select(i => i)))
+            var processes = Computer.Current.ProcessManager.ProcessClassTable.SelectMany(i => i.Value.Select(i => i)).AsParallel();
+
+            foreach (var process in processes)
             {
-                if (userWindow?.UI.Engine?.EventHandlers == null)
+                if (process?.UI.Engine?.EventHandlers == null)
                     continue;
 
-                foreach (var eventHandler in userWindow?.UI?.Engine.EventHandlers)
+                List<InteropFunction>? list = process?.UI?.Engine.EventHandlers;
+                for (int i = 0; i < list?.Count; i++)
+                {
+                    InteropFunction? eventHandler = list[i];
                     if (eventHandler is NetworkEvent networkEventHandler)
                         networkEventHandler.InvokeEvent(channel, reply, msg);
+                }
             }
         }
         public static (object? value, int reply) PullEvent(int channel, int timeout = 20_000, [CallerMemberName] string callerName = "unknown")
@@ -108,7 +120,7 @@ namespace Lemur.JavaScript.Network
 
             bool messageNotRecieved() => !NetworkEvents.TryGetValue(channel, out queue) || queue is null || queue.Count == 0;
 
-            bool shouldWait() => !timedOut && !Computer.Current.disposing && Computer.Current.NetworkConfiguration.IsConnected();
+            bool shouldWait() => !timedOut && !Computer.Current.disposing && Computer.Current.Network.IsConnected();
 
             while (shouldWait() && messageNotRecieved())
             {/* ----------------------------------------------- */
@@ -137,7 +149,7 @@ namespace Lemur.JavaScript.Network
                         || queue is null
                         || queue.Count == 0
                         && !Computer.Current.disposing
-                        && Computer.Current.NetworkConfiguration.IsConnected())
+                        && Computer.Current.Network.IsConnected())
                 {/* ----------------------------------------------- */
                     Task.Delay(16);
                 }

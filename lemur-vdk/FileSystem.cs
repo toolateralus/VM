@@ -6,6 +6,8 @@ using System;
 using System.IO;
 using System.Linq;
 using System.Windows;
+using System.Windows.Forms;
+using System.Windows.Shapes;
 using Path = System.IO.Path;
 namespace Lemur.FS
 {
@@ -32,7 +34,7 @@ namespace Lemur.FS
             }
             catch (Exception e)
             {
-                MessageBox.Show(e.Message);
+                System.Windows.MessageBox.Show(e.Message);
                 return;
             }
 
@@ -137,15 +139,21 @@ namespace Lemur.FS
         {
             try
             {
-
+                // todo: verify whether we should even validate between iterations. seems pretty costly.
+                
                 foreach (string file in Directory.EnumerateFiles(directory))
                 {
+                    if (!ValidateAccess(file, out var path))
+                        return;
+
                     processFileAction(directory, file);
                 }
 
-                // Process subdirectories in the current directory
                 foreach (string subDir in Directory.EnumerateDirectories(directory))
                 {
+                    if (!ValidateAccess(subDir, out var path))
+                        return;
+
                     processDirAction(directory, subDir);
 
                     // Recursively process subdirectories
@@ -160,6 +168,8 @@ namespace Lemur.FS
         }
         public static void ChangeDirectory(string path)
         {
+
+
             try
             {
                 if (path == "~")
@@ -204,9 +214,11 @@ namespace Lemur.FS
         }
         public static void NewFile(string fileName, bool isDirectory = false)
         {
+            
             try
             {
-                string path = GetRelativeOrAbsolute(fileName);
+                if (!ValidateAccess(fileName, out var path))
+                    return;
 
                 if (isDirectory && !File.Exists(path) && !Directory.Exists(path))
                 {
@@ -230,22 +242,25 @@ namespace Lemur.FS
                 return;
             }
         }
-        public static void Delete(string fileName, bool isDirectory = false)
+        public static void Delete(string fileName)
         {
+           
+
             try
             {
 
-                string targetPath = GetRelativeOrAbsolute(fileName);
+                if (!ValidateAccess(fileName, out var path))
+                    return;
 
-                if (Directory.Exists(targetPath) && !File.Exists(targetPath))
+                if (Directory.Exists(path) && !File.Exists(path))
                 {
-                    Directory.Delete(targetPath, true);
+                    Directory.Delete(path, true);
                 }
                 else
                 {
-                    if (File.Exists(targetPath))
+                    if (File.Exists(path))
                     {
-                        File.Delete(targetPath);
+                        File.Delete(path);
                     }
                     else
                     {
@@ -282,8 +297,15 @@ namespace Lemur.FS
         {
             try
             {
-                fileName = GetRelativeOrAbsolute(fileName);
-                File.WriteAllText(fileName, content);
+                if (!ValidateAccess(fileName, out var path))
+                    return;
+
+                var parent = Directory.GetParent(path);
+
+                if (parent != null && !Directory.Exists(parent.FullName))
+                    parent.Create();
+
+                File.WriteAllText(path, content);
             }
             catch (Exception e)
             {
@@ -295,14 +317,16 @@ namespace Lemur.FS
         {
             try
             {
-                fileName = GetRelativeOrAbsolute(fileName);
-                if (File.Exists(fileName))
+                if (!ValidateAccess(fileName, out var path))
+                    return "";
+
+                if (File.Exists(path))
                 {
-                    return File.ReadAllText(fileName);
+                    return File.ReadAllText(path);
                 }
                 else
                 {
-                    Notifications.Now($"File '{fileName}' not found in current path.");
+                    Notifications.Now($"File '{path}' not found in current path.");
                     return "";
                 }
             }
@@ -316,8 +340,10 @@ namespace Lemur.FS
         {
             try
             {
-                fileName = GetRelativeOrAbsolute(fileName);
-                return File.Exists(fileName);
+                if (!ValidateAccess(fileName, out var path))
+                    return false;
+
+                return path.Length > 0 && File.Exists(path);
             }
             catch (Exception e)
             {
@@ -329,8 +355,10 @@ namespace Lemur.FS
         {
             try
             {
-                directoryName = GetRelativeOrAbsolute(directoryName);
-                return Directory.Exists(directoryName);
+                if (!ValidateAccess(directoryName, out var path))
+                    return false;
+
+                return Directory.Exists(path);
             }
             catch (Exception e)
             {
@@ -338,6 +366,23 @@ namespace Lemur.FS
                 return false;
             }
         }
+
+        private static bool ValidateAccess(string directoryName, out string path)
+        {
+            path = GetResourcePath(directoryName);
+
+            if (string.IsNullOrEmpty(path))
+                path = GetRelativeOrAbsolute(directoryName);
+            var contents = path.Length == 0 ? "was empty" : path;
+
+            if (!WithinFileSystemBounds(path) || path.Length == 0)
+            {
+                Notifications.Now($"Unauthorized access or bad path. offending string : {{{contents}}}");
+                return false;
+            }
+            return true;
+        }
+
         public string[] DirectoryListing()
         {
             try
@@ -356,8 +401,13 @@ namespace Lemur.FS
         {
             try
             {
-                sourcePath = GetRelativeOrAbsolute(sourcePath);
                 destinationPath = GetRelativeOrAbsolute(destinationPath);
+
+                if (!ValidateAccess(sourcePath, out sourcePath))
+                    return;
+
+                if (!ValidateAccess(destinationPath, out destinationPath))
+                    return;
 
                 if (Directory.Exists(sourcePath))
                 {
@@ -401,8 +451,12 @@ namespace Lemur.FS
             {
                 if (path != null && dest != null)
                 {
-                    path = GetRelativeOrAbsolute(path);
-                    dest = GetRelativeOrAbsolute(dest);
+                    if (!ValidateAccess(path, out path))
+                        return;
+
+                    if (!ValidateAccess(dest, out dest))
+                        return;
+
                     if (File.Exists(path))
                     {
                         if (!File.Exists(dest))
@@ -435,12 +489,13 @@ namespace Lemur.FS
                 return;
             }
         }
-
         internal static async void NewDirectory(string path)
         {
             try
             {
-                path = GetRelativeOrAbsolute(path);
+                if (!ValidateAccess(path, out path))
+                    return;
+
                 if (!File.Exists(path) && !Directory.Exists(path))
                     Directory.CreateDirectory(path);
                 else

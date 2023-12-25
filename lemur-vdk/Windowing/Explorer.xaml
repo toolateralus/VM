@@ -5,7 +5,7 @@
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
              mc:Ignorable="d" 
              d:DesignHeight="450" d:DesignWidth="800"
-              FontFamily="Cascadia Mono SemiLight" Foreground="White">
+              FontFamily="Cascadia Mono SemiLight" Foreground="White" Background="#333333">
     <UserControl.Resources>
         <ContextMenu x:Key="ExplorerContextMenu">
             <MenuItem Header="Add File" Click="AddFile_Click"/>

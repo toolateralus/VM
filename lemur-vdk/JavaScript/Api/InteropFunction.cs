@@ -85,7 +85,20 @@ namespace Lemur.JavaScript.Api
         {
             try
             {
-                javaScriptEngine.m_engine_internal.CallFunction(functionHandle, arg1, arg2);
+                if (arg1 == null && arg2 == null)
+                {
+                    _ = javaScriptEngine?.m_engine_internal.Evaluate($"{functionHandle}()");
+                }
+                if (arg1 != null && arg2 == null)
+                {
+                    _ = javaScriptEngine?.m_engine_internal.Evaluate($"{functionHandle}({arg1})");
+                }
+                if (arg1 != null && arg2 != null)
+                {
+                    _ = javaScriptEngine?.m_engine_internal.Evaluate($"{functionHandle}({arg1}, {arg1})");
+                }
+
+                //javaScriptEngine.m_engine_internal.CallFunction(functionHandle, arg1, arg2);
             }
             catch (Exception e)
             {
