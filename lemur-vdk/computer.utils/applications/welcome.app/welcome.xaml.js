@@ -36,10 +36,6 @@ class welcome {
 	on_close () {
 		File.write(this.dataPath, JSON.stringify(this.progress, true));
 	}
-	tut04_click() {
-		let pid = App.start('texed.app', 'hello-world.md', this.doRendering);
-		App.close(pid);
-	}
 	tut01_click() {
 		let pid = App.start('texed.app', 'hello-world.md', this.doRendering);
 		App.close(pid);
@@ -49,6 +45,10 @@ class welcome {
 		App.close(pid);
 	}
 	tut03_click() {
+		let pid = App.start('texed.app', 'hello-world.md', this.doRendering);
+		App.close(pid);
+	}
+	tut04_click() {
 		let pid = App.start('texed.app', 'wpf-tut0.md', this.doRendering);
 		App.close(pid);
 	}
