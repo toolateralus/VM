@@ -26,7 +26,7 @@ namespace Lemur.OS.Language
             string[] validArgs = new string[inputArgs.Length];
 
             Array.Copy(inputArgs, validArgs, validArgs.Length);
-                ;
+
             for (int i = 0; i < validArgs.Length; i++)
             {
                 string? arg = inputArgs[i];

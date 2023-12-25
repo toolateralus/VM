@@ -10,7 +10,7 @@ class cubes {
 		};
 			
 	   for (let z = 0; z < 5 * palette.length; ++z) {
-		    const position = new Vec2(85  + z, 85 + z);
+		    const position = new Vec2(z, z);
 		    const scale = new Vec2(25, 25);
 		    const node = new Node(scale, position);
 		    node.set_vertices(create_square(z % 4));

@@ -39,7 +39,7 @@ function get_set (controlName, propName, func) {
     App.setProperty(controlName, propName, result);
 }
 
-// functions added to intrinsics ------------------------- 
+// functions added to intrinsics -------------------------
 JSON.tryParse = (msg) => {
 	try {
 		return  {
