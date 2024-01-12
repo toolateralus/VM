@@ -1,0 +1,4 @@
+﻿[*.cs]
+
+# CA1307: Specify StringComparison for clarity
+dotnet_diagnostic.CA1307.severity = silent

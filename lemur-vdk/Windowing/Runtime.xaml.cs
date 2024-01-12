@@ -147,6 +147,7 @@ namespace Lemur.GUI
                 pc.InstallCSharpApp("terminal.app", typeof(Terminal));
                 pc.InstallCSharpApp("explorer.app", typeof(Explorer));
                 pc.InstallCSharpApp("texed.app", typeof(Texed));
+                pc.InstallCSharpApp("browser.app", typeof(Browser));
 
                 Runtime.LoadCustomSyntaxHighlighting();
             }

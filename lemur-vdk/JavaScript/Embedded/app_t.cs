@@ -8,6 +8,7 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Net;
 using System.Reflection;
 using System.Runtime.InteropServices;
 using System.Threading;
@@ -84,6 +85,23 @@ namespace Lemur.JS.Embedded
 
                 }
             }
+        }
+        public void callMethod(string element, string methodName, params string[] args)
+        {
+            Current.Window.Dispatcher.Invoke(() =>
+            {
+                var control = FindControl(GetUserContent(), element);
+
+                if (control is null)
+                    return;
+
+                var t = control.GetType();
+
+                var method = t.GetMethod(methodName, BindingFlags.Public);
+
+                Notifications.Now(method.ToString());
+                
+            });
         }
         public void setRow(string element, int row)
         {

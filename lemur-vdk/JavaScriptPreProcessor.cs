@@ -1,5 +1,7 @@
-﻿using System;
+﻿using Newtonsoft.Json;
+using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Text.RegularExpressions;
 
 namespace Lemur.OS.Language
@@ -22,37 +24,12 @@ namespace Lemur.OS.Language
         public static string InjectCommandLineArgs(string[] inputArgs, string jsCode)
         {
             const string ArgsArrayReplacement = "[/***/]";
-
-            string[] validArgs = new string[inputArgs.Length];
-
-            Array.Copy(inputArgs, validArgs, validArgs.Length);
-
-            for (int i = 0; i < validArgs.Length; i++)
+            ArgumentNullException.ThrowIfNull(jsCode);
+            if (jsCode.Contains(ArgsArrayReplacement))
             {
-                string? arg = inputArgs[i];
-                validArgs[i] = arg.Replace("\"", string.Empty).Replace("\'", string.Empty).Replace("`", string.Empty);
+                var argsJson = JsonConvert.SerializeObject(inputArgs, Formatting.Indented);
+                jsCode = jsCode.Replace(ArgsArrayReplacement, argsJson);
             }
-
-            var index = jsCode.IndexOf(ArgsArrayReplacement);
-
-            if (index != -1)
-            {
-                var args = jsCode.Substring(index, ArgsArrayReplacement.Length);
-
-                var newArgs = "";
-
-                if (validArgs.Length > 1) {
-                    var args_InQuotes = string.Join("' ,'", validArgs);
-                    newArgs = $"[{args_InQuotes}]";
-                } 
-                else
-                {
-                    newArgs = "['" + string.Join(" ,", validArgs) + "']"; 
-                }
-
-                jsCode = jsCode.Replace(args, newArgs);
-            }
-
             return jsCode;
         }
     }

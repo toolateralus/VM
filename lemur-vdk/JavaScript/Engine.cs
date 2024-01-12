@@ -301,7 +301,7 @@ await Execute(@$"
             } catch (Exception e) 
             {
                 Notifications.Exception(e);
-                var ans = MessageBox.Show("The application has encountered a serious problem. You should restart. Do you want to quit now?", "Please exit now.", MessageBoxButton.YesNo);
+                var ans = MessageBox.Show($"The application has encountered a serious problem. You should only continue if you know it's harmless or unimportant. Do you want to quit now? \n\n {e}", "Please exit now.", MessageBoxButton.YesNo);
 
                 if (ans == MessageBoxResult.Yes)
                     Environment.Exit(1);

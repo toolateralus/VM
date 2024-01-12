@@ -15,6 +15,9 @@ using System.Security.Cryptography.Xml;
 using Lemur.JS.Embedded;
 using ICSharpCode.AvalonEdit.Search;
 using ICSharpCode.AvalonEdit;
+using System.Runtime.InteropServices;
+using JavaScriptEngineSwitcher.Core.Extensions;
+using System.Diagnostics;
 
 namespace Lemur.GUI
 {
@@ -24,6 +27,7 @@ namespace Lemur.GUI
         {
             Terminal,
             JavaScript,
+            Count,
         }
         internal Engine? Engine;
         private List<string> commandHistory = [];
@@ -92,7 +96,6 @@ namespace Lemur.GUI
         Dictionary<Interpreter, string> cachedInput = new (){
             { Interpreter.Terminal, ""},
             { Interpreter.JavaScript, ""},
-            { Interpreter.Scorch, ""},
         };
         private async void terminal_PreviewKeyDown(object sender, System.Windows.Input.KeyEventArgs e)
         {
@@ -103,9 +106,7 @@ namespace Lemur.GUI
                     // switching interpreters.
                     if (Keyboard.IsKeyDown(System.Windows.Input.Key.LeftShift))
                     {
-                        interpreterBox.SelectedIndex = 1 - interpreterBox.SelectedIndex;
-                        var i = (Interpreter)interpreterBox.SelectedIndex;
-                        output.AppendText($"\nusing interpreter::{i}");
+                        var count = (int)Interpreter.Count;
 
                         if (interpreterBox.SelectedIndex == count - 1)
                             interpreterBox.SelectedIndex = 0;
@@ -128,13 +129,12 @@ namespace Lemur.GUI
                            
                             // switching TO JavaScript.
                             case Interpreter.JavaScript:
-                            interpreterLabel.Content = "JavaScript";
+                                interpreterLabel.Content = "JavaScript";
                                 CacheInput(cur_interpreter);
-                            input.MinHeight = 100;
-                            input.Focus();
+                                input.MinHeight = 100;
+                                input.Focus();
                                 break;
                         }
-
                     }
                     break;
 
@@ -161,9 +161,7 @@ namespace Lemur.GUI
                         return;
 
                     if (historyIndex == -1)
-                    {
                         tempInput = input.Text;
-                    }
                     if (historyIndex < commandHistory.Count - 1)
                     {
                         historyIndex++;
@@ -195,7 +193,7 @@ namespace Lemur.GUI
 
         private async Task Send(KeyEventArgs? e)
         {
-
+            
 
             string inputText = input.Text;
 
@@ -204,7 +202,6 @@ namespace Lemur.GUI
 
             switch ((Interpreter)interpreterBox.SelectedIndex)
             {
-                // terminal
                 case Interpreter.Terminal:
 
                     HandleEvent(e);
@@ -216,7 +213,7 @@ namespace Lemur.GUI
 
                     OnTerminalSend?.Invoke(inputText);
 
-                    // for Terminalread
+                    // for Terminal read
                     if (IsReading)
                     {
                         output.AppendText("\n" + inputText);
@@ -233,7 +230,6 @@ namespace Lemur.GUI
                     PushHistory(inputText);
                     input.Clear();
                     break;
-
                 case Interpreter.JavaScript:
 
                     // for newlines

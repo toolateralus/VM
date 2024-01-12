@@ -220,7 +220,7 @@ namespace Lemur.GUI
         {
             var path = SearchBar.Text;
 
-            if (Computer.Current.CLI.TryCommand(path))
+            if (path.Length != 0 && Computer.Current.CLI.TryCommand(path))
             {
                 Notifications.Now($"Command {path} succeeded.");
                 return;

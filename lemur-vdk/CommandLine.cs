@@ -7,14 +7,18 @@ using Lemur.Windowing;
 using Microsoft.Windows.Themes;
 using Newtonsoft.Json.Linq;
 using System;
+using System.CodeDom.Compiler;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Diagnostics;
 using System.Diagnostics.Metrics;
 using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Reflection;
+using System.Security.AccessControl;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 using System.Xml.Linq;
 
@@ -25,46 +29,120 @@ namespace Lemur.OS.Language
     /// </summary>
     public partial class CommandLine
     {
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="termInput"></param>
+        /// <returns>true if command existed & was invoked, false if not found.</returns>
+        /// <exception cref="ArgumentException"></exception>
         public bool TryCommand(string termInput)
         {
-            var inputs = termInput.Split(';').Select(i => i.Trim());
+            ArgumentNullException.ThrowIfNull(termInput);
 
-            var executed = false;
-            foreach (var input in inputs)
+            if (termInput.Length == 0)
+                throw new ArgumentException("invalid command : ");
+
+            termInput = termInput.Trim();
+
+            if (Commands.TryGetValue(termInput, out var _cmd))
             {
-                // no args, just execute literal input.
-                if (Commands.TryGetValue(input, out var _cmd))
-                {
-                    _cmd.Action.Invoke([]);
-                    executed = true;
-                    continue;
-                }
-
-                string[] split = input.Split(' ');
-
-                if (split.Length == 0)
-                    continue;
-
-                string cmdName = split.First();
-                var str_args = split[1..];
-
-                if (Aliases.TryGetValue(cmdName, out var alias) && File.Exists(alias))
-                {
-                    var jsCode = File.ReadAllText(alias);
-
-                    jsCode = JavaScriptPreProcessor.InjectCommandLineArgs(str_args, jsCode);
-
-                    _ = Task.Run(async delegate { await Computer.Current.JavaScript.Execute(jsCode); });
-
-                    executed = true;
-                    continue;
-                }
-
-                executed = TryInvoke(cmdName, str_args);
+                _cmd.Action.Invoke([]);
+                return true;
             }
 
-            return executed; 
+            var cmdName = ParseName(ref termInput);
+
+            // retrim since name leaves dead white space between first arg.
+            termInput = termInput.TrimStart();
+
+            var arguments = ParseArguments(termInput);
+
+            var result = false;
+
+            var args = arguments.ToArray();
+
+            if (Aliases.TryGetValue(cmdName, out var alias) && FileSystem.FileExists(alias))
+            {
+                var jsCode = FileSystem.Read(alias);
+
+                jsCode = JavaScriptPreProcessor.InjectCommandLineArgs(args, jsCode);
+
+                ThreadPool.QueueUserWorkItem(async _ =>
+                {
+                    using var engine = new Engine(computer, cmdName);
+                    await engine.Execute(jsCode).ConfigureAwait(false);
+                });
+
+                return true;
+            }
+
+            result = TryInvoke(cmdName, args);
+
+            return result;
+
+            static string ParseName(ref string termInput)
+            {
+                // get command name ie 'grep' ..
+                string? cmdName = termInput.Split(' ')[0];
+
+                // remove the command name, parse args
+                termInput = termInput[cmdName.Length..];
+                return cmdName;
+            }
         }
+
+        private static List<string> ParseArguments(string termInput)
+        {
+            var arguments = new List<string>();
+            StringBuilder builder = new();
+            var position = 0;
+
+            while (position < termInput.Length)
+            {
+                var ch = termInput[position];
+                position++; // consume this character BEFORE the switch.
+
+                switch (ch)
+                {
+                    case ' ':
+                        arguments.Add(builder.ToString());
+                        builder.Clear();
+                        continue;
+                    case '\'':
+                        builder.Append(ParseString('\'', termInput, ref position));
+                        continue;
+                    case '\"':
+                        builder.Append(ParseString('\"', termInput, ref position));
+                        continue;
+                }
+
+                builder.Append(ch);
+            }
+
+            if (builder.Length != 0)
+                arguments.Add($"{builder}");
+
+            return arguments;
+        }
+
+        private static string ParseString(char delimiter, string termInput, ref int position)
+        {
+            var builder = new StringBuilder();
+
+            while (position < termInput.Length)
+            {
+                var ch = termInput[position];
+                position++;
+                
+                if (ch == delimiter)
+                    break;
+
+                builder.Append(ch);
+            }
+
+            return builder.ToString();
+        }
+
         public bool TryInvoke(string name, params string[] args)
         {
             if (!Commands.TryGetValue(name, out var cmd))
@@ -345,33 +423,68 @@ namespace Lemur.OS.Language
             var IP = LANIPFetcher.GetLocalIPAddress().MapToIPv4();
             Notifications.Now(IP.ToString());
         }
+
         [Command("edit", "reads / creates a .js file at provided path, and opens it in the text editor")]
         public void EditTextFile(SafeList<string> obj)
         {
             if (obj[0] is string fileName)
             {
-
                 if (FileSystem.GetResourcePath(fileName) is string AbsPath && !string.IsNullOrEmpty(AbsPath))
                 {
-                    if (!File.Exists(AbsPath))
-                    {
-                        var str = File.Create(AbsPath);
-                        str.Close();
-                    }
-                    var wnd = Computer.Current.Window;
                     var tEdit = new Texed(AbsPath);
                     Computer.Current.OpenAppGUI(tEdit, "texed.app", computer.ProcessManager.GetNextProcessID());
+                }
+                else
+                {
+
+                    const string TerminalAppArgument = "-t";
+                    switch (obj[1]) 
+                    {
+                        case TerminalAppArgument:
+                            FileSystem.Write(fileName, 
+$@"
+/* 
+    this file was created as '{fileName}'
+        by the 'edit' command 
+            at {DateTime.Now} 
+                by {Computer.Current.Config["username"]}
+*/
+
+const args = [/***/];
+
+var is_running = true;
+while (is_running) {{
+    let user_input = read();
+    switch (user_input) {{
+        case 'exit':
+            is_running = false;
+            break;
+    }}
+}}
+");
+                            break;
+                        default:
+                            FileSystem.Write(fileName, $@"
+/* 
+    this file was created as '{fileName}'
+        by the 'edit' command 
+            at {DateTime.Now} 
+                by ??????
+*/");
+                            break;
+                    }
+
+
                 }
             }
             else
             {
-                Notifications.Now("Invalid input parameters.");
+                Notifications.Now($"Invalid input parameters... got {obj[0]}");
             }
         }
         [Command("config", "config <all|set|get|rm> <prop_name?> <value?>")]
         public void ModifyConfig(SafeList<string> obj)
         {
-            // I am not sure if this is even possible.
             Computer.Current.Config ??= [];
 
             if (obj is null)

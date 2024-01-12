@@ -260,9 +260,12 @@ namespace Lemur.GUI
                     if (terminal == null)
                     {
                         terminal = new Terminal();
-
-                        var jsEngine = new Engine(computer, "Auxillary__Terminal");
+                        var jsEngine = new Engine(computer, "Terminal");
                         Computer.Current.OpenAppGUI(terminal, "cmd.app", computer.ProcessManager.GetNextProcessID(), engine: jsEngine);
+                        terminal.Window.OnApplicationClose += delegate
+                        {
+                            terminal = null;
+                        };
                     }
                     var code = string.IsNullOrEmpty(textEditor.Text) ? "print('You must provide some javascript to execute...')" : textEditor.Text;
                     Task.Run(async () => { await terminal.Engine.Execute(code); });

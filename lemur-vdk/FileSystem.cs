@@ -70,10 +70,8 @@ namespace Lemur.FS
             try
             {
                 if (string.IsNullOrEmpty(name))
-                {
-                    Notifications.Now($"Failed to get file {name}");
-                    return "";
-                }
+                    return Root;
+                
 
                 if (System.IO.Path.IsPathFullyQualified(name))
                     if (File.Exists(name) || Directory.Exists(name))
@@ -115,9 +113,7 @@ namespace Lemur.FS
             {
                 Notifications.Exception(ex);
             }
-
             return "";
-            //throw new NullReferenceException("Failed to get resource " + name);
         }
         private static bool WithinFileSystemBounds(string? name) => name?.StartsWith(Root) is bool b && b;
         internal static void VerifyOrCreateAppdataDir(string path)
