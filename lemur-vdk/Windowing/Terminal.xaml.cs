@@ -77,12 +77,22 @@ namespace Lemur.GUI
             {
                 var json = JsonConvert.SerializeObject(commandHistory, Formatting.Indented);
                 FileSystem.Write("system/history.txt", json);
+                try
+                {
+                    Engine.Dispose();
+
+                }
+                catch (Exception e)
+                {
+
+                }
             };
         }
 
         Dictionary<Interpreter, string> cachedInput = new (){
             { Interpreter.Terminal, ""},
             { Interpreter.JavaScript, ""},
+            { Interpreter.Scorch, ""},
         };
         private async void terminal_PreviewKeyDown(object sender, System.Windows.Input.KeyEventArgs e)
         {
@@ -97,22 +107,32 @@ namespace Lemur.GUI
                         var i = (Interpreter)interpreterBox.SelectedIndex;
                         output.AppendText($"\nusing interpreter::{i}");
 
-                        // switching to javascript;
-                        if (i == Interpreter.JavaScript)
+                        if (interpreterBox.SelectedIndex == count - 1)
+                            interpreterBox.SelectedIndex = 0;
+                        else interpreterBox.SelectedIndex++;
+
+                        var cur_interpreter = (Interpreter)interpreterBox.SelectedIndex;
+
+                        output.AppendText($"\nusing interpreter::{cur_interpreter}");
+
+                        switch (cur_interpreter)
                         {
+                            // switching TO terminal.
+
+                            case Interpreter.Terminal:
+                                interpreterLabel.Content = "Terminal";
+                                CacheInput(cur_interpreter);
+                                input.MinHeight = 0;
+                                input.Focus();
+                                break;
+                           
+                            // switching TO JavaScript.
+                            case Interpreter.JavaScript:
                             interpreterLabel.Content = "JavaScript";
-                            cachedInput[Interpreter.Terminal] = input.Text;
-                            input.Text = cachedInput[Interpreter.JavaScript];
+                                CacheInput(cur_interpreter);
                             input.MinHeight = 100;
                             input.Focus();
-                        // switching to terminal
-                        } else if (i == Interpreter.Terminal)
-                        {
-                            interpreterLabel.Content = "Terminal";
-                            cachedInput[Interpreter.JavaScript] = input.Text;
-                            input.Text = cachedInput[Interpreter.Terminal];
-                            input.MinHeight = 0;
-                            input.Focus();
+                                break;
                         }
 
                     }
@@ -163,6 +183,14 @@ namespace Lemur.GUI
                     }
                     break;
             }
+        }
+
+        private void CacheInput(Interpreter i)
+        {
+            var count = (int)Interpreter.Count;
+            var last_index = count + i - 1 % count;
+            cachedInput[last_index] = input.Text;
+            input.Text = cachedInput[i];
         }
 
         private async Task Send(KeyEventArgs? e)
