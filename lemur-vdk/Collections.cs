@@ -11,10 +11,11 @@ namespace Lemur.Types
     /// </summary>
     /// <typeparam name="T">The type to be stored</typeparam>
     /// <param name="array">The array to copy</param>
-    public class SafeList<T>: List<T?>
+    public class SafeList<T> : List<T?>
     {
         public SafeList() { }
-        public SafeList(IEnumerable<T?> array) : base(array) { 
+        public SafeList(IEnumerable<T?> array) : base(array)
+        {
         }
         public int Length => Count;
         public new T? this[int index]

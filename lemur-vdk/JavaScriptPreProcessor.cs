@@ -6,7 +6,7 @@ using System.Text.RegularExpressions;
 
 namespace Lemur.OS.Language
 {
-    public class JavaScriptPreProcessor
+    public static class JavaScriptPreProcessor
     {
         public static string MangleNames(string input)
         {

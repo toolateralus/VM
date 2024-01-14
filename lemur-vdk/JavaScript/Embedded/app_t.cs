@@ -70,7 +70,7 @@ namespace Lemur.JS.Embedded
                     var task = Task.Run(job.Invoke, cts.Token);
                     await Task.WhenAny(task, Task.Delay(100_000)).ConfigureAwait(false);
                     lastTime = DateTime.Now;
-                } 
+                }
                 else
                 {
                     await Task.Delay(16).ConfigureAwait(false);
@@ -100,7 +100,7 @@ namespace Lemur.JS.Embedded
                 var method = t.GetMethod(methodName, BindingFlags.Public);
 
                 Notifications.Now(method.ToString());
-                
+
             });
         }
         public void setRow(string element, int row)
@@ -118,7 +118,8 @@ namespace Lemur.JS.Embedded
         public void setColumn(string element, int row)
         {
 
-            Current.Window.Dispatcher.Invoke(() => { 
+            Current.Window.Dispatcher.Invoke(() =>
+            {
                 var control = FindControl(GetUserContent(), element);
 
                 if (control is null)
@@ -155,7 +156,7 @@ namespace Lemur.JS.Embedded
         {
             var didAdd = false;
 
-            childTypeString = "System.Windows.Controls." + childTypeString.Trim(); 
+            childTypeString = "System.Windows.Controls." + childTypeString.Trim();
 
             Current.Window?.Dispatcher.Invoke(() =>
             {
@@ -177,21 +178,24 @@ namespace Lemur.JS.Embedded
 
                 var children = childrenProperty.GetValue(parentControl) as System.Collections.IList;
 
-                if (children == null) {
+                if (children == null)
+                {
                     Notifications.Now("No 'Children' property found");
                     return;
                 }
 
                 Type? childType = typeof(Control).Assembly.DefinedTypes.FirstOrDefault(type => type.FullName.Contains(childTypeString));
 
-                if (childType == null || !typeof(FrameworkElement).IsAssignableFrom(childType)) {
+                if (childType == null || !typeof(FrameworkElement).IsAssignableFrom(childType))
+                {
                     Notifications.Now($"Invalid type string provided for createChild {childType}");
                     return;
                 }
 
                 var newChild = Activator.CreateInstance(childType) as FrameworkElement;
-                
-                if (newChild == null) {
+
+                if (newChild == null)
+                {
                     Notifications.Now("addChild child element was null on instantiation");
                     return;
                 }
@@ -252,7 +256,7 @@ namespace Lemur.JS.Embedded
 
             deferredJobs.Enqueue((Action)(async () =>
             {
-                await Task.Delay(delay);
+                await Task.Delay(delay).ConfigureAwait(false);
 
                 var computer = GetComputer();
 
@@ -267,7 +271,7 @@ namespace Lemur.JS.Embedded
                 if (identifier != null)
                     await engine.Execute($"{identifier} = {code}").ConfigureAwait(false);
                 else
-                    _ = await engine.Execute(code).ConfigureAwait(false) ;
+                    _ = await engine.Execute(code).ConfigureAwait(false);
             }));
         }
         public void defer(string methodName, int delayMs, params object[] args)
@@ -303,7 +307,7 @@ namespace Lemur.JS.Embedded
                     if (args.Length > 0)
                     {
                         var argStrings = new List<string>();
-                        foreach ( var arg in args )
+                        foreach (var arg in args)
                         {
                             switch (arg)
                             {

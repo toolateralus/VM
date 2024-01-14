@@ -50,14 +50,13 @@ namespace Lemur.GUI
 
             PreviewKeyDown += terminal_PreviewKeyDown;
 
-            output.AppendText("Interpreter Controls:\r\n----------------------\r\n\r\nCommon Shortcuts:\r\n- [Shift + Tab]: Toggle between interpreters.\r\n- [Ctrl + T]: Open a temporary JavaScript file with the input's contents.\r\n- [Ctrl + Shift + C]: End any process, including this one, and close the window.\r\n\r\nJavaScript Interpreter:\r\n------------------------\r\n\r\nShortcuts:\r\n- [Left Shift + Enter] or [F5]: Run the input code.\r\n\r\nTerminal Interpreter:\r\n---------------------\r\nShortcuts:\r\n-'help' command : type help into the input bar below and press enter. \n you will get a list of all possible commands and how to use many of them \r\n[Up Arrow / Down Arrow]: Navigate forward and backward in command history.\r\n  (Note: This feature may have occasional quirks but is generally reliable and saves history to a file on session begin and end.)\r\n");
             input.Focus();
 
             output.TextChanged += Output_TextChanged;
 
 
 
-            if (FileSystem.GetResourcePath("history.txt") is string path && path != "")
+            if (FileSystem.GetResourcePath("history.txt") is string path && !string.IsNullOrEmpty(path))
             {
                 var jArray = JsonConvert.DeserializeObject<List<string>>(FileSystem.Read(path));
                 commandHistory = jArray ?? [];
@@ -93,13 +92,13 @@ namespace Lemur.GUI
             };
         }
 
-        Dictionary<Interpreter, string> cachedInput = new (){
+        Dictionary<Interpreter, string> cachedInput = new(){
             { Interpreter.Terminal, ""},
             { Interpreter.JavaScript, ""},
         };
         private async void terminal_PreviewKeyDown(object sender, System.Windows.Input.KeyEventArgs e)
         {
-            
+
             switch (e.Key)
             {
                 case System.Windows.Input.Key.Tab:
@@ -126,7 +125,7 @@ namespace Lemur.GUI
                                 input.MinHeight = 0;
                                 input.Focus();
                                 break;
-                           
+
                             // switching TO JavaScript.
                             case Interpreter.JavaScript:
                                 interpreterLabel.Content = "JavaScript";
@@ -193,7 +192,7 @@ namespace Lemur.GUI
 
         private async Task Send(KeyEventArgs? e)
         {
-            
+
 
             string inputText = input.Text;
 
@@ -250,7 +249,7 @@ namespace Lemur.GUI
             if (output.Text == outputText)
                 output.AppendText("\n done.");
 
-            
+
 
             LastSentInput = LastSentBuffer;
             LastSentBuffer = output.Text;

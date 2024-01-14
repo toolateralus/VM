@@ -48,14 +48,11 @@ namespace Lemur
         public static Computer Current => current;
 
         public required ProcessManager ProcessManager { get; init; }
-        
+
         // todo :: make a more firm, observable way to install applications.
         // right now, the only real thing that attaches the app startup to the comptuer is the button.
         internal readonly Dictionary<string, Type> csApps = [];
         internal readonly List<string> jsApps = new();
-
-        private int startupTimeoutMs = 20_000;
-
         internal bool disposing;
         public Computer(FileSystem fs)
         {
@@ -131,7 +128,7 @@ namespace Lemur
             CreateJavaScriptRuntime(out var processID, out var engine);
 
             string name = type.Replace(".app", "");
-            
+
 
             var absPath = FileSystem.GetResourcePath(name + ".app");
 
@@ -149,7 +146,7 @@ namespace Lemur
                 Notifications.Now($"invalid name for app {type}");
                 return;
             }
-            
+
             // todo: run pre-processor here? have that be optional.
             // homemade typescript? or something more experimental even :D
 
@@ -172,14 +169,14 @@ namespace Lemur
                 {
                     var file = File.ReadAllText(conf);
                     appConfig = JsonConvert.DeserializeObject<AppConfig>(file);
-                } 
+                }
                 catch (Exception e)
                 {
                     Notifications.Exception(e);
                     return;
                 }
-               
-            } 
+
+            }
             else
             {
                 Notifications.Now($"Warning : No '.appconfig' file found for app {name}. using a default.");
@@ -217,12 +214,12 @@ namespace Lemur
                     Notifications.Now($"Error : either the app was not found or there was an error parsing xaml or js for {type}.");
                     return;
                 }
-                   
-                
+
+
                 // todo: add a way to make a purely functional version of this. we don't want to force the user to use a class.
                 // i don't know how we'd do this but i know it's easy(ish)
                 OpenAppGUI(control, appConfig.title, processID, engine);
-            } 
+            }
             if (appConfig.terminal)
             {
                 Terminal term = new();
@@ -234,14 +231,14 @@ namespace Lemur
 
                 OpenAppGUI(term, appConfig.title, pid, engine);
 
-                await engine.Execute($"""const my_pid = () => '{processID}'""");
+                await engine.Execute($"""const my_pid = () => '{processID}'""").ConfigureAwait(false);
 
 
                 if (appConfig?.isWpf == false)
                     await engine.Execute(js).ConfigureAwait(true);
 
             }
-            string allIncludes = ""; 
+            string allIncludes = "";
             foreach (var item in appConfig?.requires)
                 allIncludes += $"const {{{string.Join(", ", item.Value)}}} = require('{item.Key}')\n";
 
@@ -252,7 +249,7 @@ namespace Lemur
             if (appConfig?.isWpf == true || appConfig?.@class != null)
             {
                 _ = await engine.Execute(js).ConfigureAwait(true);
-                
+
 
                 string instantiation_code;
 
@@ -270,7 +267,7 @@ namespace Lemur
 
                 await engine.Execute(instantiation_code).ConfigureAwait(true);
             }
-          
+
         }
         private bool TryOpenCSAppByName(string type, object[] cmdLineArgs)
         {
@@ -422,36 +419,36 @@ namespace Lemur
         {
             Window.Dispatcher?.Invoke(() =>
             {
-            var btn = Window.MakeDesktopButton(appName);
+                var btn = Window.MakeDesktopButton(appName);
 
-            switch (type)
-            {
-                case AppType.Native:
-                    InstallNative(btn, appName);
-                    break;
-                case AppType.Extern:
-                    if (runtime_type != null)
-                        InstallExtern(btn, appName, runtime_type);
-                    break;
-            }
-
-
-
-            // if we don't stop this, it deletes the whole computer xD
-            if (runtime_type == null)
-            {
-                MenuItem delete = new()
+                switch (type)
                 {
-                    Header = "delete app (no undo)"
-                };
-                delete.Click += (sender, @event) =>
-                {
-                var answer = System.Windows.MessageBox.Show($"are you sure you want to delete {appName}?", "Delete PERMANENTLY??", MessageBoxButton.YesNo, System.Windows.MessageBoxImage.Warning);
+                    case AppType.Native:
+                        InstallNative(btn, appName);
+                        break;
+                    case AppType.Extern:
+                        if (runtime_type != null)
+                            InstallExtern(btn, appName, runtime_type);
+                        break;
+                }
 
-                if (answer == MessageBoxResult.Yes)
+
+
+                // if we don't stop this, it deletes the whole computer xD
+                if (runtime_type == null)
                 {
-                    Computer.Current.Uninstall(appName + ".app");
-                        var path = FileSystem.GetResourcePath(appName + ".app");
+                    MenuItem delete = new()
+                    {
+                        Header = "delete app (no undo)"
+                    };
+                    delete.Click += (sender, @event) =>
+                    {
+                        var answer = System.Windows.MessageBox.Show($"are you sure you want to delete {appName}?", "Delete PERMANENTLY??", MessageBoxButton.YesNo, System.Windows.MessageBoxImage.Warning);
+
+                        if (answer == MessageBoxResult.Yes)
+                        {
+                            Computer.Current.Uninstall(appName + ".app");
+                            var path = FileSystem.GetResourcePath(appName + ".app");
                             if (!string.IsNullOrEmpty(path))
                                 FileSystem.Delete(path);
                         }
@@ -584,7 +581,8 @@ namespace Lemur
             if (config is null)
             {
                 InstallIcon(AppType.Native, type);
-            } else
+            }
+            else
             {
                 InstallIcon(AppType.Native, type, runtime_type: null, config);
             }

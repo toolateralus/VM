@@ -47,7 +47,8 @@ namespace Lemur.GUI
             {
                 ResizableParent?.ToggleVisibility();
 
-                if (ResizableParent.Visibility == Visibility.Visible) {
+                if (ResizableParent.Visibility == Visibility.Visible)
+                {
                     ResizableParent.BringIntoViewAndToTop();
                 }
             };
@@ -66,7 +67,7 @@ namespace Lemur.GUI
                     ResizableParent?.ToggleMaximize();
                 else
                     ResizableParent?.BeginMove(e.GetPosition(this));
-                 
+
                 lastClickedTime = DateTimeOffset.Now.ToUnixTimeMilliseconds();
 
                 e.Handled = true;
@@ -90,7 +91,7 @@ namespace Lemur.GUI
 
                 proc.Terminate();
             }
-                
+
             if (Engine == null)
                 return;
 

@@ -110,7 +110,7 @@ namespace Lemur.JavaScript.Api
             var event_call = $"{procID}.{methodName}{argsString}";
             var id = $"{procID}{methodName}";
             string func = $"function {id} {argsString} {{ {event_call}; }}";
-            await javaScriptEngine?.Execute(func);
+            await (javaScriptEngine?.Execute(func)).ConfigureAwait(false);
             return id;
         }
     }

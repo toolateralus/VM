@@ -70,7 +70,7 @@ namespace Lemur.JavaScript.Network
 
             while (true)
             {
-                await networkConfig.ConnectClientAsync(SERVER, CLIENTS);
+                await networkConfig.ConnectClientAsync(SERVER, CLIENTS).ConfigureAwait(false);
             }
         }
         internal void Dispose()
@@ -159,7 +159,8 @@ namespace Lemur.JavaScript.Network
 
             string message = $"\nReceived data, listener: {listener}, ch: {channel}, reply: {reply}, size: {FormatBytes(bytesLength)}";
 
-            Computer.Current.Window.Dispatcher.Invoke(() => {
+            Computer.Current.Window.Dispatcher.Invoke(() =>
+            {
                 foreach (var cmd in Computer.Current.ProcessManager.TryGetAllProcessesOfType<Terminal>())
                     cmd.output.AppendText(message);
             });
@@ -183,8 +184,9 @@ namespace Lemur.JavaScript.Network
             connectedClients.Add(client);
             Notifications.Now($"SERVER:Client {client.GetHashCode()} connected ");
             _ = Task.Run(
-                async delegate { 
-                    await HandleClientCommunicationAsync(client, connectedClients).ConfigureAwait(false); 
+                async delegate
+                {
+                    await HandleClientCommunicationAsync(client, connectedClients).ConfigureAwait(false);
                 }
             );
         }
@@ -240,8 +242,8 @@ namespace Lemur.JavaScript.Network
             var file = packet.Data;
             if (AvailableForDownload.Contains(file))
             {
-                await SendDataRecusive(file);
-                await SendDownloadMessage(packet, "END_DOWNLOAD");
+                await SendDataRecusive(file).ConfigureAwait(false);
+                await SendDownloadMessage(packet, "END_DOWNLOAD").ConfigureAwait(false);
             }
 
             async Task SendDataRecusive(string file)
@@ -256,7 +258,7 @@ namespace Lemur.JavaScript.Network
                 if (File.Exists(path))
                 {
                     var metadata = ToJson(path, TransmissionType.Download, DownloadReplyChannel, -1, false, file);
-                    await SendJsonToClient(packet.Client, JObject.Parse(metadata));
+                    await SendJsonToClient(packet.Client, JObject.Parse(metadata)).ConfigureAwait(false);
                 }
                 else if (Directory.Exists(path))
                 {
@@ -264,12 +266,12 @@ namespace Lemur.JavaScript.Network
 
                     foreach (var entry in directoryContents)
                     {
-                        await SendDataRecusive(entry);
+                        await SendDataRecusive(entry).ConfigureAwait(false);
                     }
                 }
                 else
                 {
-                    await SendDownloadMessage(packet, "FAILED_DOWNLOAD");
+                    await SendDownloadMessage(packet, "FAILED_DOWNLOAD").ConfigureAwait(false);
                 }
 
             }
@@ -305,7 +307,7 @@ namespace Lemur.JavaScript.Network
                     toRemove = item.Key;
                 }
             }
-            if (toRemove != "")
+            if (!string.IsNullOrEmpty(toRemove))
             {
                 IncomingFileTransfersPending.Remove(toRemove);
             }
@@ -371,7 +373,7 @@ namespace Lemur.JavaScript.Network
         {
             foreach (TcpClient connectedClient in connectedClients)
                 if (connectedClient != client)
-                    await SendJsonToClient(connectedClient, header);
+                    await SendJsonToClient(connectedClient, header).ConfigureAwait(false);
         }
         private static async Task SendJsonToClient(TcpClient client, JObject data)
         {

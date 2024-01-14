@@ -30,7 +30,7 @@ namespace Lemur.GUI
         }
         public NotificationControl()
         {
-            
+
             InitializeComponent();
             Loaded += OnLoaded;
             MouseEnter += OnMouseEnter;

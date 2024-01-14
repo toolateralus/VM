@@ -16,11 +16,11 @@ using Image = System.Windows.Controls.Image;
 namespace Lemur.JS.Embedded
 {
     public enum PrimitiveShape
-        {
-            Rectangle,
-            Triangle,
-            Circle,
-        }
+    {
+        Rectangle,
+        Triangle,
+        Circle,
+    }
     public class GraphicsContext
     {
         internal int PixelFormatBpp;
@@ -33,33 +33,33 @@ namespace Lemur.JS.Embedded
 
         public static readonly IReadOnlyList<byte[]> Palette =
         [
-        // _________________________
-        //  | B  | R  |  G  |  A  |
-        //  ------------------------
-            [255,  0,    0,    255],        // Red 0
-            [255,  128,  0,    255],        // Orange 1
-            [255,  255,  0,    255],        // Yellow 2
-            [128,  255,  0,    255],        // Lime Green 3
-            [0,    255,  0,    255],        // Green 4
-            [0,    255,  128,  255],        // Spring Green 5
-            [0,    255,  255,  255],        // Cyan 6
-            [0,    128,  255,  255],        // Sky Blue 7 
-            [0,    0,    255,  255],        // Blue 8
-            [128,  0,    255,  255],        // Purple 9 
-            [255,  0,    255,  255],        // Magenta 10
-            [255,  0,    128,  255],        // Pink 11
-            [192,  192,  192,  255],        // Light Gray 12
-            [128,  128,  128,  255],        // Medium Gray 13
-            [64,   64,   64,   255],        // Dark Gray 14
-            [0,    0,    0,    255],        // Black 15
-            [255,  255,  255,  255],        // White 16
-            [255,  69,   0,    255],        // Red-Orange 17
-            [255,  215,  0,    255],        // Gold 18
-            [0,    128,  0,    255],        // Dark Green 19
-            [0,    128,  128,  255],        // Teal 20
-            [0,    0,    128,  255],        // Navy 21
-            [255,  20,   147,  255],        // Deep Pink 22
-            [0,    250,  154,  255]         // Medium Spring Green 23
+            // _________________________
+            //  | B  | R  |  G  |  A  |
+            //  ------------------------
+            [255, 0, 0, 255],        // Red 0
+            [255, 128, 0, 255],        // Orange 1
+            [255, 255, 0, 255],        // Yellow 2
+            [128, 255, 0, 255],        // Lime Green 3
+            [0, 255, 0, 255],        // Green 4
+            [0, 255, 128, 255],        // Spring Green 5
+            [0, 255, 255, 255],        // Cyan 6
+            [0, 128, 255, 255],        // Sky Blue 7 
+            [0, 0, 255, 255],        // Blue 8
+            [128, 0, 255, 255],        // Purple 9 
+            [255, 0, 255, 255],        // Magenta 10
+            [255, 0, 128, 255],        // Pink 11
+            [192, 192, 192, 255],        // Light Gray 12
+            [128, 128, 128, 255],        // Medium Gray 13
+            [64, 64, 64, 255],        // Dark Gray 14
+            [0, 0, 0, 255],        // Black 15
+            [255, 255, 255, 255],        // White 16
+            [255, 69, 0, 255],        // Red-Orange 17
+            [255, 215, 0, 255],        // Gold 18
+            [0, 128, 0, 255],        // Dark Green 19
+            [0, 128, 128, 255],        // Teal 20
+            [0, 0, 128, 255],        // Navy 21
+            [255, 20, 147, 255],        // Deep Pink 22
+            [0, 250, 154, 255]         // Medium Spring Green 23
         ];
 
         public GraphicsContext(string pid, string targetControl, int width, int height, int PixelFormatBpp = 4)
@@ -88,7 +88,7 @@ namespace Lemur.JS.Embedded
             this.image = new(image);
 
         }
-        
+
         public void writePixel(double x, double y, double color)
         {
             writePixelPacked(x, y, color);
@@ -301,25 +301,25 @@ namespace Lemur.JS.Embedded
         }
         public void drawSkybox()
         {
-            lock(bitmap)
-            Computer.Current.Window.Dispatcher.Invoke(() =>
-            {
-                if (skybox != null)
+            lock (bitmap)
+                Computer.Current.Window.Dispatcher.Invoke(() =>
                 {
-                    // let's do the most performant copy of pixel data possible from skybox to bitmap
-                    // https://stackoverflow.com/questions/6484357/copying-from-a-bitmapsource-to-a-writeablebitmap
+                    if (skybox != null)
+                    {
+                        // let's do the most performant copy of pixel data possible from skybox to bitmap
+                        // https://stackoverflow.com/questions/6484357/copying-from-a-bitmapsource-to-a-writeablebitmap
 
-                    var rect = new Int32Rect(0, 0, skybox.PixelWidth, skybox.PixelHeight);
-                    skybox.CopyPixels(rect, renderTexture, Width * PixelFormatBpp, 0);
-                    bitmap = skybox.Clone();
-                } 
-                else
-                {
-                    Notifications.Now("No skybox was loaded. call 'Graphics.loadSkybox(string path)'");
-                }
+                        var rect = new Int32Rect(0, 0, skybox.PixelWidth, skybox.PixelHeight);
+                        skybox.CopyPixels(rect, renderTexture, Width * PixelFormatBpp, 0);
+                        bitmap = skybox.Clone();
+                    }
+                    else
+                    {
+                        Notifications.Now("No skybox was loaded. call 'Graphics.loadSkybox(string path)'");
+                    }
 
-            });
-          
+                });
+
         }
         public void saveToImage(string filePath)
         {

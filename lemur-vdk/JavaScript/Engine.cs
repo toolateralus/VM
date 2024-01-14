@@ -28,7 +28,8 @@ namespace Lemur.JS
         public key(Computer computer) : base(computer)
         {
         }
-        public void clearFocus() {
+        public void clearFocus()
+        {
             Computer.Current.Window?.Dispatcher?.Invoke(() =>
             {
                 Keyboard.ClearFocus();
@@ -116,10 +117,10 @@ namespace Lemur.JS
 
 
 #if DEBUG
-await Execute(@$"
-    const __NAME__ = '{name}'
+                await Execute(@$"
+    const __NAME__ = '{name}';
     const __DEBUG__ = true;
-");
+").ConfigureAwait(false);
 #else
 await Execute(@$"
     const __NAME__ = '{name}'
@@ -185,7 +186,7 @@ await Execute(@$"
 
                     continue;
                 }
-                await Task.Delay(1);
+                await Task.Delay(1).ConfigureAwait(false);
             }
             if (!Disposing)
             {
@@ -251,7 +252,7 @@ await Execute(@$"
             CodeDictionary.TryAdd(handle, (jsCode, callback));
 
             while (!Disposing && CodeDictionary.TryGetValue(handle, out _) && !token.IsCancellationRequested)
-                await Task.Delay(1, token);
+                await Task.Delay(1, token).ConfigureAwait(false);
 
             if (token.IsCancellationRequested)
             {
@@ -277,11 +278,17 @@ await Execute(@$"
                 return;
 
             var script = File.ReadAllText(absPath);
-            Task.Run(() => Execute(script));
+            ThreadPool.QueueUserWorkItem(async _ =>
+            {
+                var path_from_root = absPath.Replace(FileSystem.Root, string.Empty);
+                await Execute($"__FILE__ = '{path_from_root}'");
+                await Execute(script);
+            });
         }
         public void Dispose()
         {
             Disposing = true;
+
             try
             {
                 m_engine_internal.Interrupt();
@@ -290,6 +297,7 @@ await Execute(@$"
             {
                 Notifications.Exception(e);
             }
+
             try
             {
                 cts.Cancel();
@@ -298,7 +306,8 @@ await Execute(@$"
                 executionThread.Join();
                 AppModule.ReleaseThread();
 
-            } catch (Exception e) 
+            }
+            catch (Exception e)
             {
                 Notifications.Exception(e);
                 var ans = MessageBox.Show($"The application has encountered a serious problem. You should only continue if you know it's harmless or unimportant. Do you want to quit now? \n\n {e}", "Please exit now.", MessageBoxButton.YesNo);

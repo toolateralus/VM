@@ -82,9 +82,6 @@
                 <ComboBoxItem>
                     javascript
                 </ComboBoxItem>
-                <ComboBoxItem>
-                    scorch
-                </ComboBoxItem>
             </ComboBox>
 
         </StackPanel>

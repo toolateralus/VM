@@ -194,7 +194,7 @@ namespace Lemur
             }
             return contents;
         }
-        
+
         internal void GetProcessesOfType(string name, out List<Process> processes)
         {
             if (!ProcessClassTable.TryGetValue(name, out processes!))

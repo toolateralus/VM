@@ -59,7 +59,7 @@ namespace Lemur.GUI
             return menu;
         }
 
-        public static Explorer LoadFilePrompt ()
+        public static Explorer LoadFilePrompt()
         {
             Explorer explorer = new Explorer();
             explorer.IsChildProcess = true;
@@ -67,7 +67,7 @@ namespace Lemur.GUI
         }
         public Explorer()
         {
-            
+
             InitializeComponent();
             FileBox.FontSize = 16;
 
@@ -210,7 +210,7 @@ namespace Lemur.GUI
         {
             Notifications.Now(FileSystem.CurrentDirectory);
         }
-        
+
         private void SearchPressed(object sender, RoutedEventArgs e)
         {
             Navigate();

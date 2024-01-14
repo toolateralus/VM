@@ -13,5 +13,5 @@ namespace Lemur
         public string? entryPoint { get; set; }
         public string? frontEnd { get; set; }
         public Dictionary<string, string[]> requires { get; set; } = [];
-    } 
+    }
 }

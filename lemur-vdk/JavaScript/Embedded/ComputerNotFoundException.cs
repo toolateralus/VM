@@ -4,7 +4,7 @@ using System.Runtime.Serialization;
 namespace Lemur.JS.Embedded
 {
     [Serializable]
-    internal class ComputerNotFoundException : Exception
+    public class ComputerNotFoundException : Exception
     {
         public ComputerNotFoundException()
         {

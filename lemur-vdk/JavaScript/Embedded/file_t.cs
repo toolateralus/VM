@@ -15,7 +15,7 @@ namespace Lemur.JS.Embedded
         public void write(string path, string data)
         {
             ArgumentNullException.ThrowIfNull(path, nameof(path));
-            ArgumentNullException.ThrowIfNull(data, nameof(data));  
+            ArgumentNullException.ThrowIfNull(data, nameof(data));
             FileSystem.Write(path, data);
         }
         public bool exists(string path)

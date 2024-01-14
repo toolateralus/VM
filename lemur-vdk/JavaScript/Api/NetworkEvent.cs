@@ -12,7 +12,7 @@ namespace Lemur.JavaScript.Api
         public NetworkEvent(Engine javaScriptEngine, string identifier, string methodName)
         {
             base.javaScriptEngine = javaScriptEngine;
-            Task.Run(async delegate { functionHandle = await CreateFunction(identifier, methodName); });
+            Task.Run(async delegate { functionHandle = await CreateFunction(identifier, methodName).ConfigureAwait(false); });
         }
 
 

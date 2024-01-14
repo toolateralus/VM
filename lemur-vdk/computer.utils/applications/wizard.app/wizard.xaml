@@ -7,15 +7,13 @@
              d:DesignHeight="450" d:DesignWidth="800" BorderBrush="White" BorderThickness="5" Background="#474354">
     <Grid>
         <!-- We use a StackPanel for easy alignment -->
-        <StackPanel Margin="5" Width="Auto">
-            <Label Content="Enter your app's name: (it will be created under home/myApps/)" Background="Transparent"/>
-            <TextBox x:Name="nameBox" Text="Untitled" Margin="5" />
-            <Label Content="Select your app's type:" Background="Transparent"/>
-            <ComboBox x:Name="appTypeBox" Margin="5">
+        <StackPanel Orientation="Vertical">
+            <TextBox BorderBrush="Black" Margin="2,2,2,2" x:Name="nameBox" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Text="Enter your apps name (it will be created under home/myApps/)"/>
+            <ComboBox x:Name="appTypeBox">
                 <ComboBoxItem>Terminal</ComboBoxItem>
                 <ComboBoxItem>GUI</ComboBoxItem>
             </ComboBox>
-            <Button x:Name="createBtn" Margin="5" HorizontalAlignment="Left" Content="Create App"/>
+            <Button BorderBrush="Black" Margin="2,2,2,2" x:Name="createBtn" HorizontalAlignment="Left" VerticalAlignment="Top" Content="Create App"/>
         </StackPanel>
     </Grid>
 </UserControl>

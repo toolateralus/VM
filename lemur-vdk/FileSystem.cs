@@ -71,7 +71,7 @@ namespace Lemur.FS
             {
                 if (string.IsNullOrEmpty(name))
                     return Root;
-                
+
 
                 if (System.IO.Path.IsPathFullyQualified(name))
                     if (File.Exists(name) || Directory.Exists(name))
@@ -136,7 +136,7 @@ namespace Lemur.FS
             try
             {
                 // todo: verify whether we should even validate between iterations. seems pretty costly.
-                
+
                 foreach (string file in Directory.EnumerateFiles(directory))
                 {
                     if (!ValidateAccess(file, out var path))
@@ -210,7 +210,7 @@ namespace Lemur.FS
         }
         public static void NewFile(string fileName, bool isDirectory = false)
         {
-            
+
             try
             {
                 if (!ValidateAccess(fileName, out var path))
@@ -240,7 +240,7 @@ namespace Lemur.FS
         }
         public static void Delete(string fileName)
         {
-           
+
 
             try
             {
@@ -498,7 +498,7 @@ namespace Lemur.FS
                 {
                     Notifications.Now("that directory or file already exists. do you want to overwrite? [y/n]");
 
-                    var result = await Computer.Current.JavaScript.Execute($"read()");
+                    var result = await Computer.Current.JavaScript.Execute($"read()").ConfigureAwait(false);
 
                     if (result is string answer && answer == "y")
                     {

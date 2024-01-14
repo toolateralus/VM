@@ -11,7 +11,7 @@ namespace Lemur.Windowing
     /// repeat notifications stack to the top of the screen then knock out the first to make room when full.
     /// This can be very very slow.
     /// </summary>
-    public class Notifications
+    public static class Notifications
     {
         public static Computer Current { get; set; }
         /// <summary>
@@ -78,7 +78,8 @@ namespace Lemur.Windowing
         /// <param name="callerName"></param>
         /// <param name="path"></param>
         /// <returns></returns>
-        static bool IsValid(string callerName, string path) {
+        static bool IsValid(string callerName, string path)
+        {
             ArgumentNullException.ThrowIfNull(callerName);
             ArgumentNullException.ThrowIfNull(path);
 

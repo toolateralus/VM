@@ -64,7 +64,7 @@ namespace Lemur.GUI
             {
                 DateTime now = DateTime.Now;
                 string formattedDateTime = now.ToString("MM/dd/yy || h:mm:ss");
-                
+
 
                 TimeLabel.Content = formattedDateTime;
             };
@@ -154,7 +154,7 @@ namespace Lemur.GUI
             btn.Margin = new Thickness(5, 5, 5, 5);
             btn.Content = appName;
 
-            btn.Style = FindResource("DesktopButtonStyle") as Style; 
+            btn.Style = FindResource("DesktopButtonStyle") as Style;
 
             string regexPattern = @"[_a-zA-Z][_azA-Z0-9]*";
 

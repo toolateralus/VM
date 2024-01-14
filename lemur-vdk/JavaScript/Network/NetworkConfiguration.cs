@@ -114,7 +114,7 @@ namespace Lemur.JavaScript.Network
 
             Task.Run(async () =>
             {
-                await Task.Delay(timeout);
+                await Task.Delay(timeout).ConfigureAwait(false);
                 timedOut = true;
             });
 
@@ -162,10 +162,10 @@ namespace Lemur.JavaScript.Network
                 return val;
             }, cts);
 
-            var result = await loop;
+            var result = await loop.ConfigureAwait(false);
 
             // did time out
-            if (await Task.WhenAny(loop, timeoutTask) == timeoutTask)
+            if (await Task.WhenAny(loop, timeoutTask).ConfigureAwait(false) == timeoutTask)
             {
                 cts.Cancel();
                 Notifications.Now("Network timed out while polling an event");
@@ -207,7 +207,7 @@ namespace Lemur.JavaScript.Network
                     if (packet is null)
                     {
                         Notifications.Now($"Recieved a null packet from {name}");
-                        return; 
+                        return;
                     }
 
                     int messageLength = packet.Metadata.Value<int>("size");

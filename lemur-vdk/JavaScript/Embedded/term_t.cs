@@ -90,7 +90,7 @@ namespace Lemur.JS.Embedded
                 result = obj;
             }
 
-            while (result == "")
+            while (string.IsNullOrEmpty(result))
             {
                 Thread.Sleep(5);
             }
@@ -144,7 +144,7 @@ namespace Lemur.JS.Embedded
             Action<string, string> procFile = (rootDir, file) =>
             {
                 string name = "";
-                if (regex != "")
+                if (!string.IsNullOrEmpty(regex))
                 {
                     name = Regex.Match(file, regex).Value;
                 }

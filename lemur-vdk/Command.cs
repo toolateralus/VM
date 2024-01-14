@@ -7,7 +7,7 @@ namespace Lemur.OS.Language
     public delegate void CommandAction(SafeList<string> args);
 
     [AttributeUsage(AttributeTargets.Method)]
-    public class CommandAttribute(string identifier, params string[] Info) : Attribute
+    public sealed class CommandAttribute(string identifier, params string[] Info) : Attribute
     {
         public readonly string[] Info = Info;
         public readonly string Identifier = identifier;

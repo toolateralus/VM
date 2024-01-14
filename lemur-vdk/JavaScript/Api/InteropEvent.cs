@@ -24,7 +24,7 @@ namespace Lemur.JavaScript.Api
 
             Computer.Current.Window.Dispatcher.Invoke(async delegate
             {
-                functionHandle = await CreateFunction(id, method);
+                functionHandle = await CreateFunction(id, method).ConfigureAwait(false);
                 CreateHook(control, @event);
             });
         }

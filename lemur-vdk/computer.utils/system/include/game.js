@@ -81,9 +81,7 @@ class Vec2 {
     }
 
 }
-
 class Node {
-
     constructor(scale, position) {
         this.scale = scale ?? new Vec2(1, 1);
         this.position = position ?? new Vec2(0, 0);
@@ -120,12 +118,44 @@ class Node {
         const max_x = max.x - this.scale.x;
         const max_y = max.y - this.scale.y;
         
-        var collided = this.position.x < min_x || this.position.x > max_x || this.position.y < min_y || this.position.y > max_y;
+        var collided = this.position.x < min_x 
+                        || this.position.x > max_x 
+                        || this.position.y < min_y
+                        || this.position.y > max_y;
         
         this.position.x = Math.min(Math.max(this.position.x, min_x), max_x);
         this.position.y = Math.min(Math.max(this.position.y, min_y), max_y);
         
         return collided;
+    }
+    
+    update_physics(deltaTime) {
+
+        if (typeof deltaTime !== 'number' || deltaTime === NaN)
+            return;
+
+		this.rotation   += this.angular    * deltaTime;
+        this.position.x += this.velocity.x * deltaTime;
+        this.position.y += this.velocity.y * deltaTime;
+		
+		this.angular    *= this.drag;
+        this.velocity.x *= this.drag;
+        this.velocity.y *= this.drag;
+    }
+    rotate(angle) {
+        const cosAngle = Math.cos(angle);
+        const sinAngle = Math.sin(angle);
+
+        for (const Vec2 of this.vertices) {
+            const x = Vec2.x - this.position.x;
+            const y = Vec2.y - this.position.y;
+
+            const rotatedX = x * cosAngle - y * sinAngle;
+            const rotatedY = x * sinAngle + y * cosAngle;
+
+            Vec2.x = rotatedX + this.position.x;
+            Vec2.y = rotatedY + this.position.y;
+        }
     }
     distanceToVec2(x1, y1, x2, y2) {
         const dx = x2 - x1;
@@ -189,34 +219,6 @@ class Node {
             edges.push(new Line(pt1, pt2));
         }
         return edges;
-    }
-    update_physics(deltaTime) {
-
-        if (typeof deltaTime !== 'number' || deltaTime === NaN)
-            return;
-
-		this.rotation  += this.angular    * deltaTime;
-        this.position.x     += this.velocity.x * deltaTime;
-        this.position.y     += this.velocity.y * deltaTime;
-		
-		this.angular    *= this.drag;
-        this.velocity.x *= this.drag;
-        this.velocity.y *= this.drag;
-    }
-    rotate(angle) {
-        const cosAngle = Math.cos(angle);
-        const sinAngle = Math.sin(angle);
-
-        for (const Vec2 of this.vertices) {
-            const x = Vec2.x - this.position.x;
-            const y = Vec2.y - this.position.y;
-
-            const rotatedX = x * cosAngle - y * sinAngle;
-            const rotatedY = x * sinAngle + y * cosAngle;
-
-            Vec2.x = rotatedX + this.position.x;
-            Vec2.y = rotatedY + this.position.y;
-        }
     }
 }
 class Scene {

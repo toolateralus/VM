@@ -147,9 +147,10 @@ namespace Lemur.GUI
 
                 Contents = "Loading file.. please wait.";
 
-                Task.Run(async () => {
+                Task.Run(async () =>
+                {
                     Contents = await File.ReadAllTextAsync(path).ConfigureAwait(false);
-                    await Dispatcher.InvokeAsync(() => { textEditor.Text = Contents; }); 
+                    await Dispatcher.InvokeAsync(() => { textEditor.Text = Contents; });
                 });
 
                 textEditor.Text = Contents;
@@ -179,7 +180,7 @@ namespace Lemur.GUI
             var pid = computer.ProcessManager.GetNextProcessID();
             Computer.Current.OpenAppGUI(fileExplorer, "explorer.app", pid);
             var proc = Computer.Current.ProcessManager.GetProcess(pid);
-            
+
             fileExplorer.OnNavigated += (file) =>
             {
                 LoadFile(file);
@@ -268,7 +269,7 @@ namespace Lemur.GUI
                         };
                     }
                     var code = string.IsNullOrEmpty(textEditor.Text) ? "print('You must provide some javascript to execute...')" : textEditor.Text;
-                    Task.Run(async () => { await terminal.Engine.Execute(code); });
+                    Task.Run(async () => { await terminal.Engine.Execute(code).ConfigureAwait(false); });
                     break;
 
                 default:

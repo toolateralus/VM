@@ -5,7 +5,7 @@ using System.Windows.Markup;
 
 namespace Lemur.JavaScript.Api
 {
-    public class XamlHelper
+    public static class XamlHelper
     {
         public static UserControl? ParseUserControl(string xaml)
         {

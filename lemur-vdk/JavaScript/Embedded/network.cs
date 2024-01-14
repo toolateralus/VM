@@ -194,7 +194,7 @@ namespace Lemur.JavaScript.Embedded
 
             while (Computer.Current.Network.IsConnected())
             {
-                (object? value, int reply) = await NetworkConfiguration.PullEventAsync(Server.DownloadReplyChannel);
+                (object? value, int reply) = await NetworkConfiguration.PullEventAsync(Server.DownloadReplyChannel).ConfigureAwait(false);
 
                 if (value is not JObject metadata)
                 {
@@ -237,7 +237,7 @@ namespace Lemur.JavaScript.Embedded
                 File.WriteAllBytes(fullPath, dataBytes);
                 size += dataBytes.Length;
 
-                await Task.Delay(1);
+                await Task.Delay(1).ConfigureAwait(false);
             }
             Notifications.Now("Not connected to network, or download failed");
         }
