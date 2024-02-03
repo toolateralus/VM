@@ -59,17 +59,9 @@ namespace Lemur.GUI
                 ResizableParent?.BringIntoViewAndToTop();
             };
 
-            long lastClickedTime = 0;
-
             MouseLeftButtonDown += (_, e) =>
             {
-                if (DateTimeOffset.Now.ToUnixTimeMilliseconds() - lastClickedTime < 500)
-                    ResizableParent?.ToggleMaximize();
-                else
-                    ResizableParent?.BeginMove(e.GetPosition(this));
-
-                lastClickedTime = DateTimeOffset.Now.ToUnixTimeMilliseconds();
-
+                ResizableParent?.BeginMove(e.GetPosition(this));
                 e.Handled = true;
             };
 

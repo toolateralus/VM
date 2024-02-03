@@ -96,10 +96,10 @@ namespace Lemur.JS
             EmbedObject("Terminal", TermModule);
             EmbedObject("Key", KeyModule);
             EmbedType("Stopwatch", typeof(System.Diagnostics.Stopwatch));
-            EmbedType("GraphicsContext", typeof(GraphicsContext));
+            EmbedType("GraphicsContext", typeof(graphics_ctx_t));
             EmbedObject("config", Computer.Current.Config);
 
-            var joinedPalette = $"const palette = {JsonConvert.SerializeObject(GraphicsContext.Palette)}";
+            var joinedPalette = $"const palette = {JsonConvert.SerializeObject(graphics_ctx_t.Palette)}";
             Execute(joinedPalette);
 
 

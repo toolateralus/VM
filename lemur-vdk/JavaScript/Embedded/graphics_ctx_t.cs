@@ -21,15 +21,15 @@ namespace Lemur.JS.Embedded
         Triangle,
         Circle,
     }
-    public class GraphicsContext
+    public class graphics_ctx_t
     {
         internal int PixelFormatBpp;
         internal int Width, Height;
-        private byte[] renderTexture = Array.Empty<byte>();
+        private byte[] renderTexture = [];
         private WriteableBitmap bitmap;
         private WriteableBitmap skybox;
         internal readonly WeakReference<Image> image;
-        private byte[] cached_color = new byte[4];
+        private byte[] cached_color = [255,255,255,255];
 
         public static readonly IReadOnlyList<byte[]> Palette =
         [
@@ -62,7 +62,16 @@ namespace Lemur.JS.Embedded
             [0, 250, 154, 255]         // Medium Spring Green 23
         ];
 
-        public GraphicsContext(string pid, string targetControl, int width, int height, int PixelFormatBpp = 4)
+        /// <summary>
+        /// this embedded type allows users to attach a WPF 'Image' control to a drawable bitmap render surface and 
+        /// provides utility to draw, load and save images.
+        /// </summary>
+        /// <param name="pid"></param>
+        /// <param name="targetControl"></param>
+        /// <param name="width"></param>
+        /// <param name="height"></param>
+        /// <param name="PixelFormatBpp"></param>
+        public graphics_ctx_t(string pid, string targetControl, int width, int height, int PixelFormatBpp = 4)
         {
 
             Width = width;
@@ -88,11 +97,21 @@ namespace Lemur.JS.Embedded
             this.image = new(image);
 
         }
-
+        /// <summary>
+        /// Write a pixel from a packed integer color.
+        /// </summary>
+        /// <param name="x"></param>
+        /// <param name="y"></param>
+        /// <param name="color"></param>
         public void writePixel(double x, double y, double color)
         {
             writePixelPacked(x, y, color);
         }
+        /// <summary>
+        /// resize the render surface.
+        /// </summary>
+        /// <param name="width"></param>
+        /// <param name="height"></param>
         public void resize(double width, double height)
         {
             Width = (int)width;
@@ -107,11 +126,26 @@ namespace Lemur.JS.Embedded
                 bitmap = new WriteableBitmap(Width, Height, 1, 1, PixelFormats.Bgra32, null);
             });
         }
+        /// <summary>
+        /// write a pixel to the render surface from the indexed color palette
+        /// </summary>
+        /// <param name="x"></param>
+        /// <param name="y"></param>
+        /// <param name="index"></param>
         public void writePixelIndexed(double x, double y, double index)
         {
             var col = Palette[(int)index];
             writePixel(x, y, col[0], col[1], col[2], col[3]);
         }
+        /// <summary>
+        /// write a pixel to the render surface using r, g, b, a byte values
+        /// </summary>
+        /// <param name="x"></param>
+        /// <param name="y"></param>
+        /// <param name="r"></param>
+        /// <param name="g"></param>
+        /// <param name="b"></param>
+        /// <param name="a"></param>
         public void writePixel(double x, double y, byte r, byte g, byte b, byte a)
         {
             var index = (int)((y * Width + x) * PixelFormatBpp);
@@ -127,10 +161,18 @@ namespace Lemur.JS.Embedded
         public void writePixelPacked(double x, double y, double color)
         {
             byte r, g, b, a;
-            ExtractColor(color, out r, out g, out b, out a);
+            UnpackColor(color, out r, out g, out b, out a);
             writePixel(x, y, r, g, b, a);
         }
-        public static void ExtractColor(double color, out byte r, out byte g, out byte b, out byte a)
+        /// <summary>
+        /// unpacks bytes from a packed color integer.
+        /// </summary>
+        /// <param name="color"></param>
+        /// <param name="r"></param>
+        /// <param name="g"></param>
+        /// <param name="b"></param>
+        /// <param name="a"></param>
+        public static void UnpackColor(double color, out byte r, out byte g, out byte b, out byte a)
         {
             var col = (byte)color;
 
@@ -139,14 +181,7 @@ namespace Lemur.JS.Embedded
             b = (byte)(col >> 8 & 0xFF);
             a = (byte)(col & 0xFF);
         }
-        public void ExtractColorToCache(double color)
-        {
-            var col = (int)color;
-            cached_color[0 + 0] = (byte)(col >> 24 & 0xFF);
-            cached_color[0 + 1] = (byte)(col >> 16 & 0xFF);
-            cached_color[0 + 2] = (byte)(col >> 8 & 0xFF);
-            cached_color[0 + 3] = (byte)(col & 0xFF);
-        }
+        
         public void Draw(Image image)
         {
             if (image == null)
@@ -184,7 +219,6 @@ namespace Lemur.JS.Embedded
         }
         public unsafe void clearColor(double color)
         {
-            ExtractColorToCache(color);
             for (int i = 0; i < Width * Height; i++)
                 fixed (byte* ptr = renderTexture)
                     Marshal.Copy(cached_color, 0, (nint)ptr + i * PixelFormatBpp, PixelFormatBpp);
@@ -197,18 +231,18 @@ namespace Lemur.JS.Embedded
                 fixed (byte* ptr = renderTexture)
                     Marshal.Copy(cached_color, 0, (nint)ptr + i * PixelFormatBpp, PixelFormatBpp);
         }
-        public void drawFilledShape(double x, double y, double h, double w, double r, double colorIndex, int primitiveShape)
+        public void drawFilledShape(double x, double y, double height, double width, double rotation, double colorIndex, int primitiveShape)
         {
             switch ((PrimitiveShape)primitiveShape)
             {
                 case PrimitiveShape.Rectangle:
-                    writeFilledRectangle(x, y, h, w, r, colorIndex);
+                    writeFilledRectangle(x, y, height, width, rotation, colorIndex);
                     break;
                 case PrimitiveShape.Circle:
-                    writeFilledCircle(x, y, h, w, r, colorIndex);
+                    writeFilledCircle(x, y, height, width, rotation, colorIndex);
                     break;
                 case PrimitiveShape.Triangle:
-                    writeFilledTriangle(x, y, h, w, r, colorIndex);
+                    writeFilledTriangle(x, y, height, width, rotation, colorIndex);
                     break;
                 default:
                     throw new NotSupportedException($"The shape {primitiveShape} is not supported");
@@ -290,6 +324,18 @@ namespace Lemur.JS.Embedded
                 }
             }
         }
+        /// <summary>
+        /// This works very poorly. simple triangle collision test.
+        /// </summary>
+        /// <param name="x"></param>
+        /// <param name="y"></param>
+        /// <param name="x1"></param>
+        /// <param name="y1"></param>
+        /// <param name="x2"></param>
+        /// <param name="y2"></param>
+        /// <param name="x3"></param>
+        /// <param name="y3"></param>
+        /// <returns></returns>
         public bool IsPointInsideTri(double x, double y, double x1, double y1, double x2, double y2, double x3, double y3)
         {
             double denominator = (y2 - y3) * (x1 - x3) + (x3 - x2) * (y1 - y3);
