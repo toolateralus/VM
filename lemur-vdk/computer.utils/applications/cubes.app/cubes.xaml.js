@@ -47,7 +47,7 @@ class cubes {
     }
     m_Rendering() {
         this.renderer.m_drawScene(this.scene, this.gfx_ctx);
-        this.gfx_ctx.flushCtx();
+        this.gfx_ctx.flush();
         this.m_update(16 / 1000);
     }
     m_Rendering_profiled() {
@@ -59,7 +59,7 @@ class cubes {
         renderer.m_drawScene(this.scene, this.gfx_ctx);
         
         profiler.set_marker('Rendering');
-		this.gfx_ctx.flushCtx();
+		this.gfx_ctx.flush();
 
         profiler.set_marker('uploading');
         this.m_update(16 / 1000);

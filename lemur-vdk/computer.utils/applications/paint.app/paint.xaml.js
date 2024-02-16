@@ -1,10 +1,7 @@
 class paint {
 constructor(id) {
         this.id = id;
-
         this.pickerOpen = 0;
-		this.undoCache = [[]];
-		this.undoIndex = 0;
         this.mouseState = 
         {
             x: 0,
@@ -22,7 +19,7 @@ constructor(id) {
         this.gfx_ctx = new GraphicsContext(this.id, 'RenderingTarget', this.resolution, this.resolution);
 		
 		this.deferred = 0;
-		this.primIndex = 0;
+		
 	
         App.eventHandler('RenderingTarget', 'onMouseDown', Event.MouseDown);
         App.eventHandler('RenderingTarget', 'onMouseDown', Event.MouseUp);
@@ -54,7 +51,7 @@ constructor(id) {
 			const x = Math.floor(msX - halfRad);
 			const y = Math.floor(msY - halfRad)
 
-			this.gfx_ctx.drawFilledShape(x, y, radius, radius, rotation, brush, this.primIndex);
+			this.gfx_ctx.drawRect(x, y, radius, radius, rotation, brush);
 			
 		
         }
@@ -66,7 +63,7 @@ constructor(id) {
         this.mouseState.x = X;
         this.mouseState.y = Y;
         this.draw();
-    	this.gfx_ctx.flushCtx();
+    	this.gfx_ctx.flush();
     }
     onMouseDown(left, right) {
         this.mouseState.right = right;
@@ -93,15 +90,13 @@ constructor(id) {
         if (Key.isDown('B')) {
         	this.brushIndex = (this.brushIndex + 1) % palette.length;
         }
-        if (Key.isDown('S')) {
-        	this.primIndex = (this.primIndex + 1) % 3;
-        }
+       
     }
     onSelectionChanged(index) {
         this.brushIndex = index;
     }
     onSavePressed() {
-        this.gfx_ctx.flushCtx();
+        this.gfx_ctx.flush();
         this.gfx_ctx.saveToImage('home/test.bmp');
         print('saved to home/test.bmp');
     }
@@ -110,12 +105,12 @@ constructor(id) {
         print('Loaded from home/test.bmp');
     }
     onClearPressed() {
-        this.gfx_ctx.clearColorIndex(Color.WHITE);
-        this.gfx_ctx.flushCtx();
+        this.gfx_ctx.clearColor(Color.WHITE);
+        this.gfx_ctx.flush();
     }
     onFillPressed() { 
-        this.gfx_ctx.clearColorIndex(this.brushIndex);
-        this.gfx_ctx.flushCtx();
+        this.gfx_ctx.clearColor(this.brushIndex);
+        this.gfx_ctx.flush();
     }
 
 //#endregion

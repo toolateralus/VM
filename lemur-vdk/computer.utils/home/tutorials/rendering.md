@@ -200,17 +200,17 @@ nodes.forEach(node => {
         // I've attempted to make the code as expressive as possible.
 
         // note this doesn't actually show up on screen when we just call draw, it just organizes the data.
-        Graphics.drawFilledShape(this.gfx_ctx, 
+        Graphics.drawRect(this.gfx_ctx, 
                             x, y,
                             width, height,
                             rotation,
-                            color, primitive);
+                            color);
     }
 });
 
 // this is the call that will take the drawn data and flush the 'frame buffer'
 // in other words, it copies the image that you've drawn to the wpf control.
-Graphics.flushCtx(this.gfx_ctx);
+Graphics.flush(this.gfx_ctx);
 
 }
 

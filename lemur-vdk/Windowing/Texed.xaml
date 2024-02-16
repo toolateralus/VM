@@ -17,7 +17,7 @@
             <Button       Background="#333333" Foreground="Cyan" Click="RunButton_Click" Name="RunButton" TextBlock.TextAlignment="Center" Height="20" Width="120" Content="run (F5)" />
             <ToggleButton Background="#333333" Foreground="Cyan" Click="Preferences_Click" Height="20" Width="120" Content="preferences"/>
             <Button       Background="#333333" Foreground="Cyan" Click="LoadButton_Click" Name="LoadButton" TextBlock.TextAlignment="Center" Height="20" Width="100" Content="load" />
-            <Button       Background="#333333" Foreground="Cyan" Click="SaveButton_Click" Name="SaveButton" TextBlock.TextAlignment="Center" Height="20" Width="100" Content="save (ctrl + s)" />
+            <Button       Background="#333333" Foreground="Cyan" Click="SaveButton_Click" Name="SaveButton" TextBlock.TextAlignment="Center" Height="20" Width="100" Content="save" />
         </StackPanel>
         <StackPanel Visibility="Hidden" Grid.Row="1" x:Name="prefsWindow" Orientation="Vertical">
             <ComboBox x:Name="shTypeBox" SelectionChanged="DocTypeBox_SelectionChanged"/>
@@ -25,7 +25,7 @@
         </StackPanel>
 
         <avalonEdit:TextEditor x:Name="textEditor" Grid.Row="1"
-            WordWrap="True"
+            WordWrap="False"
             Foreground="White"
             Background="#28262e"
             SyntaxHighlighting="JavaScriptCustom"

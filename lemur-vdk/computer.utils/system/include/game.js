@@ -369,7 +369,7 @@ class Renderer {
     }
     m_drawScene(scene) {
 
-        this.gfx_ctx.clearColorIndex(this.bgColor);
+        this.gfx_ctx.clearColor(this.bgColor);
 
         const nodes = scene.Nodes();
 
