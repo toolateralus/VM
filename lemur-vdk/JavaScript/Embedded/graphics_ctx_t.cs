@@ -105,6 +105,7 @@ namespace Lemur.JS.Embedded {
                 return;
 
             var pixelCount = renderTexture.Length / formatBpp;
+            
             if (pixelCount <= 1)
                 return;
 
@@ -297,12 +298,15 @@ namespace Lemur.JS.Embedded {
                         IntPtr.Zero,
                         Int32Rect.Empty,
                         BitmapSizeOptions.FromEmptyOptions());
+                    
                     bitmap = new(bitmapSource);
+
+                    Notifications.Now("Bitmap loaded successfully.");
 
                     if (image.TryGetTarget(out var imageControl))
                         m_Draw(imageControl);
+                    else Notifications.Now("Image control not found when loading image."); 
                 });
-
             }
             catch (Exception ex) {
                 Notifications.Now($"Error loading image: {ex.Message}");
