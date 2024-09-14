@@ -22,6 +22,7 @@
         <StackPanel Visibility="Hidden" Grid.Row="1" x:Name="prefsWindow" Orientation="Vertical">
             <ComboBox x:Name="shTypeBox" SelectionChanged="DocTypeBox_SelectionChanged"/>
             <ComboBox x:Name="themeBox" SelectionChanged="ThemeBox_SelectionChanged"/>
+            <ComboBox x:Name="fontBox" SelectionChanged="FontBox_SelectionChanged"/>
         </StackPanel>
 
         <avalonEdit:TextEditor x:Name="textEditor" Grid.Row="1"
@@ -32,7 +33,7 @@
             ShowLineNumbers="True"
             FontSize="16"
             IsReadOnly="false" 
-            FontFamily="Consolas"
+            FontFamily="Fira Code Retina"
             HorizontalScrollBarVisibility="Auto"
             VerticalScrollBarVisibility="Auto"/>
     </Grid>

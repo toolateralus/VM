@@ -3,6 +3,9 @@
 <ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
                     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
 
+
+    
+    
     <Brush x:Key="Foreground">#FFCFCFCF</Brush>
     <Brush x:Key="Background">#222222</Brush>
     <Style x:Key="ButtonStyle" TargetType="Button">
@@ -50,6 +53,10 @@
                 </BeginStoryboard>
             </EventTrigger>
         </Style.Triggers>
+    </Style>
+
+    <Style TargetType="Control">
+        <Setter Property="FontFamily" Value="{StaticResource FiraCode}" />
     </Style>
 
     <Style x:Key="ToggleButtonStyle" TargetType="ToggleButton">

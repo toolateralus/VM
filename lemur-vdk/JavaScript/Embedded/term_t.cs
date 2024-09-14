@@ -21,7 +21,9 @@ namespace Lemur.JS.Embedded
         {
 
         }
+        public void clear() {
 
+        }
         /// <summary>
         /// Tries to invoke a terminal command, in the background.
         /// </summary>

@@ -146,6 +146,7 @@ namespace Lemur.OS.Language {
             Aliases.Clear();
         }
     }
+
     /// <summary>
     /// Set of base commands for Lemur. Feel free to expand / refine these.
     /// Check out SafeList to find out more.
@@ -183,43 +184,7 @@ namespace Lemur.OS.Language {
             FileSystem.Move(obj[0], obj[1]);
             Notifications.Now($"Moved {obj[0]}->{obj[1]}");
         }
-        [Command("mangler", "mangles a javascript file's names & identifiers, or a range of lines. usage : mangler <filename> <optional lineStart> <optional lineEnd>")]
-        public void Mangler(SafeList<string> obj) {
-            if (obj.Length == 0) {
-                Notifications.Now("mangler::error must provide a file for mangler");
-                return;
-            }
-
-            var fileName = FileSystem.GetResourcePath(obj[0]);
-            if (!File.Exists(fileName)) {
-                Notifications.Now("mangler::error : file did not exist");
-                return;
-            }
-
-
-            var data = File.ReadAllText(fileName);
-
-            if (obj[1] is not string startIndex || !int.TryParse(startIndex, out var start)) {
-                File.WriteAllText(fileName, JavaScriptPreProcessor.MangleNames(data));
-                return;
-            }
-
-            if (obj[2] is not string endIndex || !int.TryParse(endIndex, out var end)) {
-                Notifications.Now("invalid end index");
-                return;
-            }
-
-            var lines = data.Split('\n')[start..end];
-
-            var obfuscatedLines = JavaScriptPreProcessor.MangleNames(string.Join("\n", lines)).Split('\n');
-            int line = 0;
-
-            for (int i = 0; i < lines.Length; i++) {
-                if (i > start && i < end)
-                    lines[i] = obfuscatedLines[line++];
-            }
-
-        }
+       
         [Command("setbg", "sets the desktop background")]
         public void SetBackground(SafeList<string> obj) {
             if (obj[0] is not string fileName) {
@@ -382,7 +347,7 @@ $@"
     this file was created as '{fileName}'
         by the 'edit' command 
             at {DateTime.Now} 
-                by {Computer.Current.Config["username"]}
+                by {Computer.Current.Config["USER"]}
 */
 
 const args = [/***/];
@@ -531,7 +496,7 @@ while (is_running) {{
 
         }
         [Command("clear", "clears the terminal(s), if open.")]
-        public void ClearTerminal(SafeList<string> obj) {
+        public void ClearTerminal(SafeList<string> _) {
             var cmd = computer.ProcessManager.TryGetProcessOfType<Terminal>()?.output;
 
             Computer.Current.Window.Dispatcher.Invoke(() => {
@@ -542,19 +507,23 @@ while (is_running) {{
                 Notifications.Now("failed to clear - no cmd prompt open");
         }
         [Command("help", "prints these help listings")]
-        public void ShowHelp(SafeList<string> obj) {
+        public void ShowHelp(SafeList<string> _) {
             var terminal = computer.ProcessManager.TryGetProcessOfType<Terminal>();
+
+            if (terminal == null) {
+                return;
+            }
 
             StringBuilder cmdbuilder = new();
             StringBuilder aliasbuilder = new();
 
             // todo: make this easier to read, add a manual.
             foreach (var item in Computer.Current.CLI.Commands)
-                cmdbuilder?.Append($"\n{{{item.Value.Identifier}}} \t\n\'{string.Join(",", item.Value.Info)}\'");
+                cmdbuilder.Append(CultureInfo.CurrentCulture, $"\n{{{item.Value.Identifier}}} \t\n\'{string.Join(",", item.Value.Info)}\'");
 
             // todo: add better alias info
             foreach (var item in Computer.Current.CLI.Aliases)
-                aliasbuilder.Append($"\n{item.Key} -> {item.Value.Split('\\').Last()}");
+                aliasbuilder.Append(CultureInfo.CurrentCulture, $"\n{item.Key} -> {item.Value.Split('\\').Last()}");
 
             terminal.Dispatcher.Invoke(() => {
                 terminal?.output.AppendText(" ### Native Commands ### ");
@@ -567,9 +536,13 @@ while (is_running) {{
         }
         [Command("run", "runs a JavaScript file of specified path in the computers main engine.")]
         public async void RunJsFile(SafeList<string> obj) {
-            if (obj[0] is string path && FileSystem.GetResourcePath(path.Replace(".js", "") + ".js") is string AbsPath && File.Exists(AbsPath)) {
+            ArgumentNullException.ThrowIfNull(obj);
+            if (obj[0] is string path 
+                && FileSystem.GetResourcePath(
+                    path.Replace(".js", "") + ".js") 
+                    is string AbsPath 
+                && File.Exists(AbsPath)) {
                 await Computer.Current.JavaScript.Execute(File.ReadAllText(AbsPath)).ConfigureAwait(false);
-                Notifications.Now($"running {AbsPath}...");
             }
             else {
                 Notifications.Now("failed run: bad args. usage : run 'path.js'");

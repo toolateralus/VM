@@ -12,32 +12,26 @@ using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
 
-namespace Lemur
-{
-    public class ProcessManager
-    {
+namespace Lemur {
+    public class ProcessManager {
         internal Dictionary<string, List<Process>> ProcessClassTable = [];
-        internal string GetProcessClass(string identifier)
-        {
+        internal string GetProcessClass(string identifier) {
             var processClass = "Unknown process";
 
             foreach (var procList in ProcessClassTable)
                 foreach (var proc in from proc in procList.Value
                                      where proc.ID == identifier
-                                     select proc)
-                {
+                                     select proc) {
                     processClass = proc.Type;
                 }
 
             return processClass;
         }
-        internal IReadOnlyCollection<T> TryGetAllProcessesOfType<T>() where T : UserControl
-        {
+        internal IReadOnlyCollection<T> TryGetAllProcessesOfType<T>() where T : UserControl {
             List<T> contents = [];
             foreach (var process in ProcessClassTable.Values.SelectMany(i => i.Select(i => i))) // flatten array
             {
-                process.UI.Dispatcher.Invoke(() =>
-                {
+                process.UI.Dispatcher.Invoke(() => {
                     if (process.UI.ContentsFrame is not Frame frame)
                         return;
 
@@ -49,27 +43,23 @@ namespace Lemur
             }
             return contents;
         }
-        internal T? TryGetProcessOfType<T>() where T : UserControl
-        {
+        internal T? TryGetProcessOfType<T>() where T : UserControl {
             T? content = default(T);
 
-            Computer.Current.Window.Dispatcher.Invoke(() =>
-            {
+            Computer.Current.Window.Dispatcher.Invoke(() => {
                 content = TryGetProcessOfTypeUnsafe<T>();
             });
 
             return content;
         }
-        internal async Task CreateEventHandler(Engine engine, string identifier, string targetControl, string methodName, int type)
-        {
+        internal async Task CreateEventHandler(Engine engine, string identifier, string targetControl, string methodName, int type) {
             var process = GetProcess(identifier);
             var wnd = process.UI;
 
             // check if this event already exists
             var result = await engine.Execute($"{identifier} != null").ConfigureAwait(true);
 
-            if (result is not bool ID_EXISTS || !ID_EXISTS)
-            {
+            if (result is not bool ID_EXISTS || !ID_EXISTS) {
                 Notifications.Now($"App not found : {identifier}..  that is NOT good...");
                 return;
             }
@@ -79,19 +69,16 @@ namespace Lemur
 
             string processClass = process.Type.Replace(".app", "", StringComparison.CurrentCulture);
 
-            if (result is not bool METHOD_EXISTS || !METHOD_EXISTS)
-            {
+            if (result is not bool METHOD_EXISTS || !METHOD_EXISTS) {
                 Notifications.Now($"'app.eventHandler(...)' threw an exception : {processClass}.{methodName} not found. Make sure {methodName} is defined and spelled correctly in both the hook function call and the definition.");
                 return;
             }
             InteropEvent? eh = default;
 
-            wnd.Dispatcher.Invoke(() =>
-            {
+            wnd.Dispatcher.Invoke(() => {
                 var content = process?.UI?.Engine?.AppModule?.GetUserContent();
 
-                if (content == null)
-                {
+                if (content == null) {
                     Notifications.Now($"control {identifier} not found!");
                     return;
                 }
@@ -104,8 +91,7 @@ namespace Lemur
                     element = app_t.FindControl(content, targetControl)!;
 
 
-                if (element == null)
-                {
+                if (element == null) {
                     Notifications.Now($"control {targetControl} of {content.Name} not found.");
                     return;
                 }
@@ -115,8 +101,7 @@ namespace Lemur
 
             });
 
-            if (GetProcess(identifier) is not Process p)
-            {
+            if (GetProcess(identifier) is not Process p) {
                 Notifications.Now("Creating an event handler failed : this is an engine bug. report it on GitHub if you'd like");
                 return;
             }
@@ -134,8 +119,7 @@ namespace Lemur
             //    disposed = true;
             //};
 
-            p.OnProcessTermination += () =>
-            {
+            p.OnProcessTermination += () => {
                 if (disposed)
                     return;
 
@@ -151,8 +135,7 @@ namespace Lemur
 
             engine.EventHandlers.Add(eh);
         }
-        internal T? TryGetProcessOfTypeUnsafe<T>() where T : UserControl
-        {
+        internal T? TryGetProcessOfTypeUnsafe<T>() where T : UserControl {
             T? matchingWindow = default(T);
 
             foreach (var pclass in ProcessClassTable)
@@ -162,25 +145,21 @@ namespace Lemur
 
             return matchingWindow;
         }
-        internal string GetNextProcessID()
-        {
+        internal string GetNextProcessID() {
             return $"p{Computer.__procId++}";
         }
-        internal Process? GetProcess(string pid)
-        {
+        internal Process? GetProcess(string pid) {
             foreach (var pclass in ProcessClassTable)
                 if (pclass.Value.FirstOrDefault(p => p.ID == pid) is Process proc)
                     return proc;
             return null;
         }
-        internal void TerminateProcess(string pID)
-        {
+        internal void TerminateProcess(string pID) {
             if (GetProcess(pID) is Process p)
                 p.Terminate();
             else Notifications.Now($"Could not find process {pID}");
         }
-        internal List<T> TryGetAllProcessesOfTypeUnsafe<T>()
-        {
+        internal List<T> TryGetAllProcessesOfTypeUnsafe<T>() {
             List<T> contents = [];
             foreach (var process in ProcessClassTable.Values.SelectMany(i => i.Select(i => i))) // flatten array
             {
@@ -195,13 +174,11 @@ namespace Lemur
             return contents;
         }
 
-        internal void GetProcessesOfType(string name, out List<Process> processes)
-        {
+        internal void GetProcessesOfType(string name, out List<Process> processes) {
             if (!ProcessClassTable.TryGetValue(name, out processes!))
                 processes = [];
         }
-        internal void RegisterNewProcess(Process process, out List<Process> procList)
-        {
+        internal void RegisterNewProcess(Process process, out List<Process> procList) {
             GetProcessesOfType(process.Type, out procList);
 
             procList.Add(process);

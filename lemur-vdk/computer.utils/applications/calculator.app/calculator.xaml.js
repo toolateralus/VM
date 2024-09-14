@@ -1,15 +1,8 @@
 class calculator {
-	constructor(id, ...args) {
-		// id == this processes' process id
-		// useful for graphics & system stuff.
-		// ...args is a placeholder. all window constructors are varargs and can
-		// be passed any arguments from App.start('appName', arg1, arg2, ...);
-		// there is yet to be a cli tool to do this.
-    	this.id = id;
+	constructor() {
     	this.expression = ''
-    	
-    	this.setup_events();	
-    	
+    	this.setup_events();
+    	this.result = undefined
     }
     setup_events() {
     	for (let i = 0; i < 17; ++i) {
@@ -18,21 +11,46 @@ class calculator {
     		const symbol = App.getProperty(name, 'Content');
 			this[fn_sig] = () => { this.send_symbol(symbol); };
     		App.eventHandler(name, fn_sig, Event.MouseDown);
-    	}
+    	} 
     	App.eventHandler('btnClear', 'clear', Event.MouseDown);
     	App.eventHandler('btnEq', 'solve', Event.MouseDown);
+    	App.eventHandler('btnBackspace', 'backspace', Event.MouseDown);
     }
     clear() {
     	this.dirty = true;
     	this.send_symbol('');
+    	this.result = undefined;
     }
     solve() {
-    	this.expression = `${eval(this.expression)}`
+    	this.result = eval(this.expression)
+    	this.expression = `${this.result}`
 		App.setProperty('output_tb', 'Text', this.expression);
 		this.dirty = true;
     }
+    backspace() {
+    	this.expression = this.expression.slice(0, -1);
+    	this.redraw();
+    }
     send_symbol(s) {
+    
     	if (this.dirty) {
+    		if (this.result !== undefined) {
+    			let fmt = s === '.' ? `${s}` : ` ${s} `;
+	    		switch (s) {
+	    			case '.':
+	    			case '+': 
+	    			case '-':
+	    			case '*':
+	    			case '/': {
+	    				this.dirty = false;
+		    			this.expression += ` ${s} `
+		    			this.redraw();
+	    			 	return;
+	    			 }
+	    			default:
+	    				break;
+	    		}
+	    	}
     		this.expression = '';
     		this.dirty = false;
     	}
@@ -43,11 +61,13 @@ class calculator {
     		this.expression += ` ${s} `
     	}
     	
+    	this.redraw();
     	
+    }
+    redraw() {
     	App.setProperty('output_tb', 'Text', `${this.expression}`);
     }
     isDigit(char) {
-    	const code = char.charCodeAt(0);
-    	return code >= 48 && code <= 57;
+    	return char >= '0' && char <= '9';
 	}
 }

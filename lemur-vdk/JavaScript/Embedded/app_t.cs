@@ -747,6 +747,15 @@ namespace Lemur.JS.Embedded
         {
             this.processID = id;
         }
+
+        public string[] getProcessIds() {
+            List<string> procs = [];
+            foreach (var procList in GetComputer().ProcessManager.ProcessClassTable.Values)
+                foreach (var proc in procList) {
+                    procs.Add(proc.ID);
+                }
+            return [.. procs];
+        }
     }
 }
 

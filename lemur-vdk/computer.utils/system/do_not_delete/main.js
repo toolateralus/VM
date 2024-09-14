@@ -8,6 +8,7 @@ function assert(bool, message) {
 		throw new Error(message);
 }
 
+// little (slow) quality of life function for python enjoyers (not me)
 function range(start, end, step = 1) {
     if (start === undefined || end === undefined) {
       throw new Error('Both start and end values must be provided.');
@@ -67,7 +68,7 @@ function describe(obj) {
 
 // terminal -------------------------
 function print(args) {
-    Terminal.print(args);
+    Terminal.print(JSON.stringify(args));
 }
 function notify(obj) {
     Terminal.notify(obj);

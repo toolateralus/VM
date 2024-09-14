@@ -1,13 +1,12 @@
 ﻿using JavaScriptEngineSwitcher.Core;
 using JavaScriptEngineSwitcher.V8;
+
 using Lemur.FS;
-using Lemur.GUI;
 using Lemur.JavaScript.Api;
 using Lemur.JavaScript.Embedded;
 using Lemur.JS.Embedded;
 using Lemur.Windowing;
 using Newtonsoft.Json;
-using OpenTK.Graphics.Egl;
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
@@ -17,31 +16,23 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
-using System.Windows.Data;
 using System.Windows.Input;
 using static Lemur.Computer;
 
-namespace Lemur.JS
-{
-    public class key : embedable
-    {
-        public key(Computer computer) : base(computer)
-        {
+namespace Lemur.JS {
+    public class key : embedable {
+        public key(Computer computer) : base(computer) {
         }
-        public void clearFocus()
-        {
-            Computer.Current.Window?.Dispatcher?.Invoke(() =>
-            {
+        public void clearFocus() {
+            Computer.Current.Window?.Dispatcher?.Invoke(() => {
                 Keyboard.ClearFocus();
             });
 
         }
-        public bool isDown(string key)
-        {
+        public bool isDown(string key) {
             bool result = false;
 
-            Computer.Current.Window?.Dispatcher?.Invoke(() =>
-            {
+            Computer.Current.Window?.Dispatcher?.Invoke(() => {
                 if (Enum.TryParse<System.Windows.Input.Key>(key, out var _key))
                     result = Keyboard.IsKeyDown(_key);
                 else Notifications.Now($"Failed to parse key {key}");
@@ -50,8 +41,7 @@ namespace Lemur.JS
             return result;
         }
     }
-    public class Engine : IDisposable
-    {
+    public class Engine : IDisposable {
         internal IJsEngine m_engine_internal;
         IJsEngineSwitcher engineSwitcher;
         CancellationTokenSource cts = new();
@@ -62,15 +52,15 @@ namespace Lemur.JS
         public file_t FileModule { get; }
         public term_t TermModule { get; }
         public key KeyModule { get; }
-        public string IncludedFiles = "";
+        string includedFiles = "";
+
         private readonly Thread executionThread;
-        public readonly Dictionary<string, object?> Modules = new();
-        public readonly List<InteropFunction> EventHandlers = new();
-        public readonly Dictionary<string, object> EmbeddedObjects = new();
-        private readonly ConcurrentDictionary<int, (string code, Action<object?> output)> CodeDictionary = new();
+        public readonly Dictionary<string, object?> Modules = [];
+        public readonly List<InteropFunction> EventHandlers = [];
+        public readonly Dictionary<string, object> EmbeddedObjects = [];
+        private readonly ConcurrentDictionary<int, (string code, Action<object?> output)> CodeDictionary = [];
         public bool Disposing { get; private set; }
-        public Engine(Computer computer, string name)
-        {
+        public Engine(Computer computer, string name) {
             engineSwitcher = JsEngineSwitcher.Current;
             engineSwitcher.EngineFactories.AddV8();
             engineSwitcher.DefaultEngineName = V8JsEngine.EngineName;
@@ -88,6 +78,12 @@ namespace Lemur.JS
             FileModule = new file_t();
 
             EmbedObject("deferCached", (object)Defer);
+
+            EmbedObject("loadConfig", (object)Computer.LoadConfig);
+            EmbedObject("saveConfig", (object)Computer.SaveConfig);
+            EmbedObject("config", Computer.Current.Config);
+
+
             EmbedObject("Convert", ConvModule);
             EmbedObject("Network", NetworkModule);
             EmbedObject("Interop", InteropModule);
@@ -97,7 +93,6 @@ namespace Lemur.JS
             EmbedObject("Key", KeyModule);
             EmbedType("Stopwatch", typeof(System.Diagnostics.Stopwatch));
             EmbedType("GraphicsContext", typeof(graphics_ctx_t));
-            EmbedObject("config", Computer.Current.Config);
 
             var joinedPalette = $"const palette = {JsonConvert.SerializeObject(graphics_ctx_t.Palette)}";
             Execute(joinedPalette);
@@ -112,8 +107,7 @@ namespace Lemur.JS
             // aka lazy loading on demand.
             LoadModules(FileSystem.GetResourcePath("do_not_delete"));
 
-            Task.Run(async () =>
-            {
+            Task.Run(async () => {
 
 
 #if DEBUG
@@ -122,7 +116,7 @@ namespace Lemur.JS
     const __DEBUG__ = true;
 ").ConfigureAwait(false);
 #else
-await Execute(@$"
+                await Execute(@$"
     const __NAME__ = '{name}'
     const __DEBUG__ = false;
 ");
@@ -130,57 +124,44 @@ await Execute(@$"
 
             });
 
-            InteropModule.OnModuleExported = (path, obj) =>
-            {
+            InteropModule.OnModuleExported = (path, obj) => {
                 Modules[path] = obj;
             };
         }
-        public void Defer(int delay, int index)
-        {
-            try
-            {
-                Task.Run(async delegate
-                {
+        public void Defer(int delay, int index) {
+            try {
+                Task.Run(async delegate {
                     await Task.Delay(delay, cts.Token).ConfigureAwait(false);
                     m_engine_internal.Evaluate($"__executeDeferredFunc({index});");
                 }, cts.Token);
             }
             catch (OperationCanceledException) { }
         }
-        public void EmbedObject(string name, object? obj)
-        {
+        public void EmbedObject(string name, object? obj) {
             m_engine_internal.EmbedHostObject(name, obj);
         }
-        public void EmbedType(string name, Type obj)
-        {
+        public void EmbedType(string name, Type obj) {
             m_engine_internal.EmbedHostType(name, obj);
         }
-        public void EmbedAllObjects()
-        {
+        public void EmbedAllObjects() {
             foreach (var item in EmbeddedObjects)
                 m_engine_internal.EmbedHostObject(item.Key, item.Value);
         }
         // Resource intensive loops
-        private async void ExecuteAsync()
-        {
-            while (!Disposing)
-            {
-                if (!CodeDictionary.IsEmpty)
-                {
+        private async void ExecuteAsync() {
+            while (!Disposing) {
+                if (!CodeDictionary.IsEmpty) {
                     var pair = CodeDictionary.Last();
 
-                    try
-                    {
+                    try {
                         var result = m_engine_internal.Evaluate(pair.Value.code);
                         pair.Value.output?.Invoke(result);
                     }
-                    catch (Exception e)
-                    {
+                    catch (Exception e) {
                         if (e is not JsInterruptedException)
                             Notifications.Exception(e);
                     }
-                    finally
-                    {
+                    finally {
                         CodeDictionary.Remove(pair.Key, out _);
                     }
 
@@ -188,45 +169,35 @@ await Execute(@$"
                 }
                 await Task.Delay(1).ConfigureAwait(false);
             }
-            if (!Disposing)
-            {
+            if (!Disposing) {
                 throw new JsEngineException("JavaScript execution thread died unexpectedly.");
             }
         }
-        public void ImportModule(string arg)
-        {
-            if (FileSystem.GetResourcePath(arg) is string AbsPath && !string.IsNullOrEmpty(AbsPath))
-            {
-                if (!IncludedFiles.Contains(AbsPath))
-                {
-                    IncludedFiles += AbsPath;
-                    try
-                    {
+        public void ImportModule(string arg) {
+            if (FileSystem.GetResourcePath(arg) is string AbsPath && !string.IsNullOrEmpty(AbsPath)) {
+                if (!includedFiles.Contains(AbsPath)) {
+                    includedFiles += AbsPath;
+                    try {
                         var code = File.ReadAllText(AbsPath);
                         m_engine_internal.Execute(code);
                     }
-                    catch (Exception e)
-                    {
+                    catch (Exception e) {
                         Notifications.Exception(e);
                     }
 
                 }
             }
         }
-        public void LoadModules(string sourceDir)
-        {
-            if (string.IsNullOrEmpty(sourceDir))
-            {
+        public void LoadModules(string sourceDir) {
+            if (string.IsNullOrEmpty(sourceDir)) {
                 //Notifications.Now("require was called with an empty string and aborted");
                 return;
             }
 
             FileSystem.ProcessDirectoriesAndFilesRecursively(sourceDir, (_, _) => { }, file);
 
-            void file(string d, string f)
-            {
-                try
-                {
+            void file(string d, string f) {
+                try {
                     if (!f.EndsWith(".js"))
                         return;
 
@@ -241,8 +212,7 @@ await Execute(@$"
                 }
             }
         }
-        public async Task<object?> Execute(string jsCode, CancellationToken token = default)
-        {
+        public async Task<object?> Execute(string jsCode, CancellationToken token = default) {
             object? result = null;
 
             void callback(object? e) { result = e; };
@@ -254,8 +224,7 @@ await Execute(@$"
             while (!Disposing && CodeDictionary.TryGetValue(handle, out _) && !token.IsCancellationRequested)
                 await Task.Delay(1, token).ConfigureAwait(false);
 
-            if (token.IsCancellationRequested)
-            {
+            if (token.IsCancellationRequested) {
                 // cancel execution
                 CodeDictionary.TryRemove(handle, out _);
                 return null;
@@ -263,8 +232,7 @@ await Execute(@$"
 
             return result;
         }
-        private int GetUniqueHandle()
-        {
+        private int GetUniqueHandle() {
             int handle = Random.Shared.Next();
 
             while (CodeDictionary.TryGetValue(handle, out _))
@@ -272,34 +240,28 @@ await Execute(@$"
 
             return handle;
         }
-        internal void ExecuteScript(string absPath)
-        {
+        internal void ExecuteScript(string absPath) {
             if (string.IsNullOrEmpty(absPath))
                 return;
 
             var script = File.ReadAllText(absPath);
-            ThreadPool.QueueUserWorkItem(async _ =>
-            {
+            ThreadPool.QueueUserWorkItem(async _ => {
                 var path_from_root = absPath.Replace(FileSystem.Root, string.Empty);
                 await Execute($"__FILE__ = '{path_from_root}'");
                 await Execute(script);
             });
         }
-        public void Dispose()
-        {
+        public void Dispose() {
             Disposing = true;
 
-            try
-            {
+            try {
                 m_engine_internal.Interrupt();
             }
-            catch (Exception e)
-            {
+            catch (Exception e) {
                 Notifications.Exception(e);
             }
 
-            try
-            {
+            try {
                 cts.Cancel();
                 cts.Dispose();
                 m_engine_internal.Dispose();
@@ -307,8 +269,7 @@ await Execute(@$"
                 AppModule.ReleaseThread();
 
             }
-            catch (Exception e)
-            {
+            catch (Exception e) {
                 Notifications.Exception(e);
                 var ans = MessageBox.Show($"The application has encountered a serious problem. You should only continue if you know it's harmless or unimportant. Do you want to quit now? \n\n {e}", "Please exit now.", MessageBoxButton.YesNo);
 
@@ -317,16 +278,14 @@ await Execute(@$"
             }
             GC.Collect();
         }
-        internal void CreateNetworkEventHandler(string processID, string methodName)
-        {
+        internal void CreateNetworkEventHandler(string processID, string methodName) {
             ArgumentNullException.ThrowIfNull(processID);
             ArgumentNullException.ThrowIfNull(methodName);
 
             var nwEvent = new NetworkEvent(this, processID, methodName);
             EventHandlers.Add(nwEvent);
         }
-        internal void RemoveNetworkEventHandler(string processID, string methodName)
-        {
+        internal void RemoveNetworkEventHandler(string processID, string methodName) {
             ArgumentNullException.ThrowIfNull(processID);
             ArgumentNullException.ThrowIfNull(methodName);
 

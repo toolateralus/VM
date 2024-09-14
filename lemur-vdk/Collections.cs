@@ -1,8 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 
-namespace Lemur.Types
-{
+namespace Lemur.Types {
 
     /// <summary>
     /// A bounds checked list, which returns null when
@@ -11,44 +10,35 @@ namespace Lemur.Types
     /// </summary>
     /// <typeparam name="T">The type to be stored</typeparam>
     /// <param name="array">The array to copy</param>
-    public class SafeList<T> : List<T?>
-    {
+    public class SafeList<T> : List<T?> {
         public SafeList() { }
-        public SafeList(IEnumerable<T?> array) : base(array)
-        {
+        public SafeList(IEnumerable<T?> array) : base(array) {
         }
         public int Length => Count;
-        public new T? this[int index]
-        {
-            get
-            {
+        public new T? this[int index] {
+            get {
                 if (index < 0 || index >= Count)
                     return default;
                 return base[index];
             }
         }
     }
-    public class Deque<T>
-    {
+    public class Deque<T> {
         private readonly List<T> items = new();
 
-        public int Count
-        {
+        public int Count {
             get { return items.Count; }
         }
 
-        public void Push(T item)
-        {
+        public void Push(T item) {
             items.Insert(0, item);
         }
 
-        public void Enqueue(T item)
-        {
+        public void Enqueue(T item) {
             items.Add(item);
         }
 
-        public T Pop()
-        {
+        public T Pop() {
             if (items.Count == 0)
                 throw new InvalidOperationException("Deque is empty.");
 
@@ -57,8 +47,7 @@ namespace Lemur.Types
             return frontItem;
         }
 
-        public T Dequeue()
-        {
+        public T Dequeue() {
             if (items.Count == 0)
                 throw new InvalidOperationException("Deque is empty.");
 
@@ -67,8 +56,7 @@ namespace Lemur.Types
             return backItem;
         }
 
-        public T Peek(int lookahead = 0)
-        {
+        public T Peek(int lookahead = 0) {
             if (items.Count == 0)
                 throw new InvalidOperationException("Deque is empty.");
 
@@ -78,8 +66,7 @@ namespace Lemur.Types
             return items[lookahead];
         }
 
-        public T PeekFromBottom(int lookahead = 0)
-        {
+        public T PeekFromBottom(int lookahead = 0) {
             if (items.Count == 0)
                 throw new InvalidOperationException("Deque is empty.");
 
@@ -89,8 +76,7 @@ namespace Lemur.Types
             return items[items.Count - 1 - lookahead];
         }
 
-        public void Clear()
-        {
+        public void Clear() {
             items.Clear();
         }
     }

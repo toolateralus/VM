@@ -9,31 +9,24 @@ using System.Windows;
 using System.Windows.Forms;
 using System.Windows.Shapes;
 using Path = System.IO.Path;
-namespace Lemur.FS
-{
+namespace Lemur.FS {
     // ### Terminal Commands
 
     // Actual implementation
-    public partial class FileSystem
-    {
+    public partial class FileSystem {
         public static string Root { get; private set; }
-        public FileSystem(string root)
-        {
-            if (string.IsNullOrEmpty(root))
-            {
+        public FileSystem(string root) {
+            if (string.IsNullOrEmpty(root)) {
                 throw new ArgumentException("Invalid root directory path.");
             }
 
-            try
-            {
-                if (!Directory.Exists(root))
-                {
+            try {
+                if (!Directory.Exists(root)) {
                     Directory.CreateDirectory(root);
                     Installer.Install(root);
                 }
             }
-            catch (Exception e)
-            {
+            catch (Exception e) {
                 System.Windows.MessageBox.Show(e.Message);
                 return;
             }
@@ -42,40 +35,32 @@ namespace Lemur.FS
         }
 
         private static string currentDirectory;
-        public static string CurrentDirectory
-        {
+        public static string CurrentDirectory {
             get { return currentDirectory; }
-            set
-            {
-                try
-                {
+            set {
+                try {
                     if (Directory.Exists(value) &&
-                        WithinFileSystemBounds(value))
-                    {
+                        WithinFileSystemBounds(value)) {
                         currentDirectory = value;
                     }
                     else
                         throw new DirectoryNotFoundException($"Directory '{value}' not found.");
                 }
-                catch (Exception e)
-                {
+                catch (Exception e) {
                     Notifications.Exception(e);
                     return;
                 }
             }
         }
 
-        public static string GetResourcePath(string name)
-        {
-            try
-            {
+        public static string GetResourcePath(string name) {
+            try {
                 if (string.IsNullOrEmpty(name))
                     return Root;
 
 
                 if (System.IO.Path.IsPathFullyQualified(name))
-                    if (File.Exists(name) || Directory.Exists(name))
-                    {
+                    if (File.Exists(name) || Directory.Exists(name)) {
                         if (WithinFileSystemBounds(name))
                             return name;
                         else Notifications.Now($"File {name} is inaccessible due to it being outside of the restricted file system");
@@ -83,25 +68,21 @@ namespace Lemur.FS
 
                 VerifyOrCreateAppdataDir(Root);
 
-                if (Directory.Exists(name) || File.Exists(name))
-                {
+                if (Directory.Exists(name) || File.Exists(name)) {
                     if (WithinFileSystemBounds(name))
                         return name;
                     else Notifications.Now($"File {name} is inaccessible due to it being outside of the restricted file system");
                 }
 
-                if (Directory.Exists(Root))
-                {
-                    string[] entries = Directory.GetFileSystemEntries(Root, name, new EnumerationOptions
-                    {
+                if (Directory.Exists(Root)) {
+                    string[] entries = Directory.GetFileSystemEntries(Root, name, new EnumerationOptions {
                         RecurseSubdirectories = true,
                         MaxRecursionDepth = 100,
                     });
 
                     var foundPath = entries?.FirstOrDefault() ?? "";
 
-                    if (File.Exists(foundPath) || Directory.Exists(foundPath))
-                    {
+                    if (File.Exists(foundPath) || Directory.Exists(foundPath)) {
                         if (WithinFileSystemBounds(foundPath))
                             return foundPath;
                         else Notifications.Now($"File {name} is inaccessible due to it being outside of the restricted file system");
@@ -109,44 +90,35 @@ namespace Lemur.FS
                     }
                 }
             }
-            catch (Exception ex)
-            {
+            catch (Exception ex) {
                 Notifications.Exception(ex);
             }
             return "";
         }
         private static bool WithinFileSystemBounds(string? name) => name?.StartsWith(Root) is bool b && b;
-        internal static void VerifyOrCreateAppdataDir(string path)
-        {
-            try
-            {
-                if (!Directory.Exists(path))
-                {
+        internal static void VerifyOrCreateAppdataDir(string path) {
+            try {
+                if (!Directory.Exists(path)) {
                     Directory.CreateDirectory(path);
                 }
             }
-            catch (Exception e)
-            {
+            catch (Exception e) {
                 Notifications.Exception(e);
                 return;
             }
         }
-        public static void ProcessDirectoriesAndFilesRecursively(string directory, Action<string, string> processDirAction, Action<string, string> processFileAction)
-        {
-            try
-            {
+        public static void ProcessDirectoriesAndFilesRecursively(string directory, Action<string, string> processDirAction, Action<string, string> processFileAction) {
+            try {
                 // todo: verify whether we should even validate between iterations. seems pretty costly.
 
-                foreach (string file in Directory.EnumerateFiles(directory))
-                {
+                foreach (string file in Directory.EnumerateFiles(directory)) {
                     if (!ValidateAccess(file, out var path))
                         return;
 
                     processFileAction(directory, file);
                 }
 
-                foreach (string subDir in Directory.EnumerateDirectories(directory))
-                {
+                foreach (string subDir in Directory.EnumerateDirectories(directory)) {
                     if (!ValidateAccess(subDir, out var path))
                         return;
 
@@ -156,29 +128,24 @@ namespace Lemur.FS
                     ProcessDirectoriesAndFilesRecursively(subDir, processDirAction, processFileAction);
                 }
             }
-            catch (Exception e)
-            {
+            catch (Exception e) {
                 Notifications.Exception(e);
                 return;
             }
         }
-        public static void ChangeDirectory(string path)
-        {
+        public static void ChangeDirectory(string path) {
 
 
-            try
-            {
+            try {
                 if (path == "~")
                     path = Root;
 
-                if (path == "..")
-                {
+                if (path == "..") {
                     string currentDirectory = CurrentDirectory;
 
                     string[] components = currentDirectory.Split('\\');
 
-                    if (components.Length > 1)
-                    {
+                    if (components.Length > 1) {
                         string[] parentComponents = components.Take(components.Length - 1).ToArray();
 
                         string parentDirectory = string.Join("\\", parentComponents);
@@ -193,106 +160,83 @@ namespace Lemur.FS
                 if (Directory.Exists(path) && WithinFileSystemBounds(path))
                     CurrentDirectory = path;
 
-                else if (!File.Exists(path))
-                {
+                else if (!File.Exists(path)) {
                     Notifications.Now($"Directory '{path}' not found in current path.");
                 }
-                else if (!WithinFileSystemBounds(path))
-                {
+                else if (!WithinFileSystemBounds(path)) {
                     Notifications.Now($"Directory '{path}' is inaccessible due to it being outside of the restricted file system");
                 }
             }
-            catch (Exception e)
-            {
+            catch (Exception e) {
                 Notifications.Exception(e);
                 return;
             }
         }
-        public static void NewFile(string fileName, bool isDirectory = false)
-        {
+        public static void NewFile(string fileName, bool isDirectory = false) {
 
-            try
-            {
+            try {
                 if (!ValidateAccess(fileName, out var path))
                     return;
 
-                if (isDirectory && !File.Exists(path) && !Directory.Exists(path))
-                {
+                if (isDirectory && !File.Exists(path) && !Directory.Exists(path)) {
                     Directory.CreateDirectory(path);
                 }
-                else
-                {
-                    if (!File.Exists(path) && !Directory.Exists(path))
-                    {
+                else {
+                    if (!File.Exists(path) && !Directory.Exists(path)) {
                         File.Create(path).Close();
                     }
-                    else
-                    {
+                    else {
                         Notifications.Now($"File '{fileName}' already exists.");
                     }
                 }
             }
-            catch (Exception e)
-            {
+            catch (Exception e) {
                 Notifications.Exception(e);
                 return;
             }
         }
-        public static void Delete(string fileName)
-        {
+        public static void Delete(string fileName) {
 
 
-            try
-            {
+            try {
 
                 if (!ValidateAccess(fileName, out var path))
                     return;
 
-                if (Directory.Exists(path) && !File.Exists(path))
-                {
+                if (Directory.Exists(path) && !File.Exists(path)) {
                     Directory.Delete(path, true);
                 }
-                else
-                {
-                    if (File.Exists(path))
-                    {
+                else {
+                    if (File.Exists(path)) {
                         File.Delete(path);
                     }
-                    else
-                    {
+                    else {
                         Notifications.Now($"File '{fileName}' not found in current path.");
                     }
                 }
             }
-            catch (Exception e)
-            {
+            catch (Exception e) {
                 Notifications.Exception(e);
                 return;
             }
         }
-        private static string GetRelativeOrAbsolute(string fileName)
-        {
-            try
-            {
+        private static string GetRelativeOrAbsolute(string fileName) {
+            try {
                 var targetPath = fileName;
 
-                if (!Path.IsPathFullyQualified(targetPath))
-                {
+                if (!Path.IsPathFullyQualified(targetPath)) {
                     targetPath = Path.Combine(FileSystem.Root, fileName);
                 }
 
                 return targetPath;
             }
-            catch (Exception e)
-            {
+            catch (Exception e) {
                 Notifications.Exception(e);
                 return "";
             }
         }
-        public static void Write(string fileName, string content)
-        {
-            try
-            {
+        public static void Write(string fileName, string content) {
+            try {
                 if (!ValidateAccess(fileName, out var path))
                     return;
 
@@ -303,100 +247,81 @@ namespace Lemur.FS
 
                 File.WriteAllText(path, content);
             }
-            catch (Exception e)
-            {
+            catch (Exception e) {
                 Notifications.Exception(e);
                 return;
             }
         }
-        public static string Read(string fileName)
-        {
-            try
-            {
+        public static string Read(string fileName) {
+            try {
                 if (!ValidateAccess(fileName, out var path))
                     return "";
 
-                if (File.Exists(path))
-                {
+                if (File.Exists(path)) {
                     return File.ReadAllText(path);
                 }
-                else
-                {
+                else {
                     Notifications.Now($"File '{path}' not found in current path.");
                     return "";
                 }
             }
-            catch (Exception e)
-            {
+            catch (Exception e) {
                 Notifications.Exception(e);
                 return "";
             }
         }
-        public static bool FileExists(string fileName)
-        {
-            try
-            {
+        public static bool FileExists(string fileName) {
+            try {
                 if (!ValidateAccess(fileName, out var path))
                     return false;
 
                 return path.Length > 0 && File.Exists(path);
             }
-            catch (Exception e)
-            {
+            catch (Exception e) {
                 Notifications.Exception(e);
                 return false;
             }
         }
-        public static bool DirectoryExists(string directoryName)
-        {
-            try
-            {
+        public static bool DirectoryExists(string directoryName) {
+            try {
                 if (!ValidateAccess(directoryName, out var path))
                     return false;
 
                 return Directory.Exists(path);
             }
-            catch (Exception e)
-            {
+            catch (Exception e) {
                 Notifications.Exception(e);
                 return false;
             }
         }
 
-        private static bool ValidateAccess(string directoryName, out string path)
-        {
+        private static bool ValidateAccess(string directoryName, out string path) {
             path = GetResourcePath(directoryName);
 
             if (string.IsNullOrEmpty(path))
                 path = GetRelativeOrAbsolute(directoryName);
             var contents = path.Length == 0 ? "was empty" : path;
 
-            if (!WithinFileSystemBounds(path) || path.Length == 0)
-            {
+            if (!WithinFileSystemBounds(path) || path.Length == 0) {
                 Notifications.Now($"Unauthorized access or bad path. offending string : {{{contents}}}");
                 return false;
             }
             return true;
         }
 
-        public string[] DirectoryListing()
-        {
-            try
-            {
+        public string[] DirectoryListing() {
+            try {
                 string[] content = Directory.GetFileSystemEntries(currentDirectory);
 
                 return content;
             }
-            catch (Exception e)
-            {
+            catch (Exception e) {
                 Notifications.Exception(e);
                 return [];
             }
         }
-        internal static void Copy(string sourcePath, string destinationPath)
-        {
-            try
-            {
+        internal static void Copy(string sourcePath, string destinationPath) {
+            try {
                 destinationPath = GetRelativeOrAbsolute(destinationPath);
 
                 if (!ValidateAccess(sourcePath, out sourcePath))
@@ -405,103 +330,83 @@ namespace Lemur.FS
                 if (!ValidateAccess(destinationPath, out destinationPath))
                     return;
 
-                if (Directory.Exists(sourcePath))
-                {
+                if (Directory.Exists(sourcePath)) {
                     Directory.CreateDirectory(destinationPath);
 
                     string[] files = Directory.GetFiles(sourcePath);
                     string[] directories = Directory.GetDirectories(sourcePath);
 
-                    foreach (string filePath in files)
-                    {
+                    foreach (string filePath in files) {
                         string fileName = Path.GetFileName(filePath);
                         string destinationFilePath = Path.Combine(destinationPath, fileName);
                         File.Copy(filePath, destinationFilePath, true); // 'true' overwrites if the file already exists
                     }
 
-                    foreach (string directoryPath in directories)
-                    {
+                    foreach (string directoryPath in directories) {
                         string directoryName = Path.GetFileName(directoryPath);
                         string destinationSubdirectoryPath = Path.Combine(destinationPath, directoryName);
                         Copy(directoryPath, destinationSubdirectoryPath);
                     }
                 }
-                else if (File.Exists(sourcePath))
-                {
+                else if (File.Exists(sourcePath)) {
                     File.Copy(sourcePath, destinationPath, true); // 'true' overwrites if the file already exists
                 }
-                else
-                {
+                else {
                     Notifications.Now("Source file or directory not found.. \n" + sourcePath);
                 }
             }
-            catch (Exception e)
-            {
+            catch (Exception e) {
                 Notifications.Exception(e);
                 return;
             }
         }
-        internal static void Move(string? path, string? dest)
-        {
-            try
-            {
-                if (path != null && dest != null)
-                {
+        internal static void Move(string? path, string? dest) {
+            try {
+                if (path != null && dest != null) {
                     if (!ValidateAccess(path, out path))
                         return;
 
                     if (!ValidateAccess(dest, out dest))
                         return;
 
-                    if (File.Exists(path))
-                    {
-                        if (!File.Exists(dest))
-                        {
+                    if (File.Exists(path)) {
+                        if (!File.Exists(dest)) {
                             File.Move(path, dest);
                         }
-                        else
-                        {
+                        else {
                             Copy(path, dest);
                             File.Delete(path);
                         }
                     }
-                    else if (Directory.Exists(path))
-                    {
-                        if (!Directory.Exists(dest))
-                        {
+                    else if (Directory.Exists(path)) {
+                        if (!Directory.Exists(dest)) {
                             Directory.Move(path, dest);
                         }
-                        else
-                        {
+                        else {
                             Copy(path, dest);
                             Directory.Delete(path, true);
                         }
                     }
                 }
             }
-            catch (Exception e)
-            {
+            catch (Exception e) {
                 Notifications.Exception(e);
                 return;
             }
         }
-        internal static async void NewDirectory(string path)
-        {
-            try
-            {
+        internal static async void NewDirectory(string path) {
+            try {
                 if (!ValidateAccess(path, out path))
                     return;
 
                 if (!File.Exists(path) && !Directory.Exists(path))
                     Directory.CreateDirectory(path);
-                else
-                {
+                else {
                     Notifications.Now("that directory or file already exists. do you want to overwrite? [y/n]");
 
                     var result = await Computer.Current.JavaScript.Execute($"read()").ConfigureAwait(false);
 
-                    if (result is string answer && answer == "y")
-                    {
+                    if (result is string answer && answer == "y") {
                         if (File.Exists(path))
                             File.Delete(path);
 
@@ -512,8 +417,7 @@ namespace Lemur.FS
                     }
                 }
             }
-            catch (Exception e)
-            {
+            catch (Exception e) {
                 Notifications.Exception(e);
                 return;
             }

@@ -7,8 +7,16 @@
             <ResourceDictionary.MergedDictionaries>
                 <ResourceDictionary Source="Windowing/Styles.xaml"/>
             </ResourceDictionary.MergedDictionaries>
+
+             <FontFamily x:Key="FiraCode">pack://application:,,,/Fonts/#Fira Code</FontFamily>
+
+
+            <Style TargetType="Control">
+                <Setter Property="FontFamily" Value="Fira Code" />
+            </Style>
+        
             <Style TargetType="Button" BasedOn="{StaticResource ButtonStyle}" />
-            <Style TargetType="Label" BasedOn="{StaticResource LabelStyle}" />
+            <Style TargetType="Label" BasedOn="{StaticResource LabelStyle}"/>
             <Style TargetType="TextBox" BasedOn="{StaticResource TextBoxStyle}" />
             <Style TargetType="StackPanel" BasedOn="{StaticResource StackPanelStyle}" />
             <Style TargetType="ToggleButton" BasedOn="{StaticResource ToggleButtonStyle}" />

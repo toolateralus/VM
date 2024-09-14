@@ -12,37 +12,29 @@ using System.Net.Sockets;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Lemur.JavaScript.Network
-{
-    class Host
-    {
+namespace Lemur.JavaScript.Network {
+    public class Host {
         public int openPort { get; internal set; } = 8080;
-        public static IPAddress GetLocalIPAddress()
-        {
+        public static IPAddress GetLocalIPAddress() {
             IPAddress localIP = null;
 
             NetworkInterface[] networkInterfaces = NetworkInterface.GetAllNetworkInterfaces();
 
-            foreach (NetworkInterface networkInterface in networkInterfaces)
-            {
+            foreach (NetworkInterface networkInterface in networkInterfaces) {
                 if (networkInterface.OperationalStatus == OperationalStatus.Up &&
                     (networkInterface.NetworkInterfaceType == NetworkInterfaceType.Wireless80211 ||
-                     networkInterface.NetworkInterfaceType == NetworkInterfaceType.Ethernet))
-                {
+                     networkInterface.NetworkInterfaceType == NetworkInterfaceType.Ethernet)) {
                     IPInterfaceProperties ipProperties = networkInterface.GetIPProperties();
 
-                    foreach (UnicastIPAddressInformation ipInformation in ipProperties.UnicastAddresses)
-                    {
+                    foreach (UnicastIPAddressInformation ipInformation in ipProperties.UnicastAddresses) {
                         if (ipInformation.Address.AddressFamily == AddressFamily.InterNetwork &&
-                            !IPAddress.IsLoopback(ipInformation.Address))
-                        {
+                            !IPAddress.IsLoopback(ipInformation.Address)) {
                             localIP = ipInformation.Address;
                             break;
                         }
                     }
 
-                    if (localIP != null)
-                    {
+                    if (localIP != null) {
                         break;
                     }
                 }
@@ -52,8 +44,7 @@ namespace Lemur.JavaScript.Network
         }
         internal bool Running;
         TcpListener? SERVER;
-        public async Task Open(int port)
-        {
+        public async Task Open(int port) {
             openPort = port;
 
             Running = true;
@@ -68,28 +59,24 @@ namespace Lemur.JavaScript.Network
 
             Server networkConfig = new Server();
 
-            while (true)
-            {
+            while (true) {
                 await networkConfig.ConnectClientAsync(SERVER, CLIENTS).ConfigureAwait(false);
             }
         }
-        internal void Dispose()
-        {
+        internal void Dispose() {
             SERVER?.Stop();
             SERVER ??= null;
             Running = false;
         }
     }
 
-    public class Packet(JObject header, string message, TcpClient client, NetworkStream stream)
-    {
+    public class Packet(JObject header, string message, TcpClient client, NetworkStream stream) {
         public JObject Metadata = header;
         public string Data = message;
         public TcpClient Client = client;
         public NetworkStream Stream = stream;
     }
-    public enum TransmissionType
-    {
+    public enum TransmissionType {
         Path,
         Data,
         Message,
@@ -97,18 +84,15 @@ namespace Lemur.JavaScript.Network
         Request,
     }
 
-    public class Server
-    {
+    public class Server {
         public const int RequestReplyChannel = 6996;
         public const int DownloadReplyChannel = 6997;
         private readonly string UploadDirectory = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData) + "\\Lemur_SERVER_DATA";
         private readonly Dictionary<string, TcpClient> IncomingFileTransfersPending = [];
         private readonly List<string> AvailableForDownload = [];
 
-        public Server()
-        {
-            Task.Run(() =>
-            {
+        public Server() {
+            Task.Run(() => {
                 if (!Directory.Exists(UploadDirectory))
                     Directory.CreateDirectory(UploadDirectory);
                 // this could take awhile, do it in the background.
@@ -121,8 +105,7 @@ namespace Lemur.JavaScript.Network
         /// <param name="listener"></param>
         /// <returns></returns>
         /// <exception cref="IOException"></exception>
-        internal static Packet? ListenForPacket(NetworkStream stream, TcpClient client, string listener)
-        {
+        internal static Packet? ListenForPacket(NetworkStream stream, TcpClient client, string listener) {
 
             // this header will indicate the size of the actual metadata
             byte[] header = new byte[4];
@@ -159,66 +142,52 @@ namespace Lemur.JavaScript.Network
 
             string message = $"\nReceived data, listener: {listener}, ch: {channel}, reply: {reply}, size: {FormatBytes(bytesLength)}";
 
-            Computer.Current.Window.Dispatcher.Invoke(() =>
-            {
+            Computer.Current.Window.Dispatcher.Invoke(() => {
                 foreach (var cmd in Computer.Current.ProcessManager.TryGetAllProcessesOfType<Terminal>())
                     cmd.output.AppendText(message);
             });
             return new(metadata, dataString, client, stream);
         }
-        public static JObject ParseMetadata(byte[] metaData)
-        {
-            try
-            {
+        public static JObject ParseMetadata(byte[] metaData) {
+            try {
                 return JObject.Parse(Encoding.UTF8.GetString(metaData));
             }
-            catch (Exception e)
-            {
+            catch (Exception e) {
                 Notifications.Now($"Metadata parsing {e.GetType().Name}: {e.Message}");
             }
             return [];
         }
-        internal async Task ConnectClientAsync(TcpListener server, List<TcpClient> connectedClients)
-        {
+        internal async Task ConnectClientAsync(TcpListener server, List<TcpClient> connectedClients) {
             TcpClient client = await server.AcceptTcpClientAsync().ConfigureAwait(false);
             connectedClients.Add(client);
             Notifications.Now($"SERVER:Client {client.GetHashCode()} connected ");
             _ = Task.Run(
-                async delegate
-                {
+                async delegate {
                     await HandleClientCommunicationAsync(client, connectedClients).ConfigureAwait(false);
                 }
             );
         }
-        private async Task HandleClientCommunicationAsync(TcpClient client, List<TcpClient> connectedClients)
-        {
+        private async Task HandleClientCommunicationAsync(TcpClient client, List<TcpClient> connectedClients) {
             using NetworkStream stream = client.GetStream();
-            try
-            {
-                while (client.Connected && ListenForPacket(stream, client, "server") is Packet packet)
-                {
+            try {
+                while (client.Connected && ListenForPacket(stream, client, "server") is Packet packet) {
                     await TryHandleMessages(packet, connectedClients).ConfigureAwait(false);
                 }
             }
-            catch (IOException ex)
-            {
+            catch (IOException ex) {
                 Notifications.Now($"SERVER:Client {client.GetHashCode()} errored:: \n{ex.Message}");
             }
-            finally
-            {
+            finally {
                 client.Close();
                 connectedClients.Remove(client);
                 Notifications.Now($"SERVER:Client {client.GetHashCode()} disconnected");
             }
         }
-        private async Task TryHandleMessages(Packet packet, List<TcpClient> clients)
-        {
-            if (packet?.Metadata?.Value<string>("type") is string tTypeStr)
-            {
+        private async Task TryHandleMessages(Packet packet, List<TcpClient> clients) {
+            if (packet?.Metadata?.Value<string>("type") is string tTypeStr) {
                 var transmissionType = Enum.Parse<TransmissionType>(tTypeStr);
 
-                switch (transmissionType)
-                {
+                switch (transmissionType) {
                     case TransmissionType.Path:
                         HandleIncomingPathTransmission(packet);
                         break;
@@ -237,17 +206,14 @@ namespace Lemur.JavaScript.Network
                 }
             }
         }
-        private async Task HandleDownloadRequest(Packet packet)
-        {
+        private async Task HandleDownloadRequest(Packet packet) {
             var file = packet.Data;
-            if (AvailableForDownload.Contains(file))
-            {
+            if (AvailableForDownload.Contains(file)) {
                 await SendDataRecusive(file).ConfigureAwait(false);
                 await SendDownloadMessage(packet, "END_DOWNLOAD").ConfigureAwait(false);
             }
 
-            async Task SendDataRecusive(string file)
-            {
+            async Task SendDataRecusive(string file) {
                 string path = file;
 
                 if (!file.Contains(UploadDirectory))
@@ -255,46 +221,36 @@ namespace Lemur.JavaScript.Network
 
                 file = file.Replace(UploadDirectory + "\\", "");
 
-                if (File.Exists(path))
-                {
+                if (File.Exists(path)) {
                     var metadata = ToJson(path, TransmissionType.Download, DownloadReplyChannel, -1, false, file);
                     await SendJsonToClient(packet.Client, JObject.Parse(metadata)).ConfigureAwait(false);
                 }
-                else if (Directory.Exists(path))
-                {
+                else if (Directory.Exists(path)) {
                     var directoryContents = Directory.GetFileSystemEntries(path);
 
-                    foreach (var entry in directoryContents)
-                    {
+                    foreach (var entry in directoryContents) {
                         await SendDataRecusive(entry).ConfigureAwait(false);
                     }
                 }
-                else
-                {
+                else {
                     await SendDownloadMessage(packet, "FAILED_DOWNLOAD").ConfigureAwait(false);
                 }
 
             }
         }
-        private static async Task SendDownloadMessage(Packet packet, string Message)
-        {
+        private static async Task SendDownloadMessage(Packet packet, string Message) {
             // message signaling the end of the download.
             JObject endPacket = JObject.Parse(ToJson(Message, TransmissionType.Download, DownloadReplyChannel, -1));
             await SendJsonToClient(packet.Client, endPacket).ConfigureAwait(false);
         }
-        private void HandleIncomingDataTransmission(Packet packet)
-        {
+        private void HandleIncomingDataTransmission(Packet packet) {
             string toRemove = "";
-            foreach (var item in IncomingFileTransfersPending)
-            {
-                if (item.Value == packet.Client)
-                {
-                    if (packet.Metadata.Value<bool>("isDir"))
-                    {
+            foreach (var item in IncomingFileTransfersPending) {
+                if (item.Value == packet.Client) {
+                    if (packet.Metadata.Value<bool>("isDir")) {
                         Directory.CreateDirectory(UploadDirectory + "\\" + packet.Data);
                     }
-                    else
-                    {
+                    else {
                         string path = "";
 
                         if (item.Key.StartsWith('\\'))
@@ -307,28 +263,22 @@ namespace Lemur.JavaScript.Network
                     toRemove = item.Key;
                 }
             }
-            if (!string.IsNullOrEmpty(toRemove))
-            {
+            if (!string.IsNullOrEmpty(toRemove)) {
                 IncomingFileTransfersPending.Remove(toRemove);
             }
         }
-        private void HandleIncomingPathTransmission(Packet packet)
-        {
+        private void HandleIncomingPathTransmission(Packet packet) {
             // write the dir, or we wait for file data.
             string path = packet.Data;
-            if (packet.Metadata.Value<bool>("isDir"))
-            {
+            if (packet.Metadata.Value<bool>("isDir")) {
                 Directory.CreateDirectory(UploadDirectory + "\\" + path);
             }
-            else
-            {
+            else {
                 IncomingFileTransfersPending[path] = packet.Client;
             }
         }
-        public static string ToJson(string data, TransmissionType type, int ch, int reply, bool isDir = false, string? path = null)
-        {
-            var json = new
-            {
+        public static string ToJson(string data, TransmissionType type, int ch, int reply, bool isDir = false, string? path = null) {
+            var json = new {
                 size = Encoding.UTF8.GetByteCount(data),
                 data,
                 type = type.ToString(),
@@ -340,11 +290,9 @@ namespace Lemur.JavaScript.Network
 
             return JsonConvert.SerializeObject(json);
         }
-        private async void HandleRequest(string requestType, Packet packet)
-        {
+        private async void HandleRequest(string requestType, Packet packet) {
             Notifications.Now($"SERVER:Client {packet.Client.GetHashCode()} has made a {requestType} request.");
-            switch (requestType)
-            {
+            switch (requestType) {
                 case "GET_DOWNLOADS":
 
                     var names = string.Join(",\n", AvailableForDownload);
@@ -359,8 +307,7 @@ namespace Lemur.JavaScript.Network
             }
 
         }
-        public static string FormatBytes(long bytes, int decimals = 2)
-        {
+        public static string FormatBytes(long bytes, int decimals = 2) {
             if (bytes == 0) return "0 Bytes";
 
             const int k = 1024;
@@ -369,25 +316,21 @@ namespace Lemur.JavaScript.Network
             int i = Convert.ToInt32(Math.Floor(Math.Log(bytes) / Math.Log(k)));
             return string.Format("{0:F" + decimals + "} {1}", bytes / Math.Pow(k, i), units[i]);
         }
-        private static async Task BroadcastMessage(List<TcpClient> connectedClients, TcpClient client, JObject header)
-        {
+        private static async Task BroadcastMessage(List<TcpClient> connectedClients, TcpClient client, JObject header) {
             foreach (TcpClient connectedClient in connectedClients)
                 if (connectedClient != client)
                     await SendJsonToClient(connectedClient, header).ConfigureAwait(false);
         }
-        private static async Task SendJsonToClient(TcpClient client, JObject data)
-        {
+        private static async Task SendJsonToClient(TcpClient client, JObject data) {
             NetworkStream connectedStream = client.GetStream();
             byte[] bytes = Encoding.UTF8.GetBytes(data.ToString());
             var length = BitConverter.GetBytes(bytes.Length);
 
-            try
-            {
+            try {
                 await connectedStream.WriteAsync(length.AsMemory(0, 4)).ConfigureAwait(false);
                 await connectedStream.WriteAsync(bytes).ConfigureAwait(false);
             }
-            catch (SocketException ex) when (ex.SocketErrorCode == SocketError.ConnectionAborted)
-            {
+            catch (SocketException ex) when (ex.SocketErrorCode == SocketError.ConnectionAborted) {
                 Notifications.Now($"Connection aborted: {ex.Message}");
                 client.Close();
             }

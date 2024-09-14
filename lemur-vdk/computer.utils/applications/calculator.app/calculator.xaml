@@ -45,6 +45,7 @@
 		<Button FontSize="24" x:Name="btnClear" Grid.Column="4" Grid.Row="3" Content="clear"/>
 		<Button FontSize="24" x:Name="btn15" Grid.Column="4" Grid.Row="2" Content="("/>
 		<Button FontSize="24" x:Name="btn16" Grid.Column="4" Grid.Row="1" Content=")"/>
+		<Button FontSize="24" x:Name="btnBackspace" Grid.Column="4" Grid.Row="0" Content="undo"/>
         </Grid>
     </Grid>
 </UserControl>

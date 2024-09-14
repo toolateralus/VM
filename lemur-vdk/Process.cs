@@ -1,18 +1,15 @@
 ﻿using Lemur.GUI;
 using System;
 
-namespace Lemur
-{
-    public record Process(Computer computer, UserWindow UI, string ID, string Type)
-    {
+namespace Lemur {
+    public record Process(Computer computer, UserWindow UI, string ID, string Type) {
         public Action? OnProcessTermination { get; internal set; }
         public readonly Computer computer = computer;
 
         /// <summary>
         /// Anything that wants to close a process MUST call this method to do so.
         /// </summary>
-        internal void Terminate()
-        {
+        internal void Terminate() {
             // destroy event handlers mostly.
             OnProcessTermination?.Invoke();
 

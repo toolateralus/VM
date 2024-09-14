@@ -26,10 +26,8 @@ using System.Windows.Media.Imaging;
 using System.Windows.Shapes;
 using static System.Runtime.InteropServices.JavaScript.JSType;
 
-namespace Lemur
-{
-    public class Computer : IDisposable
-    {
+namespace Lemur {
+    public class Computer : IDisposable {
         const string xamlExt = ".xaml";
         const string xamlJsExt = ".xaml.js";
         internal string WorkingDir { get; private set; }
@@ -54,8 +52,7 @@ namespace Lemur
         internal readonly Dictionary<string, Type> csApps = [];
         internal readonly List<string> jsApps = new();
         internal bool disposing;
-        public Computer(FileSystem fs)
-        {
+        public Computer(FileSystem fs) {
             current = this;
 
             Notifications.Current = this;
@@ -74,57 +71,44 @@ namespace Lemur
                 JavaScript.ExecuteScript(AbsPath);
 
         }
-        internal void Exit(int exitCode)
-        {
-            if (exitCode != 0)
-            {
+        internal void Exit(int exitCode) {
+            if (exitCode != 0) {
                 Notifications.Now($"Computer {ID} has exited, most likely due to an error. code:{exitCode}");
             }
             Dispose();
         }
-        internal static JObject? LoadConfig()
-        {
-            if (FileSystem.GetResourcePath("config.json") is string AbsPath)
-            {
-                if (File.Exists(AbsPath))
-                {
+        internal static JObject? LoadConfig() {
+            if (FileSystem.GetResourcePath("config.json") is string AbsPath) {
+                if (File.Exists(AbsPath)) {
                     string json = File.ReadAllText(AbsPath);
 
-                    try
-                    {
+                    try {
                         return JObject.Parse(json);
                     }
-                    catch (JsonException ex)
-                    {
+                    catch (JsonException ex) {
                         Notifications.Now($"Error loading JSON: {ex.Message}");
                     }
                 }
-                else
-                {
+                else {
                     Notifications.Now("Could not locate a valid 'config.json' File.");
                 }
             }
 
             return null;
         }
-        public static void SaveConfig(string config)
-        {
+        public static void SaveConfig(string config) {
             string configFilePath = FileSystem.GetResourcePath("config.json");
 
-            if (!string.IsNullOrEmpty(configFilePath))
-            {
-                try
-                {
+            if (!string.IsNullOrEmpty(configFilePath)) {
+                try {
                     File.WriteAllText(configFilePath, config);
                 }
-                catch (Exception ex)
-                {
+                catch (Exception ex) {
                     Notifications.Now($"Error saving JSON config: {ex.Message}");
                 }
             }
         }
-        public async void OpenCustom(string type, params object[] cmdLineArgs)
-        {
+        public async void OpenCustom(string type, params object[] cmdLineArgs) {
             CreateJavaScriptRuntime(out var processID, out var engine);
 
             string name = type.Replace(".app", "");
@@ -132,8 +116,7 @@ namespace Lemur
 
             var absPath = FileSystem.GetResourcePath(name + ".app");
 
-            if (!Directory.Exists(absPath))
-            {
+            if (!Directory.Exists(absPath)) {
                 if (TryOpenCSAppByName(type, cmdLineArgs)) // try fallback open csharp app or error.
                     return;
 
@@ -141,8 +124,7 @@ namespace Lemur
                 return;
             }
 
-            if (string.IsNullOrEmpty(name))
-            {
+            if (string.IsNullOrEmpty(name)) {
                 Notifications.Now($"invalid name for app {type}");
                 return;
             }
@@ -150,8 +132,7 @@ namespace Lemur
             // todo: run pre-processor here? have that be optional.
             // homemade typescript? or something more experimental even :D
 
-            AppConfig? appConfig = new()
-            {
+            AppConfig? appConfig = new() {
                 requires = [],
                 @class = name,
                 isWpf = true,
@@ -163,45 +144,38 @@ namespace Lemur
 
             var exists = FileSystem.FileExists(conf);
 
-            if (exists)
-            {
-                try
-                {
+            if (exists) {
+                try {
                     var file = File.ReadAllText(conf);
                     appConfig = JsonConvert.DeserializeObject<AppConfig>(file);
                 }
-                catch (Exception e)
-                {
+                catch (Exception e) {
                     Notifications.Exception(e);
                     return;
                 }
 
             }
-            else
-            {
+            else {
                 Notifications.Now($"Warning : No '.appconfig' file found for app {name}. using a default.");
             }
 
 
             string jsFile = System.IO.Path.Combine(absPath, appConfig.entryPoint ?? (name + xamlJsExt));
 
-            if (!File.Exists(jsFile))
-            {
+            if (!File.Exists(jsFile)) {
                 Notifications.Now("Invalid application structure : your xaml & .xaml.js & .app files/folder must be the same name.");
                 return;
             }
 
             var js = File.ReadAllText(jsFile);
 
-            if (appConfig.isWpf)
-            {
+            if (appConfig.isWpf) {
                 // run & create class, in-source requires, etc.
 
                 // setup some names.
                 string xamlFile = System.IO.Path.Combine(absPath, appConfig.frontEnd ?? (name + xamlExt));
 
-                if (!File.Exists(xamlFile))
-                {
+                if (!File.Exists(xamlFile)) {
                     Notifications.Now("Invalid application structure : your xaml & .xaml.js & .app files/folder must be the same name.");
                     return;
                 }
@@ -209,8 +183,7 @@ namespace Lemur
                 var xaml = File.ReadAllText(xamlFile);
                 var control = XamlHelper.ParseUserControl(xaml);
 
-                if (control == null)
-                {
+                if (control == null) {
                     Notifications.Now($"Error : either the app was not found or there was an error parsing xaml or js for {type}.");
                     return;
                 }
@@ -220,8 +193,7 @@ namespace Lemur
                 // i don't know how we'd do this but i know it's easy(ish)
                 OpenAppGUI(control, appConfig.title, processID, engine);
             }
-            if (appConfig.terminal)
-            {
+            if (appConfig.terminal) {
                 Terminal term = new();
                 term.Engine = engine;
 
@@ -246,21 +218,18 @@ namespace Lemur
                 await engine.Execute(allIncludes).ConfigureAwait(true);
 
             // class style wpf app
-            if (appConfig?.isWpf == true || appConfig?.@class != null)
-            {
+            if (appConfig?.isWpf == true || appConfig?.@class != null) {
                 _ = await engine.Execute(js).ConfigureAwait(true);
 
 
                 string instantiation_code;
 
-                if (cmdLineArgs?.Length != 0)
-                {
+                if (cmdLineArgs?.Length != 0) {
                     // for varargs
                     var args = "[" + string.Join(", ", cmdLineArgs) + "]";
                     instantiation_code = $"const {processID} = new {name}('{processID}, {args}')";
                 }
-                else
-                {
+                else {
                     // normal pid ctor
                     instantiation_code = $"const {processID} = new {name}('{processID}')";
                 }
@@ -269,10 +238,8 @@ namespace Lemur
             }
 
         }
-        private bool TryOpenCSAppByName(string type, object[] cmdLineArgs)
-        {
-            if (csApps.TryGetValue(type, out var csType))
-            {
+        private bool TryOpenCSAppByName(string type, object[] cmdLineArgs) {
+            if (csApps.TryGetValue(type, out var csType)) {
                 // at least esablish the pid before constructing. ideally, we should be done with creating the app &
                 // presenting the UI when this constructor (activator call) gets run.
                 var pid = ProcessManager.GetNextProcessID();
@@ -282,15 +249,13 @@ namespace Lemur
             }
             return false;
         }
-        private void CreateJavaScriptRuntime(out string processID, out Engine engine)
-        {
+        private void CreateJavaScriptRuntime(out string processID, out Engine engine) {
             processID = ProcessManager.GetNextProcessID();
             engine = new(this, $"App__{processID}");
             engine.NetworkModule.processID = processID;
             engine.AppModule.processID = processID;
         }
-        public void OpenAppGUI(UserControl control, string pClass, string processID, Engine? engine = null)
-        {
+        public void OpenAppGUI(UserControl control, string pClass, string processID, Engine? engine = null) {
             ArgumentNullException.ThrowIfNull(control);
             ArgumentNullException.ThrowIfNull(pClass);
             ArgumentNullException.ThrowIfNull(processID);
@@ -312,16 +277,14 @@ namespace Lemur
             // also, having this more organized will make it much easier to safely expose it to JavaScript
             // so we can allow the user to add to their window's toolbar, title, close the app programmatically, etc.
 
-            void OnWindowClosed()
-            {
+            void OnWindowClosed() {
 
                 if (Thread.CurrentThread.GetApartmentState() != ApartmentState.STA)
                     App.Current.Dispatcher.Invoke(() => closeMethod());
                 else
                     closeMethod();
 
-                void closeMethod()
-                {
+                void closeMethod() {
                     userWindow.OnApplicationClose -= OnWindowClosed;
                     Window.Desktop.Children.Remove(resizable_window);
                     Window.RemoveTaskbarButton(pClass);
@@ -344,8 +307,7 @@ namespace Lemur
             Canvas.SetTop(resizable_window, 200);
             Canvas.SetLeft(resizable_window, 200);
         }
-        public static BitmapImage LoadImage(string path)
-        {
+        public static BitmapImage LoadImage(string path) {
             BitmapImage bitmapImage = new();
             bitmapImage.BeginInit();
             bitmapImage.CacheOption = BitmapCacheOption.OnLoad;
@@ -354,25 +316,21 @@ namespace Lemur
             bitmapImage.Freeze();
             return bitmapImage;
         }
-        public static BitmapImage? GetExternIcon(Type type)
-        {
+        public static BitmapImage? GetExternIcon(Type type) {
             var properties = type.GetProperties();
 
-            foreach (var property in properties)
-            {
+            foreach (var property in properties) {
                 if (property.Name.Contains("DesktopIcon") &&
                     property.PropertyType == typeof(string) &&
                     property.GetValue(null) is string path &&
-                    !string.IsNullOrEmpty(path))
-                {
+                    !string.IsNullOrEmpty(path)) {
                     return LoadImage(path);
                 }
             }
 
             return null;
         }
-        public static void StyleDesktopIcon(string name, Button btn, object? image)
-        {
+        public static void StyleDesktopIcon(string name, Button btn, object? image) {
             btn.Background = Brushes.Transparent;
             var grid = new Grid() { Height = btn.Height, Width = btn.Width };
 
@@ -380,12 +338,11 @@ namespace Lemur
             grid.RowDefinitions.Add(new() { Height = new GridLength(1, GridUnitType.Auto) });
             grid.RowDefinitions.Add(new() { Height = new GridLength(1, GridUnitType.Star) });
 
-            var textBlock = new TextBlock
-            {
+            var textBlock = new TextBlock {
                 Text = name,
                 TextAlignment = TextAlignment.Left,
                 FontSize = 12,
-                FontFamily = new FontFamily("MS Gothic"),
+                //FontFamily = new FontFamily("MS Gothic"),
                 Foreground = Brushes.Cyan,
                 Background = new SolidColorBrush(Color.FromArgb(155, 0, 0, 0)),
             };
@@ -394,10 +351,8 @@ namespace Lemur
             grid.Children.Add(textBlock);
 
             FrameworkElement element;
-            if (image is BitmapImage img)
-            {
-                element = new Image
-                {
+            if (image is BitmapImage img) {
+                element = new Image {
                     Opacity = 0.95,
                     Source = img,
                     Stretch = Stretch.Fill,
@@ -415,14 +370,11 @@ namespace Lemur
             btn.Content = grid;
             btn.ToolTip = name;
         }
-        public void InstallIcon(AppType type, string appName, Type? runtime_type = null, AppConfig? config = null)
-        {
-            Window.Dispatcher?.Invoke(() =>
-            {
+        public void InstallIcon(AppType type, string appName, Type? runtime_type = null, AppConfig? config = null) {
+            Window.Dispatcher?.Invoke(() => {
                 var btn = Window.MakeDesktopButton(appName);
 
-                switch (type)
-                {
+                switch (type) {
                     case AppType.Native:
                         InstallNative(btn, appName);
                         break;
@@ -435,18 +387,14 @@ namespace Lemur
 
 
                 // if we don't stop this, it deletes the whole computer xD
-                if (runtime_type == null)
-                {
-                    MenuItem delete = new()
-                    {
+                if (runtime_type == null) {
+                    MenuItem delete = new() {
                         Header = "delete app (no undo)"
                     };
-                    delete.Click += (sender, @event) =>
-                    {
+                    delete.Click += (sender, @event) => {
                         var answer = System.Windows.MessageBox.Show($"are you sure you want to delete {appName}?", "Delete PERMANENTLY??", MessageBoxButton.YesNo, System.Windows.MessageBoxImage.Warning);
 
-                        if (answer == MessageBoxResult.Yes)
-                        {
+                        if (answer == MessageBoxResult.Yes) {
                             Computer.Current.Uninstall(appName + ".app");
                             var path = FileSystem.GetResourcePath(appName + ".app");
                             if (!string.IsNullOrEmpty(path))
@@ -459,13 +407,11 @@ namespace Lemur
                 Window.DesktopIconPanel.UpdateLayout();
                 Window.DesktopIconPanel.Children.Add(btn);
 
-                MenuItem uninstall = new()
-                {
+                MenuItem uninstall = new() {
                     Header = "uninstall app"
                 };
 
-                uninstall.Click += (sender, @event) =>
-                {
+                uninstall.Click += (sender, @event) => {
                     var answer = MessageBox.Show($"are you sure you want to uninstall {appName}?", "uninstall?", MessageBoxButton.YesNo);
 
                     if (answer == MessageBoxResult.Yes)
@@ -475,49 +421,40 @@ namespace Lemur
                 btn.ContextMenu.Items.Add(uninstall);
             });
 
-            void InstallNative(Button btn, string type)
-            {
+            void InstallNative(Button btn, string type) {
                 btn.MouseDoubleClick += OnDesktopIconPressed;
 
                 var contextMenu = Window.GetNativeContextMenu(appName, config);
 
                 btn.ContextMenu = contextMenu;
 
-                void OnDesktopIconPressed(object? sender, RoutedEventArgs e)
-                {
+                void OnDesktopIconPressed(object? sender, RoutedEventArgs e) {
                     OpenCustom(type);
                 }
 
                 StyleDesktopIcon(type, btn, Runtime.GetAppIcon(appName));
             }
-            void InstallExtern(Button btn, string name, Type type)
-            {
+            void InstallExtern(Button btn, string name, Type type) {
                 btn.MouseDoubleClick += OnDesktopIconPressed;
                 StyleDesktopIcon(appName, btn, GetExternIcon(type));
 
-                void OnDesktopIconPressed(object? sender, RoutedEventArgs e)
-                {
-                    if (Activator.CreateInstance(type) is object instance && instance is UserControl userControl)
-                    {
+                void OnDesktopIconPressed(object? sender, RoutedEventArgs e) {
+                    if (Activator.CreateInstance(type) is object instance && instance is UserControl userControl) {
                         Computer.Current.OpenAppGUI(userControl, name, ProcessManager.GetNextProcessID());
                     }
-                    else
-                    {
+                    else {
                         Notifications.Now("Failed to create instance of native application. the app is likely misconfigured");
                     }
                 }
             }
         }
-        public void InstallFromType(string name, Type type)
-        {
+        public void InstallFromType(string name, Type type) {
             InstallIcon(AppType.Extern, name, type);
         }
-        internal static bool IsValidExternAppType(IEnumerable<MemberInfo> members)
-        {
+        internal static bool IsValidExternAppType(IEnumerable<MemberInfo> members) {
             return members.Any(member => member.Name == "LateInit");
         }
-        internal static void TryRunLateInit(object instance, ResizableWindow? resizableWindow = null)
-        {
+        internal static void TryRunLateInit(object instance, ResizableWindow? resizableWindow = null) {
             var method = instance.GetType().GetMethods()
              .FirstOrDefault(method =>
                  method.Name.Contains("LateInit") &&
@@ -537,10 +474,8 @@ namespace Lemur
             );
 
         }
-        public void InstallCSharpApp(string exePath, Type type)
-        {
-            if (csApps.TryGetValue(exePath, out _))
-            {
+        public void InstallCSharpApp(string exePath, Type type) {
+            if (csApps.TryGetValue(exePath, out _)) {
                 Notifications.Now("Tried to install an app that already exists on the computer, try renaming it if this was intended");
                 return;
             }
@@ -551,8 +486,7 @@ namespace Lemur
 
             InstallFromType(exePath, type);
         }
-        public void InstallNative(string type)
-        {
+        public void InstallNative(string type) {
             if (disposing)
                 return;
 
@@ -565,56 +499,44 @@ namespace Lemur
 
             AppConfig? config = null;
 
-            if (path.Length != 0)
-            {
-                try
-                {
+            if (path.Length != 0) {
+                try {
                     var data = File.ReadAllText(path);
                     config = JsonConvert.DeserializeObject<AppConfig>(data);
                 }
-                catch (Exception e)
-                {
+                catch (Exception e) {
                     Notifications.Exception(e);
                 }
             }
 
-            if (config is null)
-            {
+            if (config is null) {
                 InstallIcon(AppType.Native, type);
             }
-            else
-            {
+            else {
                 InstallIcon(AppType.Native, type, runtime_type: null, config);
             }
 
         }
-        public void Uninstall(string name)
-        {
+        public void Uninstall(string name) {
             jsApps.Remove(name);
-            Window.Dispatcher.Invoke(() =>
-            {
+            Window.Dispatcher.Invoke(() => {
                 Window.RemoveDesktopIcon(name);
             });
         }
-        internal void LoadBackground()
-        {
+        internal void LoadBackground() {
             string backgroundPath = Config?.Value<string>("BACKGROUND") ?? "background.png";
             var fullPath = FileSystem.GetResourcePath(backgroundPath);
 
-            if (fullPath.Length == 0)
-            {
+            if (fullPath.Length == 0) {
                 Notifications.Now($"Failed to find file for desktop background at path : {backgroundPath}");
                 return;
             }
 
             Window.desktopBackground.Source = LoadImage(fullPath);
         }
-        protected virtual void Dispose(bool disposing)
-        {
-            if (!this.disposing)
-            {
-                if (disposing)
-                {
+        protected virtual void Dispose(bool disposing) {
+            if (!this.disposing) {
+                if (disposing) {
                     JavaScript?.Dispose();
                     Window?.Dispose();
                     Network?.StopHosting();
@@ -639,8 +561,7 @@ namespace Lemur
                 this.disposing = true;
             }
         }
-        public void Dispose()
-        {
+        public void Dispose() {
             Dispose(disposing: true);
             GC.SuppressFinalize(this);
         }

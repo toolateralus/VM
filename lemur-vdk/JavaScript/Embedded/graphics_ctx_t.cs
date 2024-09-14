@@ -1,25 +1,17 @@
 ﻿using Lemur.FS;
-using Lemur.GUI;
 using Lemur.Windowing;
-using OpenTK.Mathematics;
 using System;
 using System.Collections.Generic;
 using System.Drawing;
 using System.Linq;
 using System.Runtime.InteropServices;
 using System.Windows;
-using System.Windows.Controls;
 using System.Windows.Interop;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using Image = System.Windows.Controls.Image;
 
 namespace Lemur.JS.Embedded {
-    public enum PrimitiveShape {
-        Rectangle,
-        Triangle,
-        Circle,
-    }
     public class graphics_ctx_t {
         internal int formatBpp;
         internal int width, height;
@@ -27,8 +19,7 @@ namespace Lemur.JS.Embedded {
         private WriteableBitmap bitmap;
         internal readonly WeakReference<Image> image;
 
-        public static readonly IReadOnlyList<byte[]> Palette =
-        [
+        public static readonly IReadOnlyList<byte[]> Palette = [
             // _________________________
             //  | B  | R  |  G  |  A  |
             //  ------------------------
@@ -258,7 +249,7 @@ namespace Lemur.JS.Embedded {
                     double rotatedY = (double)Math.Round((i - centerX) * sinR + (j - centerY) * cosR) + centerY;
 
                     if (Math.Sqrt((rotatedX - centerX) * (rotatedX - centerX) + (rotatedY - centerY) * (rotatedY - centerY)) <= radius) {
-                        writePixelIndexed(rotatedX, rotatedY, colorIndex);
+                        writePixelIndexed(Math.Round(rotatedX), Math.Round(rotatedY), colorIndex);
                     }
                 }
             }

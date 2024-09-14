@@ -13,10 +13,8 @@ using System.Threading;
 using System.Threading.Tasks;
 using static Lemur.JavaScript.Network.Server;
 
-namespace Lemur.JavaScript.Network
-{
-    public class NetworkConfiguration
-    {
+namespace Lemur.JavaScript.Network {
+    public class NetworkConfiguration {
         private Host? host;
 
         private TcpClient? client;
@@ -35,10 +33,8 @@ namespace Lemur.JavaScript.Network
 
         public static ConcurrentDictionary<int, Queue<(object? val, int replyCh)>> NetworkEvents = new();
 
-        public NetworkConfiguration()
-        {
-            if (Computer.Current?.Config?.Value<bool>("ALWAYS_CONNECT") is bool connect && connect)
-            {
+        public NetworkConfiguration() {
+            if (Computer.Current?.Config?.Value<bool>("ALWAYS_CONNECT") is bool connect && connect) {
                 if (Computer.Current?.Config?.Value<string>("DEFAULT_SERVER_IP") is string ipString
                     && IPAddress.Parse(ipString) is IPAddress ip)
                     StartClient(ip);
@@ -46,10 +42,8 @@ namespace Lemur.JavaScript.Network
                     StartClient(Server);
             }
         }
-        internal void StartClient(IPAddress ip, string? name = null)
-        {
-            try
-            {
+        internal void StartClient(IPAddress ip, string? name = null) {
+            try {
                 var ip_str = ip.ToString();
                 var port = defaultPort;
                 ServerPort = port;
@@ -60,13 +54,11 @@ namespace Lemur.JavaScript.Network
                 listenerThread = new Thread(() => listenMessages(name));
                 listenerThread.Start();
             }
-            catch (Exception e)
-            {
+            catch (Exception e) {
                 Console.WriteLine("Error connecting to the server: " + e.Message + Environment.NewLine + e.InnerException);
             }
         }
-        internal async Task<bool> StartHosting(int port)
-        {
+        internal async Task<bool> StartHosting(int port) {
             if (host != null && host.Running)
                 return false;
 
@@ -77,8 +69,7 @@ namespace Lemur.JavaScript.Network
             return host.Running;
         }
 
-        internal static void Broadcast(int channel, int reply, object? msg)
-        {
+        internal static void Broadcast(int channel, int reply, object? msg) {
             if (!NetworkEvents.TryGetValue(channel, out _))
                 NetworkEvents.TryAdd(channel, new());
 
@@ -92,28 +83,24 @@ namespace Lemur.JavaScript.Network
 
             var processes = Computer.Current.ProcessManager.ProcessClassTable.SelectMany(i => i.Value.Select(i => i)).AsParallel();
 
-            foreach (var process in processes)
-            {
+            foreach (var process in processes) {
                 if (process?.UI.Engine?.EventHandlers == null)
                     continue;
 
                 List<InteropFunction>? list = process?.UI?.Engine.EventHandlers;
-                for (int i = 0; i < list?.Count; i++)
-                {
+                for (int i = 0; i < list?.Count; i++) {
                     InteropFunction? eventHandler = list[i];
                     if (eventHandler is NetworkEvent networkEventHandler)
                         networkEventHandler.InvokeEvent(channel, reply, msg);
                 }
             }
         }
-        public static (object? value, int reply) PullEvent(int channel, int timeout = 20_000, [CallerMemberName] string callerName = "unknown")
-        {
+        public static (object? value, int reply) PullEvent(int channel, int timeout = 20_000, [CallerMemberName] string callerName = "unknown") {
             Queue<(object? val, int replyCh)>? queue = null;
 
             bool timedOut = false;
 
-            Task.Run(async () =>
-            {
+            Task.Run(async () => {
                 await Task.Delay(timeout).ConfigureAwait(false);
                 timedOut = true;
             });
@@ -122,8 +109,7 @@ namespace Lemur.JavaScript.Network
 
             bool shouldWait() => !timedOut && !Computer.Current.disposing && Computer.Current.Network.IsConnected();
 
-            while (shouldWait() && messageNotRecieved())
-            {/* ----------------------------------------------- */
+            while (shouldWait() && messageNotRecieved()) {/* ----------------------------------------------- */
                 Thread.Sleep(16);
             }
 
@@ -134,23 +120,20 @@ namespace Lemur.JavaScript.Network
 
             return val ?? new("failed", -1);
         }
-        public static async Task<(object? value, int reply)> PullEventAsync(int channel, int timeout = 20_000, [CallerMemberName] string callerName = "unknown")
-        {
+        public static async Task<(object? value, int reply)> PullEventAsync(int channel, int timeout = 20_000, [CallerMemberName] string callerName = "unknown") {
             Queue<(object? val, int replyCh)> queue;
 
             var timeoutTask = Task.Delay(timeout);
 
             CancellationTokenSource cts = new();
 
-            Task<(object? value, int reply)?> loop = new(delegate
-            {
+            Task<(object? value, int reply)?> loop = new(delegate {
 
                 while (!NetworkEvents.TryGetValue(channel, out queue)
                         || queue is null
                         || queue.Count == 0
                         && !Computer.Current.disposing
-                        && Computer.Current.Network.IsConnected())
-                {/* ----------------------------------------------- */
+                        && Computer.Current.Network.IsConnected()) {/* ----------------------------------------------- */
                     Task.Delay(16);
                 }
 
@@ -165,47 +148,38 @@ namespace Lemur.JavaScript.Network
             var result = await loop.ConfigureAwait(false);
 
             // did time out
-            if (await Task.WhenAny(loop, timeoutTask).ConfigureAwait(false) == timeoutTask)
-            {
+            if (await Task.WhenAny(loop, timeoutTask).ConfigureAwait(false) == timeoutTask) {
                 cts.Cancel();
                 Notifications.Now("Network timed out while polling an event");
             }
 
             return result ?? ("Failed", -1);
         }
-        internal void StopClient()
-        {
+        internal void StopClient() {
             client?.Close();
             stream?.Close();
             listenerThread?.Join();
             Notifications.Now($"Disconnected from {ServerIP}::{ServerPort}");
         }
 
-        public void StopHosting()
-        {
+        public void StopHosting() {
             host?.Dispose();
         }
-        internal bool IsConnected()
-        {
+        internal bool IsConnected() {
             return stream != null && client != null && client.Connected;
         }
-        internal object GetIPPortString()
-        {
+        internal object GetIPPortString() {
             return $"{LANIPFetcher.GetLocalIPAddress().MapToIPv4()}:{host?.openPort}";
         }
-        public void listenMessages(string name)
-        {
-            try
-            {
-                while (IsConnected())
-                {
+        public void listenMessages(string name) {
+            try {
+                while (IsConnected()) {
                     // ! operator usage
                     // IsConnected() is a widely used way to validate that stream & client aren't null and are connected.
                     // They cannot be null
                     var packet = ListenForPacket(stream!, client!, name);
 
-                    if (packet is null)
-                    {
+                    if (packet is null) {
                         Notifications.Now($"Recieved a null packet from {name}");
                         return;
                     }
@@ -228,25 +202,21 @@ namespace Lemur.JavaScript.Network
                         Broadcast(channel, reply, packet.Metadata);
                 }
             }
-            catch (Exception e)
-            {
+            catch (Exception e) {
                 Notifications.Exception(e);
             }
-            finally
-            {
+            finally {
                 stream?.Close();
                 client?.Close();
             }
         }
-        internal void OnSendMessage(string data, TransmissionType type, int ch, int reply, bool isDir = false)
-        {
+        internal void OnSendMessage(string data, TransmissionType type, int ch, int reply, bool isDir = false) {
             var metadata = ToJson(data, type, ch, reply, isDir);
 
             byte[] metadataBytes = Encoding.UTF8.GetBytes(metadata);
             byte[] lengthBytes = BitConverter.GetBytes(metadataBytes.Length);
 
-            if (stream != null && stream.CanWrite)
-            {
+            if (stream != null && stream.CanWrite) {
                 // header to indicate Metadata length.
                 stream.Write(lengthBytes, 0, 4);
                 // metadata for file transfer, contains the data for the transfer as well.
