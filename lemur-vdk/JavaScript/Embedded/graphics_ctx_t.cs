@@ -21,7 +21,7 @@ namespace Lemur.JS.Embedded {
 
         public static readonly IReadOnlyList<byte[]> Palette = [
             // _________________________
-            //  | B  | R  |  G  |  A  |
+            //  | R  | G  |  B  |  A  |
             //  ------------------------
             [255, 0, 0, 255],        // Red 0
             [255, 128, 0, 255],        // Orange 1
@@ -186,11 +186,18 @@ namespace Lemur.JS.Embedded {
         /// </summary>
         /// <param name="index"></param>
         public unsafe void clearColor(double index) {
-            var color = Palette[(int)index].ToArray();
+            var rgbacolor = Palette[(int)index].ToArray(); // starts as rgba
+            var bgraColor = new byte[] {
+                rgbacolor[2],
+                rgbacolor[1],
+                rgbacolor[0],
+                rgbacolor[3],
+            };
+
 
             for (int i = 0; i < width * height; i++)
                 fixed (byte* ptr = renderTexture)
-                    Marshal.Copy(color, 0, (nint)ptr + i * formatBpp, formatBpp);
+                    Marshal.Copy(bgraColor, 0, (nint)ptr + i * formatBpp, formatBpp);
         }
         /// <summary>
         /// draw a filled rectangle with specified arguments
