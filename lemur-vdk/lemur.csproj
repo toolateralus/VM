@@ -13,6 +13,16 @@
 	</PropertyGroup>
 
 	<ItemGroup>
+		<Resource Include="Fonts\FiraCode-Bold.ttf" />
+		<Resource Include="Fonts\FiraCode-Light.ttf" />
+		<Resource Include="Fonts\FiraCode-Medium.ttf" />
+		<Resource Include="Fonts\FiraCode-Regular.ttf" />
+		<Resource Include="Fonts\FiraCode-SemiBold.ttf" />
+		<Resource Include="Fonts\FiraCode-Retina.ttf" />
+	</ItemGroup>
+
+  
+	<ItemGroup>
 	  <None Include="..\.editorconfig" Link=".editorconfig" />
 	</ItemGroup>
 
@@ -42,6 +52,7 @@
 	<ItemGroup>
 		<Page Include="App.xaml" />
 	</ItemGroup>
+	
 	
 	<ItemGroup>
 	  <None Update="scorchlang.dll">
