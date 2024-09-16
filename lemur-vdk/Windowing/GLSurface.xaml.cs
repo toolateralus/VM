@@ -302,13 +302,25 @@ namespace Lemur {
         }
 
         private static void DebugCallback(DebugSource source, DebugType type, int id, DebugSeverity severity, int length, IntPtr message, IntPtr userParam) {
+            if (severity == DebugSeverity.DebugSeverityNotification) {
+                return;
+            }
             var msg = $"[{source}] [{type}] [{severity}] ID: {id} Message: {Marshal.PtrToStringAnsi(message)}";
             Notifications.Now(msg);
             Debug.WriteLine(msg);
         }
 
-        public void Render(TimeSpan _) {
-            drawCube(0, 0, 0, 0, 0, 0, 1, 1, 1);
+        public void setDrawCallback(string pid, string functionName) {
+            var process = Computer.Current.ProcessManager.GetProcess(pid);
+            drawCallback = delegate(float delta) {
+                _ = process?.UI.Engine.Execute($"{pid}.{functionName}({delta});");
+            };
+        }
+
+        Action<float> drawCallback;
+
+        public void Render(TimeSpan span) {
+            drawCallback?.Invoke((float)span.TotalMilliseconds);
             Clear(ClearBufferMask.ColorBufferBit | ClearBufferMask.DepthBufferBit);
             shader.Set("viewProjectionMatrix", camera.GetViewProjectionMatrix());
             shader.Set("time", GLFW.GetTime());
@@ -318,12 +330,19 @@ namespace Lemur {
             }
         }
 
+        public void Dispose() {
+            fixed(int* vbo = &this.vbo)
+                DeleteBuffers(1, vbo);
+            fixed (int* vao = &this.vao)
+                DeleteVertexArrays(1, vao);
+        }
+
     }
 
     /// <summary>
     /// Interaction logic for GLSurface.xaml
     /// </summary>
-    public unsafe partial class GLSurface : UserControl {
+    public partial class GLSurface : UserControl {
         public Renderer renderer;
         readonly GLWpfControlSettings settings = new() {
             TransparentBackground = false,
@@ -336,6 +355,9 @@ namespace Lemur {
             InitializeComponent();
             surface.Start(settings);
             renderer = new();
+        }
+        ~GLSurface() {
+            renderer.Dispose();
         }
         public void OnRender(TimeSpan delta) {
             renderer.Render(delta);

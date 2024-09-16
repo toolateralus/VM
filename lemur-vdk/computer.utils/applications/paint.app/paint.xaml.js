@@ -98,11 +98,13 @@ constructor(id) {
     onSavePressed() {
         this.gfx_ctx.flush();
         this.gfx_ctx.saveToImage('home/test.bmp');
-        print('saved to home/test.bmp');
+        notify('saved to home/test.bmp');
     }
     onLoadPressed() {
+    	this.onClearPressed();
         this.gfx_ctx.loadFromImage('home/test.bmp');
-        print('Loaded from home/test.bmp');
+        this.gfx_ctx.flush();
+        notify('Loaded from home/test.bmp');
     }
     onClearPressed() {
         this.gfx_ctx.clearColor(Color.WHITE);

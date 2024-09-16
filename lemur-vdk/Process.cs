@@ -2,7 +2,7 @@
 using System;
 
 namespace Lemur {
-    public record Process(Computer computer, UserWindow UI, string ID, string Type) {
+    public record Process(Computer computer, UserWindow UI, string ID, string Class) {
         public Action? OnProcessTermination { get; internal set; }
         public readonly Computer computer = computer;
 
@@ -21,12 +21,12 @@ namespace Lemur {
 
             // TODO: put in process manager.
             // remove the process and or type from process table.
-            var procList = computer.ProcessManager.ProcessClassTable[Type];
+            var procList = computer.ProcessManager.ProcessClassTable[Class];
             procList.Remove(this);
 
             if (procList.Count == 0)
-                computer.ProcessManager.ProcessClassTable.Remove(Type);
-            else computer.ProcessManager.ProcessClassTable[Type] = procList; // unnecessary? probably.
+                computer.ProcessManager.ProcessClassTable.Remove(Class);
+            else computer.ProcessManager.ProcessClassTable[Class] = procList; // unnecessary? probably.
 
         }
     }

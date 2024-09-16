@@ -6,7 +6,12 @@
 	mc:Ignorable="d" 
 	d:DesignHeight="450" d:DesignWidth="800" Background="#474354" BorderBrush="White" BorderThickness="5">
 	<Grid>
-		<!-- put your controls here :D -->
-		<Label Content="Hello"/>
+	<Image Grid.Row="0"
+                  Margin="5"
+                  x:Name="renderSurface"
+                  HorizontalAlignment="Stretch"
+                  VerticalAlignment="Stretch"
+                  Stretch="Fill"
+                  RenderOptions.BitmapScalingMode="NearestNeighbor"/>
 	</Grid>
 </UserControl>

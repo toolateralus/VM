@@ -21,7 +21,7 @@ namespace Lemur {
                 foreach (var proc in from proc in procList.Value
                                      where proc.ID == identifier
                                      select proc) {
-                    processClass = proc.Type;
+                    processClass = proc.Class;
                 }
 
             return processClass;
@@ -66,7 +66,7 @@ namespace Lemur {
             // check if this method already exists
             result = await engine.Execute($"{identifier}.{methodName} != null").ConfigureAwait(true);
 
-            string processClass = process.Type.Replace(".app", "", StringComparison.CurrentCulture);
+            string processClass = process.Class.Replace(".app", "", StringComparison.CurrentCulture);
 
             if (result is not bool METHOD_EXISTS || !METHOD_EXISTS) {
                 Notifications.Now($"'app.eventHandler(...)' threw an exception : {processClass}.{methodName} not found. Make sure {methodName} is defined and spelled correctly in both the hook function call and the definition.");
@@ -178,11 +178,11 @@ namespace Lemur {
                 processes = [];
         }
         internal void RegisterNewProcess(Process process, out List<Process> procList) {
-            GetProcessesOfType(process.Type, out procList);
+            GetProcessesOfType(process.Class, out procList);
 
             procList.Add(process);
 
-            ProcessClassTable[process.Type] = procList;
+            ProcessClassTable[process.Class] = procList;
         }
     }
 }

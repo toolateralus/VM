@@ -6,7 +6,7 @@
 	if (typeof fileName === 'string'){
 		
 		print(`uploading file ${fileName}`);
-		
+		 
 		if (!Network.IsConnected){
 			// try connect to last known ip.
 			Network.connect(null);

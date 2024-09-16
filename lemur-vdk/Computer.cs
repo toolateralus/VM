@@ -75,7 +75,6 @@ namespace Lemur {
             InstallExtern("explorer.app", typeof(Explorer));
             InstallExtern("texed.app", typeof(Texed));
             InstallExtern("browser.app", typeof(Browser));
-            InstallExtern("glsurface.app", typeof(GLSurface));
 
         }
         internal void Exit(int exitCode) {
