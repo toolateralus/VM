@@ -249,6 +249,7 @@ namespace Lemur {
         }
 
         public Renderer() {
+            
             camera = new(new(0,0,-5), new(0, 90, 0), 70, 0.01f, 1000.0f);
 
             Enable(EnableCap.DebugOutput);
@@ -353,6 +354,7 @@ namespace Lemur {
         };
         public GLSurface() {
             InitializeComponent();
+            surface.RegisterToEventsDirectly = false;
             surface.Start(settings);
             renderer = new();
         }
