@@ -119,35 +119,10 @@ namespace Lemur.GUI {
                     return;
                 }
 
-                var workingDir = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData) + $"\\Lemur\\computer{cpu_id}";
-                var FileSystem = new FileSystem(workingDir);
+                // instantiate singleton.
+                Computer pc = new(cpu_id);
 
-                Computer pc = new Computer(FileSystem)
-                {
-                    ProcessManager = new(),
-                };
-
-                DesktopWindow wnd = new(pc);
-
-                pc.Window = wnd;
-
-                pc.LoadBackground();
-
-                wnd.Show();
-
-                wnd.Closed += (o, e) =>
-                {
-                    Task.Run(() => Computer.SaveConfig(pc.Config?.ToString() ?? ""));
-                    pc.Dispose();
-                };
-
-                pc.InstallExtern("terminal.app", typeof(Terminal));
-                pc.InstallExtern("explorer.app", typeof(Explorer));
-                pc.InstallExtern("texed.app", typeof(Texed));
-                pc.InstallExtern("browser.app", typeof(Browser));
-                pc.InstallExtern("glsurface.app", typeof(GLSurface));
-
-                Runtime.LoadCustomSyntaxHighlighting();
+                LoadCustomSyntaxHighlighting();
             }
         }
         internal static BitmapImage? GetAppIcon(string type)

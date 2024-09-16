@@ -36,7 +36,7 @@ namespace Lemur {
         private static Computer? current;
         public static Computer Current => current;
 
-        public required ProcessManager ProcessManager { get; init; }
+        public ProcessManager ProcessManager { get; } = new();
 
         // we don't use bootstrappers for these because creating them requires litle procedure.
         internal readonly Dictionary<string, Type> externApps = [];
@@ -44,28 +44,38 @@ namespace Lemur {
         internal readonly Dictionary<string, Bootstrapper> bootstrappers = [];
 
         internal bool disposing;
-        public Computer(FileSystem fs) {
+        public Computer(uint cpuId) {
+            var workingDir = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData) + $"\\Lemur\\computer{cpuId}";
+            FileSystem = new FileSystem(workingDir);
             current = this;
-
             Notifications.Current = this;
-
-            FileSystem = fs;
-
             CLI = new(this);
-
             Network = new();
 
             if (LoadConfig() is not JObject config) {
                 MessageBox.Show("Failed to load config.json! create one or fix your corrupted environment. You will experience problems as a result of not having one.");
                 return;
             }
-
             Config = config;
 
             JavaScript = new(this, "Computer");
 
             if (FileSystem.GetResourcePath("startup.js") is string AbsPath)
                 JavaScript.ExecuteScript(AbsPath);
+
+            Window = new(this);
+            LoadBackground();
+
+            Window.Show();
+            Window.Closed += (o, e) => {
+                SaveConfig(Config?.ToString() ?? "");
+                Dispose();
+            };
+            InstallExtern("terminal.app", typeof(Terminal));
+            InstallExtern("explorer.app", typeof(Explorer));
+            InstallExtern("texed.app", typeof(Texed));
+            InstallExtern("browser.app", typeof(Browser));
+            InstallExtern("glsurface.app", typeof(GLSurface));
 
         }
         internal void Exit(int exitCode) {

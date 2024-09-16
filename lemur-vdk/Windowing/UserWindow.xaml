@@ -11,7 +11,7 @@
     <UserControl.Resources>
         <s:Double x:Key="resizeEdgeMargin">10</s:Double>
     </UserControl.Resources>
-    <Grid>
+    <Grid x:Name="Grid">
         <Grid.RowDefinitions>
             <RowDefinition Height="{Binding Source={StaticResource resizeEdgeMargin}}"/>
             <RowDefinition Height="*"/>
@@ -34,7 +34,7 @@
                 <Button Style="{StaticResource ButtonStyle}" MinWidth="25" MinHeight="15" Margin="5" BorderBrush="DarkCyan" Foreground="White" Background="#FF5F36A9" x:Name="maximizeBtn" Width="35" FontFamily="Consolas" FontSize="10" Content="MAX"/>
                 <Label x:Name="Title" Background="#FF1F1F1F" Foreground="White" Style="{StaticResource LabelStyle}"></Label>
             </StackPanel>
-            <Frame Grid.Row="1" x:Name="ContentsFrame" />
+            <ContentControl Grid.Row="1" x:Name="ContentsFrame" />
         </Grid>
         
         

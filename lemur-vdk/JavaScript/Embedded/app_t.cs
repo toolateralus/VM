@@ -659,6 +659,22 @@ namespace Lemur.JS.Embedded {
         {
             GetComputer().ProcessManager.TerminateProcess(pid);
         }
+
+        public Renderer? createGlSurface(string pid) {
+            var process = GetComputer().ProcessManager.GetProcess(pid);
+            if (process is not null) {
+                var task = Current.Window.Dispatcher.InvokeAsync(delegate {
+                    var surface = new GLSurface();
+                    Notifications.Now("glSurface created");
+                    process.UI.ContentsFrame.Content = surface;
+                    return surface.renderer;
+                });
+                task.Wait();
+                return task.Result;
+            }
+            return null;
+        }
+
         public string start(string path, params object[] args)
         {
             string pid = "PROC_START_FAILURE";

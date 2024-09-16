@@ -324,7 +324,7 @@ namespace Lemur {
     /// Interaction logic for GLSurface.xaml
     /// </summary>
     public unsafe partial class GLSurface : UserControl {
-        Renderer renderer;
+        public Renderer renderer;
         readonly GLWpfControlSettings settings = new() {
             TransparentBackground = false,
             MajorVersion = 4,
@@ -332,13 +332,11 @@ namespace Lemur {
             RenderContinuously = true,
             GraphicsProfile = OpenTK.Windowing.Common.ContextProfile.Core,
         };
-
         public GLSurface() {
             InitializeComponent();
             surface.Start(settings);
             renderer = new();
         }
-
         public void OnRender(TimeSpan delta) {
             renderer.Render(delta);
         }
