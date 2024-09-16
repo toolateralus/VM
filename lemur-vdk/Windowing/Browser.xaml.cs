@@ -1,13 +1,11 @@
 ﻿using Lemur.FS;
 using Lemur.GUI;
 using System;
-using System.Diagnostics;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
 
-namespace Lemur.Windowing
-{
+namespace Lemur.Windowing {
     /// <summary>
     /// Interaction logic for Browser.xaml
     /// </summary>

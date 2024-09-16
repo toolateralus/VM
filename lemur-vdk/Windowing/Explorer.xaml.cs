@@ -1,5 +1,4 @@
-﻿using ICSharpCode.AvalonEdit.Search;
-using Lemur.FS;
+﻿using Lemur.FS;
 using Lemur.Windowing;
 using System;
 using System.Collections.Generic;
@@ -11,8 +10,7 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
 
-namespace Lemur.GUI
-{
+namespace Lemur.GUI {
     /// <summary>
     /// The included file explorer app. 
     /// browse, create, open, move, and delete files & directories.

@@ -1,6 +1,5 @@
 ﻿using Lemur.JS;
 using Lemur.Windowing;
-using OpenTK.Graphics.ES20;
 using System;
 using System.Threading;
 using System.Threading.Tasks;

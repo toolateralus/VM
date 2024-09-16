@@ -1,5 +1,4 @@
 ﻿using Lemur.FS;
-using Lemur.JavaScript.Api;
 using Lemur.JavaScript.Network;
 using Lemur.JS.Embedded;
 using Lemur.Windowing;
@@ -9,13 +8,10 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Net;
-using System.Runtime.CompilerServices;
 using System.Text;
 using System.Threading.Tasks;
-using System.Windows.Documents;
 
-namespace Lemur.JavaScript.Embedded
-{
+namespace Lemur.JavaScript.Embedded {
     public delegate void TransmissionStream(string data, TransmissionType type, int outCh, int replyCh, bool isDir);
     public class network : embedable
     {

@@ -1,10 +1,7 @@
 ﻿using Lemur.FS;
-using Lemur.Windowing;
 using System;
-using System.IO;
 
-namespace Lemur.JS.Embedded
-{
+namespace Lemur.JS.Embedded {
     public class file_t
     {
         public object? read(string path)

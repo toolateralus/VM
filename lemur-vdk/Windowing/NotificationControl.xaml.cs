@@ -1,12 +1,10 @@
 ﻿using System;
-using System.Runtime.CompilerServices;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Media.Animation;
 using System.Windows.Threading;
 
-namespace Lemur.GUI
-{
+namespace Lemur.GUI {
     // TODO: we should use object pooling & a static class for notifications and handle their lifetime
     // in that class. this was nice & simple but it's very slow and does too much.
 

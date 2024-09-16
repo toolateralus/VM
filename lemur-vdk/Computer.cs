@@ -19,8 +19,6 @@ using System.Windows.Controls;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Shapes;
-using System.Xml;
-using System.Xml.Linq;
 
 namespace Lemur {
     public class Computer : IDisposable {

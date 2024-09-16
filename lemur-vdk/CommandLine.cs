@@ -4,23 +4,16 @@ using Lemur.JavaScript.Network;
 using Lemur.JS;
 using Lemur.Types;
 using Lemur.Windowing;
-using Microsoft.Windows.Themes;
 using Newtonsoft.Json.Linq;
 using System;
-using System.CodeDom.Compiler;
 using System.Collections.Generic;
-using System.ComponentModel;
-using System.Diagnostics;
-using System.Diagnostics.Metrics;
 using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Reflection;
-using System.Security.AccessControl;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
-using System.Xml.Linq;
 
 namespace Lemur.OS.Language {
     /// <summary>

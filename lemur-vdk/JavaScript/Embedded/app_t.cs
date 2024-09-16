@@ -8,7 +8,6 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Net;
 using System.Reflection;
 using System.Runtime.InteropServices;
 using System.Threading;
@@ -20,8 +19,7 @@ using System.Windows.Media.Imaging;
 using static Lemur.Computer;
 using Image = System.Windows.Controls.Image;
 
-namespace Lemur.JS.Embedded
-{
+namespace Lemur.JS.Embedded {
     public class app_t : embedable
     {
         public app_t(Computer computer) : base(computer)

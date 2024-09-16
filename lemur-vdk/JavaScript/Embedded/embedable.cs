@@ -1,9 +1,6 @@
-﻿using Microsoft.VisualBasic.Devices;
-using System;
-using System.Runtime.CompilerServices;
+﻿using System;
 
-namespace Lemur.JS.Embedded
-{
+namespace Lemur.JS.Embedded {
     public class embedable(Computer computer)
     {
         private readonly WeakReference<Computer> computer = new(computer);

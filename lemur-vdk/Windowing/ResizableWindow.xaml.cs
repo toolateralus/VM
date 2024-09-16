@@ -1,10 +1,8 @@
 ﻿using System;
 using System.Windows;
 using System.Windows.Controls;
-using System.Windows.Input;
 
-namespace Lemur.GUI
-{
+namespace Lemur.GUI {
     /// <summary>
     /// The logic used by the Windowing system to actually resize and move controls / their children.
     /// </summary>

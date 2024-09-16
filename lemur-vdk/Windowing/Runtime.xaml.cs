@@ -4,16 +4,13 @@ using Lemur.FS;
 using Lemur.Windowing;
 using System;
 using System.IO;
-using System.Linq;
 using System.Threading.Tasks;
 using System.Windows;
-using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Xml;
 using KeyEventArgs = System.Windows.Input.KeyEventArgs;
 
-namespace Lemur.GUI
-{
+namespace Lemur.GUI {
     /// <summary>
     /// The MainWindow of the app, responsible for launching & initializing a 'Computer',
     /// and some helpers.

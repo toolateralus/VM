@@ -1,13 +1,7 @@
-﻿using Lemur.FS;
-using Lemur.GUI;
-using Lemur.Types;
-using Lemur.Windowing;
+﻿using Lemur.Windowing;
 using System;
 using System.IO;
 using System.Linq;
-using System.Windows;
-using System.Windows.Forms;
-using System.Windows.Shapes;
 using Path = System.IO.Path;
 namespace Lemur.FS {
     // ### Terminal Commands

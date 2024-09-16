@@ -2,14 +2,12 @@
 using Lemur.GUI;
 using Lemur.Windowing;
 using System;
-using System.Diagnostics;
 using System.IO;
 using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace Lemur.JS.Embedded
-{
+namespace Lemur.JS.Embedded {
     /// <summary>
     /// An embedded JavaScript Type :
     /// 

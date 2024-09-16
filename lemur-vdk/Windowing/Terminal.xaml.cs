@@ -1,26 +1,17 @@
 ﻿using Lemur.JS;
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Controls;
 using System.Windows.Input;
-using Lemur;
 using Lemur.FS;
 using Lemur.Windowing;
 using System.IO;
 using Newtonsoft.Json;
-using System.Security.Cryptography.Xml;
-using Lemur.JS.Embedded;
 using ICSharpCode.AvalonEdit.Search;
-using ICSharpCode.AvalonEdit;
-using System.Runtime.InteropServices;
-using JavaScriptEngineSwitcher.Core.Extensions;
-using System.Diagnostics;
 
-namespace Lemur.GUI
-{
+namespace Lemur.GUI {
     public partial class Terminal : UserControl
     {
         enum Interpreter

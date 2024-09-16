@@ -1,11 +1,9 @@
 ﻿using Lemur.GUI;
 using System;
 using System.Collections.Generic;
-using System.IO;
 using System.Runtime.CompilerServices;
 
-namespace Lemur.Windowing
-{
+namespace Lemur.Windowing {
     /// <summary>
     /// A quick way to throw a temporary notification up to the user GUI. appears in the bottom left and lasts for a number of seconds.
     /// repeat notifications stack to the top of the screen then knock out the first to make room when full.

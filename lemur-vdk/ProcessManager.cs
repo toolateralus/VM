@@ -3,7 +3,6 @@ using Lemur.JavaScript.Api;
 using Lemur.JS;
 using Lemur.JS.Embedded;
 using Lemur.Windowing;
-using Microsoft.VisualBasic.Devices;
 using System;
 using System.Collections.Generic;
 using System.Globalization;
