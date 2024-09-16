@@ -337,7 +337,6 @@ namespace Lemur {
             fixed (int* vao = &this.vao)
                 DeleteVertexArrays(1, vao);
         }
-
     }
 
     /// <summary>
