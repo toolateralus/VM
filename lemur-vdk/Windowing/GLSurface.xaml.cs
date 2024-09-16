@@ -1,4 +1,5 @@
 ﻿using Lemur.GUI;
+using Lemur.JS;
 using Lemur.Windowing;
 using OpenTK.Graphics.OpenGL4;
 using OpenTK.Mathematics;
@@ -7,6 +8,7 @@ using OpenTK.Wpf;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using System.Windows.Controls;
 
@@ -191,20 +193,61 @@ namespace Lemur {
     }
     public unsafe class Renderer {
         private readonly int vao, vbo;
-        private readonly Shader shader;
-        private readonly List<Mesh> meshes = [ new Mesh() ];
+        private Shader shader;
         private readonly Camera camera;
 
+        Queue<Action> drawCommands = [];
 
-        /// <summary>
-        /// Add a mesh and return an index to the mesh added.
-        /// </summary>
-        /// <param name="mesh"></param>
-        /// <returns></returns>
-        public int AddMesh(Mesh mesh) {
-            meshes.Add(mesh);
-            return meshes.Count - 1;
+        static readonly Mesh cube = new();
+
+        static List<Shader> shaders = [];
+
+        public void EmbedRenderingTypes(Engine engine) {
+            ArgumentNullException.ThrowIfNull(engine, nameof(engine));
+            engine.EmbedType("Vector2", typeof(Vector2));
+            engine.EmbedType("Vector3", typeof(Vector3));
+            engine.EmbedType("Vector4", typeof(Vector4));
+            engine.EmbedType("Color", typeof(Color4));
+            engine.EmbedType("Shader", typeof(Shader));
+            engine.EmbedType("Mesh", typeof(Mesh));
+            engine.EmbedType("Camera", typeof(Camera));
+            engine.EmbedType("GLSurface", typeof(Renderer));
+            engine.EmbedObject("glSurface", this);
         }
+
+        public int compileShader(string vertexShader, string fragmentShader) {
+            shaders.Add(new(vertexShader, fragmentShader));
+            return shaders.Count - 1;
+        }
+
+        public void setShader(int index) {
+            if (index > 0 && index < shaders.Count) {
+                this.shader = shaders[index];
+            }
+        }
+
+        public void drawCube(float tx = 0, float ty = 0, float tz = 0, float rx = 0, float ry = 0, float rz = 0, float sx = 1, float sy = 1, float sz = 1) {
+            drawCommands.Enqueue(() => {
+                Vector3 scale = new(sx, sy, sz);
+                Vector3 rotation = new(rx, ry, rz);
+                Vector3 translation = new(tx, ty, tz);
+                Matrix4 scaleMatrix = Matrix4.CreateScale(scale);
+                Matrix4 rotationMatrix = Matrix4.CreateFromQuaternion(Quaternion.FromEulerAngles(rotation));
+                Matrix4 translationMatrix = Matrix4.CreateTranslation(translation);
+
+                Matrix4 srtMatrix = scaleMatrix * rotationMatrix * translationMatrix;
+
+                //Matrix4 trsMatrix = translationMatrix * rotationMatrix * scaleMatrix;
+
+                shader.Set("modelMatrix", srtMatrix);
+
+                BindVertexArray(vao);
+                BindBuffer(BufferTarget.ArrayBuffer, vbo);
+                BufferData(BufferTarget.ArrayBuffer, cube.Vertices.Length * sizeof(Vertex), cube.Vertices, BufferUsageHint.DynamicDraw);
+                DrawArrays(PrimitiveType.TriangleStrip, 0, cube.Vertices.Length);
+            });
+        }
+
         public Renderer() {
             camera = new(new(0,0,-5), new(0, 90, 0), 70, 0.01f, 1000.0f);
 
@@ -240,10 +283,10 @@ namespace Lemur {
 
                 uniform float time;
                 uniform mat4 viewProjectionMatrix;
-                uniform vec3 modelPos;
+                uniform mat4 modelMatrix;
 
                 void main() {
-                    gl_Position = viewProjectionMatrix * vec4(modelPos + aPos, 1.0);
+                    gl_Position = viewProjectionMatrix * (modelMatrix * vec4(aPos, 1.0));
                 }   
                 ";
             string fragSource = @"
@@ -265,19 +308,13 @@ namespace Lemur {
         }
 
         public void Render(TimeSpan _) {
-            
+            drawCube(0, 0, 0, 0, 0, 0, 1, 1, 1);
             Clear(ClearBufferMask.ColorBufferBit | ClearBufferMask.DepthBufferBit);
-            
             shader.Set("viewProjectionMatrix", camera.GetViewProjectionMatrix());
-            
             shader.Set("time", GLFW.GetTime());
-
-            foreach (var mesh in meshes) {
-                shader.Set("modelPos", new Vector3(0));
-                BindVertexArray(vao);
-                BindBuffer(BufferTarget.ArrayBuffer, vbo);
-                BufferData(BufferTarget.ArrayBuffer, mesh.Vertices.Length * sizeof(Vertex), mesh.Vertices, BufferUsageHint.StaticDraw);
-                DrawArrays(PrimitiveType.TriangleStrip, 0, mesh.Vertices.Length);
+            while (drawCommands.Count > 0) {
+                var command = drawCommands.Dequeue();
+                command?.Invoke();
             }
         }
 
@@ -298,18 +335,11 @@ namespace Lemur {
 
         public GLSurface() {
             InitializeComponent();
-        }
-
-        bool started = false;
-
-        public void LateInit(Computer comptuer, ResizableWindow window) {
             surface.Start(settings);
             renderer = new();
-            started = true;
         }
 
         public void OnRender(TimeSpan delta) {
-            if (!started) return;
             renderer.Render(delta);
         }
     }

@@ -662,16 +662,16 @@ namespace Lemur.JS.Embedded {
         public string start(string path, params object[] args)
         {
             string pid = "PROC_START_FAILURE";
-
             GetComputer().Window.Dispatcher.Invoke(start_app);
-
-            void start_app()
-            {
-                // this way of fetching a pid is very presumptuous and bad.
-                pid = $"p{__procId + 1}"; // the next to be created process. 
-                GetComputer().bootstrappers[path].Open(args);
+            void start_app() {
+                pid = $"p{__procId + 1}"; // speculatively get the next process.
+                if (GetComputer().bootstrappers.TryGetValue(path.Replace(".app", ""), out var bootstrapper)) {
+                    bootstrapper.Open(args);
+                }
+                else {
+                    Notifications.Now($"Unable to launch {path}");
+                }
             }
-
             return pid;
         }
         public void loadApps(object? path)

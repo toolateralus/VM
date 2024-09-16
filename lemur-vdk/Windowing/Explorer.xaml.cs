@@ -118,7 +118,7 @@ namespace Lemur.GUI {
 
         }
 
-        public void LateInit(Computer c)
+        public void LateInit(string _,  Computer c, ResizableWindow __)
         {
             this.computer = c;
         }

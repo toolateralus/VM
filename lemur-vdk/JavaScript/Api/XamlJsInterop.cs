@@ -1,36 +1,21 @@
 ﻿using Lemur.Windowing;
-using System;
 using System.Windows.Controls;
 using System.Windows.Markup;
 
 namespace Lemur.JavaScript.Api {
     public static class XamlHelper {
         public static UserControl? ParseUserControl(string xaml) {
-            UserControl? product = null;
-            Action<UserControl> output = (e) => { product = e; };
-
-            if (xaml == "Not found!")
-                return null;
-
-            System.Windows.Application.Current.Dispatcher.Invoke(delegate {
+            var task = Computer.Current.Window.Dispatcher.InvokeAsync(() => {
                 try {
-                    object parsedObject = XamlReader.Parse(xaml);
-
-                    if (parsedObject is UserControl userControl) {
-                        output.Invoke(userControl);
-                    }
-                    else {
-                        Notifications.Now("The provided XAML does not represent a UserControl, or has errors.");
-                    }
+                   return XamlReader.Parse(xaml) as UserControl;
                 }
                 catch (XamlParseException ex) {
                     Notifications.Now($"XAML parsing error: {ex.Message}");
                 }
+                return null;
             });
-
-            return product;
+            task.Wait();
+            return task.Result;
         }
-
-
     }
 }

@@ -61,7 +61,7 @@ namespace Lemur.GUI {
             output.ScrollToLine(output.Text.Length);
         }
 
-        public void LateInit(Computer computer, ResizableWindow rsz)
+        public void LateInit(string _, Computer computer, ResizableWindow rsz)
         {
             Engine ??= new(computer, "Terminal");
             Window = rsz;

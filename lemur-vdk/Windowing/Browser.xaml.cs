@@ -16,7 +16,7 @@ namespace Lemur.Windowing {
         {
             InitializeComponent();
         }
-        public async void LateInit(Computer pc, ResizableWindow win)
+        public async void LateInit(string _, Computer pc, ResizableWindow win)
         {
             await WebView.EnsureCoreWebView2Async(null).ConfigureAwait(true);
             WebView.CoreWebView2.Navigate("https://www.github.com/toolateralus/lemur-vdk/issues");

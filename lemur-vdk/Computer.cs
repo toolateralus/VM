@@ -158,7 +158,7 @@ namespace Lemur {
             // run late init on valid extern apps.
             var allMembers = control.GetType().GetMembers().Where(i => i is MethodInfo);
             if (IsValidExternAppType(allMembers))
-                TryRunLateInit(control, resizable_window);
+                TryRunLateInit(processID, control, resizable_window);
 
             // todo : change this, works for now but it's annoying.
             // we could have a much smarter windowing system that opens apps to the emptiest space or something.
@@ -234,25 +234,10 @@ namespace Lemur {
         internal static bool IsValidExternAppType(IEnumerable<MemberInfo> members) {
             return members.Any(member => member.Name == "LateInit");
         }
-        internal static void TryRunLateInit(object instance, ResizableWindow? resizableWindow = null) {
-            var method = instance.GetType().GetMethods()
-             .FirstOrDefault(method =>
-                 method.Name.Contains("LateInit") &&
-
-                 ((method.GetParameters().Length > 0 && method.GetParameters()[0].ParameterType == typeof(Computer)) ||
-
-                 method.GetParameters().Length > 1 &&
-                 method.GetParameters()[0].ParameterType == typeof(Computer) ||
-                 method.GetParameters()[1].ParameterType == typeof(ResizableWindow))
-             );
-
-            var parameters = method.GetParameters();
-
-            method?.Invoke(instance, parameters.Length == 1
-                ? new[] { Computer.Current }
-                : new object[] { Computer.Current, resizableWindow }
-            );
-
+        internal static void TryRunLateInit(string processID, object instance, ResizableWindow? resizableWindow = null) {
+            var method = instance.GetType().GetMethods().FirstOrDefault(method => method.Name.Contains("LateInit"));
+            var parameters = method!.GetParameters();
+            method?.Invoke(instance, [processID, Current, resizableWindow]);
         }
         
         public void InstallExtern(string name, Type type) {
@@ -421,6 +406,7 @@ namespace Lemur {
             Dispose(disposing: true);
             GC.SuppressFinalize(this);
         }
+        
     }
 
     public class Bootstrapper(string appName) {

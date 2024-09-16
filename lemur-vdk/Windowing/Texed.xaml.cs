@@ -114,7 +114,7 @@ namespace Lemur.GUI {
 
             shTypeBox.SelectedIndex = 1;
         }
-        public void LateInit(Computer c, ResizableWindow win)
+        public void LateInit(string _, Computer c, ResizableWindow win)
         {
             this.computer = c;
         }
