@@ -144,10 +144,10 @@ namespace Lemur.GUI
                     pc.Dispose();
                 };
 
-                pc.InstallCSharpApp("terminal.app", typeof(Terminal));
-                pc.InstallCSharpApp("explorer.app", typeof(Explorer));
-                pc.InstallCSharpApp("texed.app", typeof(Texed));
-                pc.InstallCSharpApp("browser.app", typeof(Browser));
+                pc.InstallExtern("terminal.app", typeof(Terminal));
+                pc.InstallExtern("explorer.app", typeof(Explorer));
+                pc.InstallExtern("texed.app", typeof(Texed));
+                pc.InstallExtern("browser.app", typeof(Browser));
 
                 Runtime.LoadCustomSyntaxHighlighting();
             }

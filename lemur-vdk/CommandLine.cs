@@ -334,7 +334,7 @@ namespace Lemur.OS.Language {
             if (obj[0] is string fileName) {
                 if (FileSystem.GetResourcePath(fileName) is string AbsPath && !string.IsNullOrEmpty(AbsPath)) {
                     var tEdit = new Texed(AbsPath);
-                    Computer.Current.OpenAppGUI(tEdit, "texed.app", computer.ProcessManager.GetNextProcessID());
+                    Computer.Current.PresentGUI(tEdit, "texed.app", computer.ProcessManager.GetNextProcessID());
                 }
                 else {
 

@@ -65,7 +65,7 @@ namespace Lemur.GUI
             {
                 mdViewer = new MarkdownViewer();
                 mdViewer.RenderMarkdown(Contents);
-                Computer.Current.OpenAppGUI(mdViewer, "md.app", Computer.Current.ProcessManager.GetNextProcessID());
+                Computer.Current.PresentGUI(mdViewer, "md.app", Computer.Current.ProcessManager.GetNextProcessID());
             }
         }
         /// <summary>
@@ -192,7 +192,7 @@ namespace Lemur.GUI
             var fileExplorer = Explorer.LoadFilePrompt();
 
             var pid = computer.ProcessManager.GetNextProcessID();
-            Computer.Current.OpenAppGUI(fileExplorer, "explorer.app", pid);
+            Computer.Current.PresentGUI(fileExplorer, "explorer.app", pid);
             var proc = Computer.Current.ProcessManager.GetProcess(pid);
 
             fileExplorer.OnNavigated += (file) =>
@@ -254,7 +254,7 @@ namespace Lemur.GUI
                 case ".md":
                     mdViewer = new MarkdownViewer();
                     mdViewer.RenderMarkdown(Contents);
-                    Computer.Current.OpenAppGUI(mdViewer, "md.app", computer.ProcessManager.GetNextProcessID());
+                    Computer.Current.PresentGUI(mdViewer, "md.app", computer.ProcessManager.GetNextProcessID());
                     break;
 
                 case ".xaml.js":
@@ -276,7 +276,7 @@ namespace Lemur.GUI
                     {
                         terminal = new Terminal();
                         var jsEngine = new Engine(computer, "Terminal");
-                        Computer.Current.OpenAppGUI(terminal, "cmd.app", computer.ProcessManager.GetNextProcessID(), engine: jsEngine);
+                        Computer.Current.PresentGUI(terminal, "cmd.app", computer.ProcessManager.GetNextProcessID(), engine: jsEngine);
                         terminal.Window.OnApplicationClose += delegate
                         {
                             terminal = null;

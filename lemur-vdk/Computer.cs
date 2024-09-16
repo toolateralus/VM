@@ -4,36 +4,30 @@ using Lemur.JavaScript.Api;
 using Lemur.JavaScript.Network;
 using Lemur.JS;
 using Lemur.OS.Language;
-using Lemur.Types;
 using Lemur.Windowing;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Reflection;
-using System.Runtime.CompilerServices;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
-using System.Windows.Markup;
 using System.Windows.Media;
-using System.Windows.Media.Animation;
 using System.Windows.Media.Imaging;
 using System.Windows.Shapes;
-using static System.Runtime.InteropServices.JavaScript.JSType;
+using System.Xml;
+using System.Xml.Linq;
 
 namespace Lemur {
     public class Computer : IDisposable {
-        const string xamlExt = ".xaml";
-        const string xamlJsExt = ".xaml.js";
-        internal string WorkingDir { get; private set; }
         internal uint ID { get; private set; }
-        private const string appConfigExt = ".appconfig";
-        internal static uint __procId;
+        // the 'computer id'. This is useless basically,
+        // why would you ever need to run multiple desktops under the same C# process.
+        internal static uint __procId; 
         internal NetworkConfiguration Network { get; set; }
         internal DesktopWindow Window { get; set; }
         internal FileSystem FileSystem { get; set; }
@@ -41,16 +35,16 @@ namespace Lemur {
         internal CommandLine CLI { get; set; }
         internal JObject Config { get; set; }
 
-
         private static Computer? current;
         public static Computer Current => current;
 
         public required ProcessManager ProcessManager { get; init; }
 
-        // todo :: make a more firm, observable way to install applications.
-        // right now, the only real thing that attaches the app startup to the comptuer is the button.
-        internal readonly Dictionary<string, Type> csApps = [];
-        internal readonly List<string> jsApps = new();
+        // we don't use bootstrappers for these because creating them requires litle procedure.
+        internal readonly Dictionary<string, Type> externApps = [];
+        
+        internal readonly Dictionary<string, Bootstrapper> bootstrappers = [];
+
         internal bool disposing;
         public Computer(FileSystem fs) {
             current = this;
@@ -63,7 +57,12 @@ namespace Lemur {
 
             Network = new();
 
-            Config = LoadConfig();
+            if (LoadConfig() is not JObject config) {
+                MessageBox.Show("Failed to load config.json! create one or fix your corrupted environment. You will experience problems as a result of not having one.");
+                return;
+            }
+
+            Config = config;
 
             JavaScript = new(this, "Computer");
 
@@ -108,154 +107,17 @@ namespace Lemur {
                 }
             }
         }
-        public async void OpenCustom(string type, params object[] cmdLineArgs) {
-            CreateJavaScriptRuntime(out var processID, out var engine);
-
-            string name = type.Replace(".app", "");
-
-
-            var absPath = FileSystem.GetResourcePath(name + ".app");
-
-            if (!Directory.Exists(absPath)) {
-                if (TryOpenCSAppByName(type, cmdLineArgs)) // try fallback open csharp app or error.
-                    return;
-
-                Notifications.Now($"directory for app {type} not found");
-                return;
-            }
-
-            if (string.IsNullOrEmpty(name)) {
-                Notifications.Now($"invalid name for app {type}");
-                return;
-            }
-
-            // todo: run pre-processor here? have that be optional.
-            // homemade typescript? or something more experimental even :D
-
-            AppConfig? appConfig = new() {
-                requires = [],
-                @class = name,
-                isWpf = true,
-                terminal = false,
-                title = name,
-            };
-
-            string conf = FileSystem.GetResourcePath(name + appConfigExt);
-
-            var exists = FileSystem.FileExists(conf);
-
-            if (exists) {
-                try {
-                    var file = File.ReadAllText(conf);
-                    appConfig = JsonConvert.DeserializeObject<AppConfig>(file);
-                }
-                catch (Exception e) {
-                    Notifications.Exception(e);
-                    return;
-                }
-
-            }
-            else {
-                Notifications.Now($"Warning : No '.appconfig' file found for app {name}. using a default.");
-            }
-
-
-            string jsFile = System.IO.Path.Combine(absPath, appConfig.entryPoint ?? (name + xamlJsExt));
-
-            if (!File.Exists(jsFile)) {
-                Notifications.Now("Invalid application structure : your xaml & .xaml.js & .app files/folder must be the same name.");
-                return;
-            }
-
-            var js = File.ReadAllText(jsFile);
-
-            if (appConfig.isWpf) {
-                // run & create class, in-source requires, etc.
-
-                // setup some names.
-                string xamlFile = System.IO.Path.Combine(absPath, appConfig.frontEnd ?? (name + xamlExt));
-
-                if (!File.Exists(xamlFile)) {
-                    Notifications.Now("Invalid application structure : your xaml & .xaml.js & .app files/folder must be the same name.");
-                    return;
-                }
-
-                var xaml = File.ReadAllText(xamlFile);
-                var control = XamlHelper.ParseUserControl(xaml);
-
-                if (control == null) {
-                    Notifications.Now($"Error : either the app was not found or there was an error parsing xaml or js for {type}.");
-                    return;
-                }
-
-
-                // todo: add a way to make a purely functional version of this. we don't want to force the user to use a class.
-                // i don't know how we'd do this but i know it's easy(ish)
-                OpenAppGUI(control, appConfig.title, processID, engine);
-            }
-            if (appConfig.terminal) {
-                Terminal term = new();
-                term.Engine = engine;
-
-                // if we're using both wpf and a terminal we need to spawn a nw process for this.
-                // todo: verify that we don't need an entire new process object, or that this creates one.
-                var pid = appConfig.isWpf ? Current.ProcessManager.GetNextProcessID() : processID;
-
-                OpenAppGUI(term, appConfig.title, pid, engine);
-
-                await engine.Execute($"""const my_pid = () => '{processID}'""").ConfigureAwait(false);
-
-
-                if (appConfig?.isWpf == false)
-                    await engine.Execute(js).ConfigureAwait(true);
-
-            }
-            string allIncludes = "";
-            foreach (var item in appConfig?.requires)
-                allIncludes += $"const {{{string.Join(", ", item.Value)}}} = require('{item.Key}')\n";
-
-            if (allIncludes.Length > 0)
-                await engine.Execute(allIncludes).ConfigureAwait(true);
-
-            // class style wpf app
-            if (appConfig?.isWpf == true || appConfig?.@class != null) {
-                _ = await engine.Execute(js).ConfigureAwait(true);
-
-
-                string instantiation_code;
-
-                if (cmdLineArgs?.Length != 0) {
-                    // for varargs
-                    var args = "[" + string.Join(", ", cmdLineArgs) + "]";
-                    instantiation_code = $"const {processID} = new {name}('{processID}, {args}')";
-                }
-                else {
-                    // normal pid ctor
-                    instantiation_code = $"const {processID} = new {name}('{processID}')";
-                }
-
-                await engine.Execute(instantiation_code).ConfigureAwait(true);
-            }
-
-        }
-        private bool TryOpenCSAppByName(string type, object[] cmdLineArgs) {
-            if (csApps.TryGetValue(type, out var csType)) {
-                // at least esablish the pid before constructing. ideally, we should be done with creating the app &
-                // presenting the UI when this constructor (activator call) gets run.
+      
+        private bool TryOpenExtern(string type, object[] cmdLineArgs) {
+            if (externApps.TryGetValue(type, out var csType)) {
                 var pid = ProcessManager.GetNextProcessID();
                 var app = (UserControl)Activator.CreateInstance(csType, cmdLineArgs)!;
-                OpenAppGUI(app, type, pid);
+                PresentGUI(app, type, pid);
                 return true;
             }
             return false;
         }
-        private void CreateJavaScriptRuntime(out string processID, out Engine engine) {
-            processID = ProcessManager.GetNextProcessID();
-            engine = new(this, $"App__{processID}");
-            engine.NetworkModule.processID = processID;
-            engine.AppModule.processID = processID;
-        }
-        public void OpenAppGUI(UserControl control, string pClass, string processID, Engine? engine = null) {
+        public void PresentGUI(UserControl control, string pClass, string processID, Engine? engine = null) {
             ArgumentNullException.ThrowIfNull(control);
             ArgumentNullException.ThrowIfNull(pClass);
             ArgumentNullException.ThrowIfNull(processID);
@@ -307,6 +169,7 @@ namespace Lemur {
             Canvas.SetTop(resizable_window, 200);
             Canvas.SetLeft(resizable_window, 200);
         }
+       
         public static BitmapImage LoadImage(string path) {
             BitmapImage bitmapImage = new();
             bitmapImage.BeginInit();
@@ -370,87 +233,6 @@ namespace Lemur {
             btn.Content = grid;
             btn.ToolTip = name;
         }
-        public void InstallIcon(AppType type, string appName, Type? runtime_type = null, AppConfig? config = null) {
-            Window.Dispatcher?.Invoke(() => {
-                var btn = Window.MakeDesktopButton(appName);
-
-                switch (type) {
-                    case AppType.Native:
-                        InstallNative(btn, appName);
-                        break;
-                    case AppType.Extern:
-                        if (runtime_type != null)
-                            InstallExtern(btn, appName, runtime_type);
-                        break;
-                }
-
-
-
-                // if we don't stop this, it deletes the whole computer xD
-                if (runtime_type == null) {
-                    MenuItem delete = new() {
-                        Header = "delete app (no undo)"
-                    };
-                    delete.Click += (sender, @event) => {
-                        var answer = System.Windows.MessageBox.Show($"are you sure you want to delete {appName}?", "Delete PERMANENTLY??", MessageBoxButton.YesNo, System.Windows.MessageBoxImage.Warning);
-
-                        if (answer == MessageBoxResult.Yes) {
-                            Computer.Current.Uninstall(appName + ".app");
-                            var path = FileSystem.GetResourcePath(appName + ".app");
-                            if (!string.IsNullOrEmpty(path))
-                                FileSystem.Delete(path);
-                        }
-                    };
-                    btn.ContextMenu.Items.Add(delete);
-                }
-
-                Window.DesktopIconPanel.UpdateLayout();
-                Window.DesktopIconPanel.Children.Add(btn);
-
-                MenuItem uninstall = new() {
-                    Header = "uninstall app"
-                };
-
-                uninstall.Click += (sender, @event) => {
-                    var answer = MessageBox.Show($"are you sure you want to uninstall {appName}?", "uninstall?", MessageBoxButton.YesNo);
-
-                    if (answer == MessageBoxResult.Yes)
-                        Computer.Current.Uninstall(appName + ".app");
-                };
-                btn.ContextMenu ??= new();
-                btn.ContextMenu.Items.Add(uninstall);
-            });
-
-            void InstallNative(Button btn, string type) {
-                btn.MouseDoubleClick += OnDesktopIconPressed;
-
-                var contextMenu = Window.GetNativeContextMenu(appName, config);
-
-                btn.ContextMenu = contextMenu;
-
-                void OnDesktopIconPressed(object? sender, RoutedEventArgs e) {
-                    OpenCustom(type);
-                }
-
-                StyleDesktopIcon(type, btn, Runtime.GetAppIcon(appName));
-            }
-            void InstallExtern(Button btn, string name, Type type) {
-                btn.MouseDoubleClick += OnDesktopIconPressed;
-                StyleDesktopIcon(appName, btn, GetExternIcon(type));
-
-                void OnDesktopIconPressed(object? sender, RoutedEventArgs e) {
-                    if (Activator.CreateInstance(type) is object instance && instance is UserControl userControl) {
-                        Computer.Current.OpenAppGUI(userControl, name, ProcessManager.GetNextProcessID());
-                    }
-                    else {
-                        Notifications.Now("Failed to create instance of native application. the app is likely misconfigured");
-                    }
-                }
-            }
-        }
-        public void InstallFromType(string name, Type type) {
-            InstallIcon(AppType.Extern, name, type);
-        }
         internal static bool IsValidExternAppType(IEnumerable<MemberInfo> members) {
             return members.Any(member => member.Name == "LateInit");
         }
@@ -474,24 +256,17 @@ namespace Lemur {
             );
 
         }
-        public void InstallCSharpApp(string exePath, Type type) {
-            if (csApps.TryGetValue(exePath, out _)) {
-                Notifications.Now("Tried to install an app that already exists on the computer, try renaming it if this was intended");
-                return;
-            }
-
-            csApps[exePath] = type;
-
-            Notifications.Now($"{exePath} installed!");
-
-            InstallFromType(exePath, type);
+        
+        public void InstallExtern(string name, Type type) {
+            Notifications.Now($"{name} installed!");
+            CreateBootstrapper(AppType.Extern, name, type);
         }
+        
         public void InstallNative(string type) {
             if (disposing)
                 return;
 
-            type = type.Replace(".app", "");
-            jsApps.Add(type);
+            type = type.Replace(".app", "", StringComparison.CurrentCulture);
 
             var conf = type + ".appconfig";
 
@@ -510,19 +285,20 @@ namespace Lemur {
             }
 
             if (config is null) {
-                InstallIcon(AppType.Native, type);
+                CreateBootstrapper(AppType.Native, type);
             }
             else {
-                InstallIcon(AppType.Native, type, runtime_type: null, config);
+                CreateBootstrapper(AppType.Native, type, runtime_type: null, config);
             }
 
         }
+        
         public void Uninstall(string name) {
-            jsApps.Remove(name);
             Window.Dispatcher.Invoke(() => {
                 Window.RemoveDesktopIcon(name);
             });
         }
+        
         internal void LoadBackground() {
             string backgroundPath = Config?.Value<string>("BACKGROUND") ?? "background.png";
             var fullPath = FileSystem.GetResourcePath(backgroundPath);
@@ -534,6 +310,88 @@ namespace Lemur {
 
             Window.desktopBackground.Source = LoadImage(fullPath);
         }
+        
+        public void CreateBootstrapper(AppType type, string appName, Type? runtime_type = null, AppConfig? config = null) {
+               
+            Window.Dispatcher?.Invoke(() => {
+                var btn = Window.MakeDesktopButton(appName);
+
+                switch (type) {
+                    case AppType.Native:
+                        InstallNative(btn, appName);
+                        break;
+                    case AppType.Extern:
+                    if (runtime_type != null)
+                        InstallExtern(btn, appName, runtime_type);
+                    break;
+                }
+
+                bootstrappers.Add(appName, new(appName));
+
+                // if we don't stop this, it deletes the whole computer xD .. (later) .. idk what this comment meant. uh oh!
+                if (runtime_type == null) {
+                    MenuItem delete = new() {
+                        Header = "delete app (no undo)"
+                    };
+                    delete.Click += (sender, @event) => {
+                        var answer = MessageBox.Show($"are you sure you want to delete {appName}?", "Delete PERMANENTLY??", MessageBoxButton.YesNo, System.Windows.MessageBoxImage.Warning);
+
+                        if (answer == MessageBoxResult.Yes) {
+                            Computer.Current.Uninstall(appName + ".app");
+                            var path = FileSystem.GetResourcePath(appName + ".app");
+                            if (!string.IsNullOrEmpty(path))
+                                FileSystem.Delete(path);
+                        }
+                    };
+                    btn.ContextMenu.Items.Add(delete);
+                }
+
+                Window.DesktopIconPanel.UpdateLayout();
+                Window.DesktopIconPanel.Children.Add(btn);
+
+                MenuItem uninstall = new() {
+                    Header = "uninstall app"
+                };
+
+                uninstall.Click += (sender, @event) => {
+                    var answer = MessageBox.Show($"are you sure you want to uninstall {appName}?", "uninstall?", MessageBoxButton.YesNo);
+
+                    if (answer == MessageBoxResult.Yes)
+                        Current.Uninstall(appName + ".app");
+                };
+                
+                btn.ContextMenu ??= new();
+                btn.ContextMenu.Items.Add(uninstall);
+            });
+
+            void InstallNative(Button btn, string type) {
+                btn.MouseDoubleClick += OnDesktopIconPressed;
+
+                var contextMenu = Window.GetNativeContextMenu(appName, config);
+
+                btn.ContextMenu = contextMenu;
+
+                void OnDesktopIconPressed(object? sender, RoutedEventArgs e) {
+                    bootstrappers[type].Open([]);
+                }
+
+                StyleDesktopIcon(type, btn, Runtime.GetAppIcon(appName));
+            }
+            void InstallExtern(Button btn, string name, Type type) {
+                btn.MouseDoubleClick += OnDesktopIconPressed;
+                StyleDesktopIcon(appName, btn, GetExternIcon(type));
+
+                void OnDesktopIconPressed(object? sender, RoutedEventArgs e) {
+                    if (Activator.CreateInstance(type) is UserControl userControl) {
+                        Computer.Current.PresentGUI(userControl, name, ProcessManager.GetNextProcessID());
+                    }
+                    else {
+                        Notifications.Now("Failed to create instance of native application. the app is likely misconfigured");
+                    }
+                }
+            }
+        }
+        
         protected virtual void Dispose(bool disposing) {
             if (!this.disposing) {
                 if (disposing) {
@@ -566,4 +424,130 @@ namespace Lemur {
             GC.SuppressFinalize(this);
         }
     }
+
+    public class Bootstrapper(string appName) {
+        private readonly string appName = appName;
+        private static void CreateJavaScriptRuntime(out string processID, out Engine engine) {
+            processID = Computer.Current.ProcessManager.GetNextProcessID();
+            engine = new(Computer.Current, $"App__{processID}");
+            engine.NetworkModule.processID = processID;
+            engine.AppModule.processID = processID;
+        }
+        public async void Open(params object[] args) {
+            // we don't want to dispose the idisposable here. just creating it.
+            CreateJavaScriptRuntime(out var processID, out var engine);
+
+            string name = appName.Replace(".app", "");
+            var absPath = FileSystem.GetResourcePath(name + ".app");
+
+            if (!Directory.Exists(absPath)) {
+                Notifications.Now($"directory for app {appName} not found");
+                return;
+            }
+            if (string.IsNullOrEmpty(name)) {
+                Notifications.Now($"invalid name for app {appName}");
+                return;
+            }
+
+            AppConfig? appConfig = new() {
+                requires = [],
+                @class = name,
+                isWpf = true,
+                terminal = false,
+                title = name,
+            };
+
+            // we support not having a .appconfig to prevent silly issues with accidental deletions 
+            // and older versions that didn't use appconfig
+            string conf = FileSystem.GetResourcePath(name + ".appconfig");
+            var exists = FileSystem.FileExists(conf);
+            if (exists) {
+                try {
+                    var file = File.ReadAllText(conf);
+                    var config = JsonConvert.DeserializeObject<AppConfig>(file);
+                    appConfig = config ?? appConfig;
+                }
+                catch (Exception e) {
+                    Notifications.Exception(e);
+                    return;
+                }
+
+            }
+            else {
+                Notifications.Now($"Warning : No '.appconfig' file found for app {name}. using a default.");
+            }
+
+           await ExecuteRequires(engine, appConfig).ConfigureAwait(true);
+
+            // locate the entry point of the application, the main file.
+            string jsFile = System.IO.Path.Combine(absPath, appConfig.entryPoint ?? (name + ".xaml.js"));
+
+            if (!File.Exists(jsFile)) {
+                Notifications.Now("Invalid application structure : your xaml & .xaml.js & .app files/folder must be the same name.");
+                return;
+            }
+
+            var js = await File.ReadAllTextAsync(jsFile).ConfigureAwait(true);
+
+            if (appConfig.isWpf) {
+                // setup some names.
+                string xamlFile = System.IO.Path.Combine(absPath, appConfig.frontEnd ?? (name + ".xaml"));
+
+                if (!File.Exists(xamlFile)) {
+                    Notifications.Now("Invalid application structure : your xaml & .xaml.js & .app files/folder must be the same name.");
+                    return;
+                }
+
+                var xaml = File.ReadAllText(xamlFile);
+                var control = XamlHelper.ParseUserControl(xaml);
+
+                if (control == null) {
+                    Notifications.Now($"Error : either the app was not found or there was an error parsing xaml or js for {appName}.");
+                    return;
+                }
+
+                // TODO: make a way to have a void main() style app.
+                Computer.Current.PresentGUI(control, appConfig.title, processID, engine);
+
+                // wait for the class declaration to finalize.
+                // Hope that the user didn't put some long running global code in there D:
+                _ = await engine.Execute(js).ConfigureAwait(true);
+
+                string instantiation_code = $"const {processID} = new {name}('{processID}')";
+
+                _ = engine.Execute(instantiation_code);
+            }
+            else if (appConfig.terminal) {
+                Terminal term = new() {
+                    Engine = engine
+                };
+
+                // if we're using both wpf and a terminal we need to spawn a nw process for this.
+                // todo: verify that we don't need an entire new process object, or that this creates one.
+                // wtf is this doing
+                var pid = appConfig.isWpf ? Computer.Current.ProcessManager.GetNextProcessID() : processID;
+
+                Computer.Current.PresentGUI(term, appConfig.title, pid, engine);
+
+                _ = engine.Execute($"""const pid = {pid}'""").ConfigureAwait(false);
+                if (appConfig.isWpf == false)
+                    _ = engine.Execute(js).ConfigureAwait(false);
+            }
+
+        }
+        
+        private static async Task ExecuteRequires(Engine engine, AppConfig? appConfig) {
+            string joinedRequires = "";
+
+            if (appConfig is not null)
+                foreach (var item in appConfig.requires)
+                    joinedRequires += $"const {{{string.Join(", ", item.Value)}}} = require('{item.Key}')\n";
+
+            if (joinedRequires.Length > 0)
+                await engine.Execute(joinedRequires).ConfigureAwait(true);
+        }
+    }
+
 }
+
+

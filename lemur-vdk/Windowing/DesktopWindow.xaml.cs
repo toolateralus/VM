@@ -114,7 +114,7 @@ namespace Lemur.GUI
                 {
                     string name = appName + ".appconfig";
                     var editor = new Texed(name);
-                    Computer.Current.OpenAppGUI(editor, name, computer.ProcessManager.GetNextProcessID());
+                    Computer.Current.PresentGUI(editor, name, computer.ProcessManager.GetNextProcessID());
                 };
                 contextMenu.Items.Add(configMenu);
             }
@@ -131,7 +131,7 @@ namespace Lemur.GUI
 
                 var explorer = new Explorer();
                 var pid = Computer.Current.ProcessManager.GetNextProcessID();
-                Computer.Current.OpenAppGUI(explorer, appName + ".app", pid);
+                Computer.Current.PresentGUI(explorer, appName + ".app", pid);
 
             };
             contextMenu.Items.Add(folder);
@@ -298,7 +298,7 @@ namespace Lemur.GUI
         {
             var name = appName + ".xaml";
             var editor = new Texed(name);
-            Computer.Current.OpenAppGUI(editor, name, computer.ProcessManager.GetNextProcessID());
+            Computer.Current.PresentGUI(editor, name, computer.ProcessManager.GetNextProcessID());
         }
         private void JsSource_Click(object? sender, RoutedEventArgs e, string appName, bool isTerminal)
         {
@@ -309,7 +309,7 @@ namespace Lemur.GUI
                 name = appName + ".xaml.js";
 
             var editor = new Texed(name);
-            Computer.Current.OpenAppGUI(editor, name, computer.ProcessManager.GetNextProcessID());
+            Computer.Current.PresentGUI(editor, name, computer.ProcessManager.GetNextProcessID());
         }
         public void Computer_KeyDown(object sender, KeyEventArgs e)
         {
@@ -322,7 +322,7 @@ namespace Lemur.GUI
                     if (Keyboard.IsKeyDown(Key.LeftCtrl))
                     {
                         var cmd = new Terminal();
-                        Computer.Current.OpenAppGUI(cmd, "Cmd", computer.ProcessManager.GetNextProcessID());
+                        Computer.Current.PresentGUI(cmd, "Cmd", computer.ProcessManager.GetNextProcessID());
                     }
                     break;
 

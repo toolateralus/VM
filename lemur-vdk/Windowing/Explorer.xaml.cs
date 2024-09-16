@@ -237,7 +237,7 @@ namespace Lemur.GUI
                     if (IsChildProcess)
                         return;
 
-                    Computer.Current.OpenAppGUI(new Texed(path), "texed.app", computer.ProcessManager.GetNextProcessID());
+                    Computer.Current.PresentGUI(new Texed(path), "texed.app", computer.ProcessManager.GetNextProcessID());
                 }
 
                 FileSystem.ChangeDirectory(path);

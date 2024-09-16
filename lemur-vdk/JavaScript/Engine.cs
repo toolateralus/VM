@@ -42,9 +42,11 @@ namespace Lemur.JS {
         }
     }
     public class Engine : IDisposable {
+
         internal IJsEngine m_engine_internal;
-        IJsEngineSwitcher engineSwitcher;
-        CancellationTokenSource cts = new();
+        private IJsEngineSwitcher engineSwitcher;
+
+        private readonly CancellationTokenSource cts = new();
         public network NetworkModule { get; }
         public interop InteropModule { get; }
         public conv ConvModule { get; }
@@ -55,9 +57,11 @@ namespace Lemur.JS {
         string includedFiles = "";
 
         private readonly Thread executionThread;
+
         public readonly Dictionary<string, object?> Modules = [];
         public readonly List<InteropFunction> EventHandlers = [];
-        public readonly Dictionary<string, object> EmbeddedObjects = [];
+
+
         private readonly ConcurrentDictionary<int, (string code, Action<object?> output)> CodeDictionary = [];
         public bool Disposing { get; private set; }
         public Engine(Computer computer, string name) {
@@ -78,7 +82,6 @@ namespace Lemur.JS {
             FileModule = new file_t();
 
             EmbedObject("deferCached", (object)Defer);
-
             EmbedObject("loadConfig", (object)Computer.LoadConfig);
             EmbedObject("saveConfig", (object)Computer.SaveConfig);
             EmbedObject("config", Computer.Current.Config);
@@ -94,11 +97,9 @@ namespace Lemur.JS {
             EmbedType("Stopwatch", typeof(System.Diagnostics.Stopwatch));
             EmbedType("GraphicsContext", typeof(graphics_ctx_t));
 
-            var joinedPalette = $"const palette = {JsonConvert.SerializeObject(graphics_ctx_t.Palette)}";
-            Execute(joinedPalette);
+            var jsonPalette = $"const palette = {JsonConvert.SerializeObject(graphics_ctx_t.Palette)}";
+            _ = Execute(jsonPalette);
 
-
-            EmbedAllObjects();
             executionThread = new Thread(ExecuteAsync);
             executionThread.Start();
 
@@ -107,21 +108,11 @@ namespace Lemur.JS {
             // aka lazy loading on demand.
             LoadModules(FileSystem.GetResourcePath("do_not_delete"));
 
+            // TODO: add a better way to embed environment variable and interpret time vars.
             Task.Run(async () => {
-
-
-#if DEBUG
-                await Execute(@$"
-    const __NAME__ = '{name}';
-    const __DEBUG__ = true;
-").ConfigureAwait(false);
-#else
-                await Execute(@$"
-    const __NAME__ = '{name}'
-    const __DEBUG__ = false;
-");
-#endif
-
+                _ = await Execute(@$"
+                    const __FILE__= '{name}'
+                ").ConfigureAwait(false);
             });
 
             InteropModule.OnModuleExported = (path, obj) => {
@@ -143,11 +134,7 @@ namespace Lemur.JS {
         public void EmbedType(string name, Type obj) {
             m_engine_internal.EmbedHostType(name, obj);
         }
-        public void EmbedAllObjects() {
-            foreach (var item in EmbeddedObjects)
-                m_engine_internal.EmbedHostObject(item.Key, item.Value);
-        }
-        // Resource intensive loops
+
         private async void ExecuteAsync() {
             while (!Disposing) {
                 if (!CodeDictionary.IsEmpty) {
@@ -190,15 +177,15 @@ namespace Lemur.JS {
         }
         public void LoadModules(string sourceDir) {
             if (string.IsNullOrEmpty(sourceDir)) {
-                //Notifications.Now("require was called with an empty string and aborted");
+                Notifications.Now("require was called with an empty string and aborted");
                 return;
             }
+            FileSystem.ProcessDirectoriesAndFilesRecursively(sourceDir, (_, _) => { }, process_file);
 
-            FileSystem.ProcessDirectoriesAndFilesRecursively(sourceDir, (_, _) => { }, file);
 
-            void file(string d, string f) {
+            void process_file(string d, string f) {
                 try {
-                    if (!f.EndsWith(".js"))
+                    if (!f.EndsWith(".js", StringComparison.CurrentCulture))
                         return;
 
                     var code = File.ReadAllText(f);
@@ -219,11 +206,16 @@ namespace Lemur.JS {
 
             int handle = GetUniqueHandle();
 
+            // enqueue our code to be executed
             CodeDictionary.TryAdd(handle, (jsCode, callback));
 
+            // wait for the result.
             while (!Disposing && CodeDictionary.TryGetValue(handle, out _) && !token.IsCancellationRequested)
                 await Task.Delay(1, token).ConfigureAwait(false);
 
+            // if we cancelled, force removal of the code from the dictionary.
+            // Note that this doesn't actually stop the code from executing: it just 
+            // stops us from waiting for its result.
             if (token.IsCancellationRequested) {
                 // cancel execution
                 CodeDictionary.TryRemove(handle, out _);
@@ -245,6 +237,7 @@ namespace Lemur.JS {
                 return;
 
             var script = File.ReadAllText(absPath);
+
             ThreadPool.QueueUserWorkItem(async _ => {
                 var path_from_root = absPath.Replace(FileSystem.Root, string.Empty);
                 await Execute($"__FILE__ = '{path_from_root}'");

@@ -667,11 +667,11 @@ namespace Lemur.JS.Embedded
 
             GetComputer().Window.Dispatcher.Invoke(start_app);
 
-            async void start_app()
+            void start_app()
             {
                 // this way of fetching a pid is very presumptuous and bad.
                 pid = $"p{__procId + 1}"; // the next to be created process. 
-                GetComputer().OpenCustom(path, args);
+                GetComputer().bootstrappers[path].Open(args);
             }
 
             return pid;
@@ -710,9 +710,12 @@ namespace Lemur.JS.Embedded
             {
                 dir = dir.Replace(t, string.Empty);
                 dir = dir.Replace(">", string.Empty);
-
                 Type type = Type.GetType(dir);
-                Current.InstallFromType(dir, type);
+                if (type is not Type) {
+                    Notifications.Now($"Couldn't find {dir}");
+                    return;
+                }
+                Current.CreateBootstrapper(AppType.Native, dir, type, null);
 
             }
 
