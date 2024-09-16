@@ -665,7 +665,6 @@ namespace Lemur.JS.Embedded {
             if (process is not null) {
                 var task = Current.Window.Dispatcher.InvokeAsync(delegate {
                     var surface = new GLSurface();
-                    Notifications.Now("glSurface created");
                     process.UI.ContentsFrame.Content = surface;
                     return surface.renderer;
                 });

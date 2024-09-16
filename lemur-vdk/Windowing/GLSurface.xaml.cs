@@ -16,13 +16,11 @@ using static OpenTK.Graphics.OpenGL4.GL;
 using Vector3 = OpenTK.Mathematics.Vector3;
 
 namespace Lemur {
-
     public readonly struct Vertex(Vector3 position, Vector2 uv, Vector3 normal) {
         public readonly Vector3 Position = position;
         public readonly Vector2 UV = uv;
         public readonly Vector3 Normal = normal;
     }
-
     public class Shader {
         readonly int handle;
         private static void CheckProgram(int program) {
@@ -101,7 +99,6 @@ namespace Lemur {
         }
 
     }
-
     public class Mesh(Vertex[]? vertices = null) {
 #pragma warning disable CA1819 // Properties should not return arrays
         public Vertex[] Vertices { get; } = vertices ?? [
@@ -143,7 +140,6 @@ namespace Lemur {
             new(new Vector3(0.5f, -0.5f, 0.5f), new Vector2(1.0f, 1.0f), new Vector3(0.0f, -1.0f, 0.0f))
         ];
     }
-
     public class Camera {
         public Vector3 Position;
         public Vector3 Rotation;
