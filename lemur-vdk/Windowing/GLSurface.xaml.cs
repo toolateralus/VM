@@ -353,7 +353,6 @@ namespace Lemur {
         };
         public GLSurface() {
             InitializeComponent();
-            surface.RegisterToEventsDirectly = false;
             surface.Start(settings);
             renderer = new();
         }
