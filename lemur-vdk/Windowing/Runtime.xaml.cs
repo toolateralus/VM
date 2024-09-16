@@ -145,6 +145,7 @@ namespace Lemur.GUI {
                 pc.InstallExtern("explorer.app", typeof(Explorer));
                 pc.InstallExtern("texed.app", typeof(Texed));
                 pc.InstallExtern("browser.app", typeof(Browser));
+                pc.InstallExtern("glsurface.app", typeof(GLSurface));
 
                 Runtime.LoadCustomSyntaxHighlighting();
             }
