@@ -43,13 +43,9 @@ namespace Lemur {
             return contents;
         }
         internal T? TryGetProcessOfType<T>() where T : UserControl {
-            T? content = default(T);
-
-            Computer.Current.Window.Dispatcher.Invoke(() => {
-                content = TryGetProcessOfTypeUnsafe<T>();
-            });
-
-            return content;
+            var task = Computer.Current.Window.Dispatcher.InvokeAsync(TryGetProcessOfTypeUnsafe<T>);
+            task.Wait();
+            return task.Result;
         }
         internal async Task CreateEventHandler(Engine engine, string identifier, string targetControl, string methodName, int type) {
             var process = GetProcess(identifier);
@@ -139,7 +135,7 @@ namespace Lemur {
 
             foreach (var pclass in ProcessClassTable)
                 foreach (var proc in pclass.Value)
-                    if (proc.UI.ContentsFrame is Frame frame && frame.Content is T instance)
+                    if (proc.UI.ContentsFrame is ContentControl ctrl && ctrl.Content is T instance)
                         matchingWindow = instance;
 
             return matchingWindow;

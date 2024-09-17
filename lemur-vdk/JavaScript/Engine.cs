@@ -248,8 +248,7 @@ namespace Lemur.JS {
 
             ThreadPool.QueueUserWorkItem(async _ => {
                 var path_from_root = absPath.Replace(FileSystem.Root, string.Empty);
-                await Execute($"__FILE__ = '{path_from_root}'");
-                await Execute(script);
+                _ = Execute(script).ConfigureAwait(false);
             });
         }
         public void Dispose() {
