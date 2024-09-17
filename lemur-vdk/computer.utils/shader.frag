@@ -8,6 +8,8 @@ out vec4 FragColor;
 uniform float time;
 uniform vec4 color;
 
+uniform sampler2D mainTexture;
+
 void main() {
-   FragColor = color;
+   FragColor = color * texture(mainTexture, UV);
 }

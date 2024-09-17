@@ -13,6 +13,8 @@ class opengl_test {
 		let vSource = File.read('shader.vert');
     	let fSource = File.read('shader.frag');
 		this.g.setShader(this.g.compileShader(vSource, fSource));
+		this.texture = this.g.loadTexture(canonical('cubes.ico'));
+		this.g.bindTexture(this.texture);
 	}
     
     render() {

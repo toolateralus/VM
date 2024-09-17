@@ -44,7 +44,6 @@ namespace Lemur {
         public Shader(string vertexSource, string fragSource) {
             Compile(vertexSource, fragSource);
         }
-
         void Compile(string vertexSource, string fragSource) {
             int vertex = CreateShader(ShaderType.VertexShader);
             ShaderSource(vertex, vertexSource);
@@ -104,7 +103,6 @@ namespace Lemur {
         public void Set(string name, Matrix4 matrix) {
             UniformMatrix4(GetUniformLocation(handle, name), 1, false, Matrix4ToArray(matrix));
         }
-
     }
 
     public class Texture2D {
