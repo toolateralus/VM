@@ -19,8 +19,8 @@ using System.Windows;
 using System.Windows.Input;
 
 namespace Lemur.JS {
-    public class key : embedable {
-        public key(Computer computer) : base(computer) {
+    public class Key_t : embedable {
+        public Key_t(Computer computer) : base(computer) {
         }
         [ApiDoc("Call Keyboard.ClearFocus(). this will deselect any textboxes etc.")]
         public void clearFocus() {
@@ -47,13 +47,13 @@ namespace Lemur.JS {
         private IJsEngineSwitcher engineSwitcher;
 
         private readonly CancellationTokenSource cts = new();
-        public network NetworkModule { get; }
-        public interop InteropModule { get; }
-        public conv ConvModule { get; }
-        public app_t AppModule { get; }
-        public file_t FileModule { get; }
-        public term_t TermModule { get; }
-        public key KeyModule { get; }
+        public Network_t NetworkModule { get; }
+        public Interop_t InteropModule { get; }
+        public Convert_t ConvModule { get; }
+        public Embedded.App_t AppModule { get; }
+        public File_t FileModule { get; }
+        public Terminal_t TermModule { get; }
+        public Key_t KeyModule { get; }
         string includedFiles = "";
 
         private readonly Thread executionThread;
@@ -70,16 +70,16 @@ namespace Lemur.JS {
             engineSwitcher.DefaultEngineName = V8JsEngine.EngineName;
             m_engine_internal = engineSwitcher.CreateDefaultEngine();
 
-            NetworkModule = new network(computer);
-            InteropModule = new interop(computer);
-            AppModule = new app_t(computer);
-            TermModule = new term_t(computer);
-            KeyModule = new key(computer);
+            NetworkModule = new Network_t(computer);
+            InteropModule = new Interop_t(computer);
+            AppModule = new Embedded.App_t(computer);
+            TermModule = new Terminal_t(computer);
+            KeyModule = new Key_t(computer);
 
             InteropModule.OnModuleImported += ImportModule;
 
-            ConvModule = new conv();
-            FileModule = new file_t();
+            ConvModule = new Convert_t();
+            FileModule = new File_t();
 
             EmbedObject("deferCached", (object)Defer);
             EmbedObject("loadConfig", (object)Computer.LoadConfig);
@@ -95,7 +95,7 @@ namespace Lemur.JS {
             EmbedObject("Terminal", TermModule);
             EmbedObject("Key", KeyModule);
             EmbedType("Stopwatch", typeof(System.Diagnostics.Stopwatch));
-            EmbedType("GraphicsContext", typeof(graphics_ctx_t));
+            EmbedType("GraphicsContext", typeof(GraphicsContext_t));
 
             EmbedType("Vector2", typeof(Vector2));
             EmbedType("Vector3", typeof(Vector3));
@@ -106,7 +106,7 @@ namespace Lemur.JS {
             EmbedType("Camera", typeof(Camera));
             EmbedType("GLSurface", typeof(Renderer));
 
-            var jsonPalette = $"const palette = {JsonConvert.SerializeObject(graphics_ctx_t.Palette)}";
+            var jsonPalette = $"const palette = {JsonConvert.SerializeObject(GraphicsContext_t.Palette)}";
             _ = Execute(jsonPalette);
 
             executionThread = new Thread(ExecuteAsync);

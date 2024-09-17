@@ -6,11 +6,11 @@ using System.Collections.Generic;
 using System.Threading;
 
 namespace Lemur.JavaScript.Api {
-    public class interop : embedable {
+    public class Interop_t : embedable {
         internal Action<string, object?>? OnModuleExported;
         internal Action<string>? OnModuleImported;
 
-        public interop(Computer computer) : base(computer) {
+        public Interop_t(Computer computer) : base(computer) {
         }
 
         [ApiDoc("return a random number between 0 and max (inclusive)")]

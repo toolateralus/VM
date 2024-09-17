@@ -216,7 +216,7 @@ namespace Lemur.OS.Language {
 
         [Command("list-api")]
         public void ListApi(SafeList<string> obj) {
-            var terminal = computer.ProcessManager.TryGetProcessOfType<Terminal>();
+            var terminal = computer.ProcessManager.TryGetProcessOfType<GUI.Terminal>();
             var apis = ApiDocParser.Parse();
             foreach (var ap in apis) {
                 terminal.output.AppendText($"\n'{ap.Key}'\n{string.Join("\n", ap.Value)}");
@@ -225,7 +225,7 @@ namespace Lemur.OS.Language {
 
         [Command("ls", "list's the current directory's contents, or list's the provided target directory's contents.")]
         public void ListDir(SafeList<string> obj) {
-            var terminal = computer.ProcessManager.TryGetProcessOfType<Terminal>();
+            var terminal = computer.ProcessManager.TryGetProcessOfType<GUI.Terminal>();
 
             if (terminal == default) {
                 Notifications.Now("You must have a cmd prompt open to display 'help' command results.");
@@ -407,7 +407,7 @@ while (is_running) {{
                         Computer.LoadConfig();
                         return;
                     case "all":
-                        var terminal = computer.ProcessManager.TryGetProcessOfType<Terminal>();
+                        var terminal = computer.ProcessManager.TryGetProcessOfType<GUI.Terminal>();
 
                         if (terminal == default) {
                             Notifications.Now("You must have a cmd prompt open to display 'help' command results.");
@@ -449,7 +449,7 @@ while (is_running) {{
 
 
                     case "get":
-                        var terminal = computer.ProcessManager.TryGetProcessOfType<Terminal>();
+                        var terminal = computer.ProcessManager.TryGetProcessOfType<GUI.Terminal>();
 
                         if (terminal == default) {
                             Notifications.Now("You must have a cmd prompt open to display 'help' command results.");
@@ -502,7 +502,7 @@ while (is_running) {{
         }
         [Command("clear", "clears the terminal(s), if open.")]
         public void ClearTerminal(SafeList<string> _) {
-            var cmd = computer.ProcessManager.TryGetProcessOfType<Terminal>()?.output;
+            var cmd = computer.ProcessManager.TryGetProcessOfType<GUI.Terminal>()?.output;
 
             Computer.Current.Window.Dispatcher.Invoke(() => {
                 cmd?.Clear();
@@ -513,7 +513,7 @@ while (is_running) {{
         }
         [Command("help", "prints these help listings")]
         public void ShowHelp(SafeList<string> _) {
-            var terminal = computer.ProcessManager.TryGetProcessOfType<Terminal>();
+            var terminal = computer.ProcessManager.TryGetProcessOfType<GUI.Terminal>();
 
             if (terminal == null) {
                 return;

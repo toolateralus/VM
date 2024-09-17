@@ -12,7 +12,7 @@ using System.Windows.Media.Imaging;
 using Image = System.Windows.Controls.Image;
 
 namespace Lemur.JS.Embedded {
-    public class graphics_ctx_t {
+    public class GraphicsContext_t {
         internal int formatBpp;
         internal int width, height;
         private byte[] renderTexture = [];
@@ -58,7 +58,7 @@ namespace Lemur.JS.Embedded {
         /// <param name="width"></param>
         /// <param name="height"></param>
         /// <param name="PixelFormatBpp"></param>
-        public graphics_ctx_t(string pid, string targetControl, int width, int height, int PixelFormatBpp = 4) {
+        public GraphicsContext_t(string pid, string targetControl, int width, int height, int PixelFormatBpp = 4) {
 
             this.width = width;
             this.height = height;
@@ -83,7 +83,7 @@ namespace Lemur.JS.Embedded {
                     return;
                 }
 
-                var ctrl = app_t.FindControl(control, targetControl);
+                var ctrl = App_t.FindControl(control, targetControl);
 
                 if (ctrl is null || ctrl as Image == null) {
                     Notifications.Now($"{targetControl} {image} target control not found when creating graphics context.");

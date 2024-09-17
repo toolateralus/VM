@@ -129,9 +129,7 @@ namespace Lemur.GUI {
             }
             if (prefix.Contains('.')) {
                 var first = prefix.Split('.')[0];
-                Notifications.Now($"first: {first}");
                 foreach (var (_class, methodList) in apiDocs) {
-                    Notifications.Now(_class);
                     if (first == _class) {
                         insertedSomething = true;
                         foreach (var methodInfo in methodList) {
@@ -356,8 +354,6 @@ namespace Lemur.GUI {
                 prefix += e.Text;
             }
 
-            Notifications.Now(prefix);
-
             var completionWindow = GetCompletionWindow(prefix);
             if (completionWindow != null) { 
                 completionWindow.Show();
@@ -369,7 +365,7 @@ namespace Lemur.GUI {
         }
 
         private void OnKeyDown(object sender, KeyEventArgs e) {
-            if (e.Key == Key.Back || e.Key == Key.Delete || e.Key == Key.Tab) {
+            if (e.Key == System.Windows.Input.Key.Back || e.Key == System.Windows.Input.Key.Delete || e.Key == System.Windows.Input.Key.Tab) {
                 prefix = "";
             }
            
@@ -380,10 +376,7 @@ namespace Lemur.GUI {
             var index = signature.IndexOf('(');
             var first = signature[0..index];
             Text = first.Split(' ')[1];
-            index = signature.IndexOf("):");
-            if (index != -1) {
-                Description = signature[index..(signature.Length)];
-            }
+            Description = signature;
         }
         public ImageSource Image {
             get { return null; }

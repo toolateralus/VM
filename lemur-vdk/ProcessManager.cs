@@ -83,7 +83,7 @@ namespace Lemur {
                 if (targetControl.ToLower(CultureInfo.CurrentCulture).Trim() == "this")
                     element = content;
                 else
-                    element = app_t.FindControl(content, targetControl)!;
+                    element = JS.Embedded.App_t.FindControl(content, targetControl)!;
 
 
                 if (element == null) {

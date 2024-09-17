@@ -13,9 +13,9 @@ namespace Lemur.JS.Embedded {
     /// 
     /// Provides interaction with the terminal and OS 'terminal'
     /// </summary>
-    public class term_t : embedable
+    public class Terminal_t : embedable
     {
-        public term_t(Computer computer) : base(computer)
+        public Terminal_t(Computer computer) : base(computer)
         {
 
         }
@@ -57,7 +57,7 @@ namespace Lemur.JS.Embedded {
                 var msg = '\n' + string.Join('\n', message);
                 Computer.Current.Window?.Dispatcher.Invoke(() =>
                 {
-                    foreach (var cmd in GetComputer().ProcessManager.TryGetAllProcessesOfTypeUnsafe<Terminal>())
+                    foreach (var cmd in GetComputer().ProcessManager.TryGetAllProcessesOfTypeUnsafe<GUI.Terminal>())
                         cmd.output.AppendText(msg);
                 });
             }
@@ -73,8 +73,8 @@ namespace Lemur.JS.Embedded {
         [ApiDoc("Read a line of input from the terminal. Useful for CLI apps.")]
         public string? read()
         {
-            Terminal cmd = null;
-            cmd = GetComputer().ProcessManager.TryGetProcessOfType<Terminal>();
+            GUI.Terminal cmd = null;
+            cmd = GetComputer().ProcessManager.TryGetProcessOfType<GUI.Terminal>();
 
             var waiting = true;
             string result = "";

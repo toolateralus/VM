@@ -13,13 +13,13 @@ using System.Threading.Tasks;
 
 namespace Lemur.JavaScript.Embedded {
     public delegate void TransmissionStream(string data, TransmissionType type, int outCh, int replyCh, bool isDir);
-    public class network : embedable
+    public class Network_t : embedable
     {
         public event TransmissionStream OnTransmit;
         private int size;
         internal string processID;
         private List<string> attachedListeners = [];
-        public network(Computer computer) : base(computer)
+        public Network_t(Computer computer) : base(computer)
         {
             OnTransmit = Computer.Current.Network.OnSendMessage;
         }

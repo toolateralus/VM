@@ -20,9 +20,9 @@ using static Lemur.Computer;
 using Image = System.Windows.Controls.Image;
 
 namespace Lemur.JS.Embedded {
-    public class app_t : embedable
+    public class App_t : embedable
     {
-        public app_t(Computer computer) : base(computer)
+        public App_t(Computer computer) : base(computer)
         {
             ExposedEvents["draw_pixels"] = DrawPixelsEvent; // somewhat deprecated, use the dedicated graphics module instead.
             ExposedEvents["draw_image"] = DrawImageEvent;
@@ -567,7 +567,7 @@ namespace Lemur.JS.Embedded {
 
             List<byte> colorData = new();
 
-            interop.ForEachCast<int>(value.ToEnumerable(), (item) => colorData.Add((byte)item));
+            Interop_t.ForEachCast<int>(value.ToEnumerable(), (item) => colorData.Add((byte)item));
 
             GetComputer().Window?.Dispatcher.Invoke(() =>
             {
