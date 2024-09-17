@@ -1,4 +1,5 @@
 ﻿using Lemur.JS.Embedded;
+using Lemur.Types;
 using Lemur.Windowing;
 using System;
 using System.Collections.Generic;
@@ -12,6 +13,7 @@ namespace Lemur.JavaScript.Api {
         public interop(Computer computer) : base(computer) {
         }
 
+        [ApiDoc("return a random number between 0 and max (inclusive)")]
         public double random(double max = 1.0) {
             return Random.Shared.NextDouble() * max;
         }
@@ -45,12 +47,15 @@ namespace Lemur.JavaScript.Api {
             }
             return default;
         }
+        [ApiDoc("Sleep the executing thread for N ms.")]
         public void sleep(int ms) {
             Thread.Sleep(ms);
         }
+        [ApiDoc("Import a module that was exported.")]
         public void require(string path) {
             Computer.Current.JavaScript.ImportModule(path);
         }
+        [ApiDoc("Export a module that can be added with 'require'")]
         public void export(string id, object? obj) {
             OnModuleExported?.Invoke(id, obj);
         }

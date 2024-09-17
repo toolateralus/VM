@@ -35,6 +35,8 @@
             IsReadOnly="false" 
             FontFamily="Fira Code Retina"
             HorizontalScrollBarVisibility="Auto"
-            VerticalScrollBarVisibility="Auto"/>
+            VerticalScrollBarVisibility="Auto"
+            PreviewKeyDown="OnKeyDown"
+         />
     </Grid>
 </UserControl>

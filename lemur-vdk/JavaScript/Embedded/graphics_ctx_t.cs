@@ -129,6 +129,7 @@ namespace Lemur.JS.Embedded {
         /// </summary>
         /// <param name="width"></param>
         /// <param name="height"></param>
+        [ApiDoc("resize the render surface.")]
         public void resize(double width, double height) {
             this.width = (int)width;
             this.height = (int)height;
@@ -147,6 +148,7 @@ namespace Lemur.JS.Embedded {
         /// <param name="x"></param>
         /// <param name="y"></param>
         /// <param name="index"></param>
+        [ApiDoc("write a pixel with an indexed color")]
         public void writePixelIndexed(double x, double y, double index) {
             var col = Palette[(int)index];
             writePixel(x, y, col[0], col[1], col[2], col[3]);
@@ -160,6 +162,7 @@ namespace Lemur.JS.Embedded {
         /// <param name="g"></param>
         /// <param name="b"></param>
         /// <param name="a"></param>
+        [ApiDoc("write a pixel with an (r,g,b,a) color")]
         public void writePixel(double x, double y, byte r, byte g, byte b, byte a) {
             var index = (int)((y * width + x) * formatBpp);
 
@@ -175,6 +178,7 @@ namespace Lemur.JS.Embedded {
         /// the actual draw call to copy the pixel data to the specified render image.
         /// </summary>
         /// <returns></returns>
+        [ApiDoc("flush the render image, presenting the render textureto the Image control. call this when you're done rendering a frame")]
         public bool flush() {
             Computer.Current?.Window?.Dispatcher?.Invoke(() => {
                 if (this.image.TryGetTarget(out var image))
@@ -185,7 +189,8 @@ namespace Lemur.JS.Embedded {
         /// <summary>
         /// sets the entire renderTexture to a solid color from the palette by index.
         /// </summary>
-        /// <param name="index"></param>
+        /// <param name="index"></param
+        [ApiDoc("Clear the render image, setting it to the indexed color provided")]
         public unsafe void clearColor(double index) {
             var rgbacolor = Palette[(int)index].ToArray(); // starts as rgba
             var bgraColor = new byte[] {
@@ -209,6 +214,7 @@ namespace Lemur.JS.Embedded {
         /// <param name="width"></param>
         /// <param name="rot"></param>
         /// <param name="colorIndex"></param>
+        [ApiDoc("draw a rectangle with an indexed color")]
         public void drawRect(double x, double y, double height, double width, double rot, double colorIndex) {
             double cosR = Math.Cos(rot);
             double sinR = Math.Sin(rot);
@@ -243,6 +249,7 @@ namespace Lemur.JS.Embedded {
         /// <param name="w"></param>
         /// <param name="r"></param>
         /// <param name="colorIndex"></param>
+        [ApiDoc("draw a circle with an indexed color")]
         public void drawCircle(double x, double y, double h, double w, double r, double colorIndex) {
             double cosR = Math.Cos(r);
             double sinR = Math.Sin(r);
@@ -266,6 +273,7 @@ namespace Lemur.JS.Embedded {
         /// Saves the current render surface to an image of '.bmp' type at filePath
         /// </summary>
         /// <param name="filePath"></param>
+        [ApiDoc("save out the current renderTexture to a bitmap image at the path provided")]
         public void saveToImage(string filePath) {
             try {
                 using Bitmap bitmap = new((int)width, (int)height);
@@ -295,6 +303,7 @@ namespace Lemur.JS.Embedded {
         /// Loads up an image from filePath and writes it to the current render surface
         /// </summary>
         /// <param name="filePath"></param>
+        [ApiDoc("read a bitmap image at the path provided and load it's contents into the current renderTexture")]
         public void loadFromImage(string filePath) {
             try {
                 Computer.Current.Window.Dispatcher.Invoke(() => {

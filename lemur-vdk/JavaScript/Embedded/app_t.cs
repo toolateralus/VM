@@ -84,6 +84,8 @@ namespace Lemur.JS.Embedded {
                 }
             }
         }
+
+        [ApiDoc("Call a method on the provided WPF control.")]
         public void callMethod(string element, string methodName, params string[] args)
         {
             Current.Window.Dispatcher.Invoke(() =>
@@ -101,6 +103,8 @@ namespace Lemur.JS.Embedded {
 
             });
         }
+
+        [ApiDoc("call Grid.SetRow() on the provided control")]
         public void setRow(string element, int row)
         {
             Current.Window.Dispatcher.Invoke(() =>
@@ -113,6 +117,7 @@ namespace Lemur.JS.Embedded {
                 Grid.SetRow(control, row);
             });
         }
+        [ApiDoc("call Grid.SetColumn() on the provided control")]
         public void setColumn(string element, int row)
         {
 
@@ -126,6 +131,7 @@ namespace Lemur.JS.Embedded {
                 Grid.SetColumn(control, row);
             });
         }
+        [ApiDoc("call Grid.SetColumnSpan() on the provided control")]
         public void setColumnSpan(string element, int row)
         {
             Current.Window.Dispatcher.Invoke(() =>
@@ -138,6 +144,7 @@ namespace Lemur.JS.Embedded {
                 Grid.SetColumnSpan(control, row);
             });
         }
+        [ApiDoc("call Grid.SetRowSpan() on the provided control")]
         public void setRowSpan(string element, int row)
         {
             Current.Window.Dispatcher.Invoke(() =>
@@ -150,6 +157,7 @@ namespace Lemur.JS.Embedded {
                 Grid.SetRowSpan(control, row);
             });
         }
+        [ApiDoc("Add a child element of target type provided in childTypeString argument, of given name. such as Button (which gets fully qualified internally to System.Windows.Control.Button)")]
         public bool addChild(string parentName, string childTypeString, string childName)
         {
             var didAdd = false;
@@ -205,6 +213,8 @@ namespace Lemur.JS.Embedded {
 
             return didAdd;
         }
+
+        [ApiDoc("Remove a child of given name from a parent control")]
         public bool removeChild(string parent, string childName)
         {
             var didRemove = false;
@@ -248,6 +258,8 @@ namespace Lemur.JS.Embedded {
 
             return didRemove;
         }
+
+        [ApiDoc("like 'eval' in javascript, but execute after 'delay' milliseconds. Pretty much useless")]
         public void deferEval(string code, int delay, string? identifier = null)
         {
             WakeUpBackgroundThread();
@@ -272,6 +284,8 @@ namespace Lemur.JS.Embedded {
                     _ = await engine.Execute(code).ConfigureAwait(false);
             }));
         }
+
+        [ApiDoc("defer a method call for delayMs ms with args passed as args.")]
         public void defer(string methodName, int delayMs, params object[] args)
         {
             WakeUpBackgroundThread();
@@ -608,6 +622,9 @@ namespace Lemur.JS.Embedded {
 
             image.Source = bitmap;
         }
+
+
+        [ApiDoc("reflect on a control of given name for a property of name described in 'property'")]
         public object? getProperty(string controlName, object? property)
         {
             object? output = null;
@@ -625,6 +642,8 @@ namespace Lemur.JS.Embedded {
 
             return output;
         }
+
+        [ApiDoc("reflect on a control of given name for a property of name described in 'property', and set it's value to 'value")]
         public void setProperty(string controlName, object? property, object? value)
         {
             object? output = null;
@@ -641,12 +660,15 @@ namespace Lemur.JS.Embedded {
             }));
 
         }
+
+        [ApiDoc("execute an event as long as it's valid within the ExposedEvents. Pretty much deprecated")]
         public object? pushEvent(string targetControl, string eventType, object? data)
         {
             if (ExposedEvents.TryGetValue(eventType, out var handler))
                 return handler.Invoke(targetControl, data);
             return null;
         }
+        [ApiDoc("subscribe a method to an event. See 'Event.*eventName*' enum for more info")]
         public void eventHandler(string targetControl, string methodName, int type)
         {
             var pc = GetComputer();
@@ -655,11 +677,13 @@ namespace Lemur.JS.Embedded {
             if (proc is Process p)
                 Task.Run(async () => await procMgr.CreateEventHandler(proc.UI.Engine, processID, targetControl, methodName, type).ConfigureAwait(false));
         }
+        [ApiDoc("Kill the current process")]
         public void close(string pid)
         {
             GetComputer().ProcessManager.TerminateProcess(pid);
         }
 
+        [ApiDoc("Open a GLSurface in your app. Note this replaces all the XAML from your declared document, but enables 2D and 3D GPU Accelerated rendering.")]
         public Renderer? createGlSurface(string pid) {
             var process = GetComputer().ProcessManager.GetProcess(pid);
             if (process is not null) {
@@ -674,6 +698,7 @@ namespace Lemur.JS.Embedded {
             return null;
         }
 
+        [ApiDoc("Start a process by name. such as 'terminal.app'")]
         public string start(string path, params object[] args)
         {
             string pid = "PROC_START_FAILURE";
@@ -689,6 +714,8 @@ namespace Lemur.JS.Embedded {
             }
             return pid;
         }
+
+        [ApiDoc("Load all the apps (recursively) starting at the provided directory path.")]
         public void loadApps(object? path)
         {
             string directory = FileSystem.Root;
@@ -716,6 +743,7 @@ namespace Lemur.JS.Embedded {
                 FileSystem.ProcessDirectoriesAndFilesRecursively(AbsPath, procDir, /* proc file */ (_, _) => { });
             }
         }
+        [ApiDoc("Install an app from a .app dir. note, you can do typeof<Terminal> or something like that to reinstall native apps you've uninstalled.")]
         public void install(string dir)
         {
             var t = "typeof<";
@@ -738,6 +766,8 @@ namespace Lemur.JS.Embedded {
                 GetComputer().InstallNative(dir);
             }
         }
+
+        [ApiDoc("Uninstall an application from the .app dir name")]
         public void uninstall(string dir)
         {
             DesktopWindow window = GetComputer().Window;
@@ -764,6 +794,7 @@ namespace Lemur.JS.Embedded {
             this.processID = id;
         }
 
+        [ApiDoc("returns a list of all currently running process ids. use 'blitArray' on the returned value to convert it to a javascript string[]")]
         public string[] getProcessIds() {
             List<string> procs = [];
             foreach (var procList in GetComputer().ProcessManager.ProcessClassTable.Values)

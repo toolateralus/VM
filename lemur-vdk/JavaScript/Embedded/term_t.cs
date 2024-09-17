@@ -19,13 +19,11 @@ namespace Lemur.JS.Embedded {
         {
 
         }
-        public void clear() {
-
-        }
         /// <summary>
         /// Tries to invoke a terminal command, in the background.
         /// </summary>
         /// <param name="command"></param>
+        [ApiDoc("call a terminal command. much like C's system() function")]
         public void call(string command)
         {
             Task.Run(() =>
@@ -34,6 +32,7 @@ namespace Lemur.JS.Embedded {
                     Notifications.Now($"Couldn't 'call' {command}");
             });
         }
+        [ApiDoc("send a global notification to the desktop. Useful for throwing warnings or errors that the user of an app needs to see. just use notify() not Term.notify()")]
         public void notify(params object[] message)
         {
             try
@@ -50,6 +49,7 @@ namespace Lemur.JS.Embedded {
         /// Prints to the terminal. there is a global function 'print' that wraps this.
         /// </summary>
         /// <param name="message"></param>
+        [ApiDoc("print a line to every terminal instance open. Useful for throwing warnings or errors that the user of an app needs to see. just use print() not Term.print()")]
         public void print(params object[] message)
         {
             try
@@ -70,6 +70,7 @@ namespace Lemur.JS.Embedded {
         /// Read from the terminal.
         /// </summary>
         /// <returns></returns>
+        [ApiDoc("Read a line of input from the terminal. Useful for CLI apps.")]
         public string? read()
         {
             Terminal cmd = null;
@@ -100,6 +101,7 @@ namespace Lemur.JS.Embedded {
 
             return result;
         }
+        [ApiDoc("Create a command alias, that when the alias is called in the terminal, the javascript file at the provided path is executed.")]
         public void alias(string alias, string path)
         {
 
@@ -123,6 +125,7 @@ namespace Lemur.JS.Embedded {
 
             Computer.Current.CLI.Aliases[alias] = FileSystem.GetResourcePath(path) ?? "not found";
         }
+        [ApiDoc("Set the default directory for the command aliases to be searched for")]
         public void setAliasDirectory(string path, string regex = "")
         {
             if (FileSystem.GetResourcePath(path) is string AbsPath && !string.IsNullOrEmpty(AbsPath))

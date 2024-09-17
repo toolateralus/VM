@@ -23,7 +23,7 @@ namespace Lemur.JavaScript.Embedded {
         {
             OnTransmit = Computer.Current.Network.OnSendMessage;
         }
-
+        [ApiDoc("add a listener callback that gets invoked each time a message is recieved.")]
         public void addListener(string methodName)
         {
             if (GetComputer().ProcessManager.GetProcess(processID) is Process p)
@@ -40,6 +40,7 @@ namespace Lemur.JavaScript.Embedded {
             }
         }
 
+        [ApiDoc("remove a listener callback")]
         public void removeListener(string methodName)
         {
             if (GetComputer().ProcessManager.GetProcess(processID) is Process p)
@@ -50,17 +51,18 @@ namespace Lemur.JavaScript.Embedded {
             }
         }
 
-
+        [ApiDoc("get the local ipv4 address as a string.")]
         public string? ip()
         {
             return LANIPFetcher.GetLocalIPAddress().MapToIPv4().ToString();
         }
+        [ApiDoc("Kill the current TCP connection, as a client.")]
         public void disconnect()
         {
             Computer.Current.Network.StopClient();
             Notifications.Now("Stopping connection to client");
         }
-
+        [ApiDoc("Open a tcp connection to the provided IP string.")]
         public void connect(object? ip)
         {
             IPAddress? targetIP = null;
@@ -98,6 +100,7 @@ namespace Lemur.JavaScript.Embedded {
                 Notifications.Now($"Failed to connect to {ipString} :: {e.Message}");
             }
         }
+        [ApiDoc("Upload a file at provided path over the TCP connection")]
         public async void upload(string path)
         {
             var isDir = false;
@@ -151,6 +154,7 @@ namespace Lemur.JavaScript.Embedded {
                 Notifications.Now("Uploading path: " + path);
             }
         }
+        [ApiDoc("Send a notification showing all available downloadable content from a server if connected.")]
         public async void check_for_downloadable_content()
         {
             OnTransmit?.Invoke("GET_DOWNLOADS", TransmissionType.Request, -1, Server.RequestReplyChannel, false);
@@ -161,7 +165,8 @@ namespace Lemur.JavaScript.Embedded {
             }
             return;
         }
-        public async void download(string path)
+        [ApiDoc("Download a file at by name over the TCP connection")]
+        public async void download(string name)
         {
 
             if (!Computer.Current.Network.IsConnected())
@@ -170,7 +175,7 @@ namespace Lemur.JavaScript.Embedded {
                 return;
             }
 
-            Notifications.Now($"Downloading {path}..");
+            Notifications.Now($"Downloading {name}..");
 
             string root;
 
@@ -186,7 +191,7 @@ namespace Lemur.JavaScript.Embedded {
                 Directory.CreateDirectory(root);
             }
 
-            OnTransmit?.Invoke(path, TransmissionType.Download, 0, Server.DownloadReplyChannel, false);
+            OnTransmit?.Invoke(name, TransmissionType.Download, 0, Server.DownloadReplyChannel, false);
 
             while (Computer.Current.Network.IsConnected())
             {
@@ -199,26 +204,26 @@ namespace Lemur.JavaScript.Embedded {
                         switch (dataStr)
                         {
                             case "END_DOWNLOAD":
-                                Notifications.Now($"{{{Server.FormatBytes(size)}}} downloads\\{path} downloaded.. run  the <install '{path}' to install it.");
+                                Notifications.Now($"{{{Server.FormatBytes(size)}}} downloads\\{name} downloaded.. run  the <install '{name}' to install it.");
                                 return;
                             case "FAILED_DOWNLOAD":
-                                Notifications.Now($"Download failed for {path}");
+                                Notifications.Now($"Download failed for {name}");
                                 return;
                         }
                     }
-                    Notifications.Now($"Invalid data gotten from server for {path}");
+                    Notifications.Now($"Invalid data gotten from server for {name}");
                     return;
                 }
 
                 if (metadata.Value<string>("data") is not string dataString || Encoding.UTF8.GetBytes(dataString) is not byte[] dataBytes)
                 {
-                    Notifications.Now($"Invalid data for {path}");
+                    Notifications.Now($"Invalid data for {name}");
                     return;
                 }
 
                 if (metadata.Value<string>("path") is not string pathString)
                 {
-                    Notifications.Now($"Invalid path for {path}");
+                    Notifications.Now($"Invalid path for {name}");
                     return;
                 }
                 var fullPath = Path.Combine(root, pathString);
@@ -239,6 +244,8 @@ namespace Lemur.JavaScript.Embedded {
         }
 
         public bool IsConnected => Computer.Current.Network.IsConnected();
+
+        [ApiDoc("Send a message over the TCP connection, expects int channel, int replyChannel, string message")]
         public void send(params object?[]? parameters)
         {
             if (parameters is null || parameters.Length <= 2)
@@ -254,6 +261,7 @@ namespace Lemur.JavaScript.Embedded {
                 NetworkConfiguration.Broadcast(channel, replyChannel, json);
             }
         }
+        [ApiDoc("Listen for a message over the TCP connection, expects int channel")]
         public object? listen(params object?[]? parameters)
         {
             (object? value, int reply) @event = default;

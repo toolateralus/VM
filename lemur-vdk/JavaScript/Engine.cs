@@ -22,22 +22,23 @@ namespace Lemur.JS {
     public class key : embedable {
         public key(Computer computer) : base(computer) {
         }
+        [ApiDoc("Call Keyboard.ClearFocus(). this will deselect any textboxes etc.")]
         public void clearFocus() {
             Computer.Current.Window?.Dispatcher?.Invoke(() => {
                 Keyboard.ClearFocus();
             });
 
         }
+        [ApiDoc("return whether a key such as 'R', 'LeftCtrl' or whatever is down.")]
         public bool isDown(string key) {
-            bool result = false;
-
-            Computer.Current.Window?.Dispatcher?.Invoke(() => {
+            var task = Computer.Current.Window?.Dispatcher?.InvokeAsync(() => {
                 if (Enum.TryParse<System.Windows.Input.Key>(key, out var _key))
-                    result = Keyboard.IsKeyDown(_key);
-                else Notifications.Now($"Failed to parse key {key}");
+                    return Keyboard.IsKeyDown(_key);
+                Notifications.Now($"Failed to parse key {key}");
+                return false;
             });
-
-            return result;
+            task.Wait();
+            return task.Result;
         }
     }
     public class Engine : IDisposable {

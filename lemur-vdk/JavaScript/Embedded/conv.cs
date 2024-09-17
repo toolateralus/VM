@@ -10,16 +10,17 @@ namespace Lemur.JS.Embedded
 {
     public class conv
     {
-        public string utf8FromBase64(string base64)
-        {
-            return Encoding.UTF8.GetString((byte[])toBytes(base64));
-        }
+        [ApiDoc("convert a base64 string to a utf8 string.")]
+        public string utf8FromBase64(string base64) => Encoding.UTF8.GetString((byte[])toBytes(base64));
+        [ApiDoc("convert a base64 string to a byte array.")]
         public object toBytes(string base64) => Convert.FromBase64String(base64);
-        public string toBase64(object ints)
+
+        [ApiDoc("convert a byte array to a base 64 string")]
+        public string toBase64(object inBytes)
         {
             List<byte> bytes = new List<byte>();
 
-            interop.ForEachCast<int>(ints.ToEnumerable(), (data) => bytes.Add((byte)data));
+            interop.ForEachCast<int>(bytes.ToEnumerable(), (data) => bytes.Add((byte)data));
 
             return Convert.ToBase64String(bytes.ToArray());
         }
@@ -29,6 +30,7 @@ namespace Lemur.JS.Embedded
         /// </summary>
         /// <param name="path"></param>
         /// <returns></returns>
+        [ApiDoc("load a file from a path, and return it's contents as a base64 string")]
         public string? base64FromFile(string path)
         {
             byte[] imageData = null;

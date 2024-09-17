@@ -2,6 +2,7 @@
 using Lemur.GUI;
 using Lemur.JavaScript.Network;
 using Lemur.JS;
+using Lemur.JS.Embedded;
 using Lemur.Types;
 using Lemur.Windowing;
 using Newtonsoft.Json.Linq;
@@ -14,6 +15,7 @@ using System.Reflection;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
+using static System.Net.Mime.MediaTypeNames;
 
 namespace Lemur.OS.Language {
     /// <summary>
@@ -211,6 +213,16 @@ namespace Lemur.OS.Language {
                 Notifications.Now("Invalid input parameters.");
             }
         }
+
+        [Command("list-api")]
+        public void ListApi(SafeList<string> obj) {
+            var terminal = computer.ProcessManager.TryGetProcessOfType<Terminal>();
+            var apis = ApiDocParser.Parse();
+            foreach (var ap in apis) {
+                terminal.output.AppendText($"\n'{ap.Key}'\n{string.Join("\n", ap.Value)}");
+            }
+        }
+
         [Command("ls", "list's the current directory's contents, or list's the provided target directory's contents.")]
         public void ListDir(SafeList<string> obj) {
             var terminal = computer.ProcessManager.TryGetProcessOfType<Terminal>();
