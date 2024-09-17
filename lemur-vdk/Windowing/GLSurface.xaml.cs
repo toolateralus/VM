@@ -1,5 +1,5 @@
-﻿using Lemur.GUI;
-using Lemur.JS;
+﻿using Assimp;
+using Lemur.JS.Embedded;
 using Lemur.Windowing;
 using OpenTK.Graphics.OpenGL4;
 using OpenTK.Mathematics;
@@ -8,11 +8,13 @@ using OpenTK.Wpf;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
-using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
+using System.Transactions;
 using System.Windows.Controls;
 
 using static OpenTK.Graphics.OpenGL4.GL;
+using PrimitiveType = OpenTK.Graphics.OpenGL4.PrimitiveType;
+using Quaternion = OpenTK.Mathematics.Quaternion;
 using Vector3 = OpenTK.Mathematics.Vector3;
 
 namespace Lemur {
@@ -99,46 +101,36 @@ namespace Lemur {
         }
 
     }
-    public class Mesh(Vertex[]? vertices = null) {
-#pragma warning disable CA1819 // Properties should not return arrays
-        public Vertex[] Vertices { get; } = vertices ?? [
-#pragma warning restore CA1819 // Properties should not return arrays
-            // Front face
-            new(new Vector3(-0.5f, -0.5f, 0.5f), new Vector2(0.0f, 0.0f), new Vector3(0.0f, 0.0f, 1.0f)),
-            new(new Vector3(0.5f, -0.5f, 0.5f), new Vector2(1.0f, 0.0f), new Vector3(0.0f, 0.0f, 1.0f)),
-            new(new Vector3(-0.5f, 0.5f, 0.5f), new Vector2(0.0f, 1.0f), new Vector3(0.0f, 0.0f, 1.0f)),
-            new(new Vector3(0.5f, 0.5f, 0.5f), new Vector2(1.0f, 1.0f), new Vector3(0.0f, 0.0f, 1.0f)),
+    
+    public class Mesh {
+        public Vertex[] vertices = [];
+        public int[] indices;
+        public Mesh(string path) {
+            Notifications.Now("Mesh created!");
+            using AssimpContext importer = new();
+            Scene scene = importer.ImportFile(path, PostProcessSteps.Triangulate | PostProcessSteps.GenerateNormals | PostProcessSteps.FlipUVs);
+            if (scene.HasMeshes) {
+                Assimp.Mesh mesh = scene.Meshes[0];
+                vertices = new Vertex[mesh.VertexCount];
+                for (int i = 0; i < mesh.VertexCount; i++) {
+                    Vector3D vertex = mesh.Vertices[i];
+                    Vector3D normal = mesh.HasNormals ? mesh.Normals[i] : new Vector3D(0, 0, 0);
+                    Vector3D texCoord = mesh.HasTextureCoords(0) ? mesh.TextureCoordinateChannels[0][i] : new Vector3D(0, 0, 0);
+                    vertices[i] = new Vertex(
+                        new Vector3(vertex.X, vertex.Y, vertex.Z),
+                        new Vector2(texCoord.X, texCoord.Y),
+                        new Vector3(normal.X, normal.Y, normal.Z)
+                    );
+                }
+                indices = mesh.GetIndices();
+            }
 
-            // Back face
-            new(new Vector3(-0.5f, -0.5f, -0.5f), new Vector2(0.0f, 0.0f), new Vector3(0.0f, 0.0f, -1.0f)),
-            new(new Vector3(0.5f, -0.5f, -0.5f), new Vector2(1.0f, 0.0f), new Vector3(0.0f, 0.0f, -1.0f)),
-            new(new Vector3(-0.5f, 0.5f, -0.5f), new Vector2(0.0f, 1.0f), new Vector3(0.0f, 0.0f, -1.0f)),
-            new(new Vector3(0.5f, 0.5f, -0.5f), new Vector2(1.0f, 1.0f), new Vector3(0.0f, 0.0f, -1.0f)),
-
-            // Left face
-            new(new Vector3(-0.5f, -0.5f, -0.5f), new Vector2(0.0f, 0.0f), new Vector3(-1.0f, 0.0f, 0.0f)),
-            new(new Vector3(-0.5f, -0.5f, 0.5f), new Vector2(1.0f, 0.0f), new Vector3(-1.0f, 0.0f, 0.0f)),
-            new(new Vector3(-0.5f, 0.5f, -0.5f), new Vector2(0.0f, 1.0f), new Vector3(-1.0f, 0.0f, 0.0f)),
-            new(new Vector3(-0.5f, 0.5f, 0.5f), new Vector2(1.0f, 1.0f), new Vector3(-1.0f, 0.0f, 0.0f)),
-
-            // Right face
-            new(new Vector3(0.5f, -0.5f, -0.5f), new Vector2(0.0f, 0.0f), new Vector3(1.0f, 0.0f, 0.0f)),
-            new(new Vector3(0.5f, -0.5f, 0.5f), new Vector2(1.0f, 0.0f), new Vector3(1.0f, 0.0f, 0.0f)),
-            new(new Vector3(0.5f, 0.5f, -0.5f), new Vector2(0.0f, 1.0f), new Vector3(1.0f, 0.0f, 0.0f)),
-            new(new Vector3(0.5f, 0.5f, 0.5f), new Vector2(1.0f, 1.0f), new Vector3(1.0f, 0.0f, 0.0f)),
-
-            // Top face
-            new(new Vector3(-0.5f, 0.5f, -0.5f), new Vector2(0.0f, 0.0f), new Vector3(0.0f, 1.0f, 0.0f)),
-            new(new Vector3(-0.5f, 0.5f, 0.5f), new Vector2(1.0f, 0.0f), new Vector3(0.0f, 1.0f, 0.0f)),
-            new(new Vector3(0.5f, 0.5f, -0.5f), new Vector2(0.0f, 1.0f), new Vector3(0.0f, 1.0f, 0.0f)),
-            new(new Vector3(0.5f, 0.5f, 0.5f), new Vector2(1.0f, 1.0f), new Vector3(0.0f, 1.0f, 0.0f)),
-
-            // Bottom face
-            new(new Vector3(-0.5f, -0.5f, -0.5f), new Vector2(0.0f, 0.0f), new Vector3(0.0f, -1.0f, 0.0f)),
-            new(new Vector3(-0.5f, -0.5f, 0.5f), new Vector2(1.0f, 0.0f), new Vector3(0.0f, -1.0f, 0.0f)),
-            new(new Vector3(0.5f, -0.5f, -0.5f), new Vector2(0.0f, 1.0f), new Vector3(0.0f, -1.0f, 0.0f)),
-            new(new Vector3(0.5f, -0.5f, 0.5f), new Vector2(1.0f, 1.0f), new Vector3(0.0f, -1.0f, 0.0f))
-        ];
+            string n = "Mesh Cube: \n";
+            foreach (Vertex vert in vertices) {
+                n += $"pos: {vert.Position}, uv: {vert.UV}, normal: {vert.Normal}\n";
+            }
+            Notifications.Now(n);
+        }
     }
     public class Camera {
         public Vector3 Position;
@@ -187,59 +179,61 @@ namespace Lemur {
         public void SetNearPlane(float nearPlane) => NearPlane = nearPlane;
         public void SetFarPlane(float farPlane) => FarPlane = farPlane;
     }
-    public class TestStruct
-    {
-        public float x, y;
-    }
-    public unsafe class Renderer {
-        private readonly int vao, vbo;
+
+    public unsafe class Renderer : embedable {
+        private readonly int vao, vbo, ebo;
         private Shader shader;
         private readonly Camera camera;
 
         Queue<Action> drawCommands = [];
 
-        static readonly Mesh cube = new();
-
         static List<Shader> shaders = [];
 
+
+        int shadersBacklog ;
+
+        [ApiDoc("Compile a shader from vertex and fragment source")]
         public int compileShader(string vertexShader, string fragmentShader) {
-            shaders.Add(new(vertexShader, fragmentShader));
-            return shaders.Count - 1;
+            drawCommands.Enqueue(delegate {
+                shadersBacklog--;
+                shaders.Add(new(vertexShader, fragmentShader));
+            });
+            var len = shaders.Count + shadersBacklog;
+            shadersBacklog++;
+            return len;
         }
-
+        
+        [ApiDoc("Set a shader by index, shaders can be compiled with .compileShader(vert, frag)")]
         public void setShader(int index) {
-            if (index > 0 && index < shaders.Count) {
-                this.shader = shaders[index];
-            }
-        }
-
-        public void drawCube(Vector3 translation, Vector3 rotation, Vector3 scale) {
-            drawCommands.Enqueue(() => {
-                Matrix4 scaleMatrix = Matrix4.CreateScale(scale);
-                Matrix4 rotationMatrix = Matrix4.CreateFromQuaternion(Quaternion.FromEulerAngles(rotation));
-                Matrix4 translationMatrix = Matrix4.CreateTranslation(translation);
-
-                Matrix4 srtMatrix = scaleMatrix * rotationMatrix * translationMatrix;
-
-                //Matrix4 trsMatrix = translationMatrix * rotationMatrix * scaleMatrix;
-
-                shader.Set("modelMatrix", srtMatrix);
-
-                BindVertexArray(vao);
-                BindBuffer(BufferTarget.ArrayBuffer, vbo);
-                BufferData(BufferTarget.ArrayBuffer, cube.Vertices.Length * sizeof(Vertex), cube.Vertices, BufferUsageHint.DynamicDraw);
-                DrawArrays(PrimitiveType.TriangleStrip, 0, cube.Vertices.Length);
+            drawCommands.Enqueue(delegate { 
+                if (index >= 0 && index < shaders.Count) {
+                    shader = shaders[index];
+                    shader.Use();
+                }
             });
         }
 
-        public Renderer() {
-            
-            camera = new(new(0,0,-5), new(0, 90, 0), 70, 0.01f, 1000.0f);
+        [ApiDoc("draw a Mesh instance")]
+        public void drawMesh(Mesh mesh, Vector3 translation, Vector3 rotation, Vector3 scale) {
+            drawCommands.Enqueue(delegate {
+                Matrix4 srtMatrix = GetModelMatrix(translation, rotation, scale);
+                shader?.Set("modelMatrix", srtMatrix);
+                BindBuffer(BufferTarget.ArrayBuffer, vbo);
+                BufferData(BufferTarget.ArrayBuffer, mesh.vertices.Length * sizeof(Vertex), mesh.vertices, BufferUsageHint.DynamicDraw);
+                BindBuffer(BufferTarget.ElementArrayBuffer, ebo);
+                BufferData(BufferTarget.ElementArrayBuffer, mesh.indices.Length * sizeof(int), mesh.indices, BufferUsageHint.DynamicDraw);
+                DrawElements(PrimitiveType.Triangles, mesh.indices.Length, DrawElementsType.UnsignedInt, IntPtr.Zero);
+            });
+        }
 
+        private static Matrix4 GetModelMatrix(Vector3 translation, Vector3 rotation, Vector3 scale) => Matrix4.CreateScale(scale) * Matrix4.CreateFromQuaternion(Quaternion.FromEulerAngles(rotation)) * Matrix4.CreateTranslation(translation);
+
+        public Renderer() {
+            camera = new(new(0, 0, -5), new(0, 90, 0), 70, 0.01f, 1000.0f);
             Enable(EnableCap.DebugOutput);
             Enable(EnableCap.DebugOutputSynchronous);
             DebugMessageCallback(DebugCallback, IntPtr.Zero);
-
+            Enable(EnableCap.CullFace);
             // Setup 
             {
                 fixed (int* vao = &this.vao)
@@ -247,6 +241,9 @@ namespace Lemur {
 
                 fixed (int* vbo = &this.vbo)
                     GenBuffers(1, vbo);
+
+                fixed (int* ebo = &this.ebo)
+                    GenBuffers(1, ebo);
 
                 BindVertexArray(vao);
                 BindBuffer(BufferTarget.ArrayBuffer, vbo);
@@ -257,35 +254,13 @@ namespace Lemur {
                 EnableVertexAttribArray(1);
                 VertexAttribPointer(2, 3, VertexAttribPointerType.Float, false, sizeof(Vertex), Marshal.OffsetOf<Vertex>("Normal"));
                 EnableVertexAttribArray(2);
+
+                // Bind the EBO
+                BindBuffer(BufferTarget.ElementArrayBuffer, ebo);
             }
-           
-            string vertexSource = @"
-                #version 450 core
 
-                layout(location = 0) in vec3 aPos;
-                layout(location = 1) in vec2 aUV;
-                layout(location = 2) in vec3 aNormal;
-
-                uniform float time;
-                uniform mat4 viewProjectionMatrix;
-                uniform mat4 modelMatrix;
-
-                void main() {
-                    gl_Position = viewProjectionMatrix * (modelMatrix * vec4(aPos, 1.0));
-                }   
-                ";
-            string fragSource = @"
-                #version 450 core
-                out vec4 FragColor;
-                void main() {
-                    FragColor = vec4(1.0);
-                } ";
-            
-            shader = new(vertexSource, fragSource);
-            shader.Use();
             ClearColor(Color4.Black);
         }
-
         private static void DebugCallback(DebugSource source, DebugType type, int id, DebugSeverity severity, int length, IntPtr message, IntPtr userParam) {
             if (severity == DebugSeverity.DebugSeverityNotification) {
                 return;
@@ -307,8 +282,12 @@ namespace Lemur {
         public void Render(TimeSpan span) {
             drawCallback?.Invoke((float)span.TotalMilliseconds);
             Clear(ClearBufferMask.ColorBufferBit | ClearBufferMask.DepthBufferBit);
-            shader.Set("viewProjectionMatrix", camera.GetViewProjectionMatrix());
-            shader.Set("time", GLFW.GetTime());
+
+            if (shader is not null) {
+                shader.Set("viewProjectionMatrix", camera.GetViewProjectionMatrix());
+                shader.Set("time", GLFW.GetTime());
+            }
+
             while (drawCommands.Count > 0) {
                 var command = drawCommands.Dequeue();
                 command?.Invoke();
@@ -333,7 +312,7 @@ namespace Lemur {
             MajorVersion = 4,
             MinorVersion = 5,
             RenderContinuously = true,
-            GraphicsProfile = OpenTK.Windowing.Common.ContextProfile.Core,
+            Profile = OpenTK.Windowing.Common.ContextProfile.Core,
         };
         public GLSurface() {
             InitializeComponent();

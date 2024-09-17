@@ -23,6 +23,11 @@ namespace Lemur.JS.Embedded {
             ArgumentNullException.ThrowIfNull(path, nameof(path));
             return FileSystem.FileExists(path);
         }
+
+        [ApiDoc("Resolve a path to the absolute canonical path")]
+        public string canonicalPath(string path) {
+            return FileSystem.GetResourcePath(path);
+        }
     }
 }
 

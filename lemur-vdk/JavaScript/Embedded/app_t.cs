@@ -157,6 +157,9 @@ namespace Lemur.JS.Embedded {
                 Grid.SetRowSpan(control, row);
             });
         }
+
+        
+
         [ApiDoc("Add a child element of target type provided in childTypeString argument, of given name. such as Button (which gets fully qualified internally to System.Windows.Control.Button)")]
         public bool addChild(string parentName, string childTypeString, string childName)
         {
