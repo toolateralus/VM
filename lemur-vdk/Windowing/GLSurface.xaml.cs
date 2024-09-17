@@ -208,15 +208,17 @@ namespace Lemur {
 
     public unsafe class GLRenderer : embedable {
         private readonly int vao, vbo, ebo;
-        private Shader shader;
+        
+        private Shader? shader;
+        private Texture2D? texture;
+
         private readonly Camera camera;
-        private Action<float> drawCallback;
-        private Action initCallback;
+        private Action<float>? drawCallback;
+        private Action? initCallback;
         private bool initialized;
-        private Texture2D texture;
         private Queue<Action> drawCommands = [];
-        private static List<Shader> shaders = [];
-        private static List<Texture2D> textures = [];
+        private List<Shader> shaders = [];
+        private List<Texture2D> textures = [];
 
         [ApiDoc("Compile a shader from vertex and fragment source")]
         public int compileShader(string vertexShader, string fragmentShader) {
@@ -372,9 +374,8 @@ namespace Lemur {
 
             if (!initialized) {
                 initialized = true;
-                initCallback();
+                initCallback?.Invoke();
             }
-
 
             drawCallback?.Invoke((float)span.TotalMilliseconds);
             Clear(ClearBufferMask.ColorBufferBit | ClearBufferMask.DepthBufferBit);
@@ -385,7 +386,7 @@ namespace Lemur {
             }
 
             while (drawCommands.Count > 0) {
-                drawCommands.Dequeue()();
+                drawCommands.Dequeue()?.Invoke();
             }
 
         }
