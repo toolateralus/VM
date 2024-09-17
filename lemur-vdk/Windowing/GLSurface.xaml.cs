@@ -187,6 +187,10 @@ namespace Lemur {
         public void SetNearPlane(float nearPlane) => NearPlane = nearPlane;
         public void SetFarPlane(float farPlane) => FarPlane = farPlane;
     }
+    public class TestStruct
+    {
+        public float x, y;
+    }
     public unsafe class Renderer {
         private readonly int vao, vbo;
         private Shader shader;
@@ -197,19 +201,6 @@ namespace Lemur {
         static readonly Mesh cube = new();
 
         static List<Shader> shaders = [];
-
-        public void EmbedRenderingTypes(Engine engine) {
-            ArgumentNullException.ThrowIfNull(engine, nameof(engine));
-            engine.EmbedType("Vector2", typeof(Vector2));
-            engine.EmbedType("Vector3", typeof(Vector3));
-            engine.EmbedType("Vector4", typeof(Vector4));
-            engine.EmbedType("Color", typeof(Color4));
-            engine.EmbedType("Shader", typeof(Shader));
-            engine.EmbedType("Mesh", typeof(Mesh));
-            engine.EmbedType("Camera", typeof(Camera));
-            engine.EmbedType("GLSurface", typeof(Renderer));
-            engine.EmbedObject("glSurface", this);
-        }
 
         public int compileShader(string vertexShader, string fragmentShader) {
             shaders.Add(new(vertexShader, fragmentShader));
@@ -222,11 +213,8 @@ namespace Lemur {
             }
         }
 
-        public void drawCube(float tx = 0, float ty = 0, float tz = 0, float rx = 0, float ry = 0, float rz = 0, float sx = 1, float sy = 1, float sz = 1) {
+        public void drawCube(Vector3 translation, Vector3 rotation, Vector3 scale) {
             drawCommands.Enqueue(() => {
-                Vector3 scale = new(sx, sy, sz);
-                Vector3 rotation = new(rx, ry, rz);
-                Vector3 translation = new(tx, ty, tz);
                 Matrix4 scaleMatrix = Matrix4.CreateScale(scale);
                 Matrix4 rotationMatrix = Matrix4.CreateFromQuaternion(Quaternion.FromEulerAngles(rotation));
                 Matrix4 translationMatrix = Matrix4.CreateTranslation(translation);

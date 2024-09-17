@@ -7,6 +7,7 @@ using Lemur.JavaScript.Embedded;
 using Lemur.JS.Embedded;
 using Lemur.Windowing;
 using Newtonsoft.Json;
+using OpenTK.Mathematics;
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
@@ -94,6 +95,15 @@ namespace Lemur.JS {
             EmbedObject("Key", KeyModule);
             EmbedType("Stopwatch", typeof(System.Diagnostics.Stopwatch));
             EmbedType("GraphicsContext", typeof(graphics_ctx_t));
+
+            EmbedType("Vector2", typeof(Vector2));
+            EmbedType("Vector3", typeof(Vector3));
+            EmbedType("Vector4", typeof(Vector4));
+            EmbedType("Color", typeof(Color4));
+            EmbedType("Shader", typeof(Shader));
+            EmbedType("Mesh", typeof(Mesh));
+            EmbedType("Camera", typeof(Camera));
+            EmbedType("GLSurface", typeof(Renderer));
 
             var jsonPalette = $"const palette = {JsonConvert.SerializeObject(graphics_ctx_t.Palette)}";
             _ = Execute(jsonPalette);
