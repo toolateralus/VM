@@ -12,10 +12,11 @@ using System.Runtime.InteropServices;
 using System.Threading;
 using System.Transactions;
 using System.Windows.Controls;
-
+using System.Windows.Media.Imaging;
 using static OpenTK.Graphics.OpenGL4.GL;
 using PrimitiveType = OpenTK.Graphics.OpenGL4.PrimitiveType;
 using Quaternion = OpenTK.Mathematics.Quaternion;
+using TextureWrapMode = OpenTK.Graphics.OpenGL4.TextureWrapMode;
 using Vector3 = OpenTK.Mathematics.Vector3;
 
 namespace Lemur {
@@ -105,7 +106,35 @@ namespace Lemur {
         }
 
     }
-    
+
+    public class Texture2D {
+        public readonly int handle;
+        public unsafe Texture2D(string path) {
+            BitmapImage bitmap = new BitmapImage(new Uri(path, UriKind.RelativeOrAbsolute));
+            bitmap.Freeze();
+            int width = bitmap.PixelWidth;
+            int height = bitmap.PixelHeight;
+            int stride = width * ((bitmap.Format.BitsPerPixel + 7) / 8);
+            byte[] pixelData = new byte[height * stride];
+            bitmap.CopyPixels(pixelData, stride, 0);
+
+            fixed (int* handle = &this.handle)
+                GenTextures(1, handle);
+
+            BindTexture(TextureTarget.Texture2D, this.handle);
+            TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureWrapS, (int)TextureWrapMode.Repeat);
+            TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureWrapT, (int)TextureWrapMode.Repeat);
+            TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureMinFilter, (int)TextureMinFilter.Linear);
+            TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureMagFilter, (int)TextureMagFilter.Linear);
+            TexImage2D(TextureTarget.Texture2D, 0, PixelInternalFormat.Rgba, width, height, 0,
+                          PixelFormat.Bgra, PixelType.UnsignedByte, pixelData);
+            GenerateMipmap(GenerateMipmapTarget.Texture2D);
+        }
+        public void Use() {
+            BindTexture(TextureTarget.Texture2D, handle);
+        }
+    }
+
     public class Mesh {
         public Vertex[] vertices = [];
         public int[] indices;
@@ -181,11 +210,13 @@ namespace Lemur {
         private readonly int vao, vbo, ebo;
         private Shader shader;
         private readonly Camera camera;
-
-        Queue<Action> drawCommands = [];
-
-        static List<Shader> shaders = [];
-
+        private Action<float> drawCallback;
+        private Action initCallback;
+        private bool initialized;
+        private Texture2D texture;
+        private Queue<Action> drawCommands = [];
+        private static List<Shader> shaders = [];
+        private static List<Texture2D> textures = [];
 
         [ApiDoc("Compile a shader from vertex and fragment source")]
         public int compileShader(string vertexShader, string fragmentShader) {
@@ -198,6 +229,20 @@ namespace Lemur {
             if (index >= 0 && index < shaders.Count) {
                 shader = shaders[index];
                 shader.Use();
+            }
+        }
+
+        [ApiDoc("Generate a texture object and get a handle back")]
+        public int loadTexture(string path) {
+            textures.Add(new(path));
+            return textures.Count -  1;
+        }
+
+        [ApiDoc("Bind a texture with it's integer handle you got back from loadTexture(string path)")]
+        public void bindTexture(int index) {
+            if (index >= 0 && index < shaders.Count) {
+                texture = textures[index];
+                texture.Use();
             }
         }
 
@@ -322,9 +367,7 @@ namespace Lemur {
             };
         }
 
-        Action<float> drawCallback;
-        private Action initCallback;
-        bool initialized;
+
         public void Render(TimeSpan span) {
 
             if (!initialized) {
