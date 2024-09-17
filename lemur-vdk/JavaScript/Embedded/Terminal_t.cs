@@ -15,10 +15,7 @@ namespace Lemur.JS.Embedded {
     /// </summary>
     public class Terminal_t : embedable
     {
-        public Terminal_t(Computer computer) : base(computer)
-        {
-
-        }
+    
         /// <summary>
         /// Tries to invoke a terminal command, in the background.
         /// </summary>

@@ -12,7 +12,7 @@ using System.Windows.Media.Imaging;
 using Image = System.Windows.Controls.Image;
 
 namespace Lemur.JS.Embedded {
-    public class GraphicsContext_t {
+    public class GraphicsContext_t : embedable {
         internal int formatBpp;
         internal int width, height;
         private byte[] renderTexture = [];

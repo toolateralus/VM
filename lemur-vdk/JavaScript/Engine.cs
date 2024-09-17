@@ -20,8 +20,7 @@ using System.Windows.Input;
 
 namespace Lemur.JS {
     public class Key_t : embedable {
-        public Key_t(Computer computer) : base(computer) {
-        }
+        
         [ApiDoc("Call Keyboard.ClearFocus(). this will deselect any textboxes etc.")]
         public void clearFocus() {
             Computer.Current.Window?.Dispatcher?.Invoke(() => {
@@ -70,11 +69,11 @@ namespace Lemur.JS {
             engineSwitcher.DefaultEngineName = V8JsEngine.EngineName;
             m_engine_internal = engineSwitcher.CreateDefaultEngine();
 
-            NetworkModule = new Network_t(computer);
-            InteropModule = new Interop_t(computer);
-            AppModule = new Embedded.App_t(computer);
-            TermModule = new Terminal_t(computer);
-            KeyModule = new Key_t(computer);
+            NetworkModule = new Network_t();
+            InteropModule = new Interop_t();
+            AppModule = new App_t();
+            TermModule = new Terminal_t();
+            KeyModule = new Key_t();
 
             InteropModule.OnModuleImported += ImportModule;
 
@@ -85,7 +84,6 @@ namespace Lemur.JS {
             EmbedObject("loadConfig", (object)Computer.LoadConfig);
             EmbedObject("saveConfig", (object)Computer.SaveConfig);
             EmbedObject("config", Computer.Current.Config);
-
 
             EmbedObject("Convert", ConvModule);
             EmbedObject("Network", NetworkModule);

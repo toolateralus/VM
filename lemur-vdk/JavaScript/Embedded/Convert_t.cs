@@ -8,7 +8,7 @@ using System.Text;
 
 namespace Lemur.JS.Embedded
 {
-    public class Convert_t
+    public class Convert_t : embedable
     {
         [ApiDoc("convert a base64 string to a utf8 string.")]
         public string utf8FromBase64(string base64) => Encoding.UTF8.GetString((byte[])toBytes(base64));

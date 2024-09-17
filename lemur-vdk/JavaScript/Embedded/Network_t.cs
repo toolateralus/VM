@@ -19,7 +19,7 @@ namespace Lemur.JavaScript.Embedded {
         private int size;
         internal string processID;
         private List<string> attachedListeners = [];
-        public Network_t(Computer computer) : base(computer)
+        public Network_t()
         {
             OnTransmit = Computer.Current.Network.OnSendMessage;
         }

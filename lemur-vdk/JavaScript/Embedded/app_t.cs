@@ -22,7 +22,7 @@ using Image = System.Windows.Controls.Image;
 namespace Lemur.JS.Embedded {
     public class App_t : embedable
     {
-        public App_t(Computer computer) : base(computer)
+        public App_t()
         {
             ExposedEvents["draw_pixels"] = DrawPixelsEvent; // somewhat deprecated, use the dedicated graphics module instead.
             ExposedEvents["draw_image"] = DrawImageEvent;

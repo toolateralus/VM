@@ -2,7 +2,7 @@
 using System;
 
 namespace Lemur.JS.Embedded {
-    public class File_t
+    public class File_t : embedable
     {
         [ApiDoc("Read a file from a path. return its contents as a string")]
         public object? read(string path)

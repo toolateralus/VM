@@ -10,7 +10,7 @@ namespace Lemur.JavaScript.Api {
         internal Action<string, object?>? OnModuleExported;
         internal Action<string>? OnModuleImported;
 
-        public Interop_t(Computer computer) : base(computer) {
+        public Interop_t()  {
         }
 
         [ApiDoc("return a random number between 0 and max (inclusive)")]
