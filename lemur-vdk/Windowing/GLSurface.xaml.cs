@@ -9,6 +9,7 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Runtime.InteropServices;
+using System.Threading;
 using System.Transactions;
 using System.Windows.Controls;
 
@@ -24,7 +25,7 @@ namespace Lemur {
         public readonly Vector3 Normal = normal;
     }
     public class Shader {
-        readonly int handle;
+        int handle;
         private static void CheckProgram(int program) {
             GetProgram(program, GetProgramParameterName.LinkStatus, out int success);
             if (success == 0) {
@@ -40,6 +41,10 @@ namespace Lemur {
             }
         }
         public Shader(string vertexSource, string fragSource) {
+            Compile(vertexSource, fragSource);
+        }
+
+        void Compile(string vertexSource, string fragSource) {
             int vertex = CreateShader(ShaderType.VertexShader);
             ShaderSource(vertex, vertexSource);
             CompileShader(vertex);
@@ -49,8 +54,7 @@ namespace Lemur {
             ShaderSource(fragment, fragSource);
             CompileShader(fragment);
             CheckShader(fragment);
-
-            handle = CreateProgram();
+            this.handle = CreateProgram();
             AttachShader(handle, vertex);
             AttachShader(handle, fragment);
             LinkProgram(handle);
@@ -106,7 +110,6 @@ namespace Lemur {
         public Vertex[] vertices = [];
         public int[] indices;
         public Mesh(string path) {
-            Notifications.Now("Mesh created!");
             using AssimpContext importer = new();
             Scene scene = importer.ImportFile(path, PostProcessSteps.Triangulate | PostProcessSteps.GenerateNormals | PostProcessSteps.FlipUVs);
             if (scene.HasMeshes) {
@@ -124,12 +127,6 @@ namespace Lemur {
                 }
                 indices = mesh.GetIndices();
             }
-
-            string n = "Mesh Cube: \n";
-            foreach (Vertex vert in vertices) {
-                n += $"pos: {vert.Position}, uv: {vert.UV}, normal: {vert.Normal}\n";
-            }
-            Notifications.Now(n);
         }
     }
     public class Camera {
@@ -180,7 +177,7 @@ namespace Lemur {
         public void SetFarPlane(float farPlane) => FarPlane = farPlane;
     }
 
-    public unsafe class Renderer : embedable {
+    public unsafe class GLRenderer : embedable {
         private readonly int vao, vbo, ebo;
         private Shader shader;
         private readonly Camera camera;
@@ -190,26 +187,54 @@ namespace Lemur {
         static List<Shader> shaders = [];
 
 
-        int shadersBacklog ;
-
         [ApiDoc("Compile a shader from vertex and fragment source")]
         public int compileShader(string vertexShader, string fragmentShader) {
-            drawCommands.Enqueue(delegate {
-                shadersBacklog--;
-                shaders.Add(new(vertexShader, fragmentShader));
-            });
-            var len = shaders.Count + shadersBacklog;
-            shadersBacklog++;
-            return len;
+            shaders.Add(new(vertexShader, fragmentShader));
+            return shaders.Count - 1;
         }
         
         [ApiDoc("Set a shader by index, shaders can be compiled with .compileShader(vert, frag)")]
         public void setShader(int index) {
-            drawCommands.Enqueue(delegate { 
-                if (index >= 0 && index < shaders.Count) {
-                    shader = shaders[index];
-                    shader.Use();
-                }
+            if (index >= 0 && index < shaders.Count) {
+                shader = shaders[index];
+                shader.Use();
+            }
+        }
+
+        [ApiDoc("Set a uniform float in the currently bound shader.")]
+        public void uniformF(string identifier, float value) {
+            drawCommands.Enqueue(delegate {
+                shader?.Set(identifier, value);
+            });
+        }
+        [ApiDoc("Set a uniform int in the currently bound shader.")]
+        public void uniformI(string identifier, int value) {
+            drawCommands.Enqueue(delegate {
+                shader?.Set(identifier, value);
+            });
+        }
+        [ApiDoc("Set a uniform Vector2 in the currently bound shader.")]
+        public void uniformVec2(string identifier, Vector2 value) {
+            drawCommands.Enqueue(delegate {
+                shader?.Set(identifier, value);
+            });
+        }
+        [ApiDoc("Set a uniform Vector3 in the currently bound shader.")]
+        public void uniformVec3(string identifier, Vector3 value) {
+            drawCommands.Enqueue(delegate {
+                shader?.Set(identifier, value);
+            });
+        }
+        [ApiDoc("Set a uniform Vector4 in the currently bound shader.")]
+        public void uniformVec4(string identifier, Vector4 value) {
+            drawCommands.Enqueue(delegate {
+                shader?.Set(identifier, value);
+            });
+        }
+        [ApiDoc("Set a uniform Matrix4 in the currently bound shader.")]
+        public void uniformMat4(string identifier, Matrix4 value) {
+            drawCommands.Enqueue(delegate {
+                shader?.Set(identifier, value);
             });
         }
 
@@ -217,18 +242,21 @@ namespace Lemur {
         public void drawMesh(Mesh mesh, Vector3 translation, Vector3 rotation, Vector3 scale) {
             drawCommands.Enqueue(delegate {
                 Matrix4 srtMatrix = GetModelMatrix(translation, rotation, scale);
+                
                 shader?.Set("modelMatrix", srtMatrix);
                 BindBuffer(BufferTarget.ArrayBuffer, vbo);
                 BufferData(BufferTarget.ArrayBuffer, mesh.vertices.Length * sizeof(Vertex), mesh.vertices, BufferUsageHint.DynamicDraw);
+
                 BindBuffer(BufferTarget.ElementArrayBuffer, ebo);
                 BufferData(BufferTarget.ElementArrayBuffer, mesh.indices.Length * sizeof(int), mesh.indices, BufferUsageHint.DynamicDraw);
+
                 DrawElements(PrimitiveType.Triangles, mesh.indices.Length, DrawElementsType.UnsignedInt, IntPtr.Zero);
             });
         }
 
         private static Matrix4 GetModelMatrix(Vector3 translation, Vector3 rotation, Vector3 scale) => Matrix4.CreateScale(scale) * Matrix4.CreateFromQuaternion(Quaternion.FromEulerAngles(rotation)) * Matrix4.CreateTranslation(translation);
 
-        public Renderer() {
+        public GLRenderer() {
             camera = new(new(0, 0, -5), new(0, 90, 0), 70, 0.01f, 1000.0f);
             Enable(EnableCap.DebugOutput);
             Enable(EnableCap.DebugOutputSynchronous);
@@ -261,6 +289,7 @@ namespace Lemur {
 
             ClearColor(Color4.Black);
         }
+        
         private static void DebugCallback(DebugSource source, DebugType type, int id, DebugSeverity severity, int length, IntPtr message, IntPtr userParam) {
             if (severity == DebugSeverity.DebugSeverityNotification) {
                 return;
@@ -270,16 +299,40 @@ namespace Lemur {
             Debug.WriteLine(msg);
         }
 
+
+        public void setInitCallback(string pid, string functionName) {
+            var process = Computer.Current.ProcessManager.GetProcess(pid);
+            initCallback = delegate {
+                try {
+                    process?.UI.Engine.m_engine_internal.Execute($"{pid}.{functionName}();");
+                }
+                catch (Exception e) {
+                    Notifications.Exception(e);
+                }
+            };
+        }
         public void setDrawCallback(string pid, string functionName) {
             var process = Computer.Current.ProcessManager.GetProcess(pid);
             drawCallback = delegate(float delta) {
-                _ = process?.UI.Engine.Execute($"{pid}.{functionName}({delta});");
+                try {
+                    process?.UI.Engine.m_engine_internal.Execute($"{pid}.{functionName}({delta});");
+                } catch (Exception e) {
+                    Notifications.Exception(e);
+                }
             };
         }
 
         Action<float> drawCallback;
-
+        private Action initCallback;
+        bool initialized;
         public void Render(TimeSpan span) {
+
+            if (!initialized) {
+                initialized = true;
+                initCallback();
+            }
+
+
             drawCallback?.Invoke((float)span.TotalMilliseconds);
             Clear(ClearBufferMask.ColorBufferBit | ClearBufferMask.DepthBufferBit);
 
@@ -289,9 +342,9 @@ namespace Lemur {
             }
 
             while (drawCommands.Count > 0) {
-                var command = drawCommands.Dequeue();
-                command?.Invoke();
+                drawCommands.Dequeue()();
             }
+
         }
 
         public void Dispose() {
@@ -306,7 +359,9 @@ namespace Lemur {
     /// Interaction logic for GLSurface.xaml
     /// </summary>
     public partial class GLSurface : UserControl {
-        public Renderer renderer;
+        public GLRenderer renderer;
+
+
         readonly GLWpfControlSettings settings = new() {
             TransparentBackground = false,
             MajorVersion = 4,

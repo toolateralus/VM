@@ -687,7 +687,7 @@ namespace Lemur.JS.Embedded {
         }
 
         [ApiDoc("Open a GLSurface in your app. Note this replaces all the XAML from your declared document, but enables 2D and 3D GPU Accelerated rendering.")]
-        public Renderer? createGlSurface(string pid) {
+        public GLRenderer? createGLRenderer(string pid) {
             var process = GetComputer().ProcessManager.GetProcess(pid);
             if (process is not null) {
                 var task = Current.Window.Dispatcher.InvokeAsync(delegate {

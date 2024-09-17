@@ -9,7 +9,7 @@
 		<Image x:Name="RenderTarget" 
 			HorizontalAlignment="Stretch" 
 			VerticalAlignment="Stretch"
-			Stretch="Uniform" 
+			Stretch="Uniform"
 			RenderOptions.BitmapScalingMode="NearestNeighbor"/>
 	</Grid>
 </UserControl>

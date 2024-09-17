@@ -98,11 +98,14 @@ namespace Lemur.JS {
             EmbedType("Vector2", typeof(Vector2));
             EmbedType("Vector3", typeof(Vector3));
             EmbedType("Vector4", typeof(Vector4));
+            EmbedType("Matrix4", typeof(Matrix4));
+
             EmbedType("Color", typeof(Color4));
             EmbedType("Shader", typeof(Shader));
             EmbedType("Mesh", typeof(Mesh));
             EmbedType("Camera", typeof(Camera));
-            EmbedType("GLSurface", typeof(Renderer));
+            EmbedType("GLRenderer", typeof(GLRenderer));
+            EmbedType("Guid", typeof(Guid));
 
             var jsonPalette = $"const palette = {JsonConvert.SerializeObject(GraphicsContext_t.Palette)}";
             _ = Execute(jsonPalette);

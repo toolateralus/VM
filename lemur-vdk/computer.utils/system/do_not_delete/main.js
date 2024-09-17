@@ -143,3 +143,7 @@ function defer(func, delay, ...args)
 	};
 	deferCached(Math.floor(delay), index);
 }
+
+function canonical(path) {
+    return File.canonicalPath(path);
+}

@@ -1,6 +1,7 @@
 ﻿using ICSharpCode.AvalonEdit.CodeCompletion;
 using ICSharpCode.AvalonEdit.Document;
 using ICSharpCode.AvalonEdit.Editing;
+using ICSharpCode.AvalonEdit.Folding;
 using ICSharpCode.AvalonEdit.Highlighting;
 using ICSharpCode.AvalonEdit.Search;
 using Lemur.FS;
@@ -19,6 +20,74 @@ using System.Windows.Input;
 using System.Windows.Media;
 
 namespace Lemur.GUI {
+    /// <summary>
+    /// Allows producing foldings from a document based on braces.
+    /// </summary>
+    public class BraceFoldingStrategy {
+        /// <summary>
+        /// Gets/Sets the opening brace. The default value is '{'.
+        /// </summary>
+        public char OpeningBrace { get; set; }
+
+        /// <summary>
+        /// Gets/Sets the closing brace. The default value is '}'.
+        /// </summary>
+        public char ClosingBrace { get; set; }
+
+        /// <summary>
+        /// Creates a new BraceFoldingStrategy.
+        /// </summary>
+        public BraceFoldingStrategy() {
+            this.OpeningBrace = '{';
+            this.ClosingBrace = '}';
+        }
+
+        public void UpdateFoldings(FoldingManager manager, TextDocument document) {
+            int firstErrorOffset;
+            IEnumerable<NewFolding> newFoldings = CreateNewFoldings(document, out firstErrorOffset);
+            manager.UpdateFoldings(newFoldings, firstErrorOffset);
+        }
+
+        /// <summary>
+        /// Create <see cref="NewFolding"/>s for the specified document.
+        /// </summary>
+        public IEnumerable<NewFolding> CreateNewFoldings(TextDocument document, out int firstErrorOffset) {
+            firstErrorOffset = -1;
+            return CreateNewFoldings(document);
+        }
+
+        /// <summary>
+        /// Create <see cref="NewFolding"/>s for the specified document.
+        /// </summary>
+        public IEnumerable<NewFolding> CreateNewFoldings(ITextSource document) {
+            List<NewFolding> newFoldings = new List<NewFolding>();
+
+            Stack<int> startOffsets = new Stack<int>();
+            int lastNewLineOffset = 0;
+            char openingBrace = this.OpeningBrace;
+            char closingBrace = this.ClosingBrace;
+            for (int i = 0; i < document.TextLength; i++) {
+                char c = document.GetCharAt(i);
+                if (c == openingBrace) {
+                    startOffsets.Push(i);
+                }
+                else if (c == closingBrace && startOffsets.Count > 0) {
+                    int startOffset = startOffsets.Pop();
+                    // don't fold if opening and closing brace are on the same line
+                    if (startOffset < lastNewLineOffset) {
+                        newFoldings.Add(new NewFolding(startOffset, i + 1));
+                    }
+                }
+                else if (c == '\n' || c == '\r') {
+                    lastNewLineOffset = i + 1;
+                }
+            }
+            newFoldings.Sort((a, b) => a.StartOffset.CompareTo(b.StartOffset));
+            return newFoldings;
+        }
+    }
+
+
     /// <summary>
     /// The in app text editor / IDE. much of the great behavior comes from the use of AvaloniaEdit's TextEditor control.
     /// it does a ton of heavy lifting.
@@ -65,6 +134,8 @@ namespace Lemur.GUI {
                 Computer.Current.PresentGUI(mdViewer, "md.app", Computer.Current.ProcessManager.GetNextProcessID());
             }
         }
+
+    
         /// <summary>
         /// Loads a file from path and opens a new text editor for that file.
         /// </summary>
@@ -80,6 +151,10 @@ namespace Lemur.GUI {
             LoadedFile = "newfile.txt";
             InitializeComponent();
             SearchPanel.Install(textEditor);
+            
+            foldingManager = FoldingManager.Install(textEditor.TextArea);
+            foldingStrategy = new BraceFoldingStrategy();
+            
 
             shTypeBox.ItemsSource = LanguageOptions;
             themeBox.ItemsSource = new List<string>() { "Light", "Dark" };
@@ -165,6 +240,7 @@ namespace Lemur.GUI {
                 RunButton_Click(null!, null!);
             }
             Contents = textEditor.Text;
+            foldingStrategy.UpdateFoldings(foldingManager, textEditor.Document);
         }
         private void LoadFile(string path) {
             path = FileSystem.GetResourcePath(path);
@@ -184,10 +260,8 @@ namespace Lemur.GUI {
 
                 Task.Run(async () => {
                     Contents = await File.ReadAllTextAsync(path).ConfigureAwait(false);
-                    await Dispatcher.InvokeAsync(() => { textEditor.Text = Contents; });
+                    await Dispatcher.InvokeAsync(() => { textEditor.Text = Contents; foldingStrategy.UpdateFoldings(foldingManager, textEditor.Document);  });
                 });
-
-                textEditor.Text = Contents;
             }
         }
         private void SetSyntaxHighlighting(string? extension) {
@@ -345,8 +419,11 @@ namespace Lemur.GUI {
         }
 
         string prefix = "";
-        private void TextEntered(object sender, TextCompositionEventArgs e) {
+        private FoldingManager foldingManager;
+        private BraceFoldingStrategy foldingStrategy;
 
+        private void TextEntered(object sender, TextCompositionEventArgs e) {
+            
             if (e.Text == " ") {
                 prefix = "";
             }
