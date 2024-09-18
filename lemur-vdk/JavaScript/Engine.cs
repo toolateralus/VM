@@ -30,14 +30,10 @@ namespace Lemur.JS {
         }
         [ApiDoc("return whether a key such as 'R', 'LeftCtrl' or whatever is down.")]
         public bool isDown(string key) {
-            var task = Computer.Current.Window?.Dispatcher?.InvokeAsync(() => {
-                if (Enum.TryParse<System.Windows.Input.Key>(key, out var _key))
-                    return Keyboard.IsKeyDown(_key);
-                Notifications.Now($"Failed to parse key {key}");
-                return false;
-            });
-            task.Wait();
-            return task.Result;
+            if (Enum.TryParse<Key>(key, out var _key))
+                return Keyboard.IsKeyDown(_key);
+            Notifications.Now($"Failed to parse key {key}");
+            return false;
         }
     }
     public class Engine : IDisposable {

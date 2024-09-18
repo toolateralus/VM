@@ -1,6 +1,6 @@
 {
   "NAME": "Default VDK",
-  "ALIAS_PATH": "C:\\Users\\Josh\\AppData\\Roaming\\Lemur\\computer0\\commands",
+  "ALIAS_PATH": "C:\\Users\\Cooper\\AppData\\Roaming\\Lemur\\computer0\\commands",
   "BACKGROUND": "epic_background.png",
   "TEXT_EDITOR_THEME": "Dark",
   "CMD_LINE_TIMEOUT": "50000",
@@ -8,5 +8,5 @@
   "ALWAYS_CONNECT": false,
   "FONT_SIZE": 12,
   "USER": "josh",
-  "TEXT_EDITOR_FONT": "Fira Code"
+  "TEXT_EDITOR_FONT": "Cascadia Mono"
 }

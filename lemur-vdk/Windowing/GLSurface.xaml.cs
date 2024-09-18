@@ -171,7 +171,7 @@ namespace Lemur {
             FarPlane = farPlane;
         }
 
-        private Vector3 Forward() {
+        public Vector3 Forward() {
             float pitch = MathHelper.DegreesToRadians(Rotation.X);
             float yaw = MathHelper.DegreesToRadians(Rotation.Y);
 
@@ -210,7 +210,7 @@ namespace Lemur {
         private Shader? shader;
         private Texture2D? texture;
 
-        private readonly Camera camera;
+        public Camera camera;
         private Action<float>? drawCallback;
         private Action? initCallback;
         private bool initialized;
@@ -307,6 +307,7 @@ namespace Lemur {
             Enable(EnableCap.DebugOutputSynchronous);
             DebugMessageCallback(DebugCallback, IntPtr.Zero);
             Enable(EnableCap.CullFace);
+            Enable(EnableCap.DepthTest);
             // Setup 
             {
                 fixed (int* vao = &this.vao)
