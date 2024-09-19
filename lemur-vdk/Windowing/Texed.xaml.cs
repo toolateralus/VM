@@ -99,6 +99,9 @@ namespace Lemur.GUI {
     public partial class Texed : UserControl {
         public string LoadedFile;
         internal string Contents;
+        string prefix = "";
+        private FoldingManager foldingManager;
+        private BraceFoldingStrategy foldingStrategy;
         public Dictionary<string, string> LanguageOptions = new()
         {
             { "MarkDown", ".md" },
@@ -124,6 +127,9 @@ namespace Lemur.GUI {
         };
         // reflection grabs this later.
         public static string? DesktopIcon => FileSystem.GetResourcePath("texed.png");
+
+        public bool UnsavedChanges { get; private set; }
+
         public MarkdownViewer? mdViewer;
         public Terminal? terminal;
         private Computer computer;
@@ -223,22 +229,22 @@ namespace Lemur.GUI {
         public void LateInit(string _, Computer c, ResizableWindow win) {
             this.computer = c;
         }
-        protected override void OnKeyUp(KeyEventArgs e) {
-            var ctrl = Keyboard.IsKeyDown(System.Windows.Input.Key.LeftCtrl);
+        public void OnKeyUp(object? sender, KeyEventArgs e) {
+            var ctrl = Keyboard.IsKeyDown(Key.LeftCtrl);
 
-            if (ctrl && e.Key == System.Windows.Input.Key.S)
+            if (ctrl && e?.Key == Key.S) {
                 Save();
-            else if (ctrl && e.Key == System.Windows.Input.Key.OemPlus)
-                textEditor.FontSize += 1;
-            else if (ctrl && e.Key == System.Windows.Input.Key.OemMinus && textEditor.FontSize > 0)
-                textEditor.FontSize -= 1;
-            else if (ctrl && e.Key == System.Windows.Input.Key.LeftShift && Keyboard.IsKeyDown(System.Windows.Input.Key.Tab)) {
-                // we should have 'tabs' in future, allowing for several open documents at once.
-                // this should be relatively easy.
             }
-            else if (e.Key == System.Windows.Input.Key.F5) {
+            else if (ctrl && e?.Key == Key.OemPlus) {
+                textEditor.FontSize += 1;
+            }
+            else if (ctrl && e?.Key == Key.OemMinus && textEditor.FontSize > 0) {
+                textEditor.FontSize -= 1;
+            }
+            else if (e?.Key == Key.F5) {
                 RunButton_Click(null!, null!);
             }
+
             Contents = textEditor.Text;
             foldingStrategy.UpdateFoldings(foldingManager, textEditor.Document);
         }
@@ -296,7 +302,10 @@ namespace Lemur.GUI {
             Save();
         }
         internal void Save() {
-            Notifications.Now(LoadedFile);
+            UnsavedChanges = false;
+            ChangesLabel.Content = "no unsaved changes";
+            ChangesLabel.Foreground = Brushes.Green;
+            
             if (!File.Exists(LoadedFile)) {
                 var dialog = new SaveFileDialog();
                 dialog.InitialDirectory = FileSystem.Root;
@@ -418,12 +427,12 @@ namespace Lemur.GUI {
                     }, new System.Windows.Media.FontFamily("Consolas"));
         }
 
-        string prefix = "";
-        private FoldingManager foldingManager;
-        private BraceFoldingStrategy foldingStrategy;
-
         private void TextEntered(object sender, TextCompositionEventArgs e) {
             
+            UnsavedChanges = true;
+            ChangesLabel.Content = "unsaved changes";
+            ChangesLabel.Foreground = Brushes.Red;
+
             if (e.Text == " ") {
                 prefix = "";
             }
@@ -445,7 +454,6 @@ namespace Lemur.GUI {
             if (e.Key == System.Windows.Input.Key.Back || e.Key == System.Windows.Input.Key.Delete || e.Key == System.Windows.Input.Key.Tab) {
                 prefix = "";
             }
-           
         }
     }
     public class MyCompletionData : ICompletionData {

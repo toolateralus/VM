@@ -10,6 +10,9 @@
     <Grid>
         <glWpfControl:GLWpfControl 
             x:Name="surface" 
-            Render="OnRender"/>
+            Render="OnRender"
+            KeyDown="OnKeyDown"
+            KeyUp="OnKeyUp"
+            />
     </Grid>
 </UserControl>

@@ -12,6 +12,7 @@ using System.Runtime.InteropServices;
 using System.Threading;
 using System.Transactions;
 using System.Windows.Controls;
+using System.Windows.Input;
 using System.Windows.Media.Imaging;
 using static OpenTK.Graphics.OpenGL4.GL;
 using PrimitiveType = OpenTK.Graphics.OpenGL4.PrimitiveType;
@@ -135,10 +136,27 @@ namespace Lemur {
 
     public class Mesh {
         public Vertex[] vertices = [];
-        public int[] indices;
+        public int[] indices = [];
+
+        static Dictionary<string, Mesh> cachedMeshes = [];
+
+        public static readonly PostProcessSteps postProcessFlags = 
+            PostProcessSteps.Triangulate |
+            PostProcessSteps.GenerateNormals |
+            PostProcessSteps.FlipUVs |
+            PostProcessSteps.OptimizeGraph |
+            PostProcessSteps.OptimizeMeshes;
+
         public Mesh(string path) {
+
+            if (cachedMeshes.TryGetValue(path, out var cached)) {
+                this.vertices = cached.vertices;
+                this.indices = cached.indices;
+                return;
+            }
+
             using AssimpContext importer = new();
-            Scene scene = importer.ImportFile(path, PostProcessSteps.Triangulate | PostProcessSteps.GenerateNormals | PostProcessSteps.FlipUVs);
+            Scene scene = importer.ImportFile(path, postProcessFlags);
             if (scene.HasMeshes) {
                 Assimp.Mesh mesh = scene.Meshes[0];
                 vertices = new Vertex[mesh.VertexCount];
@@ -153,7 +171,11 @@ namespace Lemur {
                     );
                 }
                 indices = mesh.GetIndices();
+            } else {
+                Notifications.Now("Scene file loaded by assimp had no meshes.");
             }
+
+            cachedMeshes[path] = this;
         }
     }
     public class Camera {
@@ -395,6 +417,7 @@ namespace Lemur {
             fixed (int* vao = &this.vao)
                 DeleteVertexArrays(1, vao);
         }
+
     }
 
     /// <summary>
@@ -402,7 +425,6 @@ namespace Lemur {
     /// </summary>
     public partial class GLSurface : UserControl {
         public GLRenderer renderer;
-
 
         readonly GLWpfControlSettings settings = new() {
             TransparentBackground = false,
@@ -421,6 +443,14 @@ namespace Lemur {
         }
         public void OnRender(TimeSpan delta) {
             renderer.Render(delta);
+        }
+
+        public static Dictionary<Key, bool> keyStates = [];
+        private void OnKeyUp(object sender, System.Windows.Input.KeyEventArgs e) {
+            keyStates[e.Key] = false;
+        }
+        private void OnKeyDown(object sender, System.Windows.Input.KeyEventArgs e) {
+            keyStates[e.Key] = true;
         }
     }
 }
