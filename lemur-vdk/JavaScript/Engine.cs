@@ -32,7 +32,6 @@ namespace Lemur.JS {
         public bool isDown(string key) {
             if (Enum.TryParse<Key>(key, out var _key))
                 return Keyboard.IsKeyDown(_key);
-
             Notifications.Now($"Failed to parse key {key}");
             return false;
         }

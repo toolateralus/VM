@@ -50,6 +50,13 @@ namespace Lemur.JS.Embedded
 
             return null!;
         }
+        public string getType(object? obj)
+        {
+            return obj?.GetType().Name ?? "null";
+        }
+        public float toFloat(double num) {
+            return (float)num;
+        }
     }
 }
 
